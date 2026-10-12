@@ -5,7 +5,7 @@ let state = {
   sources: {},
   lastUpdated: null,
   analyzerUsed: null,
-  sentimentMode: 'local', // 'local' or 'gemini'
+  sentimentMode: 'gemini', // 'gemini', 'groq', 'openrouter', 'local', etc.
   spectrumViewMode: 'averages', // 'averages' or 'distribution'
   isSyncing: false,
   syncMessage: '',
@@ -676,29 +676,29 @@ function getResolvedSources() {
       } else if (state.sentimentMode === 'gemini') {
         if (art.sentimentGemini !== undefined && art.sentimentGemini !== null) {
           score = art.sentimentGemini;
-          explanation = `Analyzed using Gemini LLM (gemini-3.5-flash). Sentiment Score: ${score.toFixed(2)}.`;
+          explanation = art.explanationGemini || `Analyzed using Gemini 3.8 Flash. Score: ${score.toFixed(2)}.`;
           category = art.categoryGemini || category;
         } else {
-          score = null;
-          explanation = 'This article has not been analyzed by the Gemini LLM yet. Run Sync & Analyze to generate.';
+          score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
+          explanation = art.explanation || art.explanationLocal || 'Fallback local analysis.';
         }
       } else if (state.sentimentMode === 'openrouter') {
         if (art.sentimentOpenRouter !== undefined && art.sentimentOpenRouter !== null) {
           score = art.sentimentOpenRouter;
-          explanation = `Analyzed using OpenRouter LLM (${art.openRouterModelUsed || 'Llama'}). Sentiment Score: ${score.toFixed(2)}.`;
+          explanation = art.explanationOpenRouter || `Analyzed using OpenRouter (${art.openRouterModelUsed || 'Llama'}). Score: ${score.toFixed(2)}.`;
           category = art.categoryOpenRouter || category;
         } else {
-          score = null;
-          explanation = 'This article has not been analyzed by the OpenRouter LLM yet. Run Sync & Analyze to generate.';
+          score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
+          explanation = art.explanation || art.explanationLocal || 'Fallback local analysis.';
         }
       } else if (state.sentimentMode === 'groq') {
         if (art.sentimentGroq !== undefined && art.sentimentGroq !== null) {
           score = art.sentimentGroq;
-          explanation = `Analyzed using Groq LLM (${art.groqModelUsed || 'Llama'}). Sentiment Score: ${score.toFixed(2)}.`;
+          explanation = art.explanationGroq || `Analyzed using Groq (${art.groqModelUsed || 'Llama'}). Score: ${score.toFixed(2)}.`;
           category = art.categoryGroq || category;
         } else {
-          score = null;
-          explanation = 'This article has not been analyzed by the Groq LLM yet. Run Sync & Analyze to generate.';
+          score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
+          explanation = art.explanation || art.explanationLocal || 'Fallback local analysis.';
         }
       } else if (state.sentimentMode === 'global') {
         const afinn = art.sentimentAFINN !== undefined && art.sentimentAFINN !== null 

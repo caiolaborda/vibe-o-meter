@@ -72,33 +72,39 @@ function readConfig() {
   return {};
 }
 
-// Local lexicon analysis (AFINN + VADER)
+// Local lexicon analysis (AFINN + VADER) with news context weighting
 function analyzeLocally(headlines) {
   return headlines.map(item => {
     const textToAnalyze = `${item.title} ${item.description || ''}`;
     const afinnScore = Math.max(-1.0, Math.min(1.0, sentimentAnalyzer.analyze(textToAnalyze).score / 8));
     const vaderScore = vader.SentimentIntensityAnalyzer.polarity_scores(textToAnalyze).compound;
-    const averageScore = Number(((afinnScore + vaderScore) / 2).toFixed(3));
+    let baseScore = (afinnScore + vaderScore) / 2;
+
+    // News-domain contextual valence correction (lexicons often fail on conflict/disaster terms)
+    const textLower = textToAnalyze.toLowerCase();
+    if (/\b(hits|strikes|bombs|attacked|attacking|attack|missile|drone strike|killed|killing|dead|fatal|casualties|collapse|violate|violating|ceasefire|sanctions|slain|destroy|destroyed)\b/i.test(textLower)) {
+      baseScore = Math.min(baseScore - 0.5, -0.3);
+    }
+    const finalScore = Number(Math.max(-1.0, Math.min(1.0, baseScore)).toFixed(3));
 
     let category = 'other';
-    const text = textToAnalyze.toLowerCase();
-    if (/politic|election|biden|trump|government|senate|minister|president|parliament/.test(text)) category = 'politics';
-    else if (/market|stock|inflation|economy|price|bank|fed|trade|dollar|tariff/.test(text)) category = 'business';
-    else if (/tech|ai\b|robot|google|apple|software|crypto|cyber|phone|semiconductor/.test(text)) category = 'technology';
-    else if (/science|space|nasa|planet|discover|climate|nature|earth|energy/.test(text)) category = 'science';
-    else if (/health|covid|virus|doctor|hospital|vaccin|cancer|disease|mental/.test(text)) category = 'health';
-    else if (/movie|actor|music|hollywood|star|show|award|film|celebrity/.test(text)) category = 'entertainment';
-    else if (/sport|football|soccer|cup|game|win|champion|tennis|basketball|olympic/.test(text)) category = 'sports';
-    else if (/world|war|border|treaty|nation|international|conflict|crisis|refugee|strike/.test(text)) category = 'world';
+    if (/politic|election|biden|trump|government|senate|minister|president|parliament/.test(textLower)) category = 'politics';
+    else if (/market|stock|inflation|economy|price|bank|fed|trade|dollar|tariff/.test(textLower)) category = 'business';
+    else if (/tech|ai\b|robot|google|apple|software|crypto|cyber|phone|semiconductor/.test(textLower)) category = 'technology';
+    else if (/science|space|nasa|planet|discover|climate|nature|earth|energy/.test(textLower)) category = 'science';
+    else if (/health|covid|virus|doctor|hospital|vaccin|cancer|disease|mental/.test(textLower)) category = 'health';
+    else if (/movie|actor|music|hollywood|star|show|award|film|celebrity/.test(textLower)) category = 'entertainment';
+    else if (/sport|football|soccer|cup|game|win|champion|tennis|basketball|olympic/.test(textLower)) category = 'sports';
+    else if (/world|war|border|treaty|nation|international|conflict|crisis|refugee|strike|kyiv|russia|ukraine/.test(textLower)) category = 'world';
 
     return {
       ...item,
-      sentiment: averageScore,
-      sentimentLocal: averageScore,
+      sentiment: finalScore,
+      sentimentLocal: finalScore,
       sentimentAFINN: Number(afinnScore.toFixed(3)),
       sentimentVADER: Number(vaderScore.toFixed(3)),
       category,
-      explanation: `Analyzed locally with VADER (${vaderScore.toFixed(2)}) and AFINN-111 (${afinnScore.toFixed(2)}).`
+      explanation: `Analyzed locally with news-calibrated VADER (${vaderScore.toFixed(2)}) and AFINN-111 (${afinnScore.toFixed(2)}).`
     };
   });
 }
@@ -114,13 +120,11 @@ function tryRepairJsonArray(text) {
   return clean;
 }
 
-// Structured Gemini sentiment analysis with model fallback
+// Structured Gemini sentiment analysis with retry & fallback
 async function analyzeWithGemini(headlines, apiKey, requestedModel) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
-    requestedModel || process.env.GEMINI_MODEL || 'gemini-3.8-flash',
-    'gemini-2.5-flash',
-    'gemini-1.5-flash'
+    requestedModel || process.env.GEMINI_MODEL || 'gemini-3.8-flash'
   ].filter(Boolean);
 
   const promptData = headlines.map((item, index) => ({
@@ -143,35 +147,45 @@ Return ONLY the JSON array matching this description. Do not wrap in markdown co
 
   let lastError = null;
   for (const modelName of modelsToTry) {
-    try {
-      console.log(`[Gemini] Attempting analysis using model: ${modelName}...`);
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-      }, { apiVersion: 'v1beta' });
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`[Gemini] Attempting analysis using model: ${modelName} (attempt ${attempt}/3)...`);
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+        }, { apiVersion: 'v1beta' });
 
-      const response = await model.generateContent(prompt);
-      let text = response.response.text().trim();
-      if (text.startsWith('```json')) text = text.substring(7);
-      else if (text.startsWith('```')) text = text.substring(3);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-      text = tryRepairJsonArray(text.trim());
+        const generatePromise = model.generateContent(prompt);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Gemini API call timed out after 25s')), 25000)
+        );
+        const response = await Promise.race([generatePromise, timeoutPromise]);
+        let text = response.response.text().trim();
+        if (text.startsWith('```json')) text = text.substring(7);
+        else if (text.startsWith('```')) text = text.substring(3);
+        if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+        text = tryRepairJsonArray(text.trim());
 
-      const parsed = JSON.parse(text);
-      const results = headlines.map((item, index) => {
-        const match = (Array.isArray(parsed) ? parsed : []).find(r => r.index === index) || { score: 0, category: 'other' };
-        return {
-          ...item,
-          sentiment: Number(match.score) || 0,
-          category: match.category || 'other',
-          explanation: match.explanation || 'Analyzed via Gemini.'
-        };
-      });
+        const parsed = JSON.parse(text);
+        const results = headlines.map((item, index) => {
+          const match = (Array.isArray(parsed) ? parsed : []).find(r => r.index === index) || { score: 0, category: 'other' };
+          return {
+            ...item,
+            sentiment: Number(match.score) || 0,
+            category: match.category || 'other',
+            explanation: match.explanation || 'Analyzed via Gemini.'
+          };
+        });
 
-      return { results, modelUsed: modelName };
-    } catch (err) {
-      console.warn(`[Gemini] Model ${modelName} failed:`, err.message || err);
-      lastError = err;
+        return { results, modelUsed: modelName };
+      } catch (err) {
+        console.warn(`[Gemini] Model ${modelName} attempt ${attempt} failed:`, err.message || err);
+        lastError = err;
+        if (attempt < 3) {
+          console.log(`[Gemini] Waiting ${2 * attempt}s before retrying...`);
+          await new Promise(r => setTimeout(r, 2000 * attempt));
+        }
+      }
     }
   }
   throw lastError || new Error('All Gemini model attempts failed');
@@ -298,6 +312,9 @@ async function main() {
         const cacheKey = `${source.id}_${item.title.trim().toLowerCase()}`;
         const cached = existingMap.get(cacheKey);
         if (cached) {
+          if (preferredAnalyzer === 'gemini' && (cached.sentimentGemini === undefined || cached.sentimentGemini === null)) {
+            unanalyzedArticles.push(cached);
+          }
           sourceArticles.push(cached);
         } else {
           unanalyzedArticles.push(item);
