@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-12T14:05:21.825Z",
+  "lastUpdated": "2026-10-12T14:09:28.776Z",
   "analyzerUsed": "Local Ensemble (VADER + AFINN)",
   "editorialSummaryDate": "2026-10-12",
   "editorialSummary": "Earth's media vibe lands at a cautiously grumpy -0.085 today. Spiegel International is leading today's existential dread charge, while tech and science sections desperately try to pump dopamine into our feeds. Brace yourselves accordingly.",
   "globalStats": {
-    "globalSentiment": -0.085,
-    "totalArticles": 1725,
+    "globalSentiment": -0.086,
+    "totalArticles": 1729,
     "mostNegativeOutlet": {
       "id": "spiegel",
       "name": "Spiegel International",
@@ -17,14 +17,14 @@
       "score": 0
     },
     "categoryAverages": {
-      "politics": -0.174,
+      "politics": -0.175,
       "other": -0.027,
-      "world": -0.529,
+      "world": -0.53,
       "technology": -0.022,
       "entertainment": -0.021,
       "sports": 0.088,
       "business": -0.108,
-      "health": -0.27,
+      "health": -0.296,
       "science": 0.306
     },
     "editorialSummary": "Earth's media vibe lands at a cautiously grumpy -0.085 today. Spiegel International is leading today's existential dread charge, while tech and science sections desperately try to pump dopamine into our feeds. Brace yourselves accordingly.",
@@ -33,11 +33,11 @@
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.152,
+      "averageSentiment": -0.155,
       "distribution": {
         "positive": 25,
         "neutral": 85,
-        "negative": 74
+        "negative": 75
       },
       "articles": [
         {
@@ -198,6 +198,21 @@
           "sentimentGemini": -0.85,
           "explanationGemini": "A shooting incident involving teachers and a teenage suspect inside a school is deeply alarming.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Why is it so hard to fight the Houthis?",
+          "description": "Security correspondent Frank Gardner explains how the Iran-backed Houthis' precision strikes and guerrilla tactics have made it difficult for Saudi forces to gain the upper hand.",
+          "link": "https://www.bbc.co.uk/news/videos/cmy56nzd6y69o?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 12:15:01 GMT",
+          "sentimentLocal": -0.59,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": 0.07,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.07) and AFINN-111 (-0.25).",
+          "categoryLocal": "world",
+          "sentiment": -0.59,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.07) and AFINN-111 (-0.25).",
+          "category": "world"
         },
         {
           "sourceId": "bbc",
@@ -12691,13 +12706,43 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.049,
+      "averageSentiment": -0.056,
       "distribution": {
         "positive": 50,
         "neutral": 74,
-        "negative": 65
+        "negative": 67
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "Police officer injured as 10 arrests made at tense Liverpool v Manchester City match",
+          "description": "Police officer taken to hospital with serious facial injury Five people arrested on suspicion of tragedy chanting A police officer sustained a serious facial injury while making an arrest after the Liverpool v Manchester City match at Anfield on Sunday, Merseyside police have said. The fixture was highly charged as City played their first match since it was confirmed they had been found guilty of breaching Premier League financial rules. Continue reading...",
+          "link": "https://www.theguardian.com/football/2026/oct/12/police-officer-injured-as-10-arrests-made-at-tense-liverpool-v-manchester-city-match",
+          "pubDate": "Mon, 12 Oct 2026 13:54:45 GMT",
+          "sentimentLocal": -0.99,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.98,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.98) and AFINN-111 (-1.00).",
+          "categoryLocal": "health",
+          "sentiment": -0.99,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.98) and AFINN-111 (-1.00).",
+          "category": "health"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Cyber-attack like OpenAI Medicare breach ‘seems likely’ in UK, says minister",
+          "description": "Kanishka Narayan, concerned by Australian incident, says British cyber defences could be bypassed by AI agent UK politics live – latest updates An AI-driven cyber-attack like the OpenAI breach of Australia’s healthcare system is likely, “if not inevitable”, in the UK, according to a senior minister. Kanishka Narayan, the UK AI minister, indicated that the British government’s own cyber defences would be bypassed by a technology that has developed highly sophisticated skills in cybersecurity. Continue reading...",
+          "link": "https://www.theguardian.com/technology/2026/oct/12/cyber-attack-like-openai-medicare-breach-seems-likely-in-uk-says-minister",
+          "pubDate": "Mon, 12 Oct 2026 13:52:55 GMT",
+          "sentimentLocal": -0.3,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.817,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.82) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.3,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.82) and AFINN-111 (0.00).",
+          "category": "politics"
+        },
         {
           "sourceId": "guardian",
           "title": "Federal agents search Ilhan Omar’s home as part of fraud investigation",
@@ -42807,7 +42852,7 @@
       "averageSentiment": -0.101,
       "distribution": {
         "positive": 24,
-        "neutral": 123,
+        "neutral": 124,
         "negative": 61
       },
       "articles": [
@@ -42918,6 +42963,21 @@
           "sentimentGemini": 0.2,
           "explanationGemini": "Calls to re-evaluate international cooperation offer opportunities for pragmatic improvement.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Six reasons Democrats may fall short of a midterm landslide in November - Reuters",
+          "description": "Six reasons Democrats may fall short of a midterm landslide in November Reuters",
+          "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxNUDUtNXdPdWhTRjltSHNuVHhFN3VyWmdKZ2lzZmItSHRCd1VRV2R1Tmx2ZzZ4VU1nY2ZDSGVrcVNMY0tfa3NWR0V3dVh4d1hHRmhYd0RnQi1UNzNsZ09xNEtQcURCbm9leDZWUEZLdWZZcjNmUU5EWkJ6VERjVDNHbVRJQjhSYm50anM3VVEtRVYyT0RIOWtScjh4MnA4MnBtVXkyNkFpdG9jN3Ry?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:51:21 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "category": "other"
         },
         {
           "sourceId": "reuters",
