@@ -510,8 +510,55 @@ async function main() {
     categoryAverages[cat] = Number((categoryStats[cat].total / categoryStats[cat].count).toFixed(3));
   });
 
-  // Generate Editorial Summary
-  let editorialSummary = `Global news sentiment leans ${globalAvg < -0.1 ? 'cautious' : (globalAvg > 0.1 ? 'optimistic' : 'neutral')} today (${globalAvg > 0 ? '+' : ''}${globalAvg}). Conflict and World events represent the primary negative drag, while Technology and Science remain steady bright spots.`;
+  // 5.6 Daily Editorial Summary (Computed once every 24h to conserve API quota)
+  const todayDateStr = now.toISOString().slice(0, 10);
+  let editorialSummary = currentCache.editorialSummary || '';
+  const cachedDate = currentCache.editorialSummaryDate || '';
+
+  if (!editorialSummary || cachedDate !== todayDateStr) {
+    console.log(`[Editorial] Generating fresh daily tongue-in-cheek briefing for ${todayDateStr}...`);
+    
+    // Attempt Gemini generation
+    if (geminiKey) {
+      try {
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ model: geminiModel || 'gemini-3.8-flash' });
+        const prompt = `You are a witty, sharp, tongue-in-cheek news editor writing the "Executive Vibe Pulse" for today.
+Data:
+- Worldwide sentiment score: ${globalAvg} (scale -1.0 pure doom to +1.0 pure optimism)
+- Most alarmist outlet: ${mostNegativeOutlet ? mostNegativeOutlet.name + ' (' + mostNegativeOutlet.score + ')' : 'N/A'}
+- Most cheerful outlet: ${mostPositiveOutlet ? mostPositiveOutlet.name + ' (' + mostPositiveOutlet.score + ')' : 'N/A'}
+- Category averages: ${JSON.stringify(categoryAverages)}
+- Articles analyzed: ${allArticlesTotal}
+
+Write a punchy, humorous 2-to-3 sentence executive briefing summarizing the mood of the world's media today. Be clever, slightly satirical about media doom-mongering vs tech optimism, but keep it insightful and polished. Return ONLY the 2-3 sentences.`;
+        
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout')), 15000));
+        const aiRes = await Promise.race([model.generateContent(prompt), timeoutPromise]);
+        const text = aiRes.response.text().trim();
+        if (text && text.length > 20) {
+          editorialSummary = text.replace(/^["']|["']$/g, '');
+        }
+      } catch (err) {
+        console.warn('[Editorial] Gemini briefing generation skipped/failed:', err.message);
+      }
+    }
+
+    // High quality witty fallback if Gemini is busy
+    if (!editorialSummary || cachedDate !== todayDateStr) {
+      const moodAdj = globalAvg < -0.2 ? 'decidedly apocalyptic' : (globalAvg < -0.05 ? 'cautiously grumpy' : (globalAvg > 0.1 ? 'suspiciously upbeat' : 'ambivalently neutral'));
+      const alarmistText = mostNegativeOutlet ? `${mostNegativeOutlet.name} is leading today's existential dread charge` : 'Geopolitical dread is in full swing';
+      const brightSpot = categoryAverages.science > 0 || categoryAverages.technology > 0 
+        ? 'while tech and science sections desperately try to pump dopamine into our feeds' 
+        : 'with barely a cheerful headline in sight';
+      editorialSummary = `Earth's media vibe lands at a ${moodAdj} ${globalAvg > 0 ? '+' : ''}${globalAvg} today. ${alarmistText}, ${brightSpot}. Brace yourselves accordingly.`;
+    }
+
+    currentCache.editorialSummaryDate = todayDateStr;
+    currentCache.editorialSummary = editorialSummary;
+  } else {
+    console.log(`[Editorial] Reusing existing daily briefing from ${cachedDate} to conserve API quota.`);
+  }
 
   const globalStats = {
     globalSentiment: globalAvg,
@@ -519,13 +566,16 @@ async function main() {
     mostNegativeOutlet,
     mostPositiveOutlet,
     categoryAverages,
-    editorialSummary
+    editorialSummary,
+    editorialSummaryDate: todayDateStr
   };
 
   // 6. Build Payloads
   const fullPayload = {
     lastUpdated: now.toISOString(),
     analyzerUsed: activeAnalyzerLabel,
+    editorialSummaryDate: todayDateStr,
+    editorialSummary,
     globalStats,
     sources: finalSources,
     timeSeries
@@ -534,6 +584,8 @@ async function main() {
   const summaryPayload = {
     lastUpdated: now.toISOString(),
     analyzerUsed: activeAnalyzerLabel,
+    editorialSummaryDate: todayDateStr,
+    editorialSummary,
     globalStats,
     sources: summarySources,
     timeSeries

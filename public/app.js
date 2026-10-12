@@ -5,8 +5,9 @@ let state = {
   sources: {},
   lastUpdated: null,
   analyzerUsed: null,
-  sentimentMode: 'gemini', // 'gemini', 'groq', 'openrouter', 'local', etc.
+  sentimentMode: 'gemini', // 'gemini', 'vader', 'global'
   spectrumViewMode: 'averages', // 'averages' or 'distribution'
+  showAllOutlets: false,
   isSyncing: false,
   syncMessage: '',
   filters: {
@@ -60,9 +61,6 @@ const SOURCE_FEEDS = {
 
 // DOM Elements
 const elements = {
-  syncBtn: document.getElementById('sync-btn'),
-  syncIcon: document.getElementById('sync-icon'),
-  syncActions: document.querySelector('.sync-actions'),
   lastUpdatedText: document.getElementById('last-updated-text'),
   analyzerBadge: document.getElementById('analyzer-used-badge'),
   spectrumLanes: document.getElementById('spectrum-lanes-container'),
@@ -75,11 +73,8 @@ const elements = {
   headlinesContainer: document.getElementById('headlines-container'),
   
   // Model View Toggle
-  modeAfinnBtn: document.getElementById('mode-afinn-btn'),
-  modeVaderBtn: document.getElementById('mode-vader-btn'),
-  modeLocalBtn: document.getElementById('mode-local-btn'),
   modeGeminiBtn: document.getElementById('mode-gemini-btn'),
-  modeGroqBtn: document.getElementById('mode-groq-btn'),
+  modeVaderBtn: document.getElementById('mode-vader-btn'),
   modeGlobalBtn: document.getElementById('mode-global-btn'),
   spotlightBanner: document.getElementById('spotlight-banner'),
   
@@ -97,52 +92,10 @@ const elements = {
   // Sort Buttons
   sortDateBtn: document.getElementById('sort-date'),
   sortVibeBtn: document.getElementById('sort-vibe'),
-  
-  // Settings Modal
-  openSettingsBtn: document.getElementById('open-settings-btn'),
-  closeSettingsBtn: document.getElementById('close-settings-btn'),
-  settingsModal: document.getElementById('settings-modal'),
-  saveSettingsBtn: document.getElementById('save-settings-btn'),
-  geminiKeyInput: document.getElementById('gemini-key-input'),
-  toggleKeyVisibility: document.getElementById('toggle-key-visibility'),
-  modeOpenRouterBtn: document.getElementById('mode-openrouter-btn'),
-  openRouterKeyInput: document.getElementById('openrouter-key-input'),
-  openRouterModelSelect: document.getElementById('openrouter-model-select'),
-  toggleOrKeyVisibility: document.getElementById('toggle-or-key-visibility'),
-  forceReanalyzeCheckbox: document.getElementById('force-reanalyze-checkbox'),
-  clearCacheBtn: document.getElementById('clear-cache-btn'),
-  groqKeyInput: document.getElementById('groq-key-input'),
-  groqModelSelect: document.getElementById('groq-model-select'),
-  toggleGroqKeyVisibility: document.getElementById('toggle-groq-key-visibility'),
-  autoSyncInterval: document.getElementById('auto-sync-interval'),
-  vibeCalcMethod: document.getElementById('vibe-calc-method')
 };
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
-  // Load saved API Keys and Settings in input
-  const savedKey = localStorage.getItem('gemini_api_key');
-  if (savedKey) {
-    elements.geminiKeyInput.value = savedKey;
-  }
-  const savedOrKey = localStorage.getItem('openrouter_api_key');
-  if (savedOrKey) {
-    elements.openRouterKeyInput.value = savedOrKey;
-  }
-  const savedOrModel = localStorage.getItem('openrouter_model');
-  if (savedOrModel) {
-    elements.openRouterModelSelect.value = savedOrModel;
-  }
-  
-  const savedGroqKey = localStorage.getItem('groq_api_key');
-  if (savedGroqKey) {
-    elements.groqKeyInput.value = savedGroqKey;
-  }
-  const savedGroqModel = localStorage.getItem('groq_model');
-  if (savedGroqModel) {
-    elements.groqModelSelect.value = savedGroqModel;
-  }
-  
   // Load Icons
   lucide.createIcons();
   
@@ -153,41 +106,25 @@ document.addEventListener('DOMContentLoaded', () => {
   switchSentimentMode(state.sentimentMode);
   setupSpectrumMagnification();
   
-  // Fetch initial data & check active sync progress
+  // Fetch initial data
   fetchData();
-  pollSyncStatus();
 });
 
 // Setup Event Listeners
 function setupEventListeners() {
-  // Sync button click
-  elements.syncBtn.addEventListener('click', syncData);
-
   // Setup quick topic pills
   setupTopicPills();
   
   // Model View Toggle Click
-  elements.modeAfinnBtn.addEventListener('click', () => {
-    switchSentimentMode('afinn');
-  });
-  elements.modeVaderBtn.addEventListener('click', () => {
-    switchSentimentMode('vader');
-  });
-  elements.modeLocalBtn.addEventListener('click', () => {
-    switchSentimentMode('local');
-  });
-  elements.modeGeminiBtn.addEventListener('click', () => {
-    switchSentimentMode('gemini');
-  });
-  elements.modeOpenRouterBtn.addEventListener('click', () => {
-    switchSentimentMode('openrouter');
-  });
-  elements.modeGroqBtn.addEventListener('click', () => {
-    switchSentimentMode('groq');
-  });
-  elements.modeGlobalBtn.addEventListener('click', () => {
-    switchSentimentMode('global');
-  });
+  if (elements.modeGeminiBtn) {
+    elements.modeGeminiBtn.addEventListener('click', () => switchSentimentMode('gemini'));
+  }
+  if (elements.modeVaderBtn) {
+    elements.modeVaderBtn.addEventListener('click', () => switchSentimentMode('vader'));
+  }
+  if (elements.modeGlobalBtn) {
+    elements.modeGlobalBtn.addEventListener('click', () => switchSentimentMode('global'));
+  }
   
   // Filter changes
   elements.filterSource.addEventListener('change', (e) => {
@@ -255,119 +192,8 @@ function setupEventListeners() {
   // Head-to-Head selection change
   elements.h2hSourceA.addEventListener('change', renderHeadToHead);
   elements.h2hSourceB.addEventListener('change', renderHeadToHead);
-  
-  // Settings Modal Controls
-  elements.openSettingsBtn.addEventListener('click', () => {
-    // Load background scheduler configs from server
-    fetch('/api/settings')
-      .then(res => res.json())
-      .then(cfg => {
-        if (cfg.syncInterval !== undefined) {
-          elements.autoSyncInterval.value = cfg.syncInterval.toString();
-        }
-        if (cfg.vibeCalcMethod) {
-          elements.vibeCalcMethod.value = cfg.vibeCalcMethod;
-        }
-      })
-      .catch(err => console.error('Failed to load settings from server:', err));
 
-    elements.settingsModal.classList.add('open');
-  });
-  
-  elements.closeSettingsBtn.addEventListener('click', () => {
-    elements.settingsModal.classList.remove('open');
-  });
-  
-  elements.settingsModal.addEventListener('click', (e) => {
-    if (e.target === elements.settingsModal) {
-      elements.settingsModal.classList.remove('open');
-    }
-  });
-  
-  elements.saveSettingsBtn.addEventListener('click', () => {
-    const key = elements.geminiKeyInput.value.trim();
-    if (key) {
-      localStorage.setItem('gemini_api_key', key);
-    } else {
-      localStorage.removeItem('gemini_api_key');
-    }
-    const orKey = elements.openRouterKeyInput.value.trim();
-    if (orKey) {
-      localStorage.setItem('openrouter_api_key', orKey);
-    } else {
-      localStorage.removeItem('openrouter_api_key');
-    }
-    const orModel = elements.openRouterModelSelect.value;
-    localStorage.setItem('openrouter_model', orModel);
-
-    const groqKey = elements.groqKeyInput.value.trim();
-    if (groqKey) {
-      localStorage.setItem('groq_api_key', groqKey);
-    } else {
-      localStorage.removeItem('groq_api_key');
-    }
-    const groqModel = elements.groqModelSelect.value;
-    localStorage.setItem('groq_model', groqModel);
-
-    const syncInterval = Number(elements.autoSyncInterval.value) || 0;
-    const vibeCalcMethod = elements.vibeCalcMethod.value || 'active';
-    localStorage.setItem('auto_sync_interval', syncInterval);
-    localStorage.setItem('vibe_calc_method', vibeCalcMethod);
-    
-    // Save settings to server so background automation works
-    fetch('/api/settings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        apiKey: key,
-        openRouterApiKey: orKey,
-        openRouterModel: orModel,
-        groqApiKey: groqKey,
-        groqModel: groqModel,
-        analyzer: state.sentimentMode,
-        syncInterval,
-        vibeCalcMethod
-      })
-    })
-      .then(res => res.json())
-      .then(() => {
-        elements.settingsModal.classList.remove('open');
-        alert('Settings successfully saved to browser and server database!');
-        fetchData();
-      })
-      .catch(err => {
-        console.error('Failed to save settings to server:', err);
-        elements.settingsModal.classList.remove('open');
-        alert('Settings saved locally, but failed to persist to server database.');
-      });
-  });
-  
-  elements.toggleKeyVisibility.addEventListener('click', () => {
-    const type = elements.geminiKeyInput.type === 'password' ? 'text' : 'password';
-    elements.geminiKeyInput.type = type;
-    const iconName = type === 'password' ? 'eye' : 'eye-off';
-    elements.toggleKeyVisibility.innerHTML = `<i data-lucide="${iconName}"></i>`;
-    lucide.createIcons();
-  });
-
-  elements.toggleGroqKeyVisibility.addEventListener('click', () => {
-    const type = elements.groqKeyInput.type === 'password' ? 'text' : 'password';
-    elements.groqKeyInput.type = type;
-    const iconName = type === 'password' ? 'eye' : 'eye-off';
-    elements.toggleGroqKeyVisibility.innerHTML = `<i data-lucide="${iconName}"></i>`;
-    lucide.createIcons();
-  });
-
-  elements.toggleOrKeyVisibility.addEventListener('click', () => {
-    const type = elements.openRouterKeyInput.type === 'password' ? 'text' : 'password';
-    elements.openRouterKeyInput.type = type;
-    const iconName = type === 'password' ? 'eye' : 'eye-off';
-    elements.toggleOrKeyVisibility.innerHTML = `<i data-lucide="${iconName}"></i>`;
-    lucide.createIcons();
-  });
-
+  // Spectrum view toggle
   elements.viewToggleAverages.addEventListener('click', () => {
     switchSpectrumViewMode('averages');
   });
@@ -376,19 +202,40 @@ function setupEventListeners() {
     switchSpectrumViewMode('distribution');
   });
 
-  elements.clearCacheBtn.addEventListener('click', async () => {
-    if (!confirm('Are you sure you want to delete all cached articles from the history database? This cannot be undone.')) {
-      return;
-    }
-    try {
-      const res = await fetch('/api/clear-cache', { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to clear cache');
-      alert('Historical database cache cleared successfully!');
-      elements.settingsModal.classList.remove('open');
-      fetchData();
-    } catch (err) {
-      alert('Error clearing cache: ' + err.message);
-    }
+  // Collapsible section toggles
+  document.querySelectorAll('.section-collapse-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      const isCollapsed = target.classList.toggle('is-collapsed');
+      btn.classList.toggle('is-collapsed', isCollapsed);
+      const span = btn.querySelector('span');
+      if (span) span.textContent = isCollapsed ? 'Expand' : 'Collapse';
+    });
+  });
+
+  // Toggle all 13 outlets button
+  const toggleOutletsBtn = document.getElementById('toggle-all-outlets-btn');
+  if (toggleOutletsBtn) {
+    toggleOutletsBtn.addEventListener('click', () => {
+      state.showAllOutlets = !state.showAllOutlets;
+      renderComparisonMatrix();
+      const textSpan = document.getElementById('toggle-outlets-text');
+      const icon = document.getElementById('toggle-outlets-icon');
+      if (textSpan) textSpan.textContent = state.showAllOutlets ? 'Show Top 6 Outlets' : 'Show All 13 Outlets';
+      if (icon) icon.setAttribute('data-lucide', state.showAllOutlets ? 'chevrons-up' : 'chevrons-down');
+      lucide.createIcons();
+    });
+  }
+
+  // Quick jump sub-nav smooth active state
+  const navPills = document.querySelectorAll('.nav-pill');
+  navPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      navPills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
   });
 }
 
@@ -555,17 +402,14 @@ function switchSentimentMode(mode) {
   state.sentimentMode = mode;
   
   const buttons = [
-    { id: 'modeAfinnBtn', mode: 'afinn' },
-    { id: 'modeVaderBtn', mode: 'vader' },
-    { id: 'modeLocalBtn', mode: 'local' },
     { id: 'modeGeminiBtn', mode: 'gemini' },
-    { id: 'modeOpenRouterBtn', mode: 'openrouter' },
-    { id: 'modeGroqBtn', mode: 'groq' },
+    { id: 'modeVaderBtn', mode: 'vader' },
     { id: 'modeGlobalBtn', mode: 'global' }
   ];
   
   buttons.forEach(btnInfo => {
     const btn = elements[btnInfo.id];
+    if (!btn) return;
     if (btnInfo.mode === mode) {
       btn.classList.add('active');
       btn.style.background = 'var(--accent-color)';
@@ -577,11 +421,6 @@ function switchSentimentMode(mode) {
     }
   });
 
-  // Always show Run Analysis action button
-  if (elements.syncActions) {
-    elements.syncActions.style.setProperty('display', 'flex', 'important');
-  }
-  
   updateAppUI();
 }
 
@@ -847,43 +686,74 @@ function renderSpectrum() {
   if (state.spectrumViewMode === 'averages') {
     elements.spectrumMarkers.innerHTML = '';
     const markerPositions = [];
-    
+
+    // Collect valid numeric averages
+    const validScores = Object.values(resolvedSources)
+      .map(s => s.averageSentiment)
+      .filter(v => typeof v === 'number' && !isNaN(v));
+
+    const minAvg = validScores.length > 0 ? Math.min(...validScores) : -0.5;
+    const maxAvg = validScores.length > 0 ? Math.max(...validScores) : 0.05;
+
+    // Normalizing spread: allocate 12% to 88% width so outlets breathe across the full spectrum
+    const domainMin = Math.min(-0.55, Math.floor((minAvg - 0.08) * 10) / 10);
+    const domainMax = Math.max(0.15, Math.ceil((maxAvg + 0.08) * 10) / 10);
+    const domainSpan = Math.max(0.1, domainMax - domainMin);
+
+    // Update tick labels dynamically
+    const ticksContainer = document.querySelector('.spectrum-ticks');
+    if (ticksContainer) {
+      ticksContainer.innerHTML = '';
+      for (let t = 0; t <= 4; t++) {
+        const tickScore = domainMin + (domainSpan * (t / 4));
+        const span = document.createElement('span');
+        span.style.cssText = 'position: relative; width: 2px; height: 16px; background-color: var(--border-color);';
+        span.innerHTML = `<span style="position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 0.68rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">${tickScore > 0 ? '+' : ''}${tickScore.toFixed(2)}</span>`;
+        ticksContainer.appendChild(span);
+      }
+    }
+
     Object.keys(resolvedSources).forEach(id => {
       const source = resolvedSources[id];
       if (source.error && (!source.articles || source.articles.length === 0)) return;
       
-      const avg = source.averageSentiment;
-      if (avg === null || avg === undefined) return;
-      // Map -1.0 to +1.0 sentiment into 0% to 100% position
-      const percentage = ((avg + 1) / 2) * 100;
+      const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
+      // Map normalized percentage
+      const percentage = Math.max(10, Math.min(90, 10 + ((avg - domainMin) / domainSpan) * 80));
       
-      // Vertical stacking collision check for averages markers
+      // Staggered vertical level check (max 3 tiers: 0, 1, 2)
       let yLevel = 0;
       let collision = true;
-      while (collision) {
+      while (collision && yLevel < 3) {
         collision = false;
         for (const pos of markerPositions) {
-          if (Math.abs(pos.x - percentage) < 4.5 && pos.y === yLevel) {
+          if (Math.abs(pos.x - percentage) < 4.2 && pos.y === yLevel) {
             yLevel++;
             collision = true;
             break;
           }
         }
       }
-      markerPositions.push({ x: percentage, y: yLevel });
+
+      let finalX = percentage;
+      if (yLevel >= 3) {
+        // Wrap gracefully to lower tier with subtle horizontal nudge
+        yLevel = (markerPositions.length % 2 === 0 ? 0 : 1);
+        finalX = percentage + (markerPositions.length % 2 === 0 ? 1.5 : -1.5);
+      }
+      markerPositions.push({ x: finalX, y: yLevel });
       
       // Create marker
       const marker = document.createElement('div');
       marker.className = `outlet-marker ${state.filters.source === id ? 'active' : ''}`;
-      marker.style.left = `${percentage}%`;
-      marker.style.bottom = `${6 + yLevel * 38}px`;
+      marker.style.left = `${finalX}%`;
+      marker.style.bottom = `${12 + yLevel * 44}px`;
       marker.setAttribute('data-id', id);
       
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#ccc' };
       
-      // Set brand-specific styling
       marker.innerHTML = `
-        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; border: 2.5px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.15); transition: transform 0.2s;">
+        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; border: 2.5px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
           <span>${meta.initials}</span>
         </div>
         <div class="marker-label" style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%); opacity: 0; pointer-events: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: var(--card-shadow); white-space: nowrap; color: var(--text-primary); transition: all 0.2s;">
@@ -891,7 +761,6 @@ function renderSpectrum() {
         </div>
       `;
       
-      // Spectrum marker click filter
       marker.addEventListener('click', () => {
         toggleSourceFilter(id);
       });
@@ -899,15 +768,14 @@ function renderSpectrum() {
       elements.spectrumMarkers.appendChild(marker);
     });
     
-    // Wire macOS Dock zoom styles
     setupSpectrumMagnification();
   } else {
     elements.spectrumLanes.innerHTML = '';
     
-    // Sort the lanes by average sentiment so the most positive is at the top (pushing N/A to the bottom)
+    // Sort lanes by average sentiment
     const sortedIds = Object.keys(resolvedSources).sort((a, b) => {
-      const valA = resolvedSources[a].averageSentiment !== null ? resolvedSources[a].averageSentiment : -999;
-      const valB = resolvedSources[b].averageSentiment !== null ? resolvedSources[b].averageSentiment : -999;
+      const valA = typeof resolvedSources[a].averageSentiment === 'number' ? resolvedSources[a].averageSentiment : 0;
+      const valB = typeof resolvedSources[b].averageSentiment === 'number' ? resolvedSources[b].averageSentiment : 0;
       return valB - valA;
     });
     
@@ -915,26 +783,20 @@ function renderSpectrum() {
       const source = resolvedSources[id];
       if (source.error && (!source.articles || source.articles.length === 0)) return;
       
-      const avg = source.averageSentiment;
-      const avgPct = avg !== null ? ((avg + 1) / 2) * 100 : 50;
+      const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
+      const avgPct = ((avg + 1) / 2) * 100;
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#ccc' };
       
       const lane = document.createElement('div');
       lane.className = `spectrum-lane ${state.filters.source === id ? 'active' : ''}`;
-      lane.style.cssText = 'display: flex; align-items: center; gap: 1.25rem; width: 100%; height: 50px; position: relative; margin-bottom: 0.25rem;';
+      lane.style.cssText = 'display: flex; align-items: center; gap: 1.25rem; width: 100%; height: 48px; position: relative; margin-bottom: 0.35rem;';
       
-      // Avg label text
-      const avgLabel = avg !== null 
-        ? `Avg: ${avg > 0 ? '+' : ''}${avg.toFixed(2)}`
-        : 'Avg: N/A';
-      const avgColor = avg !== null
-        ? (avg > 0.15 ? 'var(--pos-color)' : avg < -0.15 ? 'var(--neg-color)' : 'var(--text-secondary)')
-        : 'var(--text-muted)';
+      const avgLabel = `Avg: ${avg > 0 ? '+' : ''}${avg.toFixed(2)}`;
+      const avgColor = avg > 0.15 ? 'var(--pos-color)' : (avg < -0.15 ? 'var(--neg-color)' : 'var(--text-secondary)');
       
-      // Left side source header/button
       const sourceHTML = `
         <div class="lane-source-info" onclick="toggleSourceFilter('${id}')" 
-             style="display: flex; align-items: center; gap: 0.6rem; width: 160px; cursor: pointer; user-select: none; padding: 0.4rem; border-radius: 8px; transition: all 0.2s; background: ${state.filters.source === id ? 'var(--bg-secondary)' : 'transparent'}; border: 1px solid ${state.filters.source === id ? 'var(--border-color)' : 'transparent'};">
+             style="display: flex; align-items: center; gap: 0.6rem; width: 160px; cursor: pointer; user-select: none; padding: 0.35rem 0.5rem; border-radius: 8px; transition: all 0.2s; background: ${state.filters.source === id ? 'var(--bg-secondary)' : 'transparent'}; border: 1px solid ${state.filters.source === id ? 'var(--border-color)' : 'transparent'};">
           <div style="background-color: ${meta.color}; color: #fff; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             ${meta.initials}
           </div>
@@ -947,29 +809,40 @@ function renderSpectrum() {
         </div>
       `;
       
-      // Create the articles dots (filtering out null/undefined scores)
+      // Strict lane-confined honeycomb packing for article dots
+      // 3 vertical slots inside the 32px track container: 0px (center), -7px (upper), +7px (lower)
+      const verticalSlots = [0, -7, 7];
       const dotPositions = [];
-      const scoredArticles = (source.articles || []).filter(art => art.sentiment !== null && art.sentiment !== undefined);
+      const scoredArticles = (source.articles || []).filter(art => typeof art.sentiment === 'number');
       
       const dotsHTML = scoredArticles.map((art, idx) => {
         const score = art.sentiment;
-        const posPct = ((score + 1) / 2) * 100;
+        const rawX = ((score + 1) / 2) * 100;
         
-        // Beeswarm vertical stacking collision check
-        let yOffset = 0;
-        let collision = true;
-        while (collision) {
-          collision = false;
-          for (const pos of dotPositions) {
-            // Collision threshold: 1.8% horizontally on the track and matching yOffset
-            if (Math.abs(pos.x - posPct) < 1.8 && pos.y === yOffset) {
-              yOffset += 9; // offset vertically by 9px
-              collision = true;
+        let chosenX = rawX;
+        let chosenY = 0;
+        let placed = false;
+        
+        // Find non-colliding rosette position
+        for (let step = 0; step <= 8; step++) {
+          const xOffset = step === 0 ? 0 : (step % 2 === 1 ? 1 : -1) * Math.ceil(step / 2) * 1.1;
+          const xCandidate = rawX + xOffset;
+          for (const ySlot of verticalSlots) {
+            const collides = dotPositions.some(p => Math.abs(p.x - xCandidate) < 1.1 && p.y === ySlot);
+            if (!collides) {
+              chosenX = Math.max(1, Math.min(99, xCandidate));
+              chosenY = ySlot;
+              placed = true;
               break;
             }
           }
+          if (placed) break;
         }
-        dotPositions.push({ x: posPct, y: yOffset });
+        if (!placed) {
+          chosenX = Math.max(1, Math.min(99, rawX + (Math.random() * 2 - 1)));
+          chosenY = verticalSlots[idx % verticalSlots.length];
+        }
+        dotPositions.push({ x: chosenX, y: chosenY });
         
         let dotColor = 'var(--neu-color)';
         if (score > 0.15) dotColor = 'var(--pos-color)';
@@ -983,28 +856,21 @@ function renderSpectrum() {
                onclick="scrollToArticle('${cardId}')"
                onmouseenter="showGlobalTooltip(event, '${cleanTitle}', ${score}, '${source.name}', '${meta.color}')"
                onmouseleave="hideGlobalTooltip()"
-               style="position: absolute; left: calc(${posPct}% - 5px); bottom: calc(20% + ${yOffset}px); width: 10px; height: 10px; border-radius: 50%; background-color: ${dotColor}; border: 1.25px solid var(--bg-primary); cursor: pointer; transition: transform 0.15s ease, border-color 0.15s; z-index: 5;">
+               style="position: absolute; left: calc(${chosenX}% - 4px); top: calc(50% + ${chosenY}px - 4px); width: 8px; height: 8px; border-radius: 50%; background-color: ${dotColor}; border: 1px solid var(--bg-primary); cursor: pointer; transition: transform 0.15s ease; z-index: 5;">
           </div>
         `;
       }).join('');
       
-      // Average marker vertical indicator HTML (hidden if avg is null)
-      const averageMarkerHTML = avg !== null ? `
-        <!-- Average marker vertical line -->
+      const averageMarkerHTML = `
         <div style="position: absolute; left: calc(${avgPct}% - 1px); top: 15%; bottom: 15%; width: 2px; background-color: ${meta.color}; z-index: 2; opacity: 0.6;" title="Average: ${avg.toFixed(2)}"></div>
-        <div style="position: absolute; left: calc(${avgPct}% - 4px); top: 5%; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid ${meta.color}; z-index: 3;" title="Average: ${avg.toFixed(2)}"></div>
-      ` : '';
+        <div style="position: absolute; left: calc(${avgPct}% - 4px); top: 4%; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid ${meta.color}; z-index: 3;" title="Average: ${avg.toFixed(2)}"></div>
+      `;
       
-      // Right side track layout
       const trackHTML = `
-        <div class="lane-track-container" style="position: relative; flex-grow: 1; height: 32px; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-color); display: flex; align-items: center; overflow: visible;">
-          <!-- baseline tick track -->
-          <div style="position: absolute; left: 12px; right: 12px; height: 2px; background: var(--border-color); opacity: 0.5; z-index: 1; top: 75%;"></div>
-          
+        <div class="lane-track-container" style="position: relative; flex-grow: 1; height: 32px; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-color); display: flex; align-items: center; overflow: hidden;">
+          <div style="position: absolute; left: 12px; right: 12px; height: 1.5px; background: var(--border-color); opacity: 0.4; z-index: 1; top: 50%;"></div>
           ${averageMarkerHTML}
-          
-          <!-- Individual Article Dots -->
-          <div style="position: absolute; left: 12px; right: 12px; top: 0; bottom: 0; overflow: visible;">
+          <div style="position: absolute; left: 12px; right: 12px; top: 0; bottom: 0; overflow: hidden;">
             ${dotsHTML}
           </div>
         </div>
@@ -1170,33 +1036,35 @@ function createSvgSparkline(articles) {
 function renderComparisonMatrix() {
   elements.sourcesGrid.innerHTML = '';
   
-  // Sort sources by average sentiment (highest to lowest, pushing nulls to bottom)
+  // Sort sources by average sentiment (highest to lowest)
   const sortedIds = Object.keys(resolvedSources).sort((a, b) => {
-    const valA = resolvedSources[a].averageSentiment !== null ? resolvedSources[a].averageSentiment : -999;
-    const valB = resolvedSources[b].averageSentiment !== null ? resolvedSources[b].averageSentiment : -999;
+    const valA = typeof resolvedSources[a].averageSentiment === 'number' ? resolvedSources[a].averageSentiment : -999;
+    const valB = typeof resolvedSources[b].averageSentiment === 'number' ? resolvedSources[b].averageSentiment : -999;
     return valB - valA;
   });
+
+  const showMoreRow = document.getElementById('sources-show-more-row');
+  if (showMoreRow) {
+    showMoreRow.style.display = sortedIds.length > 6 ? 'block' : 'none';
+  }
+
+  // Display top 6 if not expanded, or all if expanded
+  const displayIds = state.showAllOutlets ? sortedIds : sortedIds.slice(0, 6);
   
-  sortedIds.forEach(id => {
+  displayIds.forEach(id => {
     const source = resolvedSources[id];
-    const avg = source.averageSentiment;
+    const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
     
     // Mood Class Label
     let moodClass = 'neutral';
     let moodLabel = 'Objective & Neutral';
-    let badgeText = 'N/A';
-    if (avg !== null) {
-      badgeText = (avg > 0 ? '+' : '') + avg.toFixed(2);
-      if (avg > 0.15) {
-        moodClass = 'positive';
-        moodLabel = 'Uplifting & Optimistic';
-      } else if (avg < -0.15) {
-        moodClass = 'negative';
-        moodLabel = 'Alarmist & Gloomy';
-      }
-    } else {
-      moodClass = 'none';
-      moodLabel = 'Not Analyzed Yet';
+    const badgeText = (avg > 0 ? '+' : '') + avg.toFixed(2);
+    if (avg > 0.15) {
+      moodClass = 'positive';
+      moodLabel = 'Uplifting & Optimistic';
+    } else if (avg < -0.15) {
+      moodClass = 'negative';
+      moodLabel = 'Alarmist & Gloomy';
     }
     
     // Calculate distributions
@@ -1506,8 +1374,8 @@ function renderHeadlines() {
   }
   
   articles.forEach((art, index) => {
-    const isNone = art.sentiment === null || art.sentiment === undefined;
-    const itemVibe = getMoodClass(art.sentiment);
+    const validScore = typeof art.sentiment === 'number' ? art.sentiment : (typeof art.sentimentLocal === 'number' ? art.sentimentLocal : 0);
+    const itemVibe = getMoodClass(validScore);
     const dateObj = new Date(art.pubDate);
     const dateFormatted = dateObj.toLocaleDateString(undefined, {
       month: 'short',
@@ -1524,9 +1392,7 @@ function renderHeadlines() {
     const feedUrl = SOURCE_FEEDS[art.sourceId] || '';
     const brandMeta = SOURCE_META[art.sourceId] || { initials: art.sourceId, color: '#999' };
     
-    const scoreBadgeHTML = isNone
-      ? `<span class="article-vibe-score none" style="background-color: var(--border-color); color: var(--text-muted); padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">N/A</span>`
-      : `<span class="article-vibe-score ${itemVibe}">${art.sentiment > 0 ? '+' : ''}${art.sentiment.toFixed(2)}</span>`;
+    const scoreBadgeHTML = `<span class="article-vibe-score ${itemVibe}">${validScore > 0 ? '+' : ''}${validScore.toFixed(2)}</span>`;
 
     card.innerHTML = `
       <div class="article-top-bar">

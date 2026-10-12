@@ -1,9 +1,11 @@
 {
-  "lastUpdated": "2026-10-12T13:50:07.117Z",
+  "lastUpdated": "2026-10-12T14:05:21.825Z",
   "analyzerUsed": "Local Ensemble (VADER + AFINN)",
+  "editorialSummaryDate": "2026-10-12",
+  "editorialSummary": "Earth's media vibe lands at a cautiously grumpy -0.085 today. Spiegel International is leading today's existential dread charge, while tech and science sections desperately try to pump dopamine into our feeds. Brace yourselves accordingly.",
   "globalStats": {
-    "globalSentiment": -0.084,
-    "totalArticles": 1711,
+    "globalSentiment": -0.085,
+    "totalArticles": 1725,
     "mostNegativeOutlet": {
       "id": "spiegel",
       "name": "Spiegel International",
@@ -15,28 +17,44 @@
       "score": 0
     },
     "categoryAverages": {
-      "politics": -0.172,
+      "politics": -0.174,
       "other": -0.027,
-      "world": -0.535,
+      "world": -0.529,
       "technology": -0.022,
-      "entertainment": -0.008,
-      "sports": 0.081,
-      "business": -0.105,
-      "health": -0.259,
+      "entertainment": -0.021,
+      "sports": 0.088,
+      "business": -0.108,
+      "health": -0.27,
       "science": 0.306
     },
-    "editorialSummary": "Global news sentiment leans neutral today (-0.084). Conflict and World events represent the primary negative drag, while Technology and Science remain steady bright spots."
+    "editorialSummary": "Earth's media vibe lands at a cautiously grumpy -0.085 today. Spiegel International is leading today's existential dread charge, while tech and science sections desperately try to pump dopamine into our feeds. Brace yourselves accordingly.",
+    "editorialSummaryDate": "2026-10-12"
   },
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.153,
+      "averageSentiment": -0.152,
       "distribution": {
         "positive": 25,
-        "neutral": 84,
-        "negative": 72
+        "neutral": 85,
+        "negative": 74
       },
       "articles": [
+        {
+          "sourceId": "bbc",
+          "title": "Immigration agents search Democratic congresswoman Ilhan Omar's home",
+          "description": "Omar was first elected to Congress in 2018, and is an outspoken critic of President Donald Trump.",
+          "link": "https://www.bbc.co.uk/news/articles/cvp8glg97393o?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 13:39:42 GMT",
+          "sentimentLocal": -0.262,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.273,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.27) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentiment": -0.262,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.27) and AFINN-111 (-0.25).",
+          "category": "politics"
+        },
         {
           "sourceId": "bbc",
           "title": "Immigration agents search Congresswoman Ilhan Omar's home",
@@ -462,6 +480,21 @@
         },
         {
           "sourceId": "bbc",
+          "title": "Ray Quinn says baby boy was 'born sleeping'",
+          "description": "The former Brookside actor says it is \"heartbreaking\" that his son Rio was stillborn on 20 August.",
+          "link": "https://www.bbc.co.uk/news/articles/cwp8gyp51rqro?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 07:59:33 GMT",
+          "sentimentLocal": -0.188,
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (-0.38).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.188,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (-0.38).",
+          "category": "entertainment"
+        },
+        {
+          "sourceId": "bbc",
           "title": "Indian opposition leaders march to top court to demand election chief resign",
           "description": "The march follows a chaotic weekend in Delhi which saw thousands of protesters being detained by police.",
           "link": "https://www.bbc.co.uk/news/articles/cwr5y2lgr4gdo?at_medium=RSS&at_campaign=rss",
@@ -549,6 +582,21 @@
           "sentimentGemini": -0.65,
           "explanationGemini": "Allegations of major financial fraud and tax evasion involve serious unethical conduct.",
           "categoryGemini": "business"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "South Africa face fight to save Test after Australia declare - scorecard",
+          "description": "Latest scorecard from the first Test between South Africa and Australia in Durban.",
+          "link": "https://www.bbc.co.uk/sport/cricket/scorecard/e-236997?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 00:00:00 GMT",
+          "sentimentLocal": 0.139,
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.153,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.15) and AFINN-111 (0.13).",
+          "categoryLocal": "other",
+          "sentiment": 0.139,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.15) and AFINN-111 (0.13).",
+          "category": "other"
         },
         {
           "sourceId": "bbc",
@@ -12643,13 +12691,28 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.041,
+      "averageSentiment": -0.049,
       "distribution": {
         "positive": 50,
         "neutral": 74,
-        "negative": 62
+        "negative": 65
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "Federal agents search Ilhan Omar’s home as part of fraud investigation",
+          "description": "Video posted by Fox shows what appears to be law enforcement in HSI jackets at Omar’s DC residence Federal agents searched Representative Ilhan Omar’s home Monday morning as part of a criminal investigation, according to the department of justice and reports in the Associated Press and Fox News. A video posted by Fox showed what appeared to be law enforcement in HSI jackets at what Fox News said was Omar’s Washington DC residence. Continue reading...",
+          "link": "https://www.theguardian.com/us-news/2026/oct/12/federal-agents-ilhan-omar-home-raid",
+          "pubDate": "Mon, 12 Oct 2026 13:46:45 GMT",
+          "sentimentLocal": -0.605,
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.586,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.59) and AFINN-111 (-0.63).",
+          "categoryLocal": "business",
+          "sentiment": -0.605,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.59) and AFINN-111 (-0.63).",
+          "category": "business"
+        },
         {
           "sourceId": "guardian",
           "title": "Nigel Farage adviser had unpublicised role at polling firm",
@@ -12664,6 +12727,36 @@
           "sentiment": 0.758,
           "explanation": "Analyzed locally with news-calibrated VADER (0.77) and AFINN-111 (0.75).",
           "category": "world"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Why are the Houthis attacking Saudi airports and how are the missiles getting through?",
+          "description": "Attacks by Iran-backed group come amid counteroffensive by Yemeni government supported by Riyadh Continue reading...",
+          "link": "https://www.theguardian.com/world/2026/oct/12/why-are-the-houthis-attacking-saudi-airports-riyadh-yemen",
+          "pubDate": "Mon, 12 Oct 2026 13:41:17 GMT",
+          "sentimentLocal": -0.779,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.557,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.56) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.779,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.56) and AFINN-111 (0.00).",
+          "category": "politics"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Is it a plane or a tree? Amelia Earhart expedition aims to solve mystery of disappearance",
+          "description": "Researchers will head to remote Pacific atoll, but sceptics say satellite images unlikely to be of her aircraft A team of US researchers is approaching a remote Pacific atoll where they suspect the famed aviator Amelia Earhart crash-landed in 1937, in the latest attempt to crack one of the biggest mysteries of the 20th century. The 17-person expedition was inspired by satellite images taken over several years showing a submerged object in the uninhabited island’s sandy lagoon – evidence dismissed by other longtime Earhart sleuths who say it is probably a fallen tree. Continue reading...",
+          "link": "https://www.theguardian.com/us-news/2026/oct/12/amelia-earhart-lost-plane-remote-pacific-atoll-expedition",
+          "pubDate": "Mon, 12 Oct 2026 13:37:49 GMT",
+          "sentimentLocal": -0.358,
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.34,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.34) and AFINN-111 (-0.38).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.358,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.34) and AFINN-111 (-0.38).",
+          "category": "entertainment"
         },
         {
           "sourceId": "guardian",
@@ -21310,13 +21403,43 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.085,
+      "averageSentiment": -0.083,
       "distribution": {
-        "positive": 31,
+        "positive": 32,
         "neutral": 109,
         "negative": 64
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "SC Dem Senate candidate claims she will stand up to her party as Graham ties her to 'socialist Democrats'",
+          "description": "Democratic South Carolina U.S. Senate candidate Annie Andrews and Republican Sen. Darline Graham clashed during a U.S. Senate election debate.",
+          "link": "https://www.foxnews.com/politics/sc-dem-senate-candidate-claims-stand-party-graham-ties-socialist-democrats",
+          "pubDate": "Mon, 12 Oct 2026 09:46:52 -0400",
+          "sentimentLocal": 0.201,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.40) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": 0.201,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.40) and AFINN-111 (0.00).",
+          "category": "politics"
+        },
+        {
+          "sourceId": "fox",
+          "title": "Josh Hartnett's new limited series 'Below' draws mixed reactions over its sea creature mystery",
+          "description": "Josh Hartnett's limited series \"Below\" started strong with its sea creature mystery, but viewers say the final episodes took some bizarre turns.",
+          "link": "https://www.foxnews.com/outkick-culture/josh-hartnett-limited-series-below-draws-mixed-reactions-sea-creature-mystery",
+          "pubDate": "Mon, 12 Oct 2026 09:45:46 -0400",
+          "sentimentLocal": -0.326,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.40) and AFINN-111 (-0.25).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.326,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.40) and AFINN-111 (-0.25).",
+          "category": "entertainment"
+        },
         {
           "sourceId": "fox",
           "title": "Michael Brennan is officially a dude, Blades Brown is coming and time is Jon Rahm's best friend",
@@ -21709,21 +21832,6 @@
           "sentimentGemini": 0.18,
           "explanationGemini": "A small business successfully recovering long-overdue debts resolves a protracted wrong.",
           "categoryGemini": "politics"
-        },
-        {
-          "sourceId": "fox",
-          "title": "Secret Service chief says threats against protectees up 40%, cites internet and mental health",
-          "description": "Secret Service Director Sean Curran and Deputy Director Matt Quinn gave their first joint interview with \"60 Minutes\" about the increased threats they face.",
-          "link": "https://www.foxnews.com/media/secret-service-leadership-warn-massive-increase-threats-president",
-          "pubDate": "Mon, 12 Oct 2026 06:06:23 -0400",
-          "sentimentLocal": -0.459,
-          "sentimentAFINN": -0.375,
-          "sentimentVADER": -0.542,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-0.38).",
-          "categoryLocal": "health",
-          "sentiment": -0.459,
-          "explanation": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-0.38).",
-          "category": "health"
         },
         {
           "sourceId": "fox",
@@ -31957,11 +32065,41 @@
       "name": "Al Jazeera",
       "averageSentiment": -0.112,
       "distribution": {
-        "positive": 22,
+        "positive": 23,
         "neutral": 112,
-        "negative": 52
+        "negative": 53
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Israeli academic and Al Jazeera contributor Ori Goldberg dies at 50",
+          "description": "Goldberg was a regular Al Jazeera contributor and died after a long battle with colon cancer, his family said.",
+          "link": "https://www.aljazeera.com/news/2026/10/12/israeli-academic-and-al-jazeera-contributor-ori-goldberg-dies-at-50?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 13:44:17 +0000",
+          "sentimentLocal": -0.758,
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.891,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.89) and AFINN-111 (-0.63).",
+          "categoryLocal": "health",
+          "sentiment": -0.758,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.89) and AFINN-111 (-0.63).",
+          "category": "health"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "What are the key matches to watch as the UEFA Champions League returns?",
+          "description": "Atletico vs Man United and Man City vs PSG headline the league's match day two action as the competition returns.",
+          "link": "https://www.aljazeera.com/sports/2026/10/12/champions-league-schedule-teams-matches-players?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 13:43:07 +0000",
+          "sentimentLocal": 0.555,
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0.735,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.74) and AFINN-111 (0.38).",
+          "categoryLocal": "sports",
+          "sentiment": 0.555,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.74) and AFINN-111 (0.38).",
+          "category": "sports"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Israeli settlers abuse and reportedly poison goats in Palestinian village",
@@ -40586,11 +40724,11 @@
     },
     "skynews": {
       "name": "Sky News",
-      "averageSentiment": -0.13,
+      "averageSentiment": -0.14,
       "distribution": {
         "positive": 4,
         "neutral": 42,
-        "negative": 14
+        "negative": 15
       },
       "articles": [
         {
@@ -40625,6 +40763,21 @@
           "sentimentGemini": -0.85,
           "explanationGemini": "A court proceeding over a racially motivated homicide is deeply grim and disturbing.",
           "categoryGemini": "other"
+        },
+        {
+          "sourceId": "skynews",
+          "title": "Alleged Irish crime boss Daniel Kinahan will 'vehemently defend' himself in court and apply for bail",
+          "description": "Alleged Irish crime boss Daniel Kinahan will \"vehemently defend\" the case against him and plans to seek bail, his solicitor says.",
+          "link": "https://news.sky.com/story/daniel-kinahan-alleged-irish-crime-boss-will-vehemently-defend-himself-in-court-and-apply-for-bail-13598148",
+          "pubDate": "Mon, 12 Oct 2026 12:34:00 +0100",
+          "sentimentLocal": -0.77,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.791,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.79) and AFINN-111 (-0.75).",
+          "categoryLocal": "other",
+          "sentiment": -0.77,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.79) and AFINN-111 (-0.75).",
+          "category": "other"
         },
         {
           "sourceId": "skynews",
@@ -42651,11 +42804,11 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.102,
+      "averageSentiment": -0.101,
       "distribution": {
-        "positive": 23,
-        "neutral": 122,
-        "negative": 60
+        "positive": 24,
+        "neutral": 123,
+        "negative": 61
       },
       "articles": [
         {
@@ -42801,6 +42954,21 @@
         },
         {
           "sourceId": "reuters",
+          "title": "Czech intelligence chief says Russia could resort to riskier operations in NATO states - Reuters",
+          "description": "Czech intelligence chief says Russia could resort to riskier operations in NATO states Reuters",
+          "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxNOFpYbjhMb1BkQjV1NDdwazVwQnRITl9CRlpuM3c4YkhUdmNNZVMzMGZqbl95UmdhZHBtOGkxTC1uZ1pBeUswSUt2cjl2Vms3cnBVS0VmQkVWMklTWlk3RElzUFBYck5YdmFnc05kLVA5emJadjY5VkR3RHRTRWdZQlh0MVN5SWtrTnUwSmhobmExOUV4WkU1SllEaFhOLWdmMDcxeFhrc3ZBWVl2ZG5TWlhRUWFVR25Yc0kybF9tMA?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:42:37 GMT",
+          "sentimentLocal": 0.17,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.34,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.34) and AFINN-111 (0.00).",
+          "categoryLocal": "world",
+          "sentiment": 0.17,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.34) and AFINN-111 (0.00).",
+          "category": "world"
+        },
+        {
+          "sourceId": "reuters",
           "title": "NATO commander Grynkewich warns Russia attack would be 'utterly futile' - Reuters",
           "description": "NATO commander Grynkewich warns Russia attack would be 'utterly futile' Reuters",
           "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxNRXQyeFBaci1YTDB5ekFuaFRwTGtDcVZPTms2RmJwZDU5Q0ZFcmFJazF2d0t3U1I3cGp3ZlloMTEtMF9SbFBvYm9jcWlzc1RpNTRvcU5WXzFtVmhTTnlkX05NaThKcHczcDNRM2hqMDcwYXkzQ29CcUl0QjBsS0plZ2JiYjNTTDlNNHNZekRvN0ZRU1I2MFNHcGlTRWVWbG5yd0VGMmF0eWJzc2V6VmlEbQ?oc=5",
@@ -42870,6 +43038,21 @@
           "sentimentGemini": -0.18,
           "explanationGemini": "Deliberations over contentious maritime corridors maintain strategic tension.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "In the US, a wealth boom and a price shock collide - Reuters",
+          "description": "In the US, a wealth boom and a price shock collide Reuters",
+          "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOdUhraTJpN1hiM1QxNXN1OWFiMEFJVjRPQnhZdXV0TW0ya0FvdEdVLWRPQUFVVXFiX2hvTUJYcFBwYlBxR1N2OXhCTW13UjdteTNmTTJkbVNGTVFzaTlwbFM1bkdTTGtuN2dqbEE3WUVmQldzZzZSdlRkOUFJTldWRzRyRTJuNVhCRXpBZExnN0lFY0E?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 10:38:58 GMT",
+          "sentimentLocal": 0.077,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.153,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.15) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": 0.077,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.15) and AFINN-111 (0.00).",
+          "category": "business"
         },
         {
           "sourceId": "reuters",
@@ -43185,6 +43368,21 @@
           "sentimentGemini": -0.85,
           "explanationGemini": "Loss of life in military airstrikes continues an agonizing humanitarian calamity.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Germany's fragile coalition hit by further turmoil as labour minister quits - Reuters",
+          "description": "Germany's fragile coalition hit by further turmoil as labour minister quits Reuters",
+          "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPcXVyNnZLd1owaHNQbWpoYUVYUjhTbEFfbjRQTWp6a09nRUhBMzJMNkMxOVVta2VlUTNjQ1pMWnNqajNpMUFlMi13RnA2aHZrSE5Fd01nUkxDNWc2TUltRUN4b2g0Rm9YMllPcDBBdUxQSDhtVXpSdTllRXhmbWFvT0tYUUJZQ3FJZXVYLURwTkV4ZTBnQ0FDVDBWdHpjNWdnalkxeUpqRVdBU1FJ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 06:11:00 GMT",
+          "sentimentLocal": -0.306,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.612,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.61) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.306,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.61) and AFINN-111 (0.00).",
+          "category": "politics"
         },
         {
           "sourceId": "reuters",
@@ -48670,7 +48868,7 @@
       "averageSentiment": -0.02,
       "distribution": {
         "positive": 20,
-        "neutral": 120,
+        "neutral": 121,
         "negative": 29
       },
       "articles": [
@@ -48853,6 +49051,21 @@
           "sentimentGemini": -0.84,
           "explanationGemini": "A lethal barrage against a travel hub marks a devastating milestone in regional combat.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Broadcom CEO Likens Many AI Investors to Casino Gamblers - Bloomberg.com",
+          "description": "Broadcom CEO Likens Many AI Investors to Casino Gamblers Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxORVJ1Q2xNR0czVGV0QUswTkgwcDI0ZERSTG9ZSDlhSWFXMmEySTJUNlJnbTRpS1V3NzJXTTFDbldpMEV0cWQxbUNRaUtDVzhOclk1eUxISmZxOS1Ca1pCanBycG9HMHJKMElhaF95dF9HWHlOLVNyU1hmUGRUUGNlY2tab0RQa1U2c05WNXpueURGTjUxZEdHczFEdzVYbnZDYWJBaHNJajNMcGM?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 09:58:52 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "category": "technology"
         },
         {
           "sourceId": "bloomberg",
@@ -52401,6 +52614,25 @@
         "spiegel": -0.186,
         "reuters": -0.104,
         "ap": -0.077,
+        "bloomberg": -0.02
+      }
+    },
+    {
+      "timestamp": "2026-10-12T14:05:21.825Z",
+      "analyzer": "Local Ensemble (VADER + AFINN)",
+      "averages": {
+        "bbc": -0.152,
+        "nyt": -0.114,
+        "cnn": 0,
+        "guardian": -0.049,
+        "fox": -0.083,
+        "aljazeera": -0.112,
+        "npr": -0.039,
+        "cnbc": -0.021,
+        "skynews": -0.14,
+        "spiegel": -0.186,
+        "reuters": -0.101,
+        "ap": -0.087,
         "bloomberg": -0.02
       }
     }
