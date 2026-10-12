@@ -1,15 +1,15 @@
 {
-  "lastUpdated": "2026-10-12T15:19:34.311Z",
+  "lastUpdated": "2026-10-12T15:29:12.676Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-12",
   "editorialSummary": "Good morning, executives: today the global mood sits at a mildly depressed -0.158, dragged down primarily by Sky News leading the charge into the abyss at -0.358 while CNN bravely pretends everything is fine at a flat zero. Fortunately, our 1,743 analyzed headlines reveal a neat little schizophrenia: while world news and health are busy forecasting the apocalypse, environment and science are huffing pure copium with positive vibes to keep us from canceling the future altogether.",
   "globalStats": {
     "globalSentiment": -0.162,
-    "totalArticles": 1784,
+    "totalArticles": 1790,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
-      "score": -0.358
+      "score": -0.359
     },
     "mostPositiveOutlet": {
       "id": "cnn",
@@ -21,8 +21,8 @@
       "politics": -0.2,
       "entertainment": 0.017,
       "world": -0.589,
-      "technology": -0.009,
-      "sports": 0.055,
+      "technology": -0.012,
+      "sports": 0.059,
       "other": -0.039,
       "health": -0.274,
       "science": 0.194,
@@ -22689,13 +22689,67 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.133,
+      "averageSentiment": -0.128,
       "distribution": {
-        "positive": 34,
+        "positive": 37,
         "neutral": 86,
         "negative": 90
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "Yoshinobu Yamamoto takes the mound as Dodgers look to even NLCS after Game 1 loss to Brewers",
+          "description": "Yoshinobu Yamamoto, last year's World Series MVP, takes the mound for the Dodgers in NLCS Game 2 after Milwaukee seized home field advantage.",
+          "link": "https://www.foxnews.com/outkick-betting/yoshinobu-yamamoto-takes-mound-dodgers-look-even-nlcs-game-1-loss-brewers",
+          "pubDate": "Mon, 12 Oct 2026 11:16:55 -0400",
+          "sentimentLocal": -0.101,
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.077,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.08) and AFINN-111 (-0.13).",
+          "categoryLocal": "sports",
+          "sentiment": 0.22,
+          "explanation": "This is standard competitive sports reporting detailing a high-stakes playoff baseball game.",
+          "category": "sports",
+          "sentimentGemini": 0.22,
+          "explanationGemini": "This is standard competitive sports reporting detailing a high-stakes playoff baseball game.",
+          "categoryGemini": "sports"
+        },
+        {
+          "sourceId": "fox",
+          "title": "Drew Rasmussen and the Rays look to overpower the Guardians in ALCS Game 1",
+          "description": "Drew Rasmussen's dominant postseason form gives the Tampa Bay Rays a massive ALCS Game 1 edge over the Cleveland Guardians and Foster Griffin.",
+          "link": "https://www.foxnews.com/outkick-betting/drew-rasmussen-rays-overpower-guardians-alcs-game-1",
+          "pubDate": "Mon, 12 Oct 2026 11:16:05 -0400",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "sports",
+          "sentiment": 0.24,
+          "explanation": "The article previews a major league baseball playoff game with an upbeat tone celebrating athletic performance.",
+          "category": "sports",
+          "sentimentGemini": 0.24,
+          "explanationGemini": "The article previews a major league baseball playoff game with an upbeat tone celebrating athletic performance.",
+          "categoryGemini": "sports"
+        },
+        {
+          "sourceId": "fox",
+          "title": "Bills vs Rams on 'Monday Night Football' offers a potential Super Bowl preview in Week 5",
+          "description": "\"Monday Night Football\" features a potential Super Bowl preview as Josh Allen and the Buffalo Bills face the Rams' upgraded defense at home.",
+          "link": "https://www.foxnews.com/outkick-betting/bills-vs-rams-monday-night-football-potential-super-bowl-preview-week-5",
+          "pubDate": "Mon, 12 Oct 2026 11:15:23 -0400",
+          "sentimentLocal": 0.801,
+          "sentimentAFINN": 0.75,
+          "sentimentVADER": 0.852,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.85) and AFINN-111 (0.75).",
+          "categoryLocal": "sports",
+          "sentiment": 0.2,
+          "explanation": "This describes an upcoming high-profile professional football game, generating standard athletic excitement.",
+          "category": "sports",
+          "sentimentGemini": 0.2,
+          "explanationGemini": "This describes an upcoming high-profile professional football game, generating standard athletic excitement.",
+          "categoryGemini": "sports"
+        },
         {
           "sourceId": "fox",
           "title": "'The Social Reckoning' Review: Zuckerberg, Facebook are the enemy in preachy slop disguised as journo drama",
@@ -33773,7 +33827,7 @@
       "distribution": {
         "positive": 26,
         "neutral": 66,
-        "negative": 102
+        "negative": 103
       },
       "articles": [
         {
@@ -34045,6 +34099,24 @@
           "sentimentGemini": 0.2,
           "explanationGemini": "Football fans displaying creative banners at a match is a routine and expressive part of sports culture.",
           "categoryGemini": "sports"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Vox rises as Sanchez battles political turmoil: Could Spain swing right?",
+          "description": "Snap vote could bring PP, Vox to power as polls show falling support for Sanchez, one of Europe's last leftist leaders.",
+          "link": "https://www.aljazeera.com/news/2026/10/12/far-right-surges-as-crises-threaten-sanchez-could-vox-lead-spain?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 12:08:19 +0000",
+          "sentimentLocal": -0.167,
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": -0.459,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.46) and AFINN-111 (0.13).",
+          "categoryLocal": "politics",
+          "sentiment": -0.18,
+          "explanation": "Political turmoil and shifting electoral polls indicate institutional and leadership friction within a democracy.",
+          "category": "politics",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "Political turmoil and shifting electoral polls indicate institutional and leadership friction within a democracy.",
+          "categoryGemini": "politics"
         },
         {
           "sourceId": "aljazeera",
@@ -43237,11 +43309,11 @@
     },
     "skynews": {
       "name": "Sky News",
-      "averageSentiment": -0.358,
+      "averageSentiment": -0.359,
       "distribution": {
         "positive": 6,
         "neutral": 18,
-        "negative": 37
+        "negative": 38
       },
       "articles": [
         {
@@ -43279,6 +43351,24 @@
           "sentimentGemini": -0.85,
           "explanationGemini": "A court proceeding over a racially motivated homicide is deeply grim and disturbing.",
           "categoryGemini": "other"
+        },
+        {
+          "sourceId": "skynews",
+          "title": "Alleged Irish crime boss will 'vehemently defend' himself in court and apply for bail",
+          "description": "Alleged Irish crime boss Daniel Kinahan will \"vehemently defend\" the case against him and plans to seek bail, his solicitor says.",
+          "link": "https://news.sky.com/story/daniel-kinahan-alleged-irish-crime-boss-will-vehemently-defend-himself-in-court-and-apply-for-bail-13598148",
+          "pubDate": "Mon, 12 Oct 2026 12:34:00 +0100",
+          "sentimentLocal": -0.77,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.791,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.79) and AFINN-111 (-0.75).",
+          "categoryLocal": "other",
+          "sentiment": -0.42,
+          "explanation": "Reporting on serious organized crime allegations and ongoing criminal legal proceedings involves significant negative social elements.",
+          "category": "world",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "Reporting on serious organized crime allegations and ongoing criminal legal proceedings involves significant negative social elements.",
+          "categoryGemini": "world"
         },
         {
           "sourceId": "skynews",
@@ -52263,11 +52353,11 @@
     },
     "bloomberg": {
       "name": "Bloomberg",
-      "averageSentiment": -0.094,
+      "averageSentiment": -0.096,
       "distribution": {
         "positive": 39,
         "neutral": 61,
-        "negative": 76
+        "negative": 77
       },
       "articles": [
         {
@@ -52287,6 +52377,24 @@
           "sentimentGemini": -0.48,
           "explanationGemini": "Significant financial outflow in mortgage bond funds indicates severe market distress and investor anxiety.",
           "categoryGemini": "business"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "French Supermarket Refrigeration Sites Hit by Cyberattacks - Bloomberg.com",
+          "description": "French Supermarket Refrigeration Sites Hit by Cyberattacks Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPRDNEMUZjZllBSzBVN1BZMFRPWnB0Q2czaS1ZckZEb09lbXNSQ1JVakRzRkl2aHdaYUxTV3NsMFZDY1BCUHhGV3ctMDRGWE91LUlmV1E3ZWlLTXhEZ3FkRksxQnliMEh3Wm1JMGJWRlNuRFVwRlBJZjQ1S3NUQk9IZ1RseFlGbFJpdXppRjh3TFBXQnFfMThldFVLdVc3a0hWWjlKa0hnb1VrbnJQY0E?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:12:24 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": -0.45,
+          "explanation": "A coordinated cyberattack on critical commercial infrastructure represents a disruptive and damaging security incident.",
+          "category": "technology",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "A coordinated cyberattack on critical commercial infrastructure represents a disruptive and damaging security incident.",
+          "categoryGemini": "technology"
         },
         {
           "sourceId": "bloomberg",
