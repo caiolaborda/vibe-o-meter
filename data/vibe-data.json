@@ -1,9 +1,9 @@
 {
-  "lastUpdated": "2026-10-12T13:46:30.982Z",
+  "lastUpdated": "2026-10-12T13:50:07.117Z",
   "analyzerUsed": "Local Ensemble (VADER + AFINN)",
   "globalStats": {
     "globalSentiment": -0.084,
-    "totalArticles": 1709,
+    "totalArticles": 1711,
     "mostNegativeOutlet": {
       "id": "spiegel",
       "name": "Spiegel International",
@@ -17,12 +17,12 @@
     "categoryAverages": {
       "politics": -0.172,
       "other": -0.027,
-      "world": -0.545,
+      "world": -0.535,
       "technology": -0.022,
       "entertainment": -0.008,
       "sports": 0.081,
       "business": -0.105,
-      "health": -0.251,
+      "health": -0.259,
       "science": 0.306
     },
     "editorialSummary": "Global news sentiment leans neutral today (-0.084). Conflict and World events represent the primary negative drag, while Technology and Science remain steady bright spots."
@@ -12643,13 +12643,28 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.045,
+      "averageSentiment": -0.041,
       "distribution": {
-        "positive": 49,
+        "positive": 50,
         "neutral": 74,
         "negative": 62
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "Nigel Farage adviser had unpublicised role at polling firm",
+          "description": "Exclusive: Chris Bruni-Lowe used Redfield & Wilton Strategies role to develop potential campaign tactics, sources say A close adviser to Nigel Farage had an influential role at a national polling company despite not being publicly associated with the firm, the Guardian can reveal. Chris Bruni-Lowe, Farage’s private pollster for many years, played an important role in the operations of Redfield & Wilton Strategies and used it to develop potential campaign strategies, according to several sources who have worked there. Continue reading...",
+          "link": "https://www.theguardian.com/politics/2026/oct/12/nigel-farage-adviser-influential-role-polling-firm-chris-bruni-lowe",
+          "pubDate": "Mon, 12 Oct 2026 13:42:27 GMT",
+          "sentimentLocal": 0.758,
+          "sentimentAFINN": 0.75,
+          "sentimentVADER": 0.765,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.77) and AFINN-111 (0.75).",
+          "categoryLocal": "world",
+          "sentiment": 0.758,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.77) and AFINN-111 (0.75).",
+          "category": "world"
+        },
         {
           "sourceId": "guardian",
           "title": "Most SAS personnel ‘refusing to answer’ questions from Afghanistan inquiry",
@@ -21295,11 +21310,11 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.083,
+      "averageSentiment": -0.085,
       "distribution": {
         "positive": 31,
         "neutral": 109,
-        "negative": 63
+        "negative": 64
       },
       "articles": [
         {
@@ -21694,6 +21709,21 @@
           "sentimentGemini": 0.18,
           "explanationGemini": "A small business successfully recovering long-overdue debts resolves a protracted wrong.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "fox",
+          "title": "Secret Service chief says threats against protectees up 40%, cites internet and mental health",
+          "description": "Secret Service Director Sean Curran and Deputy Director Matt Quinn gave their first joint interview with \"60 Minutes\" about the increased threats they face.",
+          "link": "https://www.foxnews.com/media/secret-service-leadership-warn-massive-increase-threats-president",
+          "pubDate": "Mon, 12 Oct 2026 06:06:23 -0400",
+          "sentimentLocal": -0.459,
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.542,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-0.38).",
+          "categoryLocal": "health",
+          "sentiment": -0.459,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-0.38).",
+          "category": "health"
         },
         {
           "sourceId": "fox",
