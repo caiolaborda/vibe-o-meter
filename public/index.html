@@ -70,6 +70,67 @@
       </div>
     </section>
 
+    <!-- DAILY VIBE PULSE HERO -->
+    <section class="pulse-hero-section">
+      <div class="pulse-hero-card card">
+        <div class="pulse-main-grid">
+          
+          <!-- Global Vibe Metric & Editorial Summary -->
+          <div class="pulse-score-card">
+            <div class="pulse-header">
+              <span class="pulse-tag"><i data-lucide="sparkles"></i> AI Executive Vibe Pulse</span>
+              <span id="pulse-article-count" class="small-text text-muted">1,600+ Articles Analyzed</span>
+            </div>
+            <div class="pulse-metric-row">
+              <div class="pulse-metric-val neg" id="global-mood-score">-0.17</div>
+              <div class="pulse-metric-details">
+                <span id="global-mood-badge" class="badge" style="background:var(--neg-bg); color:var(--neg-color); font-weight:700;">Leaning Gloomy</span>
+                <span class="pulse-metric-desc">Worldwide 24h Sentiment Average</span>
+              </div>
+            </div>
+            <p id="daily-editorial-summary" class="pulse-summary-text">
+              Loading today's AI editorial briefing...
+            </p>
+          </div>
+
+          <!-- Outlets at the Extremes -->
+          <div class="pulse-outlets-card">
+            <div class="pulse-subhead"><i data-lucide="compass"></i> Outlets in Focus Today</div>
+            
+            <div class="pulse-outlet-tile" id="pulse-tile-alarmist">
+              <div class="tile-icon-box neg"><i data-lucide="flame"></i></div>
+              <div class="tile-content">
+                <span class="tile-subtitle">Most Alarmist Outlet</span>
+                <div class="tile-title-row">
+                  <strong id="pulse-alarmist-name">Spiegel International</strong>
+                  <span id="pulse-alarmist-score" class="badge" style="background:var(--neg-bg); color:var(--neg-color); font-weight:700;">-0.46</span>
+                </div>
+              </div>
+              <button class="pulse-quick-btn" id="filter-alarmist-btn">Filter &rarr;</button>
+            </div>
+
+            <div class="pulse-outlet-tile" id="pulse-tile-uplifting">
+              <div class="tile-icon-box pos"><i data-lucide="sun"></i></div>
+              <div class="tile-content">
+                <span class="tile-subtitle">Most Uplifting Outlet</span>
+                <div class="tile-title-row">
+                  <strong id="pulse-uplifting-name">Bloomberg</strong>
+                  <span id="pulse-uplifting-score" class="badge" style="background:var(--pos-bg); color:var(--pos-color); font-weight:700;">-0.02</span>
+                </div>
+              </div>
+              <button class="pulse-quick-btn" id="filter-uplifting-btn">Filter &rarr;</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Topic Mood Strip -->
+        <div class="pulse-beats-strip" id="pulse-category-chips">
+          <!-- Dynamically populated chips in app.js -->
+        </div>
+      </div>
+    </section>
+
     <!-- HERO: SENTIMENT SPECTRUM -->
     <section class="spectrum-section">
       <h2 class="section-title flex-center">
@@ -139,6 +200,29 @@
         
         <div class="spectrum-legend">
           <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to filter headlines below.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE TOPIC & BEAT HEATMAP -->
+    <section class="heatmap-section">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <h2 class="section-title flex-center">
+            <i data-lucide="layout-grid"></i>
+            Coverage Beat & Outlet Heatmap
+          </h2>
+          <p class="section-desc">Average sentiment by news beat. Click any cell to jump directly into filtered headlines.</p>
+        </div>
+        <div class="heatmap-legend-strip flex-center" style="gap: 0.75rem; font-size: 0.75rem; font-weight: 600;">
+          <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#ef4444;"></span> Negative (&lt; -0.15)</span>
+          <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#94a3b8;"></span> Neutral</span>
+          <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#22c55e;"></span> Positive (&gt; +0.15)</span>
+        </div>
+      </div>
+      <div class="card heatmap-container">
+        <div id="heatmap-grid" class="heatmap-table">
+          <!-- Dynamically populated in app.js -->
         </div>
       </div>
     </section>
@@ -237,6 +321,20 @@
       </div>
       
       <div class="headlines-filter-bar card">
+        <!-- Quick Trending Topic Pills -->
+        <div class="trending-pills-row">
+          <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
+            <i data-lucide="flame" style="width: 14px; height: 14px; color: #f97316;"></i> Quick Beats:
+          </span>
+          <button class="topic-pill-btn active" data-topic="all">All Stories</button>
+          <button class="topic-pill-btn" data-topic="world">🌍 World & Conflict</button>
+          <button class="topic-pill-btn" data-topic="politics">🗳️ Politics</button>
+          <button class="topic-pill-btn" data-topic="business">📈 Business & Inflation</button>
+          <button class="topic-pill-btn" data-topic="technology">⚡ Tech & AI</button>
+          <button class="topic-pill-btn" data-topic="science">🚀 Science & Space</button>
+          <button class="topic-pill-btn" data-topic="health">🏥 Health</button>
+        </div>
+
         <div class="filter-controls">
           <div class="control-group">
             <label for="filter-source"><i data-lucide="globe"></i> Source</label>

@@ -162,6 +162,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
   // Sync button click
   elements.syncBtn.addEventListener('click', syncData);
+
+  // Setup quick topic pills
+  setupTopicPills();
   
   // Model View Toggle Click
   elements.modeAfinnBtn.addEventListener('click', () => {
@@ -194,6 +197,7 @@ function setupEventListeners() {
   });
   elements.filterCategory.addEventListener('change', (e) => {
     state.filters.category = e.target.value;
+    updateTopicPillsActive(e.target.value);
     renderHeadlines();
   });
   elements.filterVibe.addEventListener('change', (e) => {
@@ -799,6 +803,8 @@ function updateAppUI() {
   populateFilterOptions();
   
   // Render views
+  renderDailyPulse();
+  renderHeatmapMatrix();
   renderSpectrum();
   renderComparisonMatrix();
   renderHeadToHead();
@@ -1853,3 +1859,260 @@ window.copyToClipboard = function(text, btn) {
     console.error('Failed to copy text:', err);
   });
 };
+
+// --- DAILY VIBE PULSE HERO RENDERER ---
+function renderDailyPulse() {
+  const sources = resolvedSources || getResolvedSources();
+  if (!sources || Object.keys(sources).length === 0) return;
+
+  let totalScore = 0;
+  let totalArticles = 0;
+  const outletList = [];
+  const catStats = {};
+
+  Object.entries(sources).forEach(([id, data]) => {
+    outletList.push({ id, name: data.name, score: data.averageSentiment });
+    (data.articles || []).forEach(art => {
+      totalArticles++;
+      const s = typeof art.sentiment === 'number' ? art.sentiment : 0;
+      totalScore += s;
+      const cat = art.category || 'other';
+      if (!catStats[cat]) catStats[cat] = { total: 0, count: 0 };
+      catStats[cat].total += s;
+      catStats[cat].count++;
+    });
+  });
+
+  const globalAvg = totalArticles > 0 ? Number((totalScore / totalArticles).toFixed(2)) : 0;
+  outletList.sort((a, b) => a.score - b.score);
+  const mostAlarmist = outletList[0];
+  const mostUplifting = outletList[outletList.length - 1];
+
+  // Update Global Score & Badge
+  const scoreEl = document.getElementById('global-mood-score');
+  const badgeEl = document.getElementById('global-mood-badge');
+  const countEl = document.getElementById('pulse-article-count');
+  const summaryEl = document.getElementById('daily-editorial-summary');
+
+  if (scoreEl) {
+    scoreEl.innerText = (globalAvg > 0 ? '+' : '') + globalAvg.toFixed(2);
+    scoreEl.className = 'pulse-metric-val ' + (globalAvg < -0.1 ? 'neg' : (globalAvg > 0.1 ? 'pos' : 'neu'));
+  }
+
+  if (badgeEl) {
+    if (globalAvg < -0.2) {
+      badgeEl.innerText = 'Elevated Alarmism / Doom';
+      badgeEl.style.background = 'var(--neg-bg)';
+      badgeEl.style.color = 'var(--neg-color)';
+    } else if (globalAvg < -0.05) {
+      badgeEl.innerText = 'Leaning Gloomy';
+      badgeEl.style.background = 'rgba(239, 68, 68, 0.1)';
+      badgeEl.style.color = '#ef4444';
+    } else if (globalAvg > 0.15) {
+      badgeEl.innerText = 'Uplifting & Optimistic';
+      badgeEl.style.background = 'var(--pos-bg)';
+      badgeEl.style.color = 'var(--pos-color)';
+    } else {
+      badgeEl.innerText = 'Objective & Neutral';
+      badgeEl.style.background = 'rgba(100, 116, 139, 0.1)';
+      badgeEl.style.color = 'var(--text-secondary)';
+    }
+  }
+
+  if (countEl) {
+    countEl.innerText = `${totalArticles.toLocaleString()} Articles Analyzed`;
+  }
+
+  if (summaryEl) {
+    if (state.globalStats && state.globalStats.editorialSummary) {
+      summaryEl.innerText = state.globalStats.editorialSummary;
+    } else {
+      const topNegCat = Object.keys(catStats).sort((a, b) => (catStats[a].total / catStats[a].count) - (catStats[b].total / catStats[b].count))[0] || 'world';
+      const topPosCat = Object.keys(catStats).sort((a, b) => (catStats[b].total / catStats[b].count) - (catStats[a].total / catStats[a].count))[0] || 'science';
+      summaryEl.innerText = `Global news sentiment leans ${globalAvg < -0.1 ? 'cautious' : 'balanced'} today (${globalAvg > 0 ? '+' : ''}${globalAvg}). Coverage of ${topNegCat.toUpperCase()} drives the strongest negative sentiment, while ${topPosCat.toUpperCase()} remains a resilient bright spot.`;
+    }
+  }
+
+  // Update Outlets in Focus
+  const alarmistNameEl = document.getElementById('pulse-alarmist-name');
+  const alarmistScoreEl = document.getElementById('pulse-alarmist-score');
+  const upliftingNameEl = document.getElementById('pulse-uplifting-name');
+  const upliftingScoreEl = document.getElementById('pulse-uplifting-score');
+
+  if (alarmistNameEl && mostAlarmist) alarmistNameEl.innerText = mostAlarmist.name;
+  if (alarmistScoreEl && mostAlarmist) alarmistScoreEl.innerText = (mostAlarmist.score > 0 ? '+' : '') + mostAlarmist.score.toFixed(2);
+  if (upliftingNameEl && mostUplifting) upliftingNameEl.innerText = mostUplifting.name;
+  if (upliftingScoreEl && mostUplifting) upliftingScoreEl.innerText = (mostUplifting.score > 0 ? '+' : '') + mostUplifting.score.toFixed(2);
+
+  // Quick filter buttons on pulse tiles
+  const filterAlarmistBtn = document.getElementById('filter-alarmist-btn');
+  const filterUpliftingBtn = document.getElementById('filter-uplifting-btn');
+  if (filterAlarmistBtn && mostAlarmist) {
+    filterAlarmistBtn.onclick = () => {
+      state.filters.source = mostAlarmist.id;
+      elements.filterSource.value = mostAlarmist.id;
+      updateFilterIndicator();
+      renderHeadlines();
+      document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+    };
+  }
+  if (filterUpliftingBtn && mostUplifting) {
+    filterUpliftingBtn.onclick = () => {
+      state.filters.source = mostUplifting.id;
+      elements.filterSource.value = mostUplifting.id;
+      updateFilterIndicator();
+      renderHeadlines();
+      document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+    };
+  }
+
+  // Category Beat Chips
+  const chipsContainer = document.getElementById('pulse-category-chips');
+  if (chipsContainer) {
+    const mainCategories = ['world', 'politics', 'business', 'technology', 'science', 'health'];
+    const catIcons = {
+      world: '🌍',
+      politics: '🗳️',
+      business: '📈',
+      technology: '⚡',
+      science: '🚀',
+      health: '🏥'
+    };
+
+    chipsContainer.innerHTML = '<span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-right:0.25rem;">Beat Vibes:</span>';
+    mainCategories.forEach(cat => {
+      const data = catStats[cat];
+      if (data && data.count > 0) {
+        const avg = Number((data.total / data.count).toFixed(2));
+        const valClass = avg < -0.15 ? 'neg' : (avg > 0.15 ? 'pos' : 'neu');
+        const chip = document.createElement('button');
+        chip.className = 'beat-chip';
+        chip.innerHTML = `<span>${catIcons[cat] || '📰'} ${cat.charAt(0).toUpperCase() + cat.slice(1)}</span> <span class="beat-chip-val ${valClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>`;
+        chip.onclick = () => {
+          state.filters.category = cat;
+          elements.filterCategory.value = cat;
+          updateTopicPillsActive(cat);
+          renderHeadlines();
+          document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+        };
+        chipsContainer.appendChild(chip);
+      }
+    });
+  }
+}
+
+// --- INTERACTIVE BEAT HEATMAP RENDERER ---
+function renderHeatmapMatrix() {
+  const container = document.getElementById('heatmap-grid');
+  if (!container) return;
+
+  const sources = resolvedSources || getResolvedSources();
+  const sourceIds = Object.keys(sources);
+  if (sourceIds.length === 0) return;
+
+  const categories = ['world', 'politics', 'business', 'technology', 'science', 'health'];
+  const catLabels = {
+    world: '🌍 World',
+    politics: '🗳️ Politics',
+    business: '📈 Business',
+    technology: '⚡ Tech',
+    science: '🚀 Science',
+    health: '🏥 Health'
+  };
+
+  container.style.gridTemplateColumns = `120px repeat(${sourceIds.length}, minmax(52px, 1fr))`;
+  container.innerHTML = '';
+
+  // Top header row: Corner label + Source initials
+  const corner = document.createElement('div');
+  corner.className = 'heatmap-header-cell';
+  corner.innerText = 'BEAT / OUTLET';
+  container.appendChild(corner);
+
+  sourceIds.forEach(id => {
+    const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3) };
+    const h = document.createElement('div');
+    h.className = 'heatmap-header-cell';
+    h.title = sources[id].name;
+    h.innerHTML = `<span style="border-bottom: 2px solid ${meta.color || '#2563eb'}; padding-bottom: 2px;">${meta.initials}</span>`;
+    container.appendChild(h);
+  });
+
+  // Category rows
+  categories.forEach(cat => {
+    const label = document.createElement('div');
+    label.className = 'heatmap-row-label';
+    label.innerText = catLabels[cat] || cat;
+    container.appendChild(label);
+
+    sourceIds.forEach(id => {
+      const src = sources[id];
+      const matchingArticles = (src.articles || []).filter(a => a.category === cat);
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+
+      if (matchingArticles.length === 0) {
+        cell.innerText = '—';
+        cell.style.background = 'rgba(148, 163, 184, 0.08)';
+        cell.style.color = 'var(--text-muted)';
+        cell.title = `${src.name}: No articles in ${cat}`;
+      } else {
+        const sum = matchingArticles.reduce((acc, a) => acc + (typeof a.sentiment === 'number' ? a.sentiment : 0), 0);
+        const avg = Number((sum / matchingArticles.length).toFixed(2));
+        cell.innerText = (avg > 0 ? '+' : '') + avg.toFixed(2);
+
+        if (avg < -0.15) {
+          const intensity = Math.min(1, Math.abs(avg));
+          cell.style.background = `rgba(239, 68, 68, ${0.15 + intensity * 0.45})`;
+          cell.style.color = '#dc2626';
+        } else if (avg > 0.15) {
+          const intensity = Math.min(1, avg);
+          cell.style.background = `rgba(34, 197, 94, ${0.15 + intensity * 0.45})`;
+          cell.style.color = '#16a34a';
+        } else {
+          cell.style.background = 'rgba(148, 163, 184, 0.18)';
+          cell.style.color = 'var(--text-secondary)';
+        }
+
+        cell.title = `${src.name} on ${cat.toUpperCase()}: ${avg > 0 ? '+' : ''}${avg} (${matchingArticles.length} stories). Click to filter!`;
+        cell.onclick = () => {
+          state.filters.source = id;
+          state.filters.category = cat;
+          elements.filterSource.value = id;
+          elements.filterCategory.value = cat;
+          updateFilterIndicator();
+          updateTopicPillsActive(cat);
+          renderHeadlines();
+          document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+        };
+      }
+      container.appendChild(cell);
+    });
+  });
+}
+
+// --- QUICK TOPIC PILLS LOGIC ---
+function setupTopicPills() {
+  const pills = document.querySelectorAll('.topic-pill-btn');
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const topic = pill.dataset.topic;
+      state.filters.category = topic;
+      elements.filterCategory.value = topic;
+      updateTopicPillsActive(topic);
+      renderHeadlines();
+    });
+  });
+}
+
+function updateTopicPillsActive(topic) {
+  const pills = document.querySelectorAll('.topic-pill-btn');
+  pills.forEach(p => {
+    if (p.dataset.topic === topic) {
+      p.classList.add('active');
+    } else {
+      p.classList.remove('active');
+    }
+  });
+}
+

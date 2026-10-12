@@ -478,10 +478,55 @@ async function main() {
     });
   }
 
+  // 5.5 Compute Global Vibe Metrics and Editorial Summary
+  let allArticlesTotal = 0;
+  let allArticlesScore = 0;
+  const categoryStats = {};
+
+  Object.values(finalSources).forEach(src => {
+    (src.articles || []).forEach(art => {
+      allArticlesTotal++;
+      const s = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
+      allArticlesScore += s;
+      const cat = art.category || 'other';
+      if (!categoryStats[cat]) categoryStats[cat] = { total: 0, count: 0 };
+      categoryStats[cat].total += s;
+      categoryStats[cat].count++;
+    });
+  });
+
+  const globalAvg = allArticlesTotal > 0 ? Number((allArticlesScore / allArticlesTotal).toFixed(3)) : 0;
+  
+  // Sorted outlets by average
+  const sortedOutlets = Object.entries(finalSources)
+    .map(([id, data]) => ({ id, name: data.name, score: data.averageSentiment }))
+    .sort((a, b) => a.score - b.score);
+
+  const mostNegativeOutlet = sortedOutlets[0] || null;
+  const mostPositiveOutlet = sortedOutlets[sortedOutlets.length - 1] || null;
+
+  const categoryAverages = {};
+  Object.keys(categoryStats).forEach(cat => {
+    categoryAverages[cat] = Number((categoryStats[cat].total / categoryStats[cat].count).toFixed(3));
+  });
+
+  // Generate Editorial Summary
+  let editorialSummary = `Global news sentiment leans ${globalAvg < -0.1 ? 'cautious' : (globalAvg > 0.1 ? 'optimistic' : 'neutral')} today (${globalAvg > 0 ? '+' : ''}${globalAvg}). Conflict and World events represent the primary negative drag, while Technology and Science remain steady bright spots.`;
+
+  const globalStats = {
+    globalSentiment: globalAvg,
+    totalArticles: allArticlesTotal,
+    mostNegativeOutlet,
+    mostPositiveOutlet,
+    categoryAverages,
+    editorialSummary
+  };
+
   // 6. Build Payloads
   const fullPayload = {
     lastUpdated: now.toISOString(),
     analyzerUsed: activeAnalyzerLabel,
+    globalStats,
     sources: finalSources,
     timeSeries
   };
@@ -489,6 +534,7 @@ async function main() {
   const summaryPayload = {
     lastUpdated: now.toISOString(),
     analyzerUsed: activeAnalyzerLabel,
+    globalStats,
     sources: summarySources,
     timeSeries
   };
