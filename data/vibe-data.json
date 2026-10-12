@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-12T22:39:55.946Z",
+  "lastUpdated": "2026-10-12T22:41:44.769Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-12",
   "editorialSummary": "With a global sentiment hovering at a bleak -0.166, today's news cycle reads like a group therapy session led by Sky News, where the world is perpetually ending across every geopolitical and health beat. Fortunately, our overachieving nerds in science and the environment are desperately trying to mouth \"it's going to be okay\" from the back of the room, while CNN bravely sits on its hands, managing to feel nothing at all.",
   "globalStats": {
     "globalSentiment": -0.172,
-    "totalArticles": 2025,
+    "totalArticles": 2027,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
@@ -17,9 +17,9 @@
       "score": 0
     },
     "categoryAverages": {
-      "entertainment": -0.028,
+      "entertainment": -0.032,
       "politics": -0.207,
-      "business": -0.104,
+      "business": -0.103,
       "world": -0.582,
       "technology": -0.02,
       "other": -0.044,
@@ -53499,13 +53499,31 @@
     },
     "ap": {
       "name": "Associated Press",
-      "averageSentiment": -0.202,
+      "averageSentiment": -0.203,
       "distribution": {
         "positive": 17,
         "neutral": 39,
-        "negative": 53
+        "negative": 54
       },
       "articles": [
+        {
+          "sourceId": "ap",
+          "title": "Selma Blair arrested in New York after an alleged assault on a Delta flight - AP News",
+          "description": "Selma Blair arrested in New York after an alleged assault on a Delta flight AP News",
+          "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxNMUc5WE03aG9UWEFvWUo3NHN6YlktMDBySDVUR2JGbkN1ZDA5Z2h2RTdlaUJpbF9qV2JxMHJPRlU1TGo5QzZTeFFjeFRzOWxGZ2FiR3ZEMGYxalJFZzNaMDBZbUcxNDRCOFRBUmY0ektWZlNZUDRJMnEzZUFKZ2hjVFZzMA?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 21:59:00 GMT",
+          "sentimentLocal": -0.965,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.93,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.93) and AFINN-111 (-1.00).",
+          "categoryLocal": "other",
+          "sentiment": -0.38,
+          "explanation": "The arrest of a prominent public figure for an alleged assault represents a notable legal trouble and negative personal event.",
+          "category": "entertainment",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "The arrest of a prominent public figure for an alleged assault represents a notable legal trouble and negative personal event.",
+          "categoryGemini": "entertainment"
+        },
         {
           "sourceId": "ap",
           "title": "FBI issues actor Selma Blair a summons accusing her of assaults aboard a plane, AP source says - AP News",
@@ -55809,9 +55827,9 @@
     },
     "bloomberg": {
       "name": "Bloomberg",
-      "averageSentiment": -0.095,
+      "averageSentiment": -0.093,
       "distribution": {
-        "positive": 53,
+        "positive": 54,
         "neutral": 74,
         "negative": 93
       },
@@ -55850,6 +55868,24 @@
           "category": "business",
           "sentimentGemini": 0.28,
           "explanationGemini": "A major multi-billion dollar acquisition talks point to constructive corporate consolidation and investment.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Home Equity-Sharing Firm Unison Is Said to Pick Banks for US IPO - Bloomberg.com",
+          "description": "Home Equity-Sharing Firm Unison Is Said to Pick Banks for US IPO Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPNXhRQzFMNXF4VU9YRC1yZ3lzVDBuemYzNEw0YVZnWmhmY2NweEtUbUpfdldHa1c5WTJudWZ6U1V2X3BPa3kyaHpiRXBKZ0tNM2JfLW41c0ZLWWVJRFZwX24tMk9sMkxJc0FCZkttNkNadlFyenBMVWVhS3VSSUs1UFV2MEl2NVMyRWFjZ0dabHZxb25mTUFYa2N4QVB5NVRXZDgxV01WR3dwTHFPLXIyWGhhamxxQQ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 19:37:04 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": 0.22,
+          "explanation": "A financial firm preparing for an initial public offering indicates positive corporate growth and capital market activity.",
+          "category": "business",
+          "sentimentGemini": 0.22,
+          "explanationGemini": "A financial firm preparing for an initial public offering indicates positive corporate growth and capital market activity.",
           "categoryGemini": "business"
         },
         {
