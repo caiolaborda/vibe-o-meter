@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-12T14:52:26.070Z",
+  "lastUpdated": "2026-10-12T15:19:34.311Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-12",
   "editorialSummary": "Good morning, executives: today the global mood sits at a mildly depressed -0.158, dragged down primarily by Sky News leading the charge into the abyss at -0.358 while CNN bravely pretends everything is fine at a flat zero. Fortunately, our 1,743 analyzed headlines reveal a neat little schizophrenia: while world news and health are busy forecasting the apocalypse, environment and science are huffing pure copium with positive vibes to keep us from canceling the future altogether.",
   "globalStats": {
-    "globalSentiment": -0.16,
-    "totalArticles": 1760,
+    "globalSentiment": -0.162,
+    "totalArticles": 1784,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
@@ -17,12 +17,12 @@
       "score": 0
     },
     "categoryAverages": {
-      "politics": -0.199,
-      "business": -0.107,
-      "entertainment": 0.016,
+      "business": -0.11,
+      "politics": -0.2,
+      "entertainment": 0.017,
       "world": -0.589,
-      "technology": -0.006,
-      "sports": 0.052,
+      "technology": -0.009,
+      "sports": 0.055,
       "other": -0.039,
       "health": -0.274,
       "science": 0.194,
@@ -39,9 +39,27 @@
       "distribution": {
         "positive": 29,
         "neutral": 70,
-        "negative": 92
+        "negative": 93
       },
       "articles": [
+        {
+          "sourceId": "bbc",
+          "title": "Which war is having the biggest impact on diesel prices - Iran or Ukraine?",
+          "description": "Both conflicts have led to less diesel being exported - but the data shows more has been lost from the Middle East.",
+          "link": "https://www.bbc.co.uk/news/articles/cr0qk1j7q0eno?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 14:54:19 GMT",
+          "sentimentLocal": -0.82,
+          "sentimentAFINN": -0.875,
+          "sentimentVADER": -0.765,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.76) and AFINN-111 (-0.88).",
+          "categoryLocal": "business",
+          "sentiment": -0.22,
+          "explanation": "The article discusses economic disruption and price hikes caused by ongoing international armed conflicts.",
+          "category": "business",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "The article discusses economic disruption and price hikes caused by ongoing international armed conflicts.",
+          "categoryGemini": "business"
+        },
         {
           "sourceId": "bbc",
           "title": "Garvaghy Road residents fail in bid to challenge Drumcree decision",
@@ -13413,13 +13431,85 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.09,
+      "averageSentiment": -0.093,
       "distribution": {
-        "positive": 50,
-        "neutral": 65,
-        "negative": 82
+        "positive": 51,
+        "neutral": 66,
+        "negative": 84
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "Burnham claims EU summit could boost growth and help control illegal migration – UK politics live",
+          "description": "The prime minister tells MPs the next summit with the EU will be held on 20 November Burnham to urge MPs to embrace closer ties with EU Zia Yusuf, Reform UK’s home affairs spokesperson, is speaking now. He started his speech with an account of a 73-year-old woman dying in North Wales after having to wait 23 hours for an ambulance, and he sought to link this to immigration. He said: The Royal College of Emergency Medicine estimates that 15,000 people across Britain died last year due to excess wait times for emergency treatment. That’s 300 people a week, 300 lives destroyed, 300 families devastated. And that number has increased tenfold over the last decade. This is a moral outrage, and it is a direct result of decisions made by Tory and Labour governments. I don’t think that’s because he wants to have a fight over the European Union. I think that’s because he knows what we’re talking about today impacts hard in what is known as the red wall. Continue reading...",
+          "link": "https://www.theguardian.com/politics/live/2026/oct/12/uk-politics-live-tories-andy-burnham-russian-interference-brexit-eu-latest",
+          "pubDate": "Mon, 12 Oct 2026 15:13:01 GMT",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.935,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.93) and AFINN-111 (-1.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.35,
+          "explanation": "Parliamentary debate touches heavily upon systemic healthcare failures, mortality rates from emergency wait times, and political friction over immigration.",
+          "category": "politics",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "Parliamentary debate touches heavily upon systemic healthcare failures, mortality rates from emergency wait times, and political friction over immigration.",
+          "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Zelenskyy says ‘increasingly clear’ Russia does not want energy ceasefire after strikes on energy facilities – Europe live",
+          "description": "Zelenskyy had proposed a 60-day total ceasefire to allow Ukraine to hold presidential elections Trump announces partial ceasefire in Ukraine war as Zelenskyy says deal is ‘news to me’ Addressing the conference virtually, Ukrainian president Volodymyr Zelenskyy commented on Trump’s “sudden but very important” energy ceasefire declaration over the weekend. He said it is clear that Putin “does not read Truth social”, the site that the US president posted his ceasefire declaration on. Russia wants to ruin the existing security architecture in Europe to make sure that Russian domination comes back to where it was before 1989. We have no doubt about it. Continue reading...",
+          "link": "https://www.theguardian.com/world/live/2026/oct/12/ukraine-russia-trump-energy-ceasefire-nato-zelenskyy-nobel-latest-news-updates",
+          "pubDate": "Mon, 12 Oct 2026 14:57:07 GMT",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.636,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.64) and AFINN-111 (-0.75).",
+          "categoryLocal": "politics",
+          "sentiment": -0.72,
+          "explanation": "Active military strikes on energy facilities and failed ceasefire efforts point to deepening wartime devastation in Europe.",
+          "category": "world",
+          "sentimentGemini": -0.72,
+          "explanationGemini": "Active military strikes on energy facilities and failed ceasefire efforts point to deepening wartime devastation in Europe.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Tarek Atoui’s Turbine Hall review – hallelujah, it’s raining musical instruments!",
+          "description": "Tate Modern, London The Lebanese artist has turned trumpets, drums, cones and voices into an ingenious, interconnected sonic beast with funny, sad and mystical results. Prepare to feel the earth move! On the floor of the Turbine Hall, there are wide water basins and huge flattish rough-hewn rocks you might see on moorland or in a desert. You can sit or stand or climb on them. But if you look up, you won’t be able to stop looking up – because it’s raining musical instruments. Immense elongated brass trumpets and giant glowing drums seem to float in the air, suspended from the girders of the former power station’s roof. If Lebanese artist Tarek Atoui had just left it at that, it would be an impressive, intriguing installation, but this is Tate Modern, honey, and Atoui hasn’t been asked to occupy its grandest space with mere physical objects. Instead, his sculptural creations and found stuff resonate and echo with an ever-changing, invisible art of noises. An earth-shaking bass note throbs from a hanging trumpet – or is it from that translucent cone rising out of the ground like an ethereal minaret? Then a drumbeat booms through the space and a woman’s plangent, achingly lovely voice sings notes of infinite nostalgia and melancholy. Continue reading...",
+          "link": "https://www.theguardian.com/artanddesign/2026/oct/12/tarek-atoui-turbine-hall-review-tate-modern-london",
+          "pubDate": "Mon, 12 Oct 2026 14:55:40 GMT",
+          "sentimentLocal": 0.975,
+          "sentimentAFINN": 1,
+          "sentimentVADER": 0.95,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.95) and AFINN-111 (1.00).",
+          "categoryLocal": "politics",
+          "sentiment": 0.32,
+          "explanation": "A creative and immersive art installation receives a glowing, highly enthusiastic cultural review.",
+          "category": "entertainment",
+          "sentimentGemini": 0.32,
+          "explanationGemini": "A creative and immersive art installation receives a glowing, highly enthusiastic cultural review.",
+          "categoryGemini": "entertainment"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Is Wikipedia ‘deeply biased’? Sandi Toksvig says it is – so she’s backing a rival",
+          "description": "Just 19% of the online encyclopedia’s biographies are of women. Is this because it’s edited by ‘mostly white, middle-aged, European men’, as the comedian claims? Name: Wikipedia. Age: 25. Continue reading...",
+          "link": "https://www.theguardian.com/technology/2026/oct/12/wikipedia-deeply-biased-sandi-toksvig-backing-rival",
+          "pubDate": "Mon, 12 Oct 2026 14:53:31 GMT",
+          "sentimentLocal": 0.383,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.517,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.52) and AFINN-111 (0.25).",
+          "categoryLocal": "other",
+          "sentiment": -0.15,
+          "explanation": "A prominent public figure raises concerns over systemic demographic and gender bias within an online platform.",
+          "category": "technology",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "A prominent public figure raises concerns over systemic demographic and gender bias within an online platform.",
+          "categoryGemini": "technology"
+        },
         {
           "sourceId": "guardian",
           "title": "Alex Gibney says Universal ‘wavered’ over releasing Elon Musk documentary",
@@ -22599,13 +22689,49 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.135,
+      "averageSentiment": -0.133,
       "distribution": {
-        "positive": 33,
+        "positive": 34,
         "neutral": 86,
-        "negative": 89
+        "negative": 90
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "'The Social Reckoning' Review: Zuckerberg, Facebook are the enemy in preachy slop disguised as journo drama",
+          "description": "Fox News Digital reviews Sony Pictures' \"The Social Reckoning\" starring Jeremy Strong, Jeremy Allen White and Mikey Madison, and written and directed by Aaron Sorkin.",
+          "link": "https://www.foxnews.com/opinion/the-social-reckoning-review-zuckerberg-facebook-enemy-preachy-slop-disguised-journo-drama",
+          "pubDate": "Mon, 12 Oct 2026 10:59:36 -0400",
+          "sentimentLocal": -0.222,
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.318,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.32) and AFINN-111 (-0.13).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.25,
+          "explanation": "A film or media review critiques a project about tech companies as preachy and poorly executed.",
+          "category": "entertainment",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "A film or media review critiques a project about tech companies as preachy and poorly executed.",
+          "categoryGemini": "entertainment"
+        },
+        {
+          "sourceId": "fox",
+          "title": "This Michael Jordan game-worn jersey just became the most expensive piece of basketball memorabilia ever",
+          "description": "Miami investor Ron Firman now owns Michael Jordan's autographed Game 2 jersey, the third 1998 Finals piece to sell for eight figures recently.",
+          "link": "https://www.foxnews.com/outkick-sports/michael-jordan-game-worn-jersey-most-expensive-basketball-memorabilia",
+          "pubDate": "Mon, 12 Oct 2026 10:50:21 -0400",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "sports",
+          "sentiment": 0.35,
+          "explanation": "Sports memorabilia breaks records with a massive multimillion-dollar sale of a historic jersey.",
+          "category": "sports",
+          "sentimentGemini": 0.35,
+          "explanationGemini": "Sports memorabilia breaks records with a massive multimillion-dollar sale of a historic jersey.",
+          "categoryGemini": "sports"
+        },
         {
           "sourceId": "fox",
           "title": "Josh Brolin calls 'Sicario 3' cast work 'untouchable' as franchise moves forward without Sheridan script",
@@ -33643,13 +33769,49 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.245,
+      "averageSentiment": -0.248,
       "distribution": {
         "positive": 26,
         "neutral": 66,
-        "negative": 100
+        "negative": 102
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Will Ukraine survive the winter?",
+          "description": "Washington's position on Ukraine remains ambivalent while losses mount and an energy crisis deepens.",
+          "link": "https://www.aljazeera.com/opinions/2026/10/12/will-ukraine-survive-the-winter?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 15:04:08 +0000",
+          "sentimentLocal": -0.756,
+          "sentimentAFINN": -0.875,
+          "sentimentVADER": -0.637,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.64) and AFINN-111 (-0.88).",
+          "categoryLocal": "science",
+          "sentiment": -0.78,
+          "explanation": "Mounting wartime casualties and severe energy crises present an existential and humanitarian threat to Ukraine.",
+          "category": "world",
+          "sentimentGemini": -0.78,
+          "explanationGemini": "Mounting wartime casualties and severe energy crises present an existential and humanitarian threat to Ukraine.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Trump critic Democratic Rep. Ilhan Omar’s home searched by federal agents",
+          "description": "US authorities searched the Democratic congresswoman’s home as part of a criminal investigation.",
+          "link": "https://www.aljazeera.com/news/2026/10/12/trump-critic-democratic-rep-ilhan-omars-home-searched-by-federal-agents?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 14:59:53 +0000",
+          "sentimentLocal": -0.648,
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.67,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.67) and AFINN-111 (-0.63).",
+          "categoryLocal": "politics",
+          "sentiment": -0.45,
+          "explanation": "A sitting federal lawmaker's home is subjected to a criminal investigation and search by federal agents.",
+          "category": "politics",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "A sitting federal lawmaker's home is subjected to a criminal investigation and search by federal agents.",
+          "categoryGemini": "politics"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Iran-Saudi talks on Yemen’s Houthis: What’s in it for Tehran?",
@@ -38132,10 +38294,10 @@
     },
     "npr": {
       "name": "NPR News",
-      "averageSentiment": -0.196,
+      "averageSentiment": -0.194,
       "distribution": {
         "positive": 17,
-        "neutral": 19,
+        "neutral": 20,
         "negative": 36
       },
       "articles": [
@@ -38228,6 +38390,24 @@
           "sentimentGemini": 0,
           "explanationGemini": "An empty news summary has completely neutral sentiment.",
           "categoryGemini": "other"
+        },
+        {
+          "sourceId": "npr",
+          "title": "Texas' 15th Congressional District provides clues to state's Latino vote",
+          "description": "The 15th Congressional District runs from the east of San Antonio all the way down into the Rio Grande Valley. This majority-Latino district provides a window into the Latino vote in Texas.",
+          "link": "https://www.npr.org/2026/10/12/nx-s1-5986126/texas-15th-congressional-district-provides-clues-to-states-latino-vote",
+          "pubDate": "Mon, 12 Oct 2026 04:37:01 -0400",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "sports",
+          "sentiment": -0.02,
+          "explanation": "Analytical reporting of electoral demographics in a specific congressional district is procedurally neutral.",
+          "category": "politics",
+          "sentimentGemini": -0.02,
+          "explanationGemini": "Analytical reporting of electoral demographics in a specific congressional district is procedurally neutral.",
+          "categoryGemini": "politics"
         },
         {
           "sourceId": "npr",
@@ -39911,13 +40091,31 @@
     },
     "cnbc": {
       "name": "CNBC News",
-      "averageSentiment": -0.073,
+      "averageSentiment": -0.075,
       "distribution": {
         "positive": 31,
         "neutral": 64,
-        "negative": 46
+        "negative": 47
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Rep. Ilhan Omar’s home raided in federal criminal investigation",
+          "description": "The Minnesota Democrat, a Muslim who was born in Somalia, has been targeted for criticism in the past by President Donald Trump.",
+          "link": "https://www.cnbc.com/2026/10/12/ilhan-omar-home-raided-dhs-immigration-investigation.html",
+          "pubDate": "Mon, 12 Oct 2026 15:14:16 GMT",
+          "sentimentLocal": -0.684,
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.743,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.74) and AFINN-111 (-0.63).",
+          "categoryLocal": "politics",
+          "sentiment": -0.45,
+          "explanation": "A high-profile congressional representative's residence is raided as part of an active federal criminal inquiry.",
+          "category": "politics",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "A high-profile congressional representative's residence is raided as part of an active federal criminal inquiry.",
+          "categoryGemini": "politics"
+        },
         {
           "sourceId": "cnbc",
           "title": "DOJ confirms search of Rep. Ilhan Omar’s home in federal investigation",
@@ -45224,10 +45422,100 @@
       "averageSentiment": -0.19,
       "distribution": {
         "positive": 38,
-        "neutral": 60,
-        "negative": 114
+        "neutral": 63,
+        "negative": 117
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Heavy police presence calms tensions after Poland school attacks, Tusk says - Reuters",
+          "description": "Heavy police presence calms tensions after Poland school attacks, Tusk says Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQb1J0c0JZS0RlcEN1WjRDeXN3bUtEUVFuV0xoU1BZVFRFZGxkRk5kT2pDNWtFdWxzdFlWeWtIcWMxb1U2UGJhLTFMNVpKU2tUMUZaXzRQNWZ0SEdHZ1V5amJmWGZmN3FIckd0ZXlNOWVKdzE5dHhtaU84anc2Mk1XaG5rYk42bnctekJiYkpRZUlxbmlHUWlHVFBrc3NVdXM2OENmUnVqRU1ycGUwd2RmRGhaUGw5QWx5QkE?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:36:08 GMT",
+          "sentimentLocal": -0.258,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": -0.765,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.77) and AFINN-111 (0.25).",
+          "categoryLocal": "other",
+          "sentiment": -0.42,
+          "explanation": "High police deployment addresses simmering societal tensions following violent school attacks.",
+          "category": "world",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "High police deployment addresses simmering societal tensions following violent school attacks.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Explainer: What is the diesel deal between Putin and Trump? - Reuters",
+          "description": "Explainer: What is the diesel deal between Putin and Trump? Reuters",
+          "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPQVYyWUE3V0taZldlY0hsb2o0Rko0Y0QxTGJrbk80SHhyT3VKcWR1LTNfMFFEcEowbklSemZfRHp0Vk51cTBIQWFxNTBMSGZWTGZJejR4TUtoN1V6NGpWcnJtZWhScXY2MGotd1E4eW05UHd1cVZWb3NJLVI2NXl0QnJlRWlMeW1sVVFKSm1mQnBUd29yZVE?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:07:31 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.05,
+          "explanation": "An explanatory piece outlines international commodity negotiations and trade policies between world leaders.",
+          "category": "business",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "An explanatory piece outlines international commodity negotiations and trade policies between world leaders.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "French supermarket chain Intermarche hit by cyberattack, 150 stores targeted - Reuters",
+          "description": "French supermarket chain Intermarche hit by cyberattack, 150 stores targeted Reuters",
+          "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxOLU1iNVd4N0RyM29yWVFhSldLS2lsa0YydGZld3hRWTFONXlPWGhMcHVNcDB2N3JUSjdiNU1OVURBY0taUVVhMFBOTFNmZHV6dVREX2hsdjBEQ3g3RWRQa0dGLUZQUTZNTERGNlFnT1YzNUFHVVNGd3JLVDNCMnVINHo2Y285UF9sUktjblE1Sm9jcXFuZWZPUFk4cVJpZTNERzZJM2tVT2RzVWVKZXNhQ3NCYzZyeWU1LUM5UEVMRnB6V3ZpUm9IbU5PdzlvX0h2R3ZF?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:05:05 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": -0.55,
+          "explanation": "A major retail chain suffers a widespread cyberattack targeting numerous stores, causing operational disruption.",
+          "category": "business",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "A major retail chain suffers a widespread cyberattack targeting numerous stores, causing operational disruption.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Europe set for another year of high gas prices as reserves hit lows - Reuters",
+          "description": "Europe set for another year of high gas prices as reserves hit lows Reuters",
+          "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxOYUNxdUxmaThaQ0FLdXRxaWdHNE0tMm5OZjVZenR0X1h2cEtmODNEckpiejRHc0dtZXZnajFRZUQyLVo5ckgyR1lyTEN4YzdNNVo4OGptVC1QMkxUYUVGMDJzZnR0RXFZcXZ2NU9JMDNhVDlmLWQyMmhwZHVSRnRXWWVyTnBfX2Z3UXlxT3JRTnZ3R0xMRktqb0gwTWZRVXl4emZqU1NzWHMxX0hBeVE?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:03:01 GMT",
+          "sentimentLocal": -0.191,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.382,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.38) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": -0.32,
+          "explanation": "Persistently high energy prices and depleted reserves signal ongoing economic strain across Europe.",
+          "category": "business",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Persistently high energy prices and depleted reserves signal ongoing economic strain across Europe.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Starbucks says not buying Chipotle, ends takeover speculation - Reuters",
+          "description": "Starbucks says not buying Chipotle, ends takeover speculation Reuters",
+          "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxPbnZGZEV2WklwWFV4b0FvOTI4eFpxVFgxMTNvNDUxSVh3ZVBRalVuWjJaS1JRaUpwTXp0em0yUVAxQjZqQ1dUYlo1MGNEaFlzNUxhOUgxWF9CY3dUem1ILUdqd0FxQzNGNW9CT19qc3hueWlrNlJHQm9vYzJfV2UwWkFsRWpYbzI4THFPSVVCczVVeUpDTzJKVWJaeU45OHZw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 13:55:46 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "entertainment",
+          "sentiment": 0.05,
+          "explanation": "Routine corporate clarification ending market speculation about a potential merger.",
+          "category": "business",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "Routine corporate clarification ending market speculation about a potential merger.",
+          "categoryGemini": "business"
+        },
         {
           "sourceId": "reuters",
           "title": "US launches immigration raid of Democratic congresswoman Ilhan Omar's home - Reuters",
@@ -45245,6 +45533,24 @@
           "sentimentGemini": -0.45,
           "explanationGemini": "A law enforcement raid on a high-profile political figure's home signifies significant political and legal friction.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Microsoft plans huge deployment of its own AI chips, with an eye on saving costs - Reuters",
+          "description": "Microsoft plans huge deployment of its own AI chips, with an eye on saving costs Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxPWHVSM1ltUmRIUHVldm04ZU5JX2hLc0lhYjZVaDMzMDlkVkxXNUM3OTFFVU1kdlM1R3BneGN5cXp3Ui1Yc211TFF0VUU3ZlpRWjhBRy0yOGJjdlZxR3FmdmFHdFNMRDM3Rnh3WjJMd0d1MHNINEdvdWpBVEc5TTJNMjk1Xy1JNEY2b1g5RkYzWXYtakQ0SmNnMHdoUlRnbjFMSWVBUm9QaVBXbkFNUVgwSDVLdURleTBwMHc?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 13:03:47 GMT",
+          "sentimentLocal": 0.404,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.557,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.56) and AFINN-111 (0.25).",
+          "categoryLocal": "technology",
+          "sentiment": 0.15,
+          "explanation": "A major tech corporation plans strategic hardware deployments aimed at long-term operational cost efficiency.",
+          "category": "technology",
+          "sentimentGemini": 0.15,
+          "explanationGemini": "A major tech corporation plans strategic hardware deployments aimed at long-term operational cost efficiency.",
+          "categoryGemini": "technology"
         },
         {
           "sourceId": "reuters",
@@ -49773,31 +50079,13 @@
     },
     "ap": {
       "name": "Associated Press",
-      "averageSentiment": -0.18,
+      "averageSentiment": -0.197,
       "distribution": {
         "positive": 15,
         "neutral": 39,
-        "negative": 45
+        "negative": 48
       },
       "articles": [
-        {
-          "sourceId": "ap",
-          "title": "US stocks hover near their latest record in mixed trading on Wall Street - AP News",
-          "description": "US stocks hover near their latest record in mixed trading on Wall Street AP News",
-          "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQcWs0OFJBbUxDSUJpUEhoaTEwSmlNRVdmWFgwX19pUnc2YWlrdnNTUUJ1VjZsUnNJQ3Vfc0lxMVhMNkdWVjVsdzJVbFlQaHhoRlNsOWtIUHBGVUVyMUxQcmEwLWp3dEZwZkt4aGEySmNmZS1XRVhhWHB1S0dZZlRkWlVDeEVtUm95cVZpanpxNGhsUWcyZU9NRQ?oc=5",
-          "pubDate": "Mon, 12 Oct 2026 14:09:00 GMT",
-          "sentimentLocal": 0,
-          "sentimentAFINN": 0,
-          "sentimentVADER": 0,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
-          "categoryLocal": "business",
-          "sentiment": 0.2,
-          "explanation": "Stock markets hovering near record highs represent positive overall economic conditions.",
-          "category": "business",
-          "sentimentGemini": 0.2,
-          "explanationGemini": "Stock markets hovering near record highs represent positive overall economic conditions.",
-          "categoryGemini": "business"
-        },
         {
           "sourceId": "ap",
           "title": "Federal agents search Rep. Ilhan Omar's home as part of a criminal investigation, AP sources say - AP News",
@@ -49815,6 +50103,24 @@
           "sentimentGemini": -0.48,
           "explanationGemini": "A federal criminal investigation and home search involving a sitting lawmaker is a significant political scandal.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "ap",
+          "title": "US stocks hover near their latest record in mixed trading on Wall Street - AP News",
+          "description": "US stocks hover near their latest record in mixed trading on Wall Street AP News",
+          "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQcWs0OFJBbUxDSUJpUEhoaTEwSmlNRVdmWFgwX19pUnc2YWlrdnNTUUJ1VjZsUnNJQ3Vfc0lxMVhMNkdWVjVsdzJVbFlQaHhoRlNsOWtIUHBGVUVyMUxQcmEwLWp3dEZwZkt4aGEySmNmZS1XRVhhWHB1S0dZZlRkWlVDeEVtUm95cVZpanpxNGhsUWcyZU9NRQ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:09:00 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": 0.2,
+          "explanation": "Stock markets hovering near record highs represent positive overall economic conditions.",
+          "category": "business",
+          "sentimentGemini": 0.2,
+          "explanationGemini": "Stock markets hovering near record highs represent positive overall economic conditions.",
+          "categoryGemini": "business"
         },
         {
           "sourceId": "ap",
@@ -49836,6 +50142,24 @@
         },
         {
           "sourceId": "ap",
+          "title": "Zelenskyy says Russia strikes energy facilities despite Trump claim of an energy ceasefire - AP News",
+          "description": "Zelenskyy says Russia strikes energy facilities despite Trump claim of an energy ceasefire AP News",
+          "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOYk9yd3EweHFPQ2doVnFxQmxCdEJxMmdBdF9FT2tzdExGZmR3eUo0TjFyTmU0azY4UEtmRW56djNGaERmMGdpcmNHZWRPcllwdEhPUVhsNjJqMzYxRko2dXA0VTBtdGZvYUdid1hZZkFMeGtJOGdVX1J0NUU5X29naUJaUVNxMG9LWEw2Q3prUHVTNTlyanVIbjFxOE80Y3oyNTlfX3VhT2U?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:28:00 GMT",
+          "sentimentLocal": -0.455,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": 0.34,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.34) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentiment": -0.75,
+          "explanation": "Continued military infrastructure strikes shatter diplomatic claims of an active energy ceasefire.",
+          "category": "world",
+          "sentimentGemini": -0.75,
+          "explanationGemini": "Continued military infrastructure strikes shatter diplomatic claims of an active energy ceasefire.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "ap",
           "title": "Asian shares are mixed and Brent crude at $104 a barrel after Trump says US will buy Russian diesel - AP News",
           "description": "Asian shares are mixed and Brent crude at $104 a barrel after Trump says US will buy Russian diesel AP News",
           "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQcWs0OFJBbUxDSUJpUEhoaTEwSmlNRVdmWFgwX19pUnc2YWlrdnNTUUJ1VjZsUnNJQ3Vfc0lxMVhMNkdWVjVsdzJVbFlQaHhoRlNsOWtIUHBGVUVyMUxQcmEwLWp3dEZwZkt4aGEySmNmZS1XRVhhWHB1S0dZZlRkWlVDeEVtUm95cVZpanpxNGhsUWcyZU9NRQ?oc=5",
@@ -49851,6 +50175,24 @@
           "sentimentGemini": -0.1,
           "explanationGemini": "Mixed stock performance and energy price reactions represent standard market volatility.",
           "categoryGemini": "business"
+        },
+        {
+          "sourceId": "ap",
+          "title": "North Korea fires multiple ballistic missiles, adding to streak of weapons tests - AP News",
+          "description": "North Korea fires multiple ballistic missiles, adding to streak of weapons tests AP News",
+          "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPZ2FsdGE3YUJ5V3VpbjBDWEpDaF9FMk9IbE9ZWFRUZ0l2SEJmQi1pbFZxNzFscG5LVDJiUUxpRzZ3c2dvbzl0R3RWQmlKTTN0TDdwX1FST0IydGp5c0NwY0lpTTFOQklXZU5LZ2piMnBQRl9pcUg2M3VLTTVSU1k1NngwMkdab3BWeVFuUXh2NTBCTld2?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 06:50:00 GMT",
+          "sentimentLocal": -0.35,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.7,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": -0.58,
+          "explanation": "Provocative ballistic missile tests escalate regional security tensions and geopolitical friction.",
+          "category": "world",
+          "sentimentGemini": -0.58,
+          "explanationGemini": "Provocative ballistic missile tests escalate regional security tensions and geopolitical friction.",
+          "categoryGemini": "world"
         },
         {
           "sourceId": "ap",
@@ -49995,6 +50337,24 @@
           "sentimentGemini": 0.35,
           "explanationGemini": "Strong box office performance for films indicates positive commercial success in the entertainment sector.",
           "categoryGemini": "entertainment"
+        },
+        {
+          "sourceId": "ap",
+          "title": "A deadly airstrike hits a Sudan-Egypt border gold mine, killing at least 13 miners - AP News",
+          "description": "A deadly airstrike hits a Sudan-Egypt border gold mine, killing at least 13 miners AP News",
+          "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNcE4zVU5aRzlpV0NOaGtxM1BYYmMzc0tRUG9mVHJpZ0NBRHFNd2c0dmlOQjFrX01Fb1cxSDFpa2RzTzFhamlhQVFtYUc5bzczcThPc0poQkdpbG8ydGcySGNBMjZnRkRtbWVQeUpqUXI1a0pwdWVuUUFuY1R3UHg2ZDJmcUZhT3dqeHI2c0ViR3NxcmVsay1OU0pUa01lS0E?oc=5",
+          "pubDate": "Sun, 11 Oct 2026 16:17:00 GMT",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.869,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.87) and AFINN-111 (-1.00).",
+          "categoryLocal": "world",
+          "sentiment": -0.85,
+          "explanation": "A deadly airstrike strikes a remote mining site, resulting in multiple fatalities.",
+          "category": "world",
+          "sentimentGemini": -0.85,
+          "explanationGemini": "A deadly airstrike strikes a remote mining site, resulting in multiple fatalities.",
+          "categoryGemini": "world"
         },
         {
           "sourceId": "ap",
@@ -51903,13 +52263,67 @@
     },
     "bloomberg": {
       "name": "Bloomberg",
-      "averageSentiment": -0.09,
+      "averageSentiment": -0.094,
       "distribution": {
         "positive": 39,
-        "neutral": 60,
-        "negative": 73
+        "neutral": 61,
+        "negative": 76
       },
       "articles": [
+        {
+          "sourceId": "bloomberg",
+          "title": "US Mortgage Bond Funds Suffer One of Worst Outflows Since 2021 - Bloomberg.com",
+          "description": "US Mortgage Bond Funds Suffer One of Worst Outflows Since 2021 Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOa2F1UF9hTzVONGlnbC1MZ1AyODMycDZFRFNHZTFwZXV3Ui1TZ3BrYXFtTkwwUkFCTk5iWVpIMnFuRlBVSm14Nkk3NGRWSTFCUm5fMDZUSHctUGJ3WFg4N2dUdTk3b0h1ZEZoVmdjcXlJblJqWkpCR2Njc1Vhaklwb1JjMVphUDM3VjY3Y1dyYlJFZ09tbWttYTJjc0FkSnE1bVNQZFlpc0VwdVh6ZkhscVVBYw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:26:22 GMT",
+          "sentimentLocal": -0.973,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.945,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.95) and AFINN-111 (-1.00).",
+          "categoryLocal": "other",
+          "sentiment": -0.48,
+          "explanation": "Significant financial outflow in mortgage bond funds indicates severe market distress and investor anxiety.",
+          "category": "business",
+          "sentimentGemini": -0.48,
+          "explanationGemini": "Significant financial outflow in mortgage bond funds indicates severe market distress and investor anxiety.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "NATO Military Chief Lauds Ukraine, Lays Out Russia Strategy - Bloomberg.com",
+          "description": "NATO Military Chief Lauds Ukraine, Lays Out Russia Strategy Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxOaVZwY29KVU9fWEZVd0JzaXItTWUxUWFpVWZVeVRyWTg0MVBQYm1nVXNuUmVhQzZqblpHTVNRRUxQTWstZVZJaU5wVEhjdnczX05kdWp0SDNseVVvdThmTnFkd0VBQ3V0MnpEdWhlM29uLTJoT001bnhGc29Kbl9heklHUXR1MkZYVE4zRTFBOURpekp6d01Wd3BiZ2Z1TGx0MDBrcmNndEJBcHJVT2c?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 13:52:38 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "world",
+          "sentiment": -0.22,
+          "explanation": "High-level military strategy discussions involving active geopolitical conflict reflect underlying tension.",
+          "category": "world",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "High-level military strategy discussions involving active geopolitical conflict reflect underlying tension.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Starbucks Says It’s Not Buying Chipotle Following Speculation - Bloomberg.com",
+          "description": "Starbucks Says It’s Not Buying Chipotle Following Speculation Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNd2xFVUFxVU94RlN3RU54Z3MtamJZcWd2M0JKaVltU0dMZk1nOVg5aks1NUl1TVctNzlWMGpxelNxX3B6N2pHLXFJMG9Vb01UQTZzOFY3QXJNcDJ2dWhOeUJQdFpmekZQSzVDby01UHQ4SVM4cmZOQkpuYm14NW1RVGFPelJ3VWlCT1I2V3pOM2JpMURJOXl5ZV9MeEVjcVo2VUF1em1HTWxFdnVyanM0R0tUSQ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 13:18:36 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.05,
+          "explanation": "Routine corporate clarification regarding market speculation with no material impact.",
+          "category": "business",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "Routine corporate clarification regarding market speculation with no material impact.",
+          "categoryGemini": "business"
+        },
         {
           "sourceId": "bloomberg",
           "title": "Google Debuts $180 Fitbit Edge Tracker in Continued Health Push - Bloomberg.com",
@@ -51926,6 +52340,24 @@
           "category": "technology",
           "sentimentGemini": 0.3,
           "explanationGemini": "The launch of a new health tracking device demonstrates ongoing technology product development.",
+          "categoryGemini": "technology"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Tesla Faces US Probe Over Claim of Robotaxis Speeding in School Zones - Bloomberg.com",
+          "description": "Tesla Faces US Probe Over Claim of Robotaxis Speeding in School Zones Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxOUjNHUW0xZ0xCbFY3dHY5TGY1bHVKQy1qakxLMzZMalhPeEhCTlk5aHJQYmZld2lvRlpMQm9hSHlUM0hvalZObmFjZDdabGIycFZwWW1mdW1SWkNIbDBuV0lpSkZtUmVNVWdqNUVRZmxOV0dtWE5UdVpDMDRIYVlUQ0EzMndUcVVRVl9fZ3NrVGVGQ2tXWi02WVU0RGhZN2V0ZUZXR09iSU9LeGF2bXk4T25hS3g?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:14:34 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentiment": -0.42,
+          "explanation": "Regulatory safety probe into autonomous vehicle behavior near a school zone poses significant reputational and operational risk.",
+          "category": "technology",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "Regulatory safety probe into autonomous vehicle behavior near a school zone poses significant reputational and operational risk.",
           "categoryGemini": "technology"
         },
         {
@@ -55994,6 +56426,25 @@
         "reuters": -0.19,
         "ap": -0.174,
         "bloomberg": -0.09
+      }
+    },
+    {
+      "timestamp": "2026-10-12T15:19:34.311Z",
+      "analyzer": "Gemini (gemini-3.5-flash-lite)",
+      "averages": {
+        "bbc": -0.184,
+        "nyt": -0.182,
+        "cnn": 0,
+        "guardian": -0.093,
+        "fox": -0.133,
+        "aljazeera": -0.248,
+        "npr": -0.194,
+        "cnbc": -0.075,
+        "skynews": -0.358,
+        "spiegel": -0.186,
+        "reuters": -0.19,
+        "ap": -0.197,
+        "bloomberg": -0.094
       }
     }
   ]
