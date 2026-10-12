@@ -421,20 +421,28 @@ function setSyncingState(isSyncing, message) {
   if (isSyncing) {
     const msg = message || 'Syncing & Analyzing (takes ~10s)...';
     state.syncMessage = msg;
-    elements.syncBtn.disabled = true;
-    elements.syncIcon.classList.add('spin');
-    elements.syncBtn.querySelector('span').innerText = msg;
-    document.querySelector('.status-dot').className = 'status-dot loading';
-    elements.lastUpdatedText.innerText = msg;
+    if (elements.syncBtn) {
+      elements.syncBtn.disabled = true;
+      const span = elements.syncBtn.querySelector('span');
+      if (span) span.innerText = msg;
+    }
+    if (elements.syncIcon) elements.syncIcon.classList.add('spin');
+    const dot = document.querySelector('.status-dot');
+    if (dot) dot.className = 'status-dot loading';
+    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = msg;
   } else {
     state.syncMessage = '';
-    elements.syncBtn.disabled = false;
-    elements.syncIcon.classList.remove('spin');
-    const label = state.sentimentMode === 'gemini' ? 'Run Gemini Analysis' : 'Run OpenRouter Analysis';
-    elements.syncBtn.querySelector('span').innerText = label;
-    document.querySelector('.status-dot').className = 'status-dot green';
+    if (elements.syncBtn) {
+      elements.syncBtn.disabled = false;
+      const label = state.sentimentMode === 'gemini' ? 'Run Gemini Analysis' : 'Run OpenRouter Analysis';
+      const span = elements.syncBtn.querySelector('span');
+      if (span) span.innerText = label;
+    }
+    if (elements.syncIcon) elements.syncIcon.classList.remove('spin');
+    const dot = document.querySelector('.status-dot');
+    if (dot) dot.className = 'status-dot green';
     const dateStr = state.lastUpdated ? new Date(state.lastUpdated).toLocaleString() : 'Never';
-    elements.lastUpdatedText.innerText = `Last Updated: ${dateStr}`;
+    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = `Synced: ${dateStr}`;
   }
 }
 
@@ -498,7 +506,9 @@ function switchSentimentMode(mode) {
     }
   });
 
-  updateAppUI();
+  if (state.sources && Object.keys(state.sources).length > 0) {
+    updateAppUI();
+  }
 }
 
 // Switch active spectrum view mode (Averages vs Beeswarm Lanes)
@@ -697,22 +707,25 @@ function updateAppUI() {
 
   // Update control bar texts
   if (state.isSyncing) {
-    elements.lastUpdatedText.innerText = state.syncMessage || 'Sync in progress...';
-    document.querySelector('.status-dot').className = 'status-dot loading';
+    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = state.syncMessage || 'Sync in progress...';
+    const dot = document.querySelector('.status-dot');
+    if (dot) dot.className = 'status-dot loading';
   } else {
     const dateStr = state.lastUpdated ? new Date(state.lastUpdated).toLocaleString() : 'Never';
-    elements.lastUpdatedText.innerText = `Last Updated: ${dateStr}`;
-    document.querySelector('.status-dot').className = 'status-dot green';
+    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = `Synced: ${dateStr}`;
+    const dot = document.querySelector('.status-dot');
+    if (dot) dot.className = 'status-dot green';
   }
-  elements.analyzerBadge.innerText = state.analyzerUsed || 'None';
   
-  // Highlight analyzer color
-  if (state.analyzerUsed && state.analyzerUsed.includes('Gemini')) {
-    elements.analyzerBadge.style.color = '#818cf8';
-    elements.analyzerBadge.style.borderColor = 'rgba(129, 140, 248, 0.4)';
-  } else {
-    elements.analyzerBadge.style.color = 'var(--text-secondary)';
-    elements.analyzerBadge.style.borderColor = 'var(--border-color)';
+  if (elements.analyzerBadge) {
+    elements.analyzerBadge.innerText = state.analyzerUsed || 'None';
+    if (state.analyzerUsed && state.analyzerUsed.includes('Gemini')) {
+      elements.analyzerBadge.style.color = '#818cf8';
+      elements.analyzerBadge.style.borderColor = 'rgba(129, 140, 248, 0.4)';
+    } else {
+      elements.analyzerBadge.style.color = 'var(--text-secondary)';
+      elements.analyzerBadge.style.borderColor = 'var(--border-color)';
+    }
   }
   
   // Setup selectors
@@ -1618,27 +1631,35 @@ window.toggleReasoningPanel = function(id, btn) {
 
 // UI State Message Helpers
 function showEmptyState() {
-  elements.lastUpdatedText.innerText = 'Cache is empty.';
-  elements.analyzerBadge.innerText = 'None';
-  elements.headlinesContainer.innerHTML = `
-    <div class="empty-state">
-      <i data-lucide="database-backup"></i>
-      <h3>No local news data found</h3>
-      <p>Click "Sync & Analyze Feeds" to fetch headlines and calculate their sentiment.</p>
-    </div>
-  `;
-  lucide.createIcons();
+  if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = 'Cache is empty.';
+  if (elements.analyzerBadge) elements.analyzerBadge.innerText = 'None';
+  if (elements.headlinesContainer) {
+    elements.headlinesContainer.innerHTML = `
+      <div class="empty-state">
+        <i data-lucide="database-backup"></i>
+        <h3>No local news data found</h3>
+        <p>Waiting for data synchronization...</p>
+      </div>
+    `;
+  }
+  if (typeof lucide !== 'undefined' && lucide.createIcons) {
+    lucide.createIcons();
+  }
 }
 
 function showErrorState(message) {
-  elements.headlinesContainer.innerHTML = `
-    <div class="empty-state">
-      <i data-lucide="alert-triangle" style="color:var(--neg-color)"></i>
-      <h3>An error occurred</h3>
-      <p>${message}</p>
-    </div>
-  `;
-  lucide.createIcons();
+  if (elements.headlinesContainer) {
+    elements.headlinesContainer.innerHTML = `
+      <div class="empty-state">
+        <i data-lucide="alert-triangle" style="color:var(--neg-color)"></i>
+        <h3>An error occurred</h3>
+        <p>${message}</p>
+      </div>
+    `;
+  }
+  if (typeof lucide !== 'undefined' && lucide.createIcons) {
+    lucide.createIcons();
+  }
 }
 
 // Setup macOS dock taskbar zoom style magnification on the spectrum markers
