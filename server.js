@@ -9,7 +9,18 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const parser = new Parser();
+const parser = new Parser({
+  timeout: 10000,
+  headers: { 'User-Agent': 'Vibe-O-Meter/2.0 (News Sentiment Monitor)' },
+  customFields: {
+    item: [
+      ['content:encoded', 'contentEncoded'],
+      ['media:description', 'mediaDescription'],
+      ['itunes:summary', 'itunesSummary'],
+      ['summary', 'atomSummary']
+    ]
+  }
+});
 const sentimentAnalyzer = new Sentiment();
 
 // Ensure data folder exists
@@ -44,7 +55,31 @@ const MAX_ARTICLES_PER_SOURCE = 500; // Store up to 500 articles in history per 
 // Helper to sanitize text
 function sanitizeText(text) {
   if (!text) return '';
-  return text.replace(/[\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
+  return text.replace(/<[^>]*>?/gm, '').replace(/[\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Extract richest lead paragraph from multiple RSS/Atom summary tags
+function extractBestDescription(item) {
+  const candidates = [
+    item.contentEncoded,
+    item.atomSummary,
+    item.contentSnippet,
+    item.summary,
+    item.description,
+    item.content,
+    item.mediaDescription,
+    item.itunesSummary
+  ];
+
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim().length > 15) {
+      const clean = sanitizeText(c);
+      if (clean.length > 15) {
+        return clean.length > 450 ? clean.substring(0, 447) + '...' : clean;
+      }
+    }
+  }
+  return '';
 }
 
 // Local sentiment analyzer fallback
@@ -588,7 +623,7 @@ app.post('/api/sync', async (req, res) => {
         // Take latest 25 items from current RSS feed
         const rawItems = feed.items.slice(0, 25).map(item => ({
           title: sanitizeText(item.title),
-          description: sanitizeText(item.contentSnippet || item.content || ''),
+          description: extractBestDescription(item),
           link: item.link || '',
           pubDate: item.pubDate || item.isoDate || new Date().toISOString()
         }));
@@ -1069,7 +1104,13 @@ async function runBackgroundSync() {
               sourceArticles.push(cached);
             }
           } else {
-            const newArticle = { sourceId: source.id, ...item };
+            const newArticle = {
+              sourceId: source.id,
+              title: sanitizeText(item.title),
+              description: extractBestDescription(item),
+              link: item.link || '',
+              pubDate: item.pubDate || item.isoDate || new Date().toISOString()
+            };
             articlesToAnalyzeLocally.push(newArticle);
             if (useGemini) articlesToAnalyzeWithGemini.push(newArticle);
             if (useOpenRouter) articlesToAnalyzeWithOpenRouter.push(newArticle);

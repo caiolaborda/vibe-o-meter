@@ -26,7 +26,15 @@ if (!fs.existsSync(PUBLIC_DATA_DIR)) fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: 
 
 const parser = new Parser({
   timeout: 10000,
-  headers: { 'User-Agent': 'Vibe-O-Meter/2.0 (News Sentiment Monitor)' }
+  headers: { 'User-Agent': 'Vibe-O-Meter/2.0 (News Sentiment Monitor)' },
+  customFields: {
+    item: [
+      ['content:encoded', 'contentEncoded'],
+      ['media:description', 'mediaDescription'],
+      ['itunes:summary', 'itunesSummary'],
+      ['summary', 'atomSummary']
+    ]
+  }
 });
 const sentimentAnalyzer = new Sentiment();
 
@@ -51,6 +59,31 @@ const MAX_ARTICLES_PER_SOURCE = 500;
 function sanitizeText(text) {
   if (!text) return '';
   return text.replace(/<[^>]*>?/gm, '').replace(/[\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Extract richest lead paragraph from multiple RSS/Atom summary tags
+function extractBestDescription(item) {
+  const candidates = [
+    item.contentEncoded,
+    item.atomSummary,
+    item.contentSnippet,
+    item.summary,
+    item.description,
+    item.content,
+    item.mediaDescription,
+    item.itunesSummary
+  ];
+
+  for (const c of candidates) {
+    if (typeof c === 'string' && c.trim().length > 15) {
+      const clean = sanitizeText(c);
+      if (clean.length > 15) {
+        // Truncate to ~450 characters (2-3 solid sentences) to balance rich context with low token usage
+        return clean.length > 450 ? clean.substring(0, 447) + '...' : clean;
+      }
+    }
+  }
+  return '';
 }
 
 function readCache() {
@@ -354,7 +387,7 @@ async function main() {
       const items = (feed.items || []).slice(0, 25).map(item => ({
         sourceId: source.id,
         title: sanitizeText(item.title),
-        description: sanitizeText(item.contentSnippet || item.content || ''),
+        description: extractBestDescription(item),
         link: item.link || '',
         pubDate: item.pubDate || item.isoDate || new Date().toISOString()
       }));
