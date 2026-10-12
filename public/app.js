@@ -329,7 +329,8 @@ async function fetchData() {
     // 2. If running statically (GitHub Pages / Cloudflare / Netlify), load baked data.json
     if (!data || !data.sources || Object.keys(data.sources).length === 0) {
       try {
-        const staticRes = await fetch('data/data.json');
+        const cacheBuster = `?v=${Date.now()}`;
+        const staticRes = await fetch(`data/data.json${cacheBuster}`);
         if (staticRes.ok) {
           data = await staticRes.json();
         }
@@ -339,7 +340,8 @@ async function fetchData() {
     // 3. Fallback to summary.json
     if (!data || !data.sources || Object.keys(data.sources).length === 0) {
       try {
-        const summaryRes = await fetch('data/summary.json');
+        const cacheBuster = `?v=${Date.now()}`;
+        const summaryRes = await fetch(`data/summary.json${cacheBuster}`);
         if (summaryRes.ok) {
           data = await summaryRes.json();
         }
