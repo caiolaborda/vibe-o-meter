@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-12T14:36:51.268Z",
+  "lastUpdated": "2026-10-12T14:52:26.070Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-12",
   "editorialSummary": "Good morning, executives: today the global mood sits at a mildly depressed -0.158, dragged down primarily by Sky News leading the charge into the abyss at -0.358 while CNN bravely pretends everything is fine at a flat zero. Fortunately, our 1,743 analyzed headlines reveal a neat little schizophrenia: while world news and health are busy forecasting the apocalypse, environment and science are huffing pure copium with positive vibes to keep us from canceling the future altogether.",
   "globalStats": {
-    "globalSentiment": -0.159,
-    "totalArticles": 1749,
+    "globalSentiment": -0.16,
+    "totalArticles": 1760,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
@@ -17,12 +17,12 @@
       "score": 0
     },
     "categoryAverages": {
-      "politics": -0.197,
+      "politics": -0.199,
+      "business": -0.107,
       "entertainment": 0.016,
-      "world": -0.588,
+      "world": -0.589,
       "technology": -0.006,
-      "sports": 0.05,
-      "business": -0.105,
+      "sports": 0.052,
       "other": -0.039,
       "health": -0.274,
       "science": 0.194,
@@ -35,11 +35,11 @@
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.183,
+      "averageSentiment": -0.184,
       "distribution": {
         "positive": 29,
         "neutral": 70,
-        "negative": 91
+        "negative": 92
       },
       "articles": [
         {
@@ -59,6 +59,24 @@
           "sentimentGemini": -0.18,
           "explanationGemini": "A legal setback in a contentious sectarian dispute represents a mild political and social tension.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "French supermarket fridges heated to 50C in 'unprecedented' cyber attack",
+          "description": "Hundreds of stores were targeted by the overnight hack, which spoiled fresh and frozen food estimated to be worth millions of euros.",
+          "link": "https://www.bbc.co.uk/news/articles/crq5nzxv9q4yo?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 14:30:09 GMT",
+          "sentimentLocal": -0.487,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.026,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.03) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": -0.42,
+          "explanation": "A major cyber attack causing millions in food spoilage represents significant commercial and infrastructural damage.",
+          "category": "business",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "A major cyber attack causing millions in food spoilage represents significant commercial and infrastructural damage.",
+          "categoryGemini": "business"
         },
         {
           "sourceId": "bbc",
@@ -13398,10 +13416,28 @@
       "averageSentiment": -0.09,
       "distribution": {
         "positive": 50,
-        "neutral": 64,
+        "neutral": 65,
         "negative": 82
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "Alex Gibney says Universal ‘wavered’ over releasing Elon Musk documentary",
+          "description": "The revelation comes after the four-hour film’s Venice premiere drew a string of criticisms and insults from the founder of SpaceXAI Alex Gibney, director of the new four-hour documentary about Elon Musk, said that Universal, owners of the film’s international distribution rights “wavered” over releasing the film outside North America. Gibney was speaking to the New York Times as the film opened in the US (where it is being released by the independent distributor Bleecker Street), and appeared to confirm a story in the Hollywood Reporter that Universal, which had acquired the international rights to the film in 2023, had got cold feet. Asked by the New York Times, “Did Universal Pictures waver in setting up its international release plans?” Gibney replied: “Yes.” Continue reading...",
+          "link": "https://www.theguardian.com/film/2026/oct/12/alex-gibney-universal-wavered-releasing-elon-musk-documentary",
+          "pubDate": "Mon, 12 Oct 2026 14:38:44 GMT",
+          "sentimentLocal": -0.411,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.572,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.57) and AFINN-111 (-0.25).",
+          "categoryLocal": "technology",
+          "sentiment": -0.15,
+          "explanation": "Industry hesitation and distribution disputes surrounding a documentary reflect minor corporate and creative friction.",
+          "category": "entertainment",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Industry hesitation and distribution disputes surrounding a documentary reflect minor corporate and creative friction.",
+          "categoryGemini": "entertainment"
+        },
         {
           "sourceId": "guardian",
           "title": "Children and mothers included in Reform plan to immediately deport 90,000 asylum seekers",
@@ -22563,13 +22599,49 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.134,
+      "averageSentiment": -0.135,
       "distribution": {
-        "positive": 32,
+        "positive": 33,
         "neutral": 86,
-        "negative": 88
+        "negative": 89
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "Josh Brolin calls 'Sicario 3' cast work 'untouchable' as franchise moves forward without Sheridan script",
+          "description": "Josh Brolin reveals the third \"Sicario\" film is still in the notes process as he reunites with Benicio Del Toro and Emily Blunt for the sequel.",
+          "link": "https://www.foxnews.com/outkick-culture/josh-brolin-calls-sicario-3-cast-work-untouchable-franchise-moves-forward-without-sheridan-script",
+          "pubDate": "Mon, 12 Oct 2026 10:43:50 -0400",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "entertainment",
+          "sentiment": 0.22,
+          "explanation": "Positive updates on a major film franchise continuation bring constructive entertainment news.",
+          "category": "entertainment",
+          "sentimentGemini": 0.22,
+          "explanationGemini": "Positive updates on a major film franchise continuation bring constructive entertainment news.",
+          "categoryGemini": "entertainment"
+        },
+        {
+          "sourceId": "fox",
+          "title": "Zelenskyy accuses Putin of defying Trump's ceasefire push, sends pointed message to White House",
+          "description": "Volodymyr Zelenskyy accuses Vladimir Putin of attacking Ukraine's gas infrastructure hours after Trump announced an immediate energy ceasefire.",
+          "link": "https://www.foxnews.com/world/zelenskyy-blasts-putin-defying-trumps-ceasefire-push-sends-pointed-message-white-house",
+          "pubDate": "Mon, 12 Oct 2026 10:36:46 -0400",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.691,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.69) and AFINN-111 (-0.63).",
+          "categoryLocal": "politics",
+          "sentiment": -0.74,
+          "explanation": "Active attacks on energy infrastructure despite proposed ceasefires represent severe ongoing warfare.",
+          "category": "world",
+          "sentimentGemini": -0.74,
+          "explanationGemini": "Active attacks on energy infrastructure despite proposed ceasefires represent severe ongoing warfare.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "fox",
           "title": "Democrats see new chances to flip red states — but a $400M GOP spending advantage could derail their plans",
@@ -33571,13 +33643,85 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.242,
+      "averageSentiment": -0.245,
       "distribution": {
-        "positive": 25,
+        "positive": 26,
         "neutral": 66,
-        "negative": 97
+        "negative": 100
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Iran-Saudi talks on Yemen’s Houthis: What’s in it for Tehran?",
+          "description": "Tehran seeks dialogue in Yemen conflict, warning a military solution risks complicating the volatile regional situation.",
+          "link": "https://www.aljazeera.com/news/2026/10/12/iran-saudi-talks-on-yemens-houthis-whats-in-it-for-tehran?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 14:27:49 +0000",
+          "sentimentLocal": -0.771,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.542,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-1.00).",
+          "categoryLocal": "world",
+          "sentiment": -0.18,
+          "explanation": "Diplomatic talks amid ongoing regional conflict involve mild political tension and cautious negotiation.",
+          "category": "world",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "Diplomatic talks amid ongoing regional conflict involve mild political tension and cautious negotiation.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Iran sets crosshairs on ‘US-UAE’ oil shuttle out of Strait of Hormuz",
+          "description": "The IRGC is hitting more ships allegedly part of a shuttle operation to move crude oil beyond the Strait of Hormuz.",
+          "link": "https://www.aljazeera.com/economy/2026/10/12/iran-sets-crosshairs-on-us-uae-oil-shuttle-out-of-strait-of-hormuz?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 14:25:55 +0000",
+          "sentimentLocal": -0.348,
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.572,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.57) and AFINN-111 (-0.13).",
+          "categoryLocal": "other",
+          "sentiment": -0.72,
+          "explanation": "Military forces targeting and hitting oil shipping vessels constitutes dangerous maritime conflict.",
+          "category": "world",
+          "sentimentGemini": -0.72,
+          "explanationGemini": "Military forces targeting and hitting oil shipping vessels constitutes dangerous maritime conflict.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Why are the Houthis striking Saudi airports?",
+          "description": "The attacks mark the deadliest assault on Saudi soil in more than a decade.",
+          "link": "https://www.aljazeera.com/news/2026/10/12/why-are-the-houthis-striking-saudi-airports?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 14:23:20 +0000",
+          "sentimentLocal": -0.573,
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.772,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.77) and AFINN-111 (-0.38).",
+          "categoryLocal": "other",
+          "sentiment": -0.85,
+          "explanation": "Deadly missile and drone assaults on national infrastructure represent severe, violent conflict.",
+          "category": "world",
+          "sentimentGemini": -0.85,
+          "explanationGemini": "Deadly missile and drone assaults on national infrastructure represent severe, violent conflict.",
+          "categoryGemini": "world"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Bergs stuns Alcaraz in Shanghai as Zverev claims year’s top tennis ranking",
+          "description": "After defending his Japan Open title after returning from injury, Alcaraz never found his rhythm in a scrappy contest.",
+          "link": "https://www.aljazeera.com/sports/2026/10/12/zizou-bergs-stuns-alcaraz-in-shanghai-as-zverev-claims-year-end-top-ranking?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 14:14:04 +0000",
+          "sentimentLocal": -0.113,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.226,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.23) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentiment": 0.25,
+          "explanation": "Major tennis upsets and ranking milestones deliver positive and exciting sports updates.",
+          "category": "sports",
+          "sentimentGemini": 0.25,
+          "explanationGemini": "Major tennis upsets and ranking milestones deliver positive and exciting sports updates.",
+          "categoryGemini": "sports"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Israeli academic and Al Jazeera contributor Ori Goldberg dies at 50",
@@ -37988,11 +38132,11 @@
     },
     "npr": {
       "name": "NPR News",
-      "averageSentiment": -0.194,
+      "averageSentiment": -0.196,
       "distribution": {
         "positive": 17,
         "neutral": 19,
-        "negative": 35
+        "negative": 36
       },
       "articles": [
         {
@@ -38015,24 +38159,6 @@
         },
         {
           "sourceId": "npr",
-          "title": "U.S. restrictions on Chinese drones are leaving police departments in the lurch",
-          "description": "The U.S. government is trying to end the dominance of high-quality, low-cost drones made in China. But more restrictions mean higher costs for cash-strapped police forces that rely on those drones.",
-          "link": "https://www.npr.org/2026/10/12/nx-s1-5888604/police-chinese-drones-bans-costs",
-          "pubDate": "Mon, 12 Oct 2026 05:00:00 -0400",
-          "sentimentLocal": 0.101,
-          "sentimentAFINN": 0,
-          "sentimentVADER": 0.202,
-          "explanationLocal": "Analyzed locally with VADER (0.20) and AFINN-111 (0.00).",
-          "categoryLocal": "politics",
-          "sentiment": -0.32,
-          "explanation": "Regulatory bans creating budgetary and operational deficits for law enforcement carry negative impacts.",
-          "category": "technology",
-          "sentimentGemini": -0.32,
-          "explanationGemini": "Regulatory bans creating budgetary and operational deficits for law enforcement carry negative impacts.",
-          "categoryGemini": "technology"
-        },
-        {
-          "sourceId": "npr",
           "title": "Here's what to know if you're unsure about your measles immunity status",
           "description": "Vaccination is the best way to protect yourself against measles. For most adults, one shot of the MMR is considered enough protection. But there are certain situations that call for a second dose.",
           "link": "https://www.npr.org/2026/10/12/nx-s1-5991904/measles-vaccination-status-outbreak-extra-dose",
@@ -38048,6 +38174,42 @@
           "sentimentGemini": 0.28,
           "explanationGemini": "Constructive medical guidance informing the public about preventive immunization fosters safety.",
           "categoryGemini": "health"
+        },
+        {
+          "sourceId": "npr",
+          "title": "U.S. restrictions on Chinese drones are hurting cash-strapped police departments",
+          "description": "The U.S. government is trying to end the dominance of high-quality, low-cost drones made in China. But more restrictions mean higher costs for cash-strapped police forces that rely on those drones.",
+          "link": "https://www.npr.org/2026/10/12/nx-s1-5888604/police-chinese-drones-bans-costs",
+          "pubDate": "Mon, 12 Oct 2026 05:00:00 -0400",
+          "sentimentLocal": -0.238,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.226,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.23) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentiment": -0.32,
+          "explanation": "Government trade restrictions creating financial burdens for local public services constitute negative economic news.",
+          "category": "business",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Government trade restrictions creating financial burdens for local public services constitute negative economic news.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "npr",
+          "title": "U.S. restrictions on Chinese drones are leaving police departments in the lurch",
+          "description": "The U.S. government is trying to end the dominance of high-quality, low-cost drones made in China. But more restrictions mean higher costs for cash-strapped police forces that rely on those drones.",
+          "link": "https://www.npr.org/2026/10/12/nx-s1-5888604/police-chinese-drones-bans-costs",
+          "pubDate": "Mon, 12 Oct 2026 05:00:00 -0400",
+          "sentimentLocal": 0.101,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.202,
+          "explanationLocal": "Analyzed locally with VADER (0.20) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.32,
+          "explanation": "Regulatory bans creating budgetary and operational deficits for law enforcement carry negative impacts.",
+          "category": "technology",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Regulatory bans creating budgetary and operational deficits for law enforcement carry negative impacts.",
+          "categoryGemini": "technology"
         },
         {
           "sourceId": "npr",
@@ -49611,11 +49773,11 @@
     },
     "ap": {
       "name": "Associated Press",
-      "averageSentiment": -0.174,
+      "averageSentiment": -0.18,
       "distribution": {
         "positive": 15,
         "neutral": 39,
-        "negative": 43
+        "negative": 45
       },
       "articles": [
         {
@@ -49635,6 +49797,24 @@
           "sentimentGemini": 0.2,
           "explanationGemini": "Stock markets hovering near record highs represent positive overall economic conditions.",
           "categoryGemini": "business"
+        },
+        {
+          "sourceId": "ap",
+          "title": "Federal agents search Rep. Ilhan Omar's home as part of a criminal investigation, AP sources say - AP News",
+          "description": "Federal agents search Rep. Ilhan Omar's home as part of a criminal investigation, AP sources say AP News",
+          "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNQjdzXzdVOVh5OVVkeXRrSlNpQXBuMTBWQzhqRDUtbG9uY1ZET0trR0xXNmlIQUhBY1hRS1BsVm8yRENMUE1MZTRxaEtsUmFoaEFUSXFuTXpqeVpqMHd5a1ZYOEtnT3ZvV1NhNmZYMUg0WnlGenFVal82aFp3c2psT25Fc0dRSUNWbkNobw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:09:00 GMT",
+          "sentimentLocal": -0.764,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.778,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.78) and AFINN-111 (-0.75).",
+          "categoryLocal": "business",
+          "sentiment": -0.48,
+          "explanation": "A federal criminal investigation and home search involving a sitting lawmaker is a significant political scandal.",
+          "category": "politics",
+          "sentimentGemini": -0.48,
+          "explanationGemini": "A federal criminal investigation and home search involving a sitting lawmaker is a significant political scandal.",
+          "categoryGemini": "politics"
         },
         {
           "sourceId": "ap",
@@ -49779,6 +49959,24 @@
           "sentimentGemini": -0.95,
           "explanationGemini": "The death of 139 migrants, including children, in a capsized boat constitutes a massive humanitarian catastrophe.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "ap",
+          "title": "Pakistani president suspends provincial government led by Khan’s party ahead of march - AP News",
+          "description": "Pakistani president suspends provincial government led by Khan’s party ahead of march AP News",
+          "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxNWmdLcnFXLWZKdHNHNzFwVklpTS1OYUZDMnVZZDV4cjVOX2daQTZoM3FEWUdmVEJQRVRuZVk0NWpKcGlid2JkbmMwQmlObkZEMWh2bmpNVXctdEJSczJFaUdNN0ZtMVpTdDZOVUU5RDJFbTFUOHJ5VnlhZDlGRjF2U2x6ZE9MYm01c2NHSnZfRWVNNm5WMlVvQVlZcnJrdnc?oc=5",
+          "pubDate": "Sun, 11 Oct 2026 18:13:00 GMT",
+          "sentimentLocal": 0.33,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.66,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.66) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.55,
+          "explanation": "The suspension of a provincial government by presidential decree indicates a serious escalation of political crisis.",
+          "category": "politics",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "The suspension of a provincial government by presidential decree indicates a serious escalation of political crisis.",
+          "categoryGemini": "politics"
         },
         {
           "sourceId": "ap",
