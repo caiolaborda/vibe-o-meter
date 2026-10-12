@@ -849,15 +849,18 @@ function renderSpectrum() {
       }
       markerPositions.push({ x: finalX, y: yLevel });
       
-      // Color: stretch color based on position in visible spectrum
-      const normVal = (avg - domainMin) / domainSpan; // 0 to 1
+      // Absolute valence color (negative numbers like -0.09 must NEVER be green!)
       let markerColor = '#64748b'; // neutral slate
-      if (normVal < 0.35) {
-        markerColor = '#ef4444'; // negative coral
-      } else if (normVal > 0.65) {
+      if (avg < -0.15) {
+        markerColor = '#ef4444'; // negative coral / alarmist
+      } else if (avg < -0.02) {
+        markerColor = '#f97316'; // amber-orange / leaning gloomy
+      } else if (avg > 0.15) {
         markerColor = '#22c55e'; // positive emerald
+      } else if (avg > 0.02) {
+        markerColor = '#10b981'; // gentle positive
       } else {
-        markerColor = '#f59e0b'; // amber/balanced
+        markerColor = '#64748b'; // objective neutral
       }
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
@@ -2262,6 +2265,52 @@ function renderHeatmapMatrix() {
       }
       container.appendChild(cell);
     });
+  });
+
+  // --- BOTTOM ROW: OVERALL AVERAGE VIBE PER OUTLET ---
+  const avgLabel = document.createElement('div');
+  avgLabel.className = 'heatmap-row-label avg-row-label';
+  avgLabel.innerHTML = '<strong>📊 OVERALL AVG</strong>';
+  avgLabel.title = 'Average sentiment across all covered topics';
+  container.appendChild(avgLabel);
+
+  sourceIds.forEach(id => {
+    const src = sources[id];
+    const scored = (src.articles || []).filter(a => typeof a.sentiment === 'number');
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell avg-cell';
+
+    if (scored.length === 0) {
+      cell.innerText = '—';
+      cell.style.background = 'rgba(148, 163, 184, 0.08)';
+      cell.style.color = 'var(--text-muted)';
+      cell.title = `${src.name}: No articles analyzed`;
+    } else {
+      const sum = scored.reduce((acc, a) => acc + a.sentiment, 0);
+      const avg = Number((sum / scored.length).toFixed(2));
+      cell.innerText = (avg > 0 ? '+' : '') + avg.toFixed(2);
+      cell.style.fontWeight = '700';
+
+      if (avg < -0.15) {
+        const intensity = Math.min(1, Math.abs(avg));
+        cell.style.background = `rgba(239, 68, 68, ${0.2 + intensity * 0.45})`;
+        cell.style.color = '#b91c1c';
+      } else if (avg > 0.15) {
+        const intensity = Math.min(1, avg);
+        cell.style.background = `rgba(34, 197, 94, ${0.2 + intensity * 0.45})`;
+        cell.style.color = '#15803d';
+      } else {
+        cell.style.background = 'rgba(148, 163, 184, 0.22)';
+        cell.style.color = 'var(--text-primary)';
+      }
+
+      cell.title = `${src.name} Overall Average: ${avg > 0 ? '+' : ''}${avg} (${scored.length} total articles). Click to filter stream!`;
+      cell.onclick = () => {
+        toggleSourceFilter(id);
+        document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
+      };
+    }
+    container.appendChild(cell);
   });
 }
 
