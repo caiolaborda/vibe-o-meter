@@ -519,7 +519,7 @@ function getResolvedSources() {
       } else if (state.sentimentMode === 'gemini') {
         if (art.sentimentGemini !== undefined && art.sentimentGemini !== null) {
           score = art.sentimentGemini;
-          explanation = art.explanationGemini || `Analyzed using Gemini 3.8 Flash. Score: ${score.toFixed(2)}.`;
+          explanation = art.explanationGemini || `Analyzed using Google Gemini. Score: ${score.toFixed(2)}.`;
           category = art.categoryGemini || category;
         } else {
           score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);

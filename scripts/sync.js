@@ -12,6 +12,7 @@ const Parser = require('rss-parser');
 const Sentiment = require('sentiment');
 const vader = require('vader-sentiment');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { generateDailyBriefing } = require('./briefing');
 require('dotenv').config();
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -120,75 +121,115 @@ function tryRepairJsonArray(text) {
   return clean;
 }
 
-// Structured Gemini sentiment analysis with retry & fallback
+// Structured Gemini sentiment analysis with batching & calibrated prompt
 async function analyzeWithGemini(headlines, apiKey, requestedModel) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
-    requestedModel || process.env.GEMINI_MODEL || 'gemini-3.8-flash'
+    'gemini-3.5-flash-lite',
+    'gemini-3.5-flash',
+    requestedModel || process.env.GEMINI_MODEL
   ].filter(Boolean);
 
-  const promptData = headlines.map((item, index) => ({
-    index,
-    headline: item.title,
-    description: item.description || ''
-  }));
+  const BATCH_SIZE = 20;
+  const allResults = [];
+  let modelUsed = modelsToTry[0];
 
-  const prompt = `You are an expert news editor and sentiment analyzer. Analyze the sentiment of the following news articles based on their headlines and short descriptions.
-Return a JSON array containing an analysis object for each article. Each object must have:
-- index: the index number matching the input article
-- score: a continuous floating-point number between -1.0 (tragic/doom-laden) and 1.0 (uplifting/optimistic), to 2 decimal places. Avoid rounding to 0.0 unless completely neutral.
-- category: one of "politics", "world", "business", "technology", "science", "health", "entertainment", "sports", "other".
-- explanation: a concise 1-sentence reason for the score.
+  for (let i = 0; i < headlines.length; i += BATCH_SIZE) {
+    const chunk = headlines.slice(i, i + BATCH_SIZE);
+    const promptData = chunk.map((item, index) => ({
+      index,
+      headline: item.title,
+      description: item.description || ''
+    }));
+
+    const prompt = `You are an expert news editor and sentiment analyzer. Analyze the inherent emotional valence of the real-world event described in each news article.
+Scoring Calibration (-1.0 to +1.0 continuous scale):
+- [-1.0 to -0.6]: Extreme tragedy, active warfare, strikes/bombings, mass casualties, severe humanitarian crisis.
+- [-0.5 to -0.2]: Tension, diplomatic conflict, political friction, layoffs, inflation, market drops, legal battles.
+- [-0.1 to +0.1]: Strictly neutral, routine procedural reports, administrative announcements, schedule changes.
+- [+0.2 to +0.5]: Constructive developments, economic growth, sports victories, artistic awards, positive milestones.
+- [+0.6 to +1.0]: Major scientific breakthroughs, life-saving medical cures, peace accords, historic positive achievements.
+
+Crucial Rule: Score the impact of the event itself, not just surface vocabulary. For instance, reports of missile strikes or casualties are deeply negative even if journalistic phrasing mentions "ceasefire" or "defense".
+
+Return a JSON array of objects with:
+- index: integer matching input index
+- score: float between -1.0 and 1.0 (2 decimal places). Avoid 0.0 unless completely neutral.
+- category: one of 'politics', 'world', 'business', 'technology', 'science', 'health', 'entertainment', 'sports', 'other'
+- explanation: concise 1-sentence rationale
 
 Articles:
 ${JSON.stringify(promptData, null, 2)}
 
-Return ONLY the JSON array matching this description. Do not wrap in markdown code fences.`;
+Return ONLY valid JSON.`;
 
-  let lastError = null;
-  for (const modelName of modelsToTry) {
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        console.log(`[Gemini] Attempting analysis using model: ${modelName} (attempt ${attempt}/3)...`);
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-        }, { apiVersion: 'v1beta' });
+    let batchSuccess = false;
+    for (const modelName of modelsToTry) {
+      if (batchSuccess) break;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(headlines.length / BATCH_SIZE)} using ${modelName} (attempt ${attempt}/2)...`);
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+          });
 
-        const generatePromise = model.generateContent(prompt);
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Gemini API call timed out after 25s')), 25000)
-        );
-        const response = await Promise.race([generatePromise, timeoutPromise]);
-        let text = response.response.text().trim();
-        if (text.startsWith('```json')) text = text.substring(7);
-        else if (text.startsWith('```')) text = text.substring(3);
-        if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-        text = tryRepairJsonArray(text.trim());
+          const generatePromise = model.generateContent(prompt);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Gemini API call timed out after 30s')), 30000)
+          );
+          const response = await Promise.race([generatePromise, timeoutPromise]);
+          let text = response.response.text().trim();
+          if (text.startsWith('```json')) text = text.substring(7);
+          else if (text.startsWith('```')) text = text.substring(3);
+          if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+          text = tryRepairJsonArray(text.trim());
 
-        const parsed = JSON.parse(text);
-        const results = headlines.map((item, index) => {
-          const match = (Array.isArray(parsed) ? parsed : []).find(r => r.index === index) || { score: 0, category: 'other' };
-          return {
-            ...item,
-            sentiment: Number(match.score) || 0,
-            category: match.category || 'other',
-            explanation: match.explanation || 'Analyzed via Gemini.'
-          };
-        });
-
-        return { results, modelUsed: modelName };
-      } catch (err) {
-        console.warn(`[Gemini] Model ${modelName} attempt ${attempt} failed:`, err.message || err);
-        lastError = err;
-        if (attempt < 3) {
-          console.log(`[Gemini] Waiting ${2 * attempt}s before retrying...`);
-          await new Promise(r => setTimeout(r, 2000 * attempt));
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) {
+            chunk.forEach((item, idx) => {
+              const match = parsed.find(r => r.index === idx) || { score: 0, category: 'other' };
+              allResults.push({
+                ...item,
+                sentiment: Number(match.score) || 0,
+                sentimentGemini: Number(match.score) || 0,
+                category: match.category || 'other',
+                categoryGemini: match.category || 'other',
+                explanation: match.explanation || `Analyzed via Gemini (${modelName}).`,
+                explanationGemini: match.explanation || `Analyzed via Gemini (${modelName}).`
+              });
+            });
+            modelUsed = modelName;
+            batchSuccess = true;
+            break;
+          }
+        } catch (err) {
+          console.warn(`[Gemini] Model ${modelName} attempt ${attempt} warning:`, err.message || err);
+          if (attempt < 2) {
+            await new Promise(r => setTimeout(r, 2000));
+          }
         }
       }
     }
+
+    if (!batchSuccess) {
+      console.warn(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1} failed across models; assigning calibrated local fallback.`);
+      chunk.forEach(item => {
+        allResults.push({
+          ...item,
+          sentiment: item.sentimentLocal || 0,
+          category: item.categoryLocal || 'other',
+          explanation: item.explanationLocal || 'Fallback local analysis.'
+        });
+      });
+    }
+
+    if (i + BATCH_SIZE < headlines.length) {
+      await new Promise(r => setTimeout(r, 1200));
+    }
   }
-  throw lastError || new Error('All Gemini model attempts failed');
+
+  return { results: allResults, modelUsed };
 }
 
 // Structured Groq sentiment analysis
@@ -510,54 +551,16 @@ async function main() {
     categoryAverages[cat] = Number((categoryStats[cat].total / categoryStats[cat].count).toFixed(3));
   });
 
-  // 5.6 Daily Editorial Summary (Computed once every 24h to conserve API quota)
+  // 5.6 Daily Editorial Briefing (Decoupled call)
   const todayDateStr = now.toISOString().slice(0, 10);
   let editorialSummary = currentCache.editorialSummary || '';
-  const cachedDate = currentCache.editorialSummaryDate || '';
-
-  if (!editorialSummary || cachedDate !== todayDateStr) {
-    console.log(`[Editorial] Generating fresh daily tongue-in-cheek briefing for ${todayDateStr}...`);
-    
-    // Attempt Gemini generation
-    if (geminiKey) {
-      try {
-        const genAI = new GoogleGenerativeAI(geminiKey);
-        const model = genAI.getGenerativeModel({ model: geminiModel || 'gemini-3.8-flash' });
-        const prompt = `You are a witty, sharp, tongue-in-cheek news editor writing the "Executive Vibe Pulse" for today.
-Data:
-- Worldwide sentiment score: ${globalAvg} (scale -1.0 pure doom to +1.0 pure optimism)
-- Most alarmist outlet: ${mostNegativeOutlet ? mostNegativeOutlet.name + ' (' + mostNegativeOutlet.score + ')' : 'N/A'}
-- Most cheerful outlet: ${mostPositiveOutlet ? mostPositiveOutlet.name + ' (' + mostPositiveOutlet.score + ')' : 'N/A'}
-- Category averages: ${JSON.stringify(categoryAverages)}
-- Articles analyzed: ${allArticlesTotal}
-
-Write a punchy, humorous 2-to-3 sentence executive briefing summarizing the mood of the world's media today. Be clever, slightly satirical about media doom-mongering vs tech optimism, but keep it insightful and polished. Return ONLY the 2-3 sentences.`;
-        
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini timeout')), 15000));
-        const aiRes = await Promise.race([model.generateContent(prompt), timeoutPromise]);
-        const text = aiRes.response.text().trim();
-        if (text && text.length > 20) {
-          editorialSummary = text.replace(/^["']|["']$/g, '');
-        }
-      } catch (err) {
-        console.warn('[Editorial] Gemini briefing generation skipped/failed:', err.message);
-      }
+  try {
+    const briefing = await generateDailyBriefing({ force: false });
+    if (briefing) {
+      editorialSummary = briefing;
     }
-
-    // High quality witty fallback if Gemini is busy
-    if (!editorialSummary || cachedDate !== todayDateStr) {
-      const moodAdj = globalAvg < -0.2 ? 'decidedly apocalyptic' : (globalAvg < -0.05 ? 'cautiously grumpy' : (globalAvg > 0.1 ? 'suspiciously upbeat' : 'ambivalently neutral'));
-      const alarmistText = mostNegativeOutlet ? `${mostNegativeOutlet.name} is leading today's existential dread charge` : 'Geopolitical dread is in full swing';
-      const brightSpot = categoryAverages.science > 0 || categoryAverages.technology > 0 
-        ? 'while tech and science sections desperately try to pump dopamine into our feeds' 
-        : 'with barely a cheerful headline in sight';
-      editorialSummary = `Earth's media vibe lands at a ${moodAdj} ${globalAvg > 0 ? '+' : ''}${globalAvg} today. ${alarmistText}, ${brightSpot}. Brace yourselves accordingly.`;
-    }
-
-    currentCache.editorialSummaryDate = todayDateStr;
-    currentCache.editorialSummary = editorialSummary;
-  } else {
-    console.log(`[Editorial] Reusing existing daily briefing from ${cachedDate} to conserve API quota.`);
+  } catch (err) {
+    console.warn('[Sync] Non-blocking briefing notice:', err.message);
   }
 
   const globalStats = {
