@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-12T13:33:37.365Z",
+  "lastUpdated": "2026-10-12T13:35:36.406Z",
   "analyzerUsed": "Local Ensemble (VADER + AFINN)",
   "sources": {
     "bbc": {
@@ -32226,21 +32226,6 @@
         },
         {
           "sourceId": "aljazeera",
-          "title": "Indian opposition protesters in New Delhi call on election chief to quit",
-          "description": "Thousands of police officers and security personnel deployed across central New Delhi for third straight day.",
-          "link": "https://www.aljazeera.com/news/2026/10/12/india-opposition-plans-new-delhi-protest-to-demand-election-chief-resign?traffic_source=rss",
-          "pubDate": "Mon, 12 Oct 2026 08:00:16 +0000",
-          "sentimentLocal": 0.108,
-          "sentimentAFINN": -0.125,
-          "sentimentVADER": 0.34,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.34) and AFINN-111 (-0.13).",
-          "categoryLocal": "politics",
-          "sentiment": 0.108,
-          "explanation": "Analyzed locally with news-calibrated VADER (0.34) and AFINN-111 (-0.13).",
-          "category": "politics"
-        },
-        {
-          "sourceId": "aljazeera",
           "title": "India opposition plans New Delhi protest to demand election chief resign",
           "description": "Thousands of security personnel have been deployed before a protest rally calling for the election chief's removal.",
           "link": "https://www.aljazeera.com/news/2026/10/12/india-opposition-plans-new-delhi-protest-to-demand-election-chief-resign?traffic_source=rss",
@@ -32256,6 +32241,21 @@
           "sentimentGemini": -0.42,
           "explanationGemini": "Heavy troop deployments ahead of contentious protests point to rising domestic instability.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Indian opposition protesters in New Delhi call on election chief to quit",
+          "description": "Thousands of police officers and security personnel deployed across central New Delhi for third straight day.",
+          "link": "https://www.aljazeera.com/news/2026/10/12/india-opposition-plans-new-delhi-protest-to-demand-election-chief-resign?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 08:00:16 +0000",
+          "sentimentLocal": 0.108,
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": 0.34,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.34) and AFINN-111 (-0.13).",
+          "categoryLocal": "politics",
+          "sentiment": 0.108,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.34) and AFINN-111 (-0.13).",
+          "category": "politics"
         },
         {
           "sourceId": "aljazeera",
@@ -37543,13 +37543,28 @@
     },
     "cnbc": {
       "name": "CNBC News",
-      "averageSentiment": -0.022,
+      "averageSentiment": -0.021,
       "distribution": {
         "positive": 19,
-        "neutral": 103,
+        "neutral": 104,
         "negative": 17
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Banks are set to report this week. Here's what the options market expects",
+          "description": "Despite being flat on the year, the options market is pricing in some big financial sector moves as investor weigh the impact of higher rates.",
+          "link": "https://www.cnbc.com/2026/10/12/banks-are-set-to-report-this-week-heres-what-the-options-market-expects.html",
+          "pubDate": "Mon, 12 Oct 2026 13:27:20 GMT",
+          "sentimentLocal": 0.063,
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.13).",
+          "categoryLocal": "business",
+          "sentiment": 0.063,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.13).",
+          "category": "business"
+        },
         {
           "sourceId": "cnbc",
           "title": "Starbucks says it is not buying Chipotle after takeover speculation",
@@ -42490,13 +42505,28 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.104,
+      "averageSentiment": -0.102,
       "distribution": {
-        "positive": 22,
-        "neutral": 117,
-        "negative": 57
+        "positive": 23,
+        "neutral": 122,
+        "negative": 60
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Kyiv says Russia hits energy targets despite Trump ceasefire - Reuters",
+          "description": "Kyiv says Russia hits energy targets despite Trump ceasefire Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPYWxLV1J6R2V3UDNKc2FwUU9oQ2dvUGVXd2FQTTNQdFM2QVVBLU54eWN0SFktR25BT0l3U3NIRldielJHYjBLY1lfMTk1OGZGVUZtOG4yMXhINzZSVDhwdXZScWtCUDdVYWxjSkF6RThTcHhyMWN3Z1hrWjNMSFJFMm04eVRKZ2luSkJjWUpKM2RYSXdXa2ZKbk94MjRjaXFDRDRtLXd3c3pMbk1Ld21LOE13WEZMUXp5YWdEcnNYMzc?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:57:18 GMT",
+          "sentimentLocal": -0.3,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.494,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.49) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.3,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.49) and AFINN-111 (0.00).",
+          "category": "politics"
+        },
         {
           "sourceId": "reuters",
           "title": "Skies over Saudi capital empty after deadly Houthi airport strikes - Reuters",
@@ -42511,6 +42541,66 @@
           "sentiment": -1,
           "explanation": "Analyzed locally with news-calibrated VADER (-0.77) and AFINN-111 (-1.00).",
           "category": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Germany faces 'shadow war' that goes beyond Cold War threats, minister warns - Reuters",
+          "description": "Germany faces 'shadow war' that goes beyond Cold War threats, minister warns Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxNaEZlMVdVTDN3WFh4cmlSZmsxWjlUNmxCenc1bkZFRUc5a0xGQnQtTHcxVm41T2VBYXpYMjNrZklRV1ZDRlNuS0lOcVZwWjdXa01aTV9iaXVmbUtBQmg5Szh5NklJNm10THpOM1AtN0FaX0R0R2VtNm5iczRaNzBTNEtKbGVBWWZjTlNfRWpaX2kyaVVvVTF2WHI3T3JxSmtON0IwU3pabjFxeXdXX05RYTRuRVVqdl85Rmc?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:40:41 GMT",
+          "sentimentLocal": -0.986,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.972,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.97) and AFINN-111 (-1.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.986,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.97) and AFINN-111 (-1.00).",
+          "category": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "US launches immigration raid of Democratic congresswoman Ilhan Omar's home, Fox News reports - Reuters",
+          "description": "US launches immigration raid of Democratic congresswoman Ilhan Omar's home, Fox News reports Reuters",
+          "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOMDJQVmVIaFZGdTRES18xTGZOQTgtMzMyWGVOb2VxOUxpWUpQNDlhXzZIdXU0bE81bHVqZ2dRcnVqeE1NWkhtNXNQMTZHb0RtWUhibjBiVkF5MWdSTHJZLW0yNjJrWFYxRVpHQjBnZHJDWGhwVTBIanpDak5iLWc0Y1NIVjN1VmRhTVV2WXE1X0VHQ2gwZXNwb2FIQlEwaGtDWFVnMGpDTlQzLVd2SlNXcVB6dmpDYzJmMURtbUdQYmVra3dtc0ViRWl6NU4?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:39:14 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "category": "other"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Pupil shoots and wounds teachers with hunting rifle in southern France - Reuters",
+          "description": "Pupil shoots and wounds teachers with hunting rifle in southern France Reuters",
+          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxNSXotN0pGdDNYQ2lHMW1rZzU0c1ZTOGVNMUN6OUE1WEZVS1NwakZmbmtJRldoZU1QaFZKZC1mSmxYeUVmdGJwc2FZUzVZb1VoYnR2Mk5hbDNFYVFvT1ZScUZpbkNoMDVDVC1XMmlYTWVCVnFCaVBsQ0hsTk4zQW9SVzlSZU1ESXNmXzZiRnp2eEdiQVBTdWx6NVB2ZjI?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:29:13 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "category": "other"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Hall, Woodford win Nobel prize for work on how to stabilise economies - Reuters",
+          "description": "Hall, Woodford win Nobel prize for work on how to stabilise economies Reuters",
+          "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxQb0FkcnNtRHc1MG5POU9PWVhBX0VlQzBDQUtNOUgxRWhiVmotZVRzb1pDWFdVZnBsY3dyYjdya3hnSjJ6WUc2RFdhcDVDSTJxQ3pkcTRUbDBXTk44NU5NUDJwaVVyUEZCZmNlaHNrZmg3LVdQSEdMcUc2Vy1FVHZRbXMzbU1yZU9KT3ZTdDJ0aw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:19:37 GMT",
+          "sentimentLocal": 0.967,
+          "sentimentAFINN": 1,
+          "sentimentVADER": 0.935,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.93) and AFINN-111 (1.00).",
+          "categoryLocal": "sports",
+          "sentiment": 0.967,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.93) and AFINN-111 (1.00).",
+          "category": "sports"
         },
         {
           "sourceId": "reuters",
@@ -42529,6 +42619,21 @@
           "sentimentGemini": 0.2,
           "explanationGemini": "Calls to re-evaluate international cooperation offer opportunities for pragmatic improvement.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "EU eyes December trade initiatives after China car import deal - Reuters",
+          "description": "EU eyes December trade initiatives after China car import deal Reuters",
+          "link": "https://news.google.com/rss/articles/CBMixwFBVV95cUxONUVjWi04OFQ3RzdMUmNYSTk1bk0wbWtWM1ZmbWpVY0dMUk1HVUJEVTAwbHJlc2cwUHhtNktGZHhwdEV4QzBxSlJVa3YtUFpVZlhXcXozZDlzRUlsbXV0UWdyTkU3d0FLdkpQS1kxdGNaeDJpdnBpNWhfdWk0UjYwbUcwUEJHcExDcXVPcTRYZDJOWi1DMGJxNjMyOGp1QUxoZXZvbGg1X0djb1VOLU1YN0psU0FfaF9sc191QkZtaXdUaGhqc2t3?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:50:46 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "category": "business"
         },
         {
           "sourceId": "reuters",
@@ -42622,6 +42727,21 @@
         },
         {
           "sourceId": "reuters",
+          "title": "COMMENTARY: Morning Bid: Diesel diplomacy - Reuters",
+          "description": "COMMENTARY: Morning Bid: Diesel diplomacy Reuters",
+          "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQWlFKNW91Z1lmelRoSTRGNW9xSHNGVEZCcE55YzB5N1VMZWtyckpMVmNJaTJXZ1ZFWkRMNVN4aWxsZ0dSVU1RTGR6TEZuUzJWUFpLdlZhVmJTTlpxdlhwYU5Fc2c0WkNVRVpneElkZmwzblFINnlxTGVBRlk4SFlsV0Jybk03cGZ1elNlc20zTF92cHV0emlR?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 10:36:17 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "category": "other"
+        },
+        {
+          "sourceId": "reuters",
           "title": "Kremlin rejects Ukrainian leader's idea of a 60-day ceasefire, says it wants an overall peace deal - Reuters",
           "description": "Kremlin rejects Ukrainian leader's idea of a 60-day ceasefire, says it wants an overall peace deal Reuters",
           "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNRVRES3F4R1VDQjJnbW15cmxVelRaMExJSXNrTm84aFQ2VHFTOHFWY1RPU3RhMGh5c1ZPVWhuTTEwYUJsWjRoMHk5SFVma0pVWG5lY2JvVE55OWctbDRyaW1GQkxsel83T1RKUG16Tmp4RWJ3enJtSV9qclpOZC13aHV5OEdfVmlaOElSYWpLZnlseUMxUDViQUpOeUxBR2l0TUJ0bENHMGh2emJEV091eXo4b0FOTWpFSmZsRERBbUxqT1hxOFZTNA?oc=5",
@@ -42673,6 +42793,36 @@
           "sentimentGemini": -0.62,
           "explanationGemini": "Ceasefire violations during wartime and punitive retaliatory measures sustain hostility.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "OPEC cuts 2026 oil demand growth forecast to 400,000 bpd, sees pent-up demand in 2027 - Reuters",
+          "description": "OPEC cuts 2026 oil demand growth forecast to 400,000 bpd, sees pent-up demand in 2027 Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNSHpiemJmQ3V5V3pqc1NKUTc5MXVCVW92Mm8wQ3BWUnlmeXNmTUotNUFjYl95ZmVFN09sLXV6SzhhRWJpRG5sV3o4dUhHSTNubjZRZXpyajRDTTJYWUdNY1NDMzRWYmtEZVhsRC1Jd05SaW9ic0t3dWFtUTIwWmNFNW9SYWF2eGo0RlpNYl9QOVljdVE2RkVGR2VpZ1FZMmxXdFZuS0lNcnJyMG5IbE1yWm8xNzZJRHQ5SUVTRFJIbFFoQjZERkVVbA?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 09:41:02 GMT",
+          "sentimentLocal": -0.273,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.296,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.30) and AFINN-111 (-0.25).",
+          "categoryLocal": "other",
+          "sentiment": -0.273,
+          "explanation": "Analyzed locally with news-calibrated VADER (-0.30) and AFINN-111 (-0.25).",
+          "category": "other"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Microsoft president says milk faces more regulation than AI - Reuters",
+          "description": "Microsoft president says milk faces more regulation than AI Reuters",
+          "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxQS1NfWGg4YTk5aTliMnhVVHdsS2ZoUVJwT1hsNW9HZ2Y0VXdsRWFSb2VRT3RmQ1B1ZnZKRVZUd1ZQWElzM3dPZ08yRldXRXdwdm9Lc3hEOWZxQVNrYjBtMExTYkhnTnM5b1NNdmI5aUZGS29vRXVCLUpXY2JsbTRodVpMNkZBU1JnUEZWdUJvcUtwbnVXSWFaT3lMbzlqdVRybm9YTVJ4anVpbkZmN0lOYUFR?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 09:24:01 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "category": "politics"
         },
         {
           "sourceId": "reuters",
