@@ -20,6 +20,8 @@ const RECENT_LIMIT = 40; // Backfill the top 40 most recent articles per outlet
 
 function tryRepairJsonArray(text) {
   let clean = text.trim();
+  // Strip illegal leading positive signs from numbers like ": +0.25"
+  clean = clean.replace(/:\s*\+(\d)/g, ': $1');
   if (!clean.startsWith('[')) return clean;
   if (clean.endsWith(']')) return clean;
   if (clean.endsWith('}')) return clean + ']';
@@ -36,21 +38,30 @@ async function analyzeBatchWithGemini(chunk, genAI, modelsToTry) {
     description: item.description || ''
   }));
 
-  const prompt = `You are an expert news editor and sentiment analyzer. Analyze the inherent emotional valence of the real-world event described in each news article.
-Scoring Calibration (-1.0 to +1.0 continuous scale):
-- [-1.0 to -0.6]: Extreme tragedy, active warfare, strikes/bombings, mass casualties, severe humanitarian crisis.
-- [-0.5 to -0.2]: Tension, diplomatic conflict, political friction, layoffs, inflation, market drops, legal battles.
-- [-0.1 to +0.1]: Strictly neutral, routine procedural reports, administrative announcements, schedule changes.
-- [+0.2 to +0.5]: Constructive developments, economic growth, sports victories, artistic awards, positive milestones.
-- [+0.6 to +1.0]: Major scientific breakthroughs, life-saving medical cures, peace accords, historic positive achievements.
+  const prompt = `You are a world-class news sentiment analyst and senior media editor.
+Analyze the inherent emotional valence of the real-world events described in each article headline and short description.
 
-Crucial Rule: Score the impact of the event itself, not just surface vocabulary. For instance, reports of missile strikes or casualties are deeply negative even if journalistic phrasing mentions "ceasefire" or "defense".
+VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
+- [-1.00 to -0.65]: Catastrophe, active warfare, deadly strikes/bombings, mass casualties, severe humanitarian trauma.
+- [-0.64 to -0.30]: Conflict, mass layoffs, corruption scandals, natural disaster damage, solemn obituaries, major regulatory penalties, broken truces.
+- [-0.29 to -0.10]: Mild tension, stock market dip, diplomatic friction, political disputes, minor price hikes.
+- [-0.09 to +0.09]: Strictly neutral procedural news, routine election results without violence, scheduled hearings, administrative statements.
+- [+0.10 to +0.34]: Constructive policy, interest rate cuts, sports wins, mild economic stabilization, cultural awards.
+- [+0.35 to +0.64]: Justice delivered (conviction of perpetrators, hostage rescue, prisoner release), successful treaties, significant environmental or economic recovery.
+- [+0.65 to +1.00]: Historic scientific discoveries, life-saving medical breakthroughs, end of armed conflicts, inspiring human triumphs.
+
+EDGE CASE RULES:
+1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "ceasefire" in a story about active strikes does NOT make it positive.
+2. Justice & Rescue: When a tragic situation resolves with a perpetrator convicted, hostages freed, or victims rescued, evaluate the constructive relief of justice/rescue (+0.35 to +0.60).
+3. Democratic Politics: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violent protests or institutional breakdown.
+4. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
+5. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
 
 Return a JSON array of objects with:
 - index: integer matching input index
-- score: float between -1.0 and 1.0 (2 decimal places). Avoid 0.0 unless completely neutral.
+- score: float between -1.00 and 1.00 (2 decimal places)
 - category: one of 'politics', 'world', 'business', 'technology', 'science', 'health', 'entertainment', 'sports', 'other'
-- explanation: concise 1-sentence rationale
+- explanation: concise 1-sentence analytical rationale
 
 Articles:
 ${JSON.stringify(promptData, null, 2)}
@@ -113,20 +124,21 @@ async function runBackfill() {
 
   const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   const sources = data.sources || {};
+  const backfillAll = process.argv.includes('--all') || !process.argv.includes('--recent-only');
 
-  // Gather active articles that lack Gemini evaluation
+  // Gather articles that lack Gemini evaluation
   const queue = [];
   for (const [sourceId, source] of Object.entries(sources)) {
     const articles = source.articles || [];
-    const activeSlice = articles.slice(0, RECENT_LIMIT);
-    for (const art of activeSlice) {
+    const targetSlice = backfillAll ? articles : articles.slice(0, RECENT_LIMIT);
+    for (const art of targetSlice) {
       if (art.sentimentGemini === undefined || art.sentimentGemini === null) {
         queue.push({ sourceId, article: art });
       }
     }
   }
 
-  console.log(`[Backfill] Identified ${queue.length} active articles needing Gemini sentiment evaluation.`);
+  console.log(`[Backfill] Identified ${queue.length} articles needing Gemini sentiment evaluation (${backfillAll ? 'full database' : 'recent window'}).`);
 
   if (queue.length === 0) {
     console.log('✨ All active articles already have Gemini sentiment evaluations! Database is healthy.');

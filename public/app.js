@@ -89,6 +89,12 @@ const elements = {
   filterName: document.getElementById('filter-name'),
   clearFilterBtn: document.getElementById('clear-filter-btn'),
   
+  // Quick Nav Sticky Controls
+  quickTimeframeSelect: document.getElementById('quick-timeframe-select'),
+  quickSourceIndicator: document.getElementById('quick-source-indicator'),
+  quickSourceName: document.getElementById('quick-source-name'),
+  quickSourceClearBtn: document.getElementById('quick-source-clear-btn'),
+
   // Sort Buttons
   sortDateBtn: document.getElementById('sort-date'),
   sortVibeBtn: document.getElementById('sort-vibe'),
@@ -144,8 +150,29 @@ function setupEventListeners() {
   
   elements.filterTime.addEventListener('change', (e) => {
     state.filters.time = e.target.value;
+    if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
     updateAppUI();
   });
+
+  if (elements.quickTimeframeSelect) {
+    elements.quickTimeframeSelect.addEventListener('change', (e) => {
+      state.filters.time = e.target.value;
+      if (elements.filterTime) elements.filterTime.value = e.target.value;
+      updateAppUI();
+    });
+  }
+
+  if (elements.quickSourceClearBtn) {
+    elements.quickSourceClearBtn.addEventListener('click', () => {
+      state.filters.source = 'all';
+      if (elements.filterSource) elements.filterSource.value = 'all';
+      document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
+      updateFilterIndicator();
+      renderHeadlines();
+      updateAppUI();
+    });
+  }
   
   // Search input
   elements.searchInput.addEventListener('input', (e) => {
@@ -171,6 +198,7 @@ function setupEventListeners() {
     elements.filterCategory.value = 'all';
     elements.filterVibe.value = 'all';
     elements.filterTime.value = 'all';
+    if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = 'all';
     
     // Clear active card states in grid
     document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
@@ -1258,11 +1286,21 @@ function updateSpectrumActiveStates() {
 }
 
 function updateFilterIndicator() {
-  if (state.filters.source !== 'all' && state.sources[state.filters.source]) {
-    elements.filterName.innerText = state.sources[state.filters.source].name;
+  const isSourceActive = state.filters.source !== 'all' && state.sources[state.filters.source];
+  if (isSourceActive) {
+    const srcName = state.sources[state.filters.source].name;
+    elements.filterName.innerText = srcName;
     elements.activeFilterIndicator.style.display = 'flex';
+
+    if (elements.quickSourceIndicator && elements.quickSourceName) {
+      elements.quickSourceName.innerText = srcName;
+      elements.quickSourceIndicator.style.display = 'inline-flex';
+    }
   } else {
     elements.activeFilterIndicator.style.display = 'none';
+    if (elements.quickSourceIndicator) {
+      elements.quickSourceIndicator.style.display = 'none';
+    }
   }
 }
 

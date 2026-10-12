@@ -62,12 +62,33 @@
 
     <!-- STICKY QUICK JUMP SUB-NAV -->
     <nav class="quick-nav-bar" id="quick-nav-bar">
-      <a href="#pulse-section" class="nav-pill active"><i data-lucide="sparkles"></i><span>Pulse</span></a>
-      <a href="#spectrum-section" class="nav-pill"><i data-lucide="arrow-left-right"></i><span>Spectrum</span></a>
-      <a href="#heatmap-section" class="nav-pill"><i data-lucide="layout-grid"></i><span>Beat Heatmap</span></a>
-      <a href="#comparison-section" class="nav-pill"><i data-lucide="columns-3"></i><span>Outlets</span></a>
-      <a href="#h2h-section" class="nav-pill"><i data-lucide="swords"></i><span>Head-to-Head</span></a>
-      <a href="#feed-section" class="nav-pill"><i data-lucide="newspaper"></i><span>Headline Feed</span></a>
+      <div class="quick-nav-links">
+        <a href="#pulse-section" class="nav-pill active"><i data-lucide="sparkles"></i><span>Pulse</span></a>
+        <a href="#spectrum-section" class="nav-pill"><i data-lucide="arrow-left-right"></i><span>Spectrum</span></a>
+        <a href="#heatmap-section" class="nav-pill"><i data-lucide="layout-grid"></i><span>Beat Heatmap</span></a>
+        <a href="#comparison-section" class="nav-pill"><i data-lucide="columns-3"></i><span>Outlets</span></a>
+        <a href="#h2h-section" class="nav-pill"><i data-lucide="swords"></i><span>Head-to-Head</span></a>
+        <a href="#feed-section" class="nav-pill"><i data-lucide="newspaper"></i><span>Headline Feed</span></a>
+      </div>
+      <div class="quick-nav-actions">
+        <!-- Active Source Filter Indicator in Header Bar -->
+        <div id="quick-source-indicator" class="quick-source-pill" style="display:none;" title="Click ✕ to clear filter">
+          <span class="quick-filter-dot"></span>
+          <span class="quick-filter-prefix">Source:</span>
+          <strong id="quick-source-name">BBC</strong>
+          <button id="quick-source-clear-btn" class="quick-clear-btn" aria-label="Clear source filter">&times;</button>
+        </div>
+        <!-- Timeframe Selector -->
+        <div class="quick-timeframe-wrap" title="Filter dashboard data by timeframe">
+          <i data-lucide="clock" class="quick-time-icon"></i>
+          <select id="quick-timeframe-select" class="quick-time-select" aria-label="Select timeframe">
+            <option value="all">All Time</option>
+            <option value="24h">Past 24h</option>
+            <option value="3d">Past 3 Days</option>
+            <option value="7d">Past 7 Days</option>
+          </select>
+        </div>
+      </div>
     </nav>
 
     <!-- DAILY VIBE PULSE HERO -->
