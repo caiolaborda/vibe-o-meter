@@ -1,14 +1,14 @@
 {
-  "lastUpdated": "2026-10-12T12:42:05.822Z",
-  "analyzerUsed": "Gemini (gemini-3.8-flash)",
+  "lastUpdated": "2026-10-12T12:53:11.587Z",
+  "analyzerUsed": "Local Ensemble (VADER + AFINN)",
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.14,
+      "averageSentiment": -0.137,
       "distribution": {
-        "positive": 24,
-        "neutral": 83,
-        "negative": 64
+        "positive": 25,
+        "neutral": 84,
+        "negative": 65
       },
       "articles": [
         {
@@ -46,6 +46,21 @@
           "sentimentGemini": -0.64,
           "explanationGemini": "Debates regarding publicly broadcasting capital punishment raise grave ethical and security issues.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Normandy veteran Henry Rice dies aged 100",
+          "description": "Henry Rice, from Cranleigh, Surrey, was a signalman who served off Normandy in the days after D-Day.",
+          "link": "https://www.bbc.co.uk/news/articles/cmg47kww9k7no?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 12:21:22 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with VADER (0.00) and AFINN-111 (0.00).",
+          "category": "other"
         },
         {
           "sourceId": "bbc",
@@ -100,6 +115,21 @@
           "sentimentGemini": -0.48,
           "explanationGemini": "A warning about cybersecurity vulnerabilities signals heightened digital risks.",
           "categoryGemini": "technology"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Key suggests Carse can return as England reveal contract list",
+          "description": "Director of cricket Rob Key believes Brydon Carse can play for England again, despite an ongoing investigation into an incident outside a Derby nightclub in August.",
+          "link": "https://www.bbc.co.uk/sport/cricket/articles/cwz0v3zy7mpxo?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Mon, 12 Oct 2026 12:06:16 GMT",
+          "sentimentLocal": -0.273,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.296,
+          "explanationLocal": "Analyzed locally with VADER (-0.30) and AFINN-111 (-0.25).",
+          "categoryLocal": "other",
+          "sentiment": -0.273,
+          "explanation": "Analyzed locally with VADER (-0.30) and AFINN-111 (-0.25).",
+          "category": "other"
         },
         {
           "sourceId": "bbc",
@@ -3561,6 +3591,21 @@
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
           "openRouterModelUsed": "openrouter/free"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "BBC News app",
+          "description": "Top stories, breaking news, live reporting, and follow news topics that match your interests",
+          "link": "https://www.bbc.co.uk/news/10628994?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Wed, 30 Apr 2025 14:04:28 GMT",
+          "sentimentLocal": 0.398,
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0.421,
+          "explanationLocal": "Analyzed locally with VADER (0.42) and AFINN-111 (0.38).",
+          "categoryLocal": "other",
+          "sentiment": 0.398,
+          "explanation": "Analyzed locally with VADER (0.42) and AFINN-111 (0.38).",
+          "category": "other"
         }
       ]
     },
@@ -12452,13 +12497,28 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.027,
+      "averageSentiment": -0.032,
       "distribution": {
         "positive": 47,
         "neutral": 74,
-        "negative": 57
+        "negative": 58
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "Burnham accepts Brexit result ‘legitimate’ despite Russian interference, says No 10 – UK politics live",
+          "description": "PM ‘absolutely accepts referendum result’, says spokesperson Burnham to urge MPs to embrace closer ties with EU Zia Yusuf, Reform UK’s home affairs spokesperson, is speaking now. He started his speech with an account of a 73-year-old woman dying in North Wales after having to wait 23 hours for an ambulance, and he sought to link this to immigration. He said: The Royal College of Emergency Medicine estimates that 15,000 people across Britain died last year due to excess wait times for emergency treatment. That’s 300 people a week, 300 lives destroyed, 300 families devastated. And that number has increased tenfold over the last decade. This is a moral outrage, and it is a direct result of decisions made by Tory and Labour governments. I don’t think that’s because he wants to have a fight over the European Union. I think that’s because he knows what we’re talking about today impacts hard in what is known as the red wall. Continue reading...",
+          "link": "https://www.theguardian.com/politics/live/2026/oct/12/uk-politics-live-tories-andy-burnham-russian-interference-brexit-eu-latest",
+          "pubDate": "Mon, 12 Oct 2026 12:41:09 GMT",
+          "sentimentLocal": -0.973,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.945,
+          "explanationLocal": "Analyzed locally with VADER (-0.95) and AFINN-111 (-1.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.973,
+          "explanation": "Analyzed locally with VADER (-0.95) and AFINN-111 (-1.00).",
+          "category": "politics"
+        },
         {
           "sourceId": "guardian",
           "title": "Burnham a ‘liar’ over Russian interference in Brexit campaign, says Farage – UK politics live",
@@ -20999,13 +21059,43 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.081,
+      "averageSentiment": -0.079,
       "distribution": {
-        "positive": 29,
-        "neutral": 107,
+        "positive": 30,
+        "neutral": 108,
         "negative": 60
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "NFL stars go above and beyond to make incredible catches during Sunday's Week 5 action",
+          "description": "Parker Washington's one-handed catch and a game-winning 57-yard field goal headlined NFL Week 5's most clutch plays and touchdown highlights.",
+          "link": "https://www.foxnews.com/outkick-sports/nfl-stars-go-above-beyond-make-incredible-catches-sunday-week-5-action",
+          "pubDate": "Mon, 12 Oct 2026 08:45:15 -0400",
+          "sentimentLocal": 0.157,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.313,
+          "explanationLocal": "Analyzed locally with VADER (0.31) and AFINN-111 (0.00).",
+          "categoryLocal": "entertainment",
+          "sentiment": 0.157,
+          "explanation": "Analyzed locally with VADER (0.31) and AFINN-111 (0.00).",
+          "category": "entertainment"
+        },
+        {
+          "sourceId": "fox",
+          "title": "Ben Affleck has blunt response to teenage son's Lamborghini request after infamous mishap",
+          "description": "Ben Affleck revealed his son Samuel asked him to buy a Lamborghini, four years after the teen's infamous fender-bender at a luxury car dealership.",
+          "link": "https://www.foxnews.com/entertainment/ben-affleck-blunt-response-teenage-son-lamborghini-request-infamous-mishap",
+          "pubDate": "Mon, 12 Oct 2026 08:43:44 -0400",
+          "sentimentLocal": 0.125,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with VADER (0.00) and AFINN-111 (0.25).",
+          "categoryLocal": "other",
+          "sentiment": 0.125,
+          "explanation": "Analyzed locally with VADER (0.00) and AFINN-111 (0.25).",
+          "category": "other"
+        },
         {
           "sourceId": "fox",
           "title": "Haunting clues emerge in 7-year fishing boat mystery after wreckage found off island",
@@ -31524,13 +31614,28 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.119,
+      "averageSentiment": -0.116,
       "distribution": {
-        "positive": 17,
+        "positive": 18,
         "neutral": 111,
         "negative": 49
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Which banners did Liverpool fans display at Anfield against Man City?",
+          "description": "From creative wordplay on song lyrics to simply calling Man City 'cheats', the Reds fans went all out at Anfield.",
+          "link": "https://www.aljazeera.com/sports/2026/10/12/which-banners-did-liverpool-fans-display-at-anfield-against-man-city?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 12:21:56 +0000",
+          "sentimentLocal": 0.345,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.44,
+          "explanationLocal": "Analyzed locally with VADER (0.44) and AFINN-111 (0.25).",
+          "categoryLocal": "other",
+          "sentiment": 0.345,
+          "explanation": "Analyzed locally with VADER (0.44) and AFINN-111 (0.25).",
+          "category": "other"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Far right surges as crises threaten Sanchez: Could Vox lead Spain?",
@@ -35476,9 +35581,9 @@
     },
     "npr": {
       "name": "NPR News",
-      "averageSentiment": -0.05,
+      "averageSentiment": -0.039,
       "distribution": {
-        "positive": 10,
+        "positive": 11,
         "neutral": 46,
         "negative": 14
       },
@@ -35554,6 +35659,21 @@
           "sentimentGemini": 0,
           "explanationGemini": "An empty news summary has completely neutral sentiment.",
           "categoryGemini": "other"
+        },
+        {
+          "sourceId": "npr",
+          "title": "2 Americans win Nobel Prize in economics for work on boom-bust cycles",
+          "description": "Two Americans have won the Nobel Prize in economics for their work on how to smooth boom-and-bust cycles to limit unemployment and inflation.",
+          "link": "https://www.npr.org/2026/10/09/nx-s1-5996634/nobel-prize-in-economics",
+          "pubDate": "Mon, 12 Oct 2026 04:35:16 -0400",
+          "sentimentLocal": 0.765,
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.904,
+          "explanationLocal": "Analyzed locally with VADER (0.90) and AFINN-111 (0.63).",
+          "categoryLocal": "business",
+          "sentiment": 0.765,
+          "explanation": "Analyzed locally with VADER (0.90) and AFINN-111 (0.63).",
+          "category": "business"
         },
         {
           "sourceId": "npr",
@@ -37108,13 +37228,28 @@
     },
     "cnbc": {
       "name": "CNBC News",
-      "averageSentiment": -0.013,
+      "averageSentiment": -0.024,
       "distribution": {
         "positive": 17,
         "neutral": 102,
-        "negative": 15
+        "negative": 17
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Rep. Ilhan Omar's home raided by DHS in fraud probe of immigration paperwork: Report",
+          "description": "The Minnesota Democrat, a Muslim who was born in Somalia, has been targeted for criticism in the past by President Donald Trump.",
+          "link": "https://www.cnbc.com/2026/10/12/ilhan-omar-home-raided-dhs-immigration-investigation.html",
+          "pubDate": "Mon, 12 Oct 2026 12:52:03 GMT",
+          "sentimentLocal": -0.761,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.772,
+          "explanationLocal": "Analyzed locally with VADER (-0.77) and AFINN-111 (-0.75).",
+          "categoryLocal": "politics",
+          "sentiment": -0.761,
+          "explanation": "Analyzed locally with VADER (-0.77) and AFINN-111 (-0.75).",
+          "category": "politics"
+        },
         {
           "sourceId": "cnbc",
           "title": "Nobel prize in economics awarded to Robert E. Hall and Michael Woodford",
@@ -37132,6 +37267,21 @@
           "sentimentGemini": 0.7,
           "explanationGemini": "Awarding a Nobel prize for crucial economic stabilization models marks a positive achievement.",
           "categoryGemini": "business"
+        },
+        {
+          "sourceId": "cnbc",
+          "title": "Zelenskyy accuses Russia of violating Trump’s energy ceasefire as drone attacks continue",
+          "description": "If Russia doesn't agree to Trump's energy ceasefire, Ukraine will respond, Zelenskyy said Monday morning.",
+          "link": "https://www.cnbc.com/2026/10/12/russia-ukraine-energy-ceasefire-trump.html",
+          "pubDate": "Mon, 12 Oct 2026 12:36:21 GMT",
+          "sentimentLocal": -0.761,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.772,
+          "explanationLocal": "Analyzed locally with VADER (-0.77) and AFINN-111 (-0.75).",
+          "categoryLocal": "politics",
+          "sentiment": -0.761,
+          "explanation": "Analyzed locally with VADER (-0.77) and AFINN-111 (-0.75).",
+          "category": "politics"
         },
         {
           "sourceId": "cnbc",
@@ -41965,13 +42115,28 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.062,
+      "averageSentiment": -0.056,
       "distribution": {
-        "positive": 20,
-        "neutral": 112,
+        "positive": 21,
+        "neutral": 114,
         "negative": 41
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Pupil shoots and wounds teachers with hunting rifle in southern France - Reuters",
+          "description": "Pupil shoots and wounds teachers with hunting rifle in southern France Reuters",
+          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxNSXotN0pGdDNYQ2lHMW1rZzU0c1ZTOGVNMUN6OUE1WEZVS1NwakZmbmtJRldoZU1QaFZKZC1mSmxYeUVmdGJwc2FZUzVZb1VoYnR2Mk5hbDNFYVFvT1ZScUZpbkNoMDVDVC1XMmlYTWVCVnFCaVBsQ0hsTk4zQW9SVzlSZU1ESXNmXzZiRnp2eEdiQVBTdWx6NVB2ZjI?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:29:13 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with VADER (0.00) and AFINN-111 (0.00).",
+          "category": "other"
+        },
         {
           "sourceId": "reuters",
           "title": "Burnham to tell parliament UK needs to consider new deal with EU - Reuters",
@@ -41989,6 +42154,21 @@
           "sentimentGemini": 0.2,
           "explanationGemini": "Calls to re-evaluate international cooperation offer opportunities for pragmatic improvement.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "India Sept inflation nears RBI tolerance ceiling, boosting case for further rate hikes - Reuters",
+          "description": "India Sept inflation nears RBI tolerance ceiling, boosting case for further rate hikes Reuters",
+          "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOM2hyc2tfZ1c4OFc2WGEwN3J5Ri1jaWVLOWtWbmpYTzlMcnNyVVhrN0pEdGg1ZXlKdEJMRjNiNXpRRC1KVDNXaWdDQ0ptQ245VEJaY19RZVNMUGJDYTJjUGNwV2NrLTU0LTRVbEcwWGZmSzhoX3hEdkVGcHAzTGZLb285UTBwYXhxZTVSWmxRNkt3X2xISDZwZg?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:51:44 GMT",
+          "sentimentLocal": 0.776,
+          "sentimentAFINN": 0.75,
+          "sentimentVADER": 0.802,
+          "explanationLocal": "Analyzed locally with VADER (0.80) and AFINN-111 (0.75).",
+          "categoryLocal": "business",
+          "sentiment": 0.776,
+          "explanation": "Analyzed locally with VADER (0.80) and AFINN-111 (0.75).",
+          "category": "business"
         },
         {
           "sourceId": "reuters",
@@ -42169,6 +42349,21 @@
           "sentimentGemini": -0.68,
           "explanationGemini": "Devastation of a historic heritage food hall represents an agonizing loss of shared heritage.",
           "categoryGemini": "other"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Wall Street's big but narrow rally: 4 in 10 S&P stocks are down this year - Reuters",
+          "description": "Wall Street's big but narrow rally: 4 in 10 S&P stocks are down this year Reuters",
+          "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxPOHVFd3RKVURlTy1UV2FEeGZZTmZKT0RmYkxtM0EyTjdLTzhidVdqdVdMV05LX1R5WlpQVGpGMncwTGpPM1Q3amQwVmFSR1k0SmI0aGRIMW5iR21WMFZSbV83dGczZ3hhWURhSWVHMF95cXFGMVRZTmp4dl9hVlZYTGFmLW1ueS0xN21la3FtcHBLdXUwQ0hBSVFEb0Z3TWRLcVNoVjNTMWJnMEtY?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 09:01:43 GMT",
+          "sentimentLocal": 0.125,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with VADER (0.00) and AFINN-111 (0.25).",
+          "categoryLocal": "business",
+          "sentiment": 0.125,
+          "explanation": "Analyzed locally with VADER (0.00) and AFINN-111 (0.25).",
+          "category": "business"
         },
         {
           "sourceId": "reuters",
@@ -45548,13 +45743,28 @@
     },
     "ap": {
       "name": "Associated Press",
-      "averageSentiment": -0.075,
+      "averageSentiment": -0.083,
       "distribution": {
-        "positive": 9,
+        "positive": 10,
         "neutral": 59,
-        "negative": 22
+        "negative": 24
       },
       "articles": [
+        {
+          "sourceId": "ap",
+          "title": "Federal agents searched Rep. Ilhan Omar's home as part of criminal investigation, AP sources say - AP News",
+          "description": "Federal agents searched Rep. Ilhan Omar's home as part of criminal investigation, AP sources say AP News",
+          "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNQjdzXzdVOVh5OVVkeXRrSlNpQXBuMTBWQzhqRDUtbG9uY1ZET0trR0xXNmlIQUhBY1hRS1BsVm8yRENMUE1MZTRxaEtsUmFoaEFUSXFuTXpqeVpqMHd5a1ZYOEtnT3ZvV1NhNmZYMUg0WnlGenFVal82aFp3c2psT25Fc0dRSUNWbkNobw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 12:28:54 GMT",
+          "sentimentLocal": -0.764,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.778,
+          "explanationLocal": "Analyzed locally with VADER (-0.78) and AFINN-111 (-0.75).",
+          "categoryLocal": "business",
+          "sentiment": -0.764,
+          "explanation": "Analyzed locally with VADER (-0.78) and AFINN-111 (-0.75).",
+          "category": "business"
+        },
         {
           "sourceId": "ap",
           "title": "2 American economists win Nobel for overturning assumptions about how to deal with economic shocks - AP News",
@@ -45626,6 +45836,36 @@
           "sentimentGemini": 0.18,
           "explanationGemini": "Apprehending an international fugitive brings long-delayed accountability in corruption cases.",
           "categoryGemini": "other"
+        },
+        {
+          "sourceId": "ap",
+          "title": "139 migrants, including children, die after boat capsizes off Djibouti - AP News",
+          "description": "139 migrants, including children, die after boat capsizes off Djibouti AP News",
+          "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxNY0xjUzJkaGZaV18ycHV3djdMZmtVakRFb2RieE5qTHRSOHZmNHVyWTU4Q1J6UDZDaDdWeURCRlJLUkttNkZ0ZlNPVWpWYXEtMWh0Skw1RmpaaVRMSXpBd1VMU3VxNlAyMjZGVlcwMnUzSWNRb0NxMlFYLXh5ZVM3ejMteHllMjNKVF9VMXJWUV9MTHNuLVdEN2c5WE5wRXZXUUNBNzlMOVI?oc=5",
+          "pubDate": "Sun, 11 Oct 2026 21:34:00 GMT",
+          "sentimentLocal": -0.791,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.832,
+          "explanationLocal": "Analyzed locally with VADER (-0.83) and AFINN-111 (-0.75).",
+          "categoryLocal": "other",
+          "sentiment": -0.791,
+          "explanation": "Analyzed locally with VADER (-0.83) and AFINN-111 (-0.75).",
+          "category": "other"
+        },
+        {
+          "sourceId": "ap",
+          "title": "‘Other Mommy’ tops the box office with $27.5M; ‘The Social Reckoning’ opens to $5.5M - AP News",
+          "description": "‘Other Mommy’ tops the box office with $27.5M; ‘The Social Reckoning’ opens to $5.5M AP News",
+          "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNbjNEeFhPQl9oUzBIZ3dLblNPaHZZQmlyUmhoLTVKd0NWaEFwZE0xZE9LV2JBY2twbmFMSnMydl9jR2loUkpLaWtpdk11SmlBbmpSdzZwZGJhSThnazhEcUx0S1VjX1ZYLWJjVXZzUmduekdyMzYxNDBUZU5VR0NXZEpuSmtWQjZtTkdnSUdHLTFqSjJ5SXRPY1JSQW1RWldB?oc=5",
+          "pubDate": "Sun, 11 Oct 2026 16:28:00 GMT",
+          "sentimentLocal": 0.633,
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.765,
+          "explanationLocal": "Analyzed locally with VADER (0.77) and AFINN-111 (0.50).",
+          "categoryLocal": "other",
+          "sentiment": 0.633,
+          "explanation": "Analyzed locally with VADER (0.77) and AFINN-111 (0.50).",
+          "category": "other"
         },
         {
           "sourceId": "ap",
@@ -47426,13 +47666,28 @@
     },
     "bloomberg": {
       "name": "Bloomberg",
-      "averageSentiment": -0.017,
+      "averageSentiment": -0.019,
       "distribution": {
-        "positive": 19,
-        "neutral": 118,
-        "negative": 26
+        "positive": 20,
+        "neutral": 120,
+        "negative": 28
       },
       "articles": [
+        {
+          "sourceId": "bloomberg",
+          "title": "DeepSeek Backs Ex-Tencent AI Scientist’s $400 Million Robot Lab - Bloomberg.com",
+          "description": "DeepSeek Backs Ex-Tencent AI Scientist’s $400 Million Robot Lab Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPMjE5N1J0MDF2LWVTMDR2UUJGdXVrU0lNdVRBSzRuNU5UbXJNdTh0UmVCQXZtV1JYQi01TnFNS0pLNzVxU1BIQ25OOWtUdjZvR0JuQVU3a1lfTGdMLW1rTGg0bWc4YWRnZGUyenBlSXhZTmM0UmJzUGZNcC1lWTNBZGJmZ3NtNHBEQkNsUVVNYS1ZaGszaGtmUmZqa3VYVHVyWDBVMFJLcnBxX1AwTnBwa3FnUQ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:42:26 GMT",
+          "sentimentLocal": 0.074,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": -0.103,
+          "explanationLocal": "Analyzed locally with VADER (-0.10) and AFINN-111 (0.25).",
+          "categoryLocal": "technology",
+          "sentiment": 0.074,
+          "explanation": "Analyzed locally with VADER (-0.10) and AFINN-111 (0.25).",
+          "category": "technology"
+        },
         {
           "sourceId": "bloomberg",
           "title": "EU Deal Hastens Need for BYD, Chery to Build Chinese Cars in Europe - Bloomberg.com",
@@ -47453,6 +47708,36 @@
         },
         {
           "sourceId": "bloomberg",
+          "title": "UK Reverses Trump Plans to Keep Back OpenAI, Anthropic Models - Bloomberg.com",
+          "description": "UK Reverses Trump Plans to Keep Back OpenAI, Anthropic Models Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxPWFNDcUJ6c1JhdEw2SjZ3TmNoZ1FSMzRXcWNrUjlxeFk2N3dHbEk2N01YN0UwSlBxVm9YQnA3TWVwU3lud1lldHQ0SV9NbWxLd2tadmRDWTM4NXIzWF9mV0d0c0tLOUk1eGRNd0QwZ21HSnlCbjJiS0dvUVh4SGljWWxxU1J2T2dIR18yaExLQWktV0pjMUFzUXZJZXhaU2xJclc1WVBMLXdRM0hvazhqdw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:05:05 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": 0,
+          "explanation": "Analyzed locally with VADER (0.00) and AFINN-111 (0.00).",
+          "category": "politics"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Stumbling Equity Rally Hinges on Earnings for Year-End Boost - Bloomberg.com",
+          "description": "Stumbling Equity Rally Hinges on Earnings for Year-End Boost Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOeEJrcFViVm14MW9ZNm4xenZCbU5sSFpvdlpfRy15Y1Rnb0dpUndEcEE1dm1tekNHV0RsQV8yYlNkbl9LdGFIcnpwT1pLVmlJNmRteE42RFhKUTg1TjZJalozdm0ydERHT1V5QjZ5cWVib21RUERhMmo4TUpGRlNJVnVFMlpValdLaEt6MjRYbUNrbkYzdEVobS04RjZvLUI4Ml9kdG9yamp1SzBsMXFRNw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:00:40 GMT",
+          "sentimentLocal": 0.455,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.66,
+          "explanationLocal": "Analyzed locally with VADER (0.66) and AFINN-111 (0.25).",
+          "categoryLocal": "other",
+          "sentiment": 0.455,
+          "explanation": "Analyzed locally with VADER (0.66) and AFINN-111 (0.25).",
+          "category": "other"
+        },
+        {
+          "sourceId": "bloomberg",
           "title": "Florida’s GOP Governor Candidate Exposes His Party’s Emptiness - Bloomberg.com",
           "description": "Florida’s GOP Governor Candidate Exposes His Party’s Emptiness Bloomberg.com",
           "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOV01FMG5aTXl1cm55RkJQRGlTZlZrY19qU2FLX3oyc3ZraVBlWThTaGFVa2QwUmRWT2JXeVdxTmtiY2tvMG9pQ1pYMFRZRW9mQ00xX1V0VHF5U3M4YjlFbW11cWNUS0RjVG5zZ1MzNDJkMlJFeVFGdG00bmcxMUtPUDJRM2RlMkdyUUYxMm1walR1ZnI4U1d1OWd6UDlCaGxJUW1YdjZ4MWpYSVc1NEdRT3BLaHRxQQ?oc=5",
@@ -47468,6 +47753,36 @@
           "sentimentGemini": -0.45,
           "explanationGemini": "An editorial criticizing candidate superficiality highlights cynicism in political choices.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Businesses Risk Wave of Democratic Probes on Costs, Corruption - Bloomberg.com",
+          "description": "Businesses Risk Wave of Democratic Probes on Costs, Corruption Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxNcXNoOVl4a2JvTzJib2kyX2x3X3lwUXVDMHZvR09YYkV6OE4zWWtPTC14TWlhMkV6cEcxQm5jbzEwTEU1UWdYdW50SUMyRzJzWS05LWNGaE1fVFpuSGloSlJvQVVJZUtrUTV4bnJuODNTVkdzZF96a0FFeThQdkFFcXBBbVFSbXhxSmwzUXh4b0J3c3YzTjNKVjN4NHdQbWRrRnZMbTlMdUNTZi1oVG03aVZn?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 11:00:00 GMT",
+          "sentimentLocal": -0.747,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.494,
+          "explanationLocal": "Analyzed locally with VADER (-0.49) and AFINN-111 (-1.00).",
+          "categoryLocal": "other",
+          "sentiment": -0.747,
+          "explanation": "Analyzed locally with VADER (-0.49) and AFINN-111 (-1.00).",
+          "category": "other"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Trump-Backed Housing Rule Could Undercut Effort to Lower Costs - Bloomberg.com",
+          "description": "Trump-Backed Housing Rule Could Undercut Effort to Lower Costs Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPLUVMZV8taFNYMmcyYVF3dlZFNGk5ZDNmQkFlU05WNGxJX2JyZUNmd3B0N2NGQXA3dE0zZXB6ZEk5TUNSLWRqSXJZTGpfazZweHlpLVE5YjlCTS1CRHlWSmlfSW9hYXg4SlB1OGpmQWtyVDEtZUU4dy1yb3lOelZCYkI0SlEzdmZOQ2p2U3BBUGV1X2w1SjNHX1g0b0RLZ1g4QVVscWlRREZKSWVJdkliTFJLRQ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 10:45:00 GMT",
+          "sentimentLocal": -0.263,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.527,
+          "explanationLocal": "Analyzed locally with VADER (-0.53) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.263,
+          "explanation": "Analyzed locally with VADER (-0.53) and AFINN-111 (0.00).",
+          "category": "politics"
         },
         {
           "sourceId": "bloomberg",
