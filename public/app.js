@@ -304,6 +304,9 @@ async function fetchData() {
       state.sources = data.sources;
       state.lastUpdated = data.lastUpdated;
       state.analyzerUsed = data.analyzerUsed;
+      state.editorialSummary = data.editorialSummary || (data.globalStats && data.globalStats.editorialSummary) || '';
+      state.editorialSummaryDate = data.editorialSummaryDate || (data.globalStats && data.globalStats.editorialSummaryDate) || '';
+      state.globalStats = data.globalStats || {};
 
       updateAppUI();
     } else {
@@ -1788,9 +1791,59 @@ function renderDailyPulse() {
   });
 
   const globalAvg = totalArticles > 0 ? Number((totalScore / totalArticles).toFixed(2)) : 0;
-  outletList.sort((a, b) => a.score - b.score);
-  const mostAlarmist = outletList[0];
-  const mostUplifting = outletList[outletList.length - 1];
+  
+  // Sort outlets by average sentiment (ignoring nulls)
+  const validOutlets = outletList.filter(o => typeof o.score === 'number' && !isNaN(o.score));
+  validOutlets.sort((a, b) => a.score - b.score);
+  const mostAlarmist = validOutlets[0] || { name: 'N/A', score: 0, id: 'all' };
+  const mostUplifting = validOutlets[validOutlets.length - 1] || { name: 'N/A', score: 0, id: 'all' };
+
+  // Calculate Biggest Polarization across topics
+  const validCatStats = Object.keys(catStats)
+    .filter(cat => catStats[cat].count >= 3 && cat !== 'other')
+    .map(cat => ({
+      cat,
+      name: cat.charAt(0).toUpperCase() + cat.slice(1),
+      avg: Number((catStats[cat].total / catStats[cat].count).toFixed(2))
+    }))
+    .sort((a, b) => a.avg - b.avg);
+
+  let polarizationName = 'Cross-Topic Consensus';
+  let polarizationScore = '0.15 Spread';
+  if (validCatStats.length >= 2) {
+    const lowestCat = validCatStats[0];
+    const highestCat = validCatStats[validCatStats.length - 1];
+    const spread = (highestCat.avg - lowestCat.avg).toFixed(2);
+    polarizationName = `${lowestCat.name} vs ${highestCat.name}`;
+    polarizationScore = `${spread} Spread`;
+  }
+
+  // Update Dynamic Timeframe Headings & Badges
+  const headingEl = document.getElementById('pulse-timeframe-heading');
+  const badgeTimeEl = document.getElementById('pulse-timeframe-badge');
+  if (headingEl) {
+    if (state.filters.time === '24h') {
+      headingEl.innerText = "Past 24h Global News Vibe:";
+    } else if (state.filters.time === '3d') {
+      headingEl.innerText = "3-Day Global News Vibe:";
+    } else if (state.filters.time === '7d') {
+      headingEl.innerText = "Past 7 Days Global News Vibe:";
+    } else {
+      headingEl.innerText = "Today's Global News Vibe:";
+    }
+  }
+
+  if (badgeTimeEl) {
+    if (state.filters.time === '24h') {
+      badgeTimeEl.innerText = "Past 24 Hours";
+    } else if (state.filters.time === '3d') {
+      badgeTimeEl.innerText = "Past 3 Days";
+    } else if (state.filters.time === '7d') {
+      badgeTimeEl.innerText = "Past 7 Days";
+    } else {
+      badgeTimeEl.innerText = "All-Time View";
+    }
+  }
 
   // Update Global Score & Badge
   const scoreEl = document.getElementById('global-mood-score');
@@ -1800,36 +1853,34 @@ function renderDailyPulse() {
 
   if (scoreEl) {
     scoreEl.innerText = (globalAvg > 0 ? '+' : '') + globalAvg.toFixed(2);
-    scoreEl.className = 'pulse-metric-val ' + (globalAvg < -0.1 ? 'neg' : (globalAvg > 0.1 ? 'pos' : 'neu'));
+    scoreEl.className = 'pulse-hero-score ' + (globalAvg < -0.1 ? 'neg' : (globalAvg > 0.1 ? 'pos' : 'neu'));
   }
 
   if (badgeEl) {
-    if (globalAvg < -0.2) {
+    badgeEl.className = 'pulse-hero-mood-badge';
+    if (globalAvg < -0.3) {
       badgeEl.innerText = 'Elevated Alarmism / Doom';
-      badgeEl.style.background = 'var(--neg-bg)';
-      badgeEl.style.color = 'var(--neg-color)';
+      badgeEl.classList.add('neg');
     } else if (globalAvg < -0.05) {
       badgeEl.innerText = 'Leaning Gloomy';
-      badgeEl.style.background = 'rgba(239, 68, 68, 0.1)';
-      badgeEl.style.color = '#ef4444';
+      badgeEl.classList.add('neg');
     } else if (globalAvg > 0.15) {
       badgeEl.innerText = 'Uplifting & Optimistic';
-      badgeEl.style.background = 'var(--pos-bg)';
-      badgeEl.style.color = 'var(--pos-color)';
+      badgeEl.classList.add('pos');
     } else {
       badgeEl.innerText = 'Objective & Neutral';
-      badgeEl.style.background = 'rgba(100, 116, 139, 0.1)';
-      badgeEl.style.color = 'var(--text-secondary)';
+      badgeEl.classList.add('neu');
     }
   }
 
   if (countEl) {
-    countEl.innerText = `${totalArticles.toLocaleString()} Articles Analyzed`;
+    countEl.innerText = `${totalArticles.toLocaleString()} Headlines Analyzed`;
   }
 
   if (summaryEl) {
-    if (state.globalStats && state.globalStats.editorialSummary) {
-      summaryEl.innerText = state.globalStats.editorialSummary;
+    const summaryText = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary);
+    if (summaryText) {
+      summaryEl.innerText = summaryText;
     } else {
       const topNegCat = Object.keys(catStats).sort((a, b) => (catStats[a].total / catStats[a].count) - (catStats[b].total / catStats[b].count))[0] || 'world';
       const topPosCat = Object.keys(catStats).sort((a, b) => (catStats[b].total / catStats[b].count) - (catStats[a].total / catStats[a].count))[0] || 'science';
@@ -1837,40 +1888,54 @@ function renderDailyPulse() {
     }
   }
 
-  // Update Outlets in Focus
+  // Update Outlets in Focus & Polarization
   const alarmistNameEl = document.getElementById('pulse-alarmist-name');
   const alarmistScoreEl = document.getElementById('pulse-alarmist-score');
   const upliftingNameEl = document.getElementById('pulse-uplifting-name');
   const upliftingScoreEl = document.getElementById('pulse-uplifting-score');
+  const polNameEl = document.getElementById('pulse-polarization-name');
+  const polScoreEl = document.getElementById('pulse-polarization-score');
 
   if (alarmistNameEl && mostAlarmist) alarmistNameEl.innerText = mostAlarmist.name;
   if (alarmistScoreEl && mostAlarmist) alarmistScoreEl.innerText = (mostAlarmist.score > 0 ? '+' : '') + mostAlarmist.score.toFixed(2);
   if (upliftingNameEl && mostUplifting) upliftingNameEl.innerText = mostUplifting.name;
   if (upliftingScoreEl && mostUplifting) upliftingScoreEl.innerText = (mostUplifting.score > 0 ? '+' : '') + mostUplifting.score.toFixed(2);
+  if (polNameEl) polNameEl.innerText = polarizationName;
+  if (polScoreEl) polScoreEl.innerText = polarizationScore;
 
-  // Quick filter buttons on pulse tiles
-  const filterAlarmistBtn = document.getElementById('filter-alarmist-btn');
-  const filterUpliftingBtn = document.getElementById('filter-uplifting-btn');
-  if (filterAlarmistBtn && mostAlarmist) {
-    filterAlarmistBtn.onclick = () => {
+  // Interactivity for the 3 Signal Cards
+  const alarmistCard = document.getElementById('signal-alarmist-card');
+  const upliftingCard = document.getElementById('signal-uplifting-card');
+  const polCard = document.getElementById('signal-polarization-card');
+
+  if (alarmistCard && mostAlarmist && mostAlarmist.id !== 'all') {
+    alarmistCard.onclick = () => {
       state.filters.source = mostAlarmist.id;
-      elements.filterSource.value = mostAlarmist.id;
+      if (elements.filterSource) elements.filterSource.value = mostAlarmist.id;
       updateFilterIndicator();
       renderHeadlines();
+      updateAppUI();
       document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
     };
   }
-  if (filterUpliftingBtn && mostUplifting) {
-    filterUpliftingBtn.onclick = () => {
+  if (upliftingCard && mostUplifting && mostUplifting.id !== 'all') {
+    upliftingCard.onclick = () => {
       state.filters.source = mostUplifting.id;
-      elements.filterSource.value = mostUplifting.id;
+      if (elements.filterSource) elements.filterSource.value = mostUplifting.id;
       updateFilterIndicator();
       renderHeadlines();
+      updateAppUI();
       document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+    };
+  }
+  if (polCard) {
+    polCard.onclick = () => {
+      const heatmap = document.getElementById('heatmap-section');
+      if (heatmap) heatmap.scrollIntoView({ behavior: 'smooth' });
     };
   }
 
-  // Category Beat Chips
+  // Topic Vibes Chips (renamed from Beat)
   const chipsContainer = document.getElementById('pulse-category-chips');
   if (chipsContainer) {
     const mainCategories = ['world', 'politics', 'business', 'technology', 'science', 'health'];
@@ -1883,7 +1948,7 @@ function renderDailyPulse() {
       health: '🏥'
     };
 
-    chipsContainer.innerHTML = '<span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-right:0.25rem;">Beat Vibes:</span>';
+    chipsContainer.innerHTML = '';
     mainCategories.forEach(cat => {
       const data = catStats[cat];
       if (data && data.count > 0) {
@@ -1894,7 +1959,7 @@ function renderDailyPulse() {
         chip.innerHTML = `<span>${catIcons[cat] || '📰'} ${cat.charAt(0).toUpperCase() + cat.slice(1)}</span> <span class="beat-chip-val ${valClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>`;
         chip.onclick = () => {
           state.filters.category = cat;
-          elements.filterCategory.value = cat;
+          if (elements.filterCategory) elements.filterCategory.value = cat;
           updateTopicPillsActive(cat);
           renderHeadlines();
           document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
@@ -1905,7 +1970,7 @@ function renderDailyPulse() {
   }
 }
 
-// --- INTERACTIVE BEAT HEATMAP RENDERER ---
+// --- INTERACTIVE TOPIC HEATMAP RENDERER ---
 function renderHeatmapMatrix() {
   const container = document.getElementById('heatmap-grid');
   if (!container) return;
@@ -1930,7 +1995,7 @@ function renderHeatmapMatrix() {
   // Top header row: Corner label + Source initials
   const corner = document.createElement('div');
   corner.className = 'heatmap-header-cell';
-  corner.innerText = 'BEAT / OUTLET';
+  corner.innerText = 'TOPIC / OUTLET';
   container.appendChild(corner);
 
   sourceIds.forEach(id => {
