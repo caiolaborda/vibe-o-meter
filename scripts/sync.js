@@ -161,6 +161,7 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     'gemini-3.5-flash-lite',
+    'gemini-3.8-flash',
     'gemini-3.5-flash',
     requestedModel || process.env.GEMINI_MODEL
   ].filter(Boolean);
