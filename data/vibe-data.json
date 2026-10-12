@@ -1,15 +1,15 @@
 {
-  "lastUpdated": "2026-10-12T15:29:12.676Z",
+  "lastUpdated": "2026-10-12T15:36:54.851Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-12",
   "editorialSummary": "Good morning, executives: today the global mood sits at a mildly depressed -0.158, dragged down primarily by Sky News leading the charge into the abyss at -0.358 while CNN bravely pretends everything is fine at a flat zero. Fortunately, our 1,743 analyzed headlines reveal a neat little schizophrenia: while world news and health are busy forecasting the apocalypse, environment and science are huffing pure copium with positive vibes to keep us from canceling the future altogether.",
   "globalStats": {
-    "globalSentiment": -0.162,
-    "totalArticles": 1790,
+    "globalSentiment": -0.163,
+    "totalArticles": 1797,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
-      "score": -0.359
+      "score": -0.361
     },
     "mostPositiveOutlet": {
       "id": "cnn",
@@ -18,12 +18,12 @@
     },
     "categoryAverages": {
       "business": -0.11,
-      "politics": -0.2,
-      "entertainment": 0.017,
-      "world": -0.589,
+      "politics": -0.201,
+      "entertainment": 0.015,
+      "world": -0.59,
       "technology": -0.012,
-      "sports": 0.059,
-      "other": -0.039,
+      "sports": 0.061,
+      "other": -0.04,
       "health": -0.274,
       "science": 0.194,
       "education": -0.22,
@@ -4251,13 +4251,31 @@
     },
     "nyt": {
       "name": "The New York Times",
-      "averageSentiment": -0.182,
+      "averageSentiment": -0.186,
       "distribution": {
         "positive": 22,
         "neutral": 58,
-        "negative": 79
+        "negative": 80
       },
       "articles": [
+        {
+          "sourceId": "nyt",
+          "title": "Saudi Arabia Faces More Attacks as It Reels From Airport Strikes",
+          "description": "The Saudi authorities said they were fending off drone and missile attacks after a weekend of confrontation with the Houthi militia in Yemen, whose patrons Iran offered to mediate.",
+          "link": "https://www.nytimes.com/2026/10/12/world/middleeast/iran-houthis-saudi-arabia-mediate.html",
+          "pubDate": "Mon, 12 Oct 2026 15:26:55 +0000",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.872,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.87) and AFINN-111 (-0.38).",
+          "categoryLocal": "world",
+          "sentiment": -0.82,
+          "explanation": "Active military strikes, drone attacks, and regional warfare represent severe security crises.",
+          "category": "world",
+          "sentimentGemini": -0.82,
+          "explanationGemini": "Active military strikes, drone attacks, and regional warfare represent severe security crises.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "nyt",
           "title": "Federal Agents Search Home of Rep. Ilhan Omar",
@@ -13431,11 +13449,11 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.093,
+      "averageSentiment": -0.094,
       "distribution": {
         "positive": 51,
-        "neutral": 66,
-        "negative": 84
+        "neutral": 67,
+        "negative": 85
       },
       "articles": [
         {
@@ -13454,6 +13472,24 @@
           "category": "politics",
           "sentimentGemini": -0.35,
           "explanationGemini": "Parliamentary debate touches heavily upon systemic healthcare failures, mortality rates from emergency wait times, and political friction over immigration.",
+          "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Reform’s Zia Yusuf is sounding more and more like Trump every day | Zoe Williams",
+          "description": "On the Today programme, his comments were disconnected, cliche-riddled and unremittingly stupid. But to clog the collective consciousness with nonsense is exactly the point Had Reform merely announced its intention to suspend the asylum system for an entire parliamentary term, I’d have just ignored it. Even to dignify its policy platform with a response is to enter its alternate universe, in which it’s preparing for government. I prefer, if only fractionally, this universe we’re in, where the party hangs by a thread on the results of a parliamentary inquiry into Nigel Farage’s £5m gift from a disinterested well-wisher. Had Zia Yusuf, the party’s home affairs spokesperson, gone on BBC Radio 4’s Today programme merely promising a British version of ICE, I still would have ignored it, not due to complacency, more due to a bone-penetrating despair that anyone, even he, would look at the US’s shadow militia, performing staged acts of unfettered violence and inhumanity, and think: “That looks cool – I bet I could get some political capital out of that.” Continue reading...",
+          "link": "https://www.theguardian.com/commentisfree/2026/oct/12/reform-zia-yusuf-trump-today-programme",
+          "pubDate": "Mon, 12 Oct 2026 14:59:15 GMT",
+          "sentimentLocal": -0.724,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.449,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.45) and AFINN-111 (-1.00).",
+          "categoryLocal": "politics",
+          "sentiment": -0.38,
+          "explanation": "An opinion piece criticizing political rhetoric, policy proposals, and rising friction within immigration debates.",
+          "category": "politics",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "An opinion piece criticizing political rhetoric, policy proposals, and rising friction within immigration debates.",
           "categoryGemini": "politics"
         },
         {
@@ -13922,6 +13958,24 @@
           "category": "entertainment",
           "sentimentGemini": -0.22,
           "explanationGemini": "Broadcaster censorship of civil rights messaging prompts contention over fairness.",
+          "categoryGemini": "entertainment"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Mort à la révolution! Why UK film loves a failed rebellion",
+          "description": "Paul Greengrass’s Peasants’ Revolt epic, The Uprising, is just the latest in a long line of movies depicting an unsuccessful attempt at remaking the nation The British are perverse. We fetishise our failures, even if they are essentially tangential to a national narrative that should be about imperial conquest, slavery and being unremittingly unpleasant to foreigners. We tell and retell, for instance, the story of Captain Scott even though he died in Antarctica in 1912 after losing the race to reach the south pole first to the unacceptably Norwegian Roald Amundsen. Similarly, Christopher Nolan’s 2017 film Dunkirk typified the British tendency to snatch national glory from the jaws of defeat. And then there was the tragicomic disaster of the Charge of the Light Brigade during the 1853-56 Crimean war in which our boys raced to putatively glorious if stupid deaths. It’s as if, for us British, pointless sacrifice and embracing failure are what heroism means. And our cinema has colluded with this perversity. But there is an exception to this national veneration of failure. Britain has been reluctant to embrace its revolutionary defeats. There is, for instance, no film dealing with the Chartist movement’s 19th-century struggle for universal suffrage. Even more strikingly yet, it is only now, in 2026, that a film has been made about the calamitous 1381 Peasants’ Revolt, even though it is a pivotal event in British history. Paul Greengrass’s The Uprising, starring Andrew Garfield as a – let’s just get this over with – revolting peasant, joins a mere handful of other movies, including Kevin Brownlow and Andrew Mollo’s 1975 Winstanley, Bill Douglas’s 1986 Comrades and Mike Leigh’s 2018 Peterloo, that dare depict how radical collective action was crushed by a ruthless state. Continue reading...",
+          "link": "https://www.theguardian.com/film/2026/oct/12/cinema-films-failed-british-revolutions-paul-greengrass-the-uprising",
+          "pubDate": "Mon, 12 Oct 2026 11:14:33 GMT",
+          "sentimentLocal": -0.996,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.992,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.99) and AFINN-111 (-1.00).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.15,
+          "explanation": "A cultural commentary and film critique focused on historical failures and cinematic depictions of rebellions.",
+          "category": "entertainment",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "A cultural commentary and film critique focused on historical failures and cinematic depictions of rebellions.",
           "categoryGemini": "entertainment"
         },
         {
@@ -22689,13 +22743,31 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.128,
+      "averageSentiment": -0.126,
       "distribution": {
-        "positive": 37,
+        "positive": 38,
         "neutral": 86,
         "negative": 90
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "NFL linebacker and amateur preacher Demario Davis delivers amazing sermon on winning and life",
+          "description": "During the Jets' chapel service, Davis tied Proverbs 13:12 and the tree of life to perseverance through adversity in the NFL, relationships and careers.",
+          "link": "https://www.foxnews.com/outkick-sports/nfl-linebacker-amateur-preacher-demario-davis-delivers-amazing-sermon-winning-life",
+          "pubDate": "Mon, 12 Oct 2026 11:27:15 -0400",
+          "sentimentLocal": 0.83,
+          "sentimentAFINN": 1,
+          "sentimentVADER": 0.66,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.66) and AFINN-111 (1.00).",
+          "categoryLocal": "sports",
+          "sentiment": 0.35,
+          "explanation": "An inspiring religious and motivational sermon delivered by an NFL player focusing on perseverance.",
+          "category": "sports",
+          "sentimentGemini": 0.35,
+          "explanationGemini": "An inspiring religious and motivational sermon delivered by an NFL player focusing on perseverance.",
+          "categoryGemini": "sports"
+        },
         {
           "sourceId": "fox",
           "title": "Yoshinobu Yamamoto takes the mound as Dodgers look to even NLCS after Game 1 loss to Brewers",
@@ -43309,11 +43381,11 @@
     },
     "skynews": {
       "name": "Sky News",
-      "averageSentiment": -0.359,
+      "averageSentiment": -0.361,
       "distribution": {
         "positive": 6,
         "neutral": 18,
-        "negative": 38
+        "negative": 39
       },
       "articles": [
         {
@@ -43494,6 +43566,24 @@
           "category": "other",
           "sentimentGemini": -0.78,
           "explanationGemini": "A fatal zoo mauling marked by heartbreaking details conveys tragic distress.",
+          "categoryGemini": "other"
+        },
+        {
+          "sourceId": "skynews",
+          "title": "'Frankly shocking' risk-taking by motorists uncovered by AI-powered cameras",
+          "description": "Motorists have been caught driving with children on their lap and both hands on their phone rather than the wheel in a trial of AI-powered cameras.",
+          "link": "https://news.sky.com/story/trial-of-ai-technology-uncovers-frankly-shocking-number-of-road-rule-breaches-13598008",
+          "pubDate": "Mon, 12 Oct 2026 03:13:00 +0100",
+          "sentimentLocal": -0.201,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.40) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentiment": -0.45,
+          "explanation": "Exposing dangerous and reckless driving behavior among motorists creates significant societal concern.",
+          "category": "other",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "Exposing dangerous and reckless driving behavior among motorists creates significant societal concern.",
           "categoryGemini": "other"
         },
         {
@@ -50169,13 +50259,31 @@
     },
     "ap": {
       "name": "Associated Press",
-      "averageSentiment": -0.197,
+      "averageSentiment": -0.203,
       "distribution": {
         "positive": 15,
         "neutral": 39,
-        "negative": 48
+        "negative": 49
       },
       "articles": [
+        {
+          "sourceId": "ap",
+          "title": "Saudis probe how defense systems failed to stop deadly Houthi attack on Riyadh airport - AP News",
+          "description": "Saudis probe how defense systems failed to stop deadly Houthi attack on Riyadh airport AP News",
+          "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxNVlFmZ0kwWmYtTnNQeVZ5dklfNXNiZlFLRDh6TEZrUEpLYmtFMk1IckdOeHBUb1YyQV9pbXRPeUpib1VXMEV3dHJtYWs5V1BDMnQzM0ZsSTk2cXVFQ0xYbGplWUlUSEhrZlpHbzZTX05xdElackFubFV0YUhudVFFNUo4cVpLazRFaUlINkcySkVVcWJFU3ZIRHVB?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:16:00 GMT",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.935,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.93) and AFINN-111 (-1.00).",
+          "categoryLocal": "other",
+          "sentiment": -0.88,
+          "explanation": "A deadly missile attack on an international airport resulting in casualties and defense failures constitutes a major catastrophe.",
+          "category": "world",
+          "sentimentGemini": -0.88,
+          "explanationGemini": "A deadly missile attack on an international airport resulting in casualties and defense failures constitutes a major catastrophe.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "ap",
           "title": "Federal agents search Rep. Ilhan Omar's home as part of a criminal investigation, AP sources say - AP News",
@@ -52356,7 +52464,7 @@
       "averageSentiment": -0.096,
       "distribution": {
         "positive": 39,
-        "neutral": 61,
+        "neutral": 62,
         "negative": 77
       },
       "articles": [
@@ -52413,6 +52521,24 @@
           "sentimentGemini": -0.22,
           "explanationGemini": "High-level military strategy discussions involving active geopolitical conflict reflect underlying tension.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Starbucks Says It’s Not Buying Chipotle, Dousing Deal Rumors - Bloomberg.com",
+          "description": "Starbucks Says It’s Not Buying Chipotle, Dousing Deal Rumors Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNd2xFVUFxVU94RlN3RU54Z3MtamJZcWd2M0JKaVltU0dMZk1nOVg5aks1NUl1TVctNzlWMGpxelNxX3B6N2pHLXFJMG9Vb01UQTZzOFY3QXJNcDJ2dWhOeUJQdFpmekZQSzVDby01UHQ4SVM4cmZOQkpuYm14NW1RVGFPelJ3VWlCT1I2V3pOM2JpMURJOXl5ZV9MeEVjcVo2VUF1em1HTWxFdnVyanM0R0tUSQ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 13:18:36 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.05,
+          "explanation": "A routine corporate denial of merger rumors that simply dampens market speculation without real-world damage.",
+          "category": "business",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "A routine corporate denial of merger rumors that simply dampens market speculation without real-world damage.",
+          "categoryGemini": "business"
         },
         {
           "sourceId": "bloomberg",
