@@ -4,17 +4,18 @@
 let state = {
   sources: {},
   lastUpdated: null,
-  analyzerUsed: null,
+  analyzerUsed: 'Google Gemini (AI)',
   sentimentMode: 'gemini', // 'gemini', 'vader', 'global'
   spectrumViewMode: 'averages', // 'averages' or 'distribution'
   showAllOutlets: false,
+  activeRegion: 'all', // 'all', 'US', 'UK', 'EU', 'ME', 'GLOBAL'
   isSyncing: false,
   syncMessage: '',
   filters: {
     source: 'all',
     category: 'all',
     vibe: 'all',
-    time: 'all',
+    time: '24h', // Default to Past 24 Hours
     search: ''
   },
   sort: {
@@ -25,21 +26,21 @@ let state = {
 
 let resolvedSources = {};
 
-// News Source Initials for Spectrum Markers
+// News Source Metadata with Origin Region and Visual Colors
 const SOURCE_META = {
-  bbc: { initials: 'BBC', color: '#ff3f3f' },
-  nyt: { initials: 'NYT', color: '#1e293b' },
-  cnn: { initials: 'CNN', color: '#cc0000' },
-  guardian: { initials: 'GD', color: '#005689' },
-  fox: { initials: 'FOX', color: '#003366' },
-  aljazeera: { initials: 'AJ', color: '#ff9900' },
-  npr: { initials: 'NPR', color: '#3c78d8' },
-  cnbc: { initials: 'CNB', color: '#0077b6' },
-  skynews: { initials: 'SKY', color: '#f22613' },
-  spiegel: { initials: 'SPG', color: '#e62a15' },
-  reuters: { initials: 'RTR', color: '#ff8000' },
-  ap: { initials: 'AP', color: '#ff0055' },
-  bloomberg: { initials: 'BBG', color: '#1d4ed8' }
+  bbc: { initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', flag: '🇬🇧' },
+  nyt: { initials: 'NYT', color: '#1e293b', region: 'US', regionName: 'United States', flag: '🇺🇸' },
+  cnn: { initials: 'CNN', color: '#cc0000', region: 'US', regionName: 'United States', flag: '🇺🇸' },
+  guardian: { initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', flag: '🇬🇧' },
+  fox: { initials: 'FOX', color: '#003366', region: 'US', regionName: 'United States', flag: '🇺🇸' },
+  aljazeera: { initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', flag: '🇶🇦' },
+  npr: { initials: 'NPR', color: '#3c78d8', region: 'US', regionName: 'United States', flag: '🇺🇸' },
+  cnbc: { initials: 'CNB', color: '#0077b6', region: 'US', regionName: 'United States', flag: '🇺🇸' },
+  skynews: { initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', flag: '🇬🇧' },
+  spiegel: { initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', flag: '🇩🇪' },
+  reuters: { initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' },
+  ap: { initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' },
+  bloomberg: { initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', flag: '🇺🇸' }
 };
 
 // RSS Feed URLs for copying
@@ -68,11 +69,12 @@ const elements = {
   viewToggleAverages: document.getElementById('view-toggle-averages'),
   viewToggleDistribution: document.getElementById('view-toggle-distribution'),
   sourcesGrid: document.getElementById('sources-grid'),
+  regionFilterTabs: document.getElementById('region-filter-tabs'),
   h2hSourceA: document.getElementById('h2h-source-a'),
   h2hSourceB: document.getElementById('h2h-source-b'),
   headlinesContainer: document.getElementById('headlines-container'),
   
-  // Model View Toggle
+  // Model View Toggle (optional)
   modeGeminiBtn: document.getElementById('mode-gemini-btn'),
   modeVaderBtn: document.getElementById('mode-vader-btn'),
   modeGlobalBtn: document.getElementById('mode-global-btn'),
@@ -94,6 +96,9 @@ const elements = {
   quickSourceIndicator: document.getElementById('quick-source-indicator'),
   quickSourceName: document.getElementById('quick-source-name'),
   quickSourceClearBtn: document.getElementById('quick-source-clear-btn'),
+  quickCategoryIndicator: document.getElementById('quick-category-indicator'),
+  quickCategoryName: document.getElementById('quick-category-name'),
+  quickCategoryClearBtn: document.getElementById('quick-category-clear-btn'),
 
   // Sort Buttons
   sortDateBtn: document.getElementById('sort-date'),
@@ -133,26 +138,35 @@ function setupEventListeners() {
   }
   
   // Filter changes
-  elements.filterSource.addEventListener('change', (e) => {
-    state.filters.source = e.target.value;
-    updateFilterIndicator();
-    renderHeadlines();
-  });
-  elements.filterCategory.addEventListener('change', (e) => {
-    state.filters.category = e.target.value;
-    updateTopicPillsActive(e.target.value);
-    renderHeadlines();
-  });
-  elements.filterVibe.addEventListener('change', (e) => {
-    state.filters.vibe = e.target.value;
-    renderHeadlines();
-  });
+  if (elements.filterSource) {
+    elements.filterSource.addEventListener('change', (e) => {
+      state.filters.source = e.target.value;
+      updateFilterIndicator();
+      renderHeadlines();
+    });
+  }
+  if (elements.filterCategory) {
+    elements.filterCategory.addEventListener('change', (e) => {
+      state.filters.category = e.target.value;
+      updateTopicPillsActive(e.target.value);
+      updateFilterIndicator();
+      updateAppUI();
+    });
+  }
+  if (elements.filterVibe) {
+    elements.filterVibe.addEventListener('change', (e) => {
+      state.filters.vibe = e.target.value;
+      renderHeadlines();
+    });
+  }
   
-  elements.filterTime.addEventListener('change', (e) => {
-    state.filters.time = e.target.value;
-    if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
-    updateAppUI();
-  });
+  if (elements.filterTime) {
+    elements.filterTime.addEventListener('change', (e) => {
+      state.filters.time = e.target.value;
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
+      updateAppUI();
+    });
+  }
 
   if (elements.quickTimeframeSelect) {
     elements.quickTimeframeSelect.addEventListener('change', (e) => {
@@ -173,40 +187,72 @@ function setupEventListeners() {
       updateAppUI();
     });
   }
+
+  if (elements.quickCategoryClearBtn) {
+    elements.quickCategoryClearBtn.addEventListener('click', () => {
+      state.filters.category = 'all';
+      if (elements.filterCategory) elements.filterCategory.value = 'all';
+      updateTopicPillsActive('all');
+      updateFilterIndicator();
+      updateAppUI();
+    });
+  }
+
+  if (elements.regionFilterTabs) {
+    elements.regionFilterTabs.addEventListener('click', (e) => {
+      const btn = e.target.closest('.region-pill');
+      if (!btn) return;
+      elements.regionFilterTabs.querySelectorAll('.region-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeRegion = btn.dataset.region || 'all';
+      renderComparisonMatrix();
+    });
+  }
   
   // Search input
-  elements.searchInput.addEventListener('input', (e) => {
-    state.filters.search = e.target.value.trim();
-    elements.clearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
-    renderHeadlines();
-  });
+  if (elements.searchInput) {
+    elements.searchInput.addEventListener('input', (e) => {
+      state.filters.search = e.target.value.trim();
+      elements.clearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
+      renderHeadlines();
+    });
+  }
   
-  elements.clearSearchBtn.addEventListener('click', () => {
-    elements.searchInput.value = '';
-    state.filters.search = '';
-    elements.clearSearchBtn.style.display = 'none';
-    renderHeadlines();
-  });
+  if (elements.clearSearchBtn) {
+    elements.clearSearchBtn.addEventListener('click', () => {
+      elements.searchInput.value = '';
+      state.filters.search = '';
+      elements.clearSearchBtn.style.display = 'none';
+      renderHeadlines();
+    });
+  }
 
-  elements.clearFilterBtn.addEventListener('click', () => {
-    state.filters.source = 'all';
-    state.filters.category = 'all';
-    state.filters.vibe = 'all';
-    state.filters.time = 'all';
-    
-    elements.filterSource.value = 'all';
-    elements.filterCategory.value = 'all';
-    elements.filterVibe.value = 'all';
-    elements.filterTime.value = 'all';
-    if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = 'all';
-    
-    // Clear active card states in grid
-    document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
-    
-    updateFilterIndicator();
-    updateAppUI();
-  });
+  if (elements.clearFilterBtn) {
+    elements.clearFilterBtn.addEventListener('click', () => {
+      state.filters.source = 'all';
+      state.filters.category = 'all';
+      state.filters.vibe = 'all';
+      state.filters.time = '24h';
+      state.activeRegion = 'all';
+      
+      if (elements.filterSource) elements.filterSource.value = 'all';
+      if (elements.filterCategory) elements.filterCategory.value = 'all';
+      if (elements.filterVibe) elements.filterVibe.value = 'all';
+      if (elements.filterTime) elements.filterTime.value = '24h';
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = '24h';
+      if (elements.regionFilterTabs) {
+        elements.regionFilterTabs.querySelectorAll('.region-pill').forEach(b => b.classList.toggle('active', b.dataset.region === 'all'));
+      }
+      
+      // Clear active card states in grid
+      document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
+      
+      updateTopicPillsActive('all');
+      updateFilterIndicator();
+      updateAppUI();
+    });
+  }
   
   // Sort Buttons
   elements.sortDateBtn.addEventListener('click', () => {
@@ -714,24 +760,40 @@ function populateFilterOptions() {
 
 // Draw the Vibe Spectrum Axis (Hero Averages vs Beeswarm Lanes)
 function renderSpectrum() {
+  const sources = resolvedSources || getResolvedSources();
+  const isCategoryFiltered = state.filters.category !== 'all';
+  
+  // Calculate average for each source (considering active category filter if set)
+  const sourceScores = {};
+  Object.keys(sources).forEach(id => {
+    const src = sources[id];
+    let arts = src.articles || [];
+    if (isCategoryFiltered) {
+      arts = arts.filter(a => (a.category || 'other') === state.filters.category);
+    }
+    const scored = arts.filter(a => typeof a.sentiment === 'number');
+    const avg = scored.length > 0 ? (scored.reduce((sum, a) => sum + a.sentiment, 0) / scored.length) : null;
+    sourceScores[id] = { avg, scoredCount: scored.length, articles: arts };
+  });
+
+  const validScores = Object.values(sourceScores)
+    .map(s => s.avg)
+    .filter(v => typeof v === 'number' && !isNaN(v));
+
   if (state.spectrumViewMode === 'averages') {
     elements.spectrumMarkers.innerHTML = '';
     const markerPositions = [];
 
-    // Collect valid numeric averages
-    const validScores = Object.values(resolvedSources)
-      .map(s => s.averageSentiment)
-      .filter(v => typeof v === 'number' && !isNaN(v));
-
     const minAvg = validScores.length > 0 ? Math.min(...validScores) : -0.5;
     const maxAvg = validScores.length > 0 ? Math.max(...validScores) : 0.05;
 
-    // Normalizing spread: allocate 12% to 88% width so outlets breathe across the full spectrum
-    const domainMin = Math.min(-0.55, Math.floor((minAvg - 0.08) * 10) / 10);
-    const domainMax = Math.max(0.15, Math.ceil((maxAvg + 0.08) * 10) / 10);
-    const domainSpan = Math.max(0.1, domainMax - domainMin);
+    // Normed spacing: dynamically scale the track domain
+    const pad = Math.max(0.06, (maxAvg - minAvg) * 0.12);
+    const domainMin = Math.floor((minAvg - pad) * 10) / 10;
+    const domainMax = Math.ceil((maxAvg + pad) * 10) / 10;
+    const domainSpan = Math.max(0.15, domainMax - domainMin);
 
-    // Update tick labels dynamically
+    // Update dynamic tick labels
     const ticksContainer = document.querySelector('.spectrum-ticks');
     if (ticksContainer) {
       ticksContainer.innerHTML = '';
@@ -744,21 +806,22 @@ function renderSpectrum() {
       }
     }
 
-    Object.keys(resolvedSources).forEach(id => {
-      const source = resolvedSources[id];
-      if (source.error && (!source.articles || source.articles.length === 0)) return;
+    Object.keys(sources).forEach(id => {
+      const source = sources[id];
+      const data = sourceScores[id];
+      if (data.avg === null || data.scoredCount === 0) return;
       
-      const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
-      // Map normalized percentage
-      const percentage = Math.max(10, Math.min(90, 10 + ((avg - domainMin) / domainSpan) * 80));
+      const avg = data.avg;
+      // Stretched normed percentage: 6% to 94%
+      const percentage = Math.max(6, Math.min(94, 6 + (((avg - domainMin) / domainSpan) * 88)));
       
-      // Staggered vertical level check (max 3 tiers: 0, 1, 2)
+      // Collision avoidance across vertical tiers
       let yLevel = 0;
       let collision = true;
       while (collision && yLevel < 3) {
         collision = false;
         for (const pos of markerPositions) {
-          if (Math.abs(pos.x - percentage) < 4.2 && pos.y === yLevel) {
+          if (Math.abs(pos.x - percentage) < 4.5 && pos.y === yLevel) {
             yLevel++;
             collision = true;
             break;
@@ -768,27 +831,37 @@ function renderSpectrum() {
 
       let finalX = percentage;
       if (yLevel >= 3) {
-        // Wrap gracefully to lower tier with subtle horizontal nudge
         yLevel = (markerPositions.length % 2 === 0 ? 0 : 1);
         finalX = percentage + (markerPositions.length % 2 === 0 ? 1.5 : -1.5);
       }
       markerPositions.push({ x: finalX, y: yLevel });
       
-      // Create marker
+      // Color: stretch color based on position in visible spectrum
+      const normVal = (avg - domainMin) / domainSpan; // 0 to 1
+      let markerColor = '#64748b'; // neutral slate
+      if (normVal < 0.35) {
+        markerColor = '#ef4444'; // negative coral
+      } else if (normVal > 0.65) {
+        markerColor = '#22c55e'; // positive emerald
+      } else {
+        markerColor = '#f59e0b'; // amber/balanced
+      }
+
+      const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
+      const yOffset = yLevel * 44;
+      
       const marker = document.createElement('div');
       marker.className = `outlet-marker ${state.filters.source === id ? 'active' : ''}`;
       marker.style.left = `${finalX}%`;
-      marker.style.bottom = `${12 + yLevel * 44}px`;
+      marker.style.bottom = `${12 + yOffset}px`;
       marker.setAttribute('data-id', id);
       
-      const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#ccc' };
-      
       marker.innerHTML = `
-        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; border: 2.5px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
+        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; border: 2.5px solid ${markerColor}; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
           <span>${meta.initials}</span>
         </div>
         <div class="marker-label" style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%); opacity: 0; pointer-events: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: var(--card-shadow); white-space: nowrap; color: var(--text-primary); transition: all 0.2s;">
-          ${source.name}: ${avg > 0 ? '+' : ''}${avg.toFixed(2)}
+          ${source.name}: <strong style="color:${markerColor};">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</strong> ${isCategoryFiltered ? `(${state.filters.category})` : ''}
         </div>
       `;
       
@@ -801,50 +874,52 @@ function renderSpectrum() {
     
     setupSpectrumMagnification();
   } else {
+    // DISTRIBUTION VIEW: Beeswarm Plot Lanes
     elements.spectrumLanes.innerHTML = '';
     
-    // Sort lanes by average sentiment
-    const sortedIds = Object.keys(resolvedSources).sort((a, b) => {
-      const valA = typeof resolvedSources[a].averageSentiment === 'number' ? resolvedSources[a].averageSentiment : 0;
-      const valB = typeof resolvedSources[b].averageSentiment === 'number' ? resolvedSources[b].averageSentiment : 0;
+    // Sort sources by average sentiment (highest to lowest)
+    const sortedIds = Object.keys(sources).sort((a, b) => {
+      const valA = typeof sourceScores[a]?.avg === 'number' ? sourceScores[a].avg : -999;
+      const valB = typeof sourceScores[b]?.avg === 'number' ? sourceScores[b].avg : -999;
       return valB - valA;
     });
     
     sortedIds.forEach(id => {
-      const source = resolvedSources[id];
-      if (source.error && (!source.articles || source.articles.length === 0)) return;
+      const source = sources[id];
+      const data = sourceScores[id];
+      if (data.articles.length === 0 && isCategoryFiltered) return;
       
-      const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
-      const avgPct = ((avg + 1) / 2) * 100;
-      const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#ccc' };
+      const avg = data.avg ?? 0;
+      const avgPct = Math.max(0, Math.min(100, ((avg + 1) / 2) * 100));
+      const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#10b981' };
       
       const lane = document.createElement('div');
       lane.className = `spectrum-lane ${state.filters.source === id ? 'active' : ''}`;
       lane.style.cssText = 'display: flex; align-items: center; gap: 1.25rem; width: 100%; height: 48px; position: relative; margin-bottom: 0.35rem;';
       
-      const avgLabel = `Avg: ${avg > 0 ? '+' : ''}${avg.toFixed(2)}`;
+      const avgLabel = data.scoredCount > 0 ? `Avg: ${avg > 0 ? '+' : ''}${avg.toFixed(2)}` : 'N/A';
       const avgColor = avg > 0.15 ? 'var(--pos-color)' : (avg < -0.15 ? 'var(--neg-color)' : 'var(--text-secondary)');
       
       const sourceHTML = `
         <div class="lane-source-info" onclick="toggleSourceFilter('${id}')" 
-             style="display: flex; align-items: center; gap: 0.6rem; width: 160px; cursor: pointer; user-select: none; padding: 0.35rem 0.5rem; border-radius: 8px; transition: all 0.2s; background: ${state.filters.source === id ? 'var(--bg-secondary)' : 'transparent'}; border: 1px solid ${state.filters.source === id ? 'var(--border-color)' : 'transparent'};">
+             style="display: flex; align-items: center; gap: 0.6rem; width: 160px; cursor: pointer; user-select: none; padding: 0.35rem 0.5rem; border-radius: 8px; transition: all 0.2s; background: ${state.filters.source === id ? 'var(--bg-secondary)' : 'transparent'}; border: 1px solid ${state.filters.source === id ? 'var(--border-color)' : 'transparent'}; flex-shrink: 0;">
           <div style="background-color: ${meta.color}; color: #fff; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             ${meta.initials}
           </div>
           <div style="display: flex; flex-direction: column; overflow: hidden; text-align: left;">
             <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">${source.name}</span>
             <span style="font-size: 0.7rem; font-weight: 600; color: ${avgColor}; line-height: 1.2;">
-              ${avgLabel}
+              ${avgLabel} (${data.scoredCount})
             </span>
           </div>
         </div>
       `;
       
       // Strict lane-confined honeycomb packing for article dots
-      // 3 vertical slots inside the 32px track container: 0px (center), -7px (upper), +7px (lower)
+      // 3 vertical slots inside the 34px track container: 0px (center), -7px (upper), +7px (lower)
       const verticalSlots = [0, -7, 7];
       const dotPositions = [];
-      const scoredArticles = (source.articles || []).filter(art => typeof art.sentiment === 'number');
+      const scoredArticles = (data.articles || []).filter(art => typeof art.sentiment === 'number');
       
       const dotsHTML = scoredArticles.map((art, idx) => {
         const score = art.sentiment;
@@ -854,12 +929,11 @@ function renderSpectrum() {
         let chosenY = 0;
         let placed = false;
         
-        // Find non-colliding rosette position
-        for (let step = 0; step <= 8; step++) {
-          const xOffset = step === 0 ? 0 : (step % 2 === 1 ? 1 : -1) * Math.ceil(step / 2) * 1.1;
+        for (let step = 0; step <= 16; step++) {
+          const xOffset = step === 0 ? 0 : (step % 2 === 1 ? 1 : -1) * Math.ceil(step / 2) * 1.2;
           const xCandidate = rawX + xOffset;
           for (const ySlot of verticalSlots) {
-            const collides = dotPositions.some(p => Math.abs(p.x - xCandidate) < 1.1 && p.y === ySlot);
+            const collides = dotPositions.some(p => Math.abs(p.x - xCandidate) < 1.05 && p.y === ySlot);
             if (!collides) {
               chosenX = Math.max(1, Math.min(99, xCandidate));
               chosenY = ySlot;
@@ -870,7 +944,7 @@ function renderSpectrum() {
           if (placed) break;
         }
         if (!placed) {
-          chosenX = Math.max(1, Math.min(99, rawX + (Math.random() * 2 - 1)));
+          chosenX = Math.max(1, Math.min(99, rawX + ((idx % 5) - 2) * 1.5));
           chosenY = verticalSlots[idx % verticalSlots.length];
         }
         dotPositions.push({ x: chosenX, y: chosenY });
@@ -898,7 +972,7 @@ function renderSpectrum() {
       `;
       
       const trackHTML = `
-        <div class="lane-track-container" style="position: relative; flex-grow: 1; height: 32px; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-color); display: flex; align-items: center; overflow: hidden;">
+        <div class="lane-track-container" style="position: relative; flex-grow: 1; height: 34px; background: var(--bg-secondary); border-radius: 17px; border: 1px solid var(--border-color); display: flex; align-items: center; overflow: hidden;">
           <div style="position: absolute; left: 12px; right: 12px; height: 1.5px; background: var(--border-color); opacity: 0.4; z-index: 1; top: 50%;"></div>
           ${averageMarkerHTML}
           <div style="position: absolute; left: 12px; right: 12px; top: 0; bottom: 0; overflow: hidden;">
@@ -1068,15 +1142,34 @@ function renderComparisonMatrix() {
   elements.sourcesGrid.innerHTML = '';
   
   // Sort sources by average sentiment (highest to lowest)
-  const sortedIds = Object.keys(resolvedSources).sort((a, b) => {
+  let sortedIds = Object.keys(resolvedSources).sort((a, b) => {
     const valA = typeof resolvedSources[a].averageSentiment === 'number' ? resolvedSources[a].averageSentiment : -999;
     const valB = typeof resolvedSources[b].averageSentiment === 'number' ? resolvedSources[b].averageSentiment : -999;
     return valB - valA;
   });
 
+  // Filter by active region if set
+  if (state.activeRegion && state.activeRegion !== 'all') {
+    sortedIds = sortedIds.filter(id => {
+      const meta = SOURCE_META[id];
+      return meta && meta.region && meta.region.toUpperCase() === state.activeRegion.toUpperCase();
+    });
+  }
+
   const showMoreRow = document.getElementById('sources-show-more-row');
   if (showMoreRow) {
     showMoreRow.style.display = sortedIds.length > 6 ? 'block' : 'none';
+  }
+
+  if (sortedIds.length === 0) {
+    elements.sourcesGrid.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1; padding: 2.5rem; text-align: center;">
+        <i data-lucide="globe-2"></i>
+        <span>No news outlets match the selected region filter.</span>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
   }
 
   // Display top 6 if not expanded, or all if expanded
@@ -1085,6 +1178,7 @@ function renderComparisonMatrix() {
   displayIds.forEach(id => {
     const source = resolvedSources[id];
     const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
+    const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' };
     
     // Mood Class Label
     let moodClass = 'neutral';
@@ -1096,6 +1190,24 @@ function renderComparisonMatrix() {
     } else if (avg < -0.15) {
       moodClass = 'negative';
       moodLabel = 'Alarmist & Gloomy';
+    }
+
+    // Historical average across all available articles for this outlet (all-time)
+    const rawArticles = (state.sources[id] && state.sources[id].articles) || [];
+    const histScored = rawArticles.filter(a => typeof (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal) === 'number');
+    const histAvg = histScored.length > 0 
+      ? (histScored.reduce((sum, a) => sum + (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal), 0) / histScored.length) 
+      : avg;
+    const delta = avg - histAvg;
+    let trendBadgeHTML = '';
+    if (Math.abs(delta) >= 0.04) {
+      if (delta > 0) {
+        trendBadgeHTML = `<span class="source-trend-badge up" title="Trending +${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▲ +${delta.toFixed(2)} vs Hist</span>`;
+      } else {
+        trendBadgeHTML = `<span class="source-trend-badge down" title="Trending ${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▼ ${delta.toFixed(2)} vs Hist</span>`;
+      }
+    } else {
+      trendBadgeHTML = `<span class="source-trend-badge stable" title="Within ±0.03 of all-time average (${histAvg.toFixed(2)})">● Stable</span>`;
     }
     
     // Calculate distributions
@@ -1112,11 +1224,15 @@ function renderComparisonMatrix() {
     card.innerHTML = `
       <div class="source-card-header">
         <div class="source-meta">
-          <div class="source-icon ${id}">${id.slice(0,2).toUpperCase()}</div>
-          <h3 class="source-name">${source.name}</h3>
+          <div class="source-icon ${id}" style="background-color: ${meta.color}; color: #fff;">${meta.initials}</div>
+          <div style="display:flex; flex-direction:column; overflow:hidden;">
+            <h3 class="source-name">${source.name}</h3>
+            <span class="source-region-tag">${meta.flag} ${meta.regionName}</span>
+          </div>
         </div>
-        <div class="source-score-container">
+        <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.25rem;">
           <span class="score-badge ${moodClass}">${badgeText}</span>
+          ${trendBadgeHTML}
         </div>
       </div>
       
@@ -1303,6 +1419,17 @@ function updateFilterIndicator() {
     elements.activeFilterIndicator.style.display = 'none';
     if (elements.quickSourceIndicator) {
       elements.quickSourceIndicator.style.display = 'none';
+    }
+  }
+
+  // Active Topic Filter Indicator in Sticky Header Bar
+  if (elements.quickCategoryIndicator && elements.quickCategoryName) {
+    if (state.filters.category !== 'all') {
+      const catCap = state.filters.category.charAt(0).toUpperCase() + state.filters.category.slice(1);
+      elements.quickCategoryName.innerText = catCap;
+      elements.quickCategoryIndicator.style.display = 'inline-flex';
+    } else {
+      elements.quickCategoryIndicator.style.display = 'none';
     }
   }
 }
@@ -1778,14 +1905,25 @@ function renderDailyPulse() {
   const catStats = {};
 
   Object.entries(sources).forEach(([id, data]) => {
-    outletList.push({ id, name: data.name, score: data.averageSentiment });
+    let arts = data.articles || [];
+    if (state.filters.category !== 'all') {
+      arts = arts.filter(a => (a.category || 'other') === state.filters.category);
+    }
+    const scoredArts = arts.filter(a => typeof a.sentiment === 'number');
+    const avgScore = scoredArts.length > 0 
+      ? (scoredArts.reduce((acc, a) => acc + a.sentiment, 0) / scoredArts.length) 
+      : null;
+    outletList.push({ id, name: data.name, score: avgScore });
+
     (data.articles || []).forEach(art => {
-      totalArticles++;
-      const s = typeof art.sentiment === 'number' ? art.sentiment : 0;
-      totalScore += s;
+      if (state.filters.category === 'all' || (art.category || 'other') === state.filters.category) {
+        totalArticles++;
+        const s = typeof art.sentiment === 'number' ? art.sentiment : 0;
+        totalScore += s;
+      }
       const cat = art.category || 'other';
       if (!catStats[cat]) catStats[cat] = { total: 0, count: 0 };
-      catStats[cat].total += s;
+      catStats[cat].total += typeof art.sentiment === 'number' ? art.sentiment : 0;
       catStats[cat].count++;
     });
   });
@@ -1798,57 +1936,83 @@ function renderDailyPulse() {
   const mostAlarmist = validOutlets[0] || { name: 'N/A', score: 0, id: 'all' };
   const mostUplifting = validOutlets[validOutlets.length - 1] || { name: 'N/A', score: 0, id: 'all' };
 
-  // Calculate Biggest Polarization across topics
-  const validCatStats = Object.keys(catStats)
-    .filter(cat => catStats[cat].count >= 3 && cat !== 'other')
-    .map(cat => ({
-      cat,
-      name: cat.charAt(0).toUpperCase() + cat.slice(1),
-      avg: Number((catStats[cat].total / catStats[cat].count).toFixed(2))
-    }))
-    .sort((a, b) => a.avg - b.avg);
+  // Calculate Biggest Outlet Clash on the same topic
+  const categoriesToCheck = ['world', 'politics', 'business', 'technology', 'science', 'health'];
+  let maxClash = {
+    cat: null,
+    catName: '',
+    outletA: null,
+    outletB: null,
+    divergence: 0
+  };
 
-  let polarizationName = 'Cross-Topic Consensus';
-  let polarizationScore = '0.15 Spread';
-  if (validCatStats.length >= 2) {
-    const lowestCat = validCatStats[0];
-    const highestCat = validCatStats[validCatStats.length - 1];
-    const spread = (highestCat.avg - lowestCat.avg).toFixed(2);
-    polarizationName = `${lowestCat.name} vs ${highestCat.name}`;
-    polarizationScore = `${spread} Spread`;
-  }
+  categoriesToCheck.forEach(cat => {
+    const outletAvgs = [];
+    Object.entries(sources).forEach(([id, data]) => {
+      const catArts = (data.articles || []).filter(a => (a.category || 'other') === cat && typeof a.sentiment === 'number');
+      if (catArts.length >= 1) {
+        const avg = catArts.reduce((sum, a) => sum + a.sentiment, 0) / catArts.length;
+        outletAvgs.push({ id, name: data.name, avg });
+      }
+    });
 
-  // Update Dynamic Timeframe Headings & Badges
+    if (outletAvgs.length >= 2) {
+      outletAvgs.sort((a, b) => a.avg - b.avg);
+      const lowest = outletAvgs[0];
+      const highest = outletAvgs[outletAvgs.length - 1];
+      const divergence = highest.avg - lowest.avg;
+      if (divergence > maxClash.divergence) {
+        maxClash = {
+          cat,
+          catName: cat.charAt(0).toUpperCase() + cat.slice(1),
+          outletA: lowest,
+          outletB: highest,
+          divergence: Number(divergence.toFixed(2))
+        };
+      }
+    }
+  });
+
+  // Update Dynamic Timeframe & Category Headings
   const headingEl = document.getElementById('pulse-timeframe-heading');
   const badgeTimeEl = document.getElementById('pulse-timeframe-badge');
+  const countEl = document.getElementById('pulse-article-count');
+
+  let timeframeLabel = 'Past 24 Hours';
+  if (state.filters.time === '3h') timeframeLabel = 'Past 3 Hours';
+  else if (state.filters.time === '6h') timeframeLabel = 'Past 6 Hours';
+  else if (state.filters.time === '12h') timeframeLabel = 'Past 12 Hours';
+  else if (state.filters.time === '24h') timeframeLabel = 'Past 24 Hours';
+  else if (state.filters.time === '3d') timeframeLabel = 'Past 3 Days';
+  else if (state.filters.time === '7d') timeframeLabel = 'Past 7 Days';
+  else if (state.filters.time === '30d') timeframeLabel = 'Past 30 Days';
+  else if (state.filters.time === 'all') timeframeLabel = 'All-Time';
+
   if (headingEl) {
-    if (state.filters.time === '24h') {
-      headingEl.innerText = "Past 24h Global News Vibe:";
-    } else if (state.filters.time === '3d') {
-      headingEl.innerText = "3-Day Global News Vibe:";
-    } else if (state.filters.time === '7d') {
-      headingEl.innerText = "Past 7 Days Global News Vibe:";
-    } else {
+    if (state.filters.category !== 'all') {
+      const catCap = state.filters.category.charAt(0).toUpperCase() + state.filters.category.slice(1);
+      headingEl.innerText = `${catCap} News Vibe:`;
+    } else if (state.filters.time === '24h') {
       headingEl.innerText = "Today's Global News Vibe:";
+    } else {
+      headingEl.innerText = `${timeframeLabel} News Vibe:`;
     }
   }
 
   if (badgeTimeEl) {
-    if (state.filters.time === '24h') {
-      badgeTimeEl.innerText = "Past 24 Hours";
-    } else if (state.filters.time === '3d') {
-      badgeTimeEl.innerText = "Past 3 Days";
-    } else if (state.filters.time === '7d') {
-      badgeTimeEl.innerText = "Past 7 Days";
-    } else {
-      badgeTimeEl.innerText = "All-Time View";
-    }
+    badgeTimeEl.innerText = timeframeLabel;
+  }
+
+  if (countEl) {
+    const scopeLabel = state.filters.category !== 'all' 
+      ? (state.filters.category.charAt(0).toUpperCase() + state.filters.category.slice(1) + ' ') 
+      : '';
+    countEl.innerText = `${totalArticles.toLocaleString()} ${scopeLabel}Headlines Analyzed`;
   }
 
   // Update Global Score & Badge
   const scoreEl = document.getElementById('global-mood-score');
   const badgeEl = document.getElementById('global-mood-badge');
-  const countEl = document.getElementById('pulse-article-count');
   const summaryEl = document.getElementById('daily-editorial-summary');
 
   if (scoreEl) {
@@ -1873,10 +2037,6 @@ function renderDailyPulse() {
     }
   }
 
-  if (countEl) {
-    countEl.innerText = `${totalArticles.toLocaleString()} Headlines Analyzed`;
-  }
-
   if (summaryEl) {
     const summaryText = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary);
     if (summaryText) {
@@ -1888,20 +2048,31 @@ function renderDailyPulse() {
     }
   }
 
-  // Update Outlets in Focus & Polarization
+  // Update Outlets in Focus & Biggest Clash
   const alarmistNameEl = document.getElementById('pulse-alarmist-name');
   const alarmistScoreEl = document.getElementById('pulse-alarmist-score');
   const upliftingNameEl = document.getElementById('pulse-uplifting-name');
   const upliftingScoreEl = document.getElementById('pulse-uplifting-score');
   const polNameEl = document.getElementById('pulse-polarization-name');
+  const polSubEl = document.getElementById('pulse-polarization-sub');
   const polScoreEl = document.getElementById('pulse-polarization-score');
 
   if (alarmistNameEl && mostAlarmist) alarmistNameEl.innerText = mostAlarmist.name;
   if (alarmistScoreEl && mostAlarmist) alarmistScoreEl.innerText = (mostAlarmist.score > 0 ? '+' : '') + mostAlarmist.score.toFixed(2);
   if (upliftingNameEl && mostUplifting) upliftingNameEl.innerText = mostUplifting.name;
   if (upliftingScoreEl && mostUplifting) upliftingScoreEl.innerText = (mostUplifting.score > 0 ? '+' : '') + mostUplifting.score.toFixed(2);
-  if (polNameEl) polNameEl.innerText = polarizationName;
-  if (polScoreEl) polScoreEl.innerText = polarizationScore;
+  
+  if (polNameEl) {
+    polNameEl.innerText = maxClash.outletA && maxClash.outletB 
+      ? `${maxClash.outletA.name} vs ${maxClash.outletB.name}` 
+      : 'Cross-Outlet Consensus';
+  }
+  if (polSubEl) {
+    polSubEl.innerText = maxClash.catName ? `on ${maxClash.catName} news` : 'Across all topics';
+  }
+  if (polScoreEl) {
+    polScoreEl.innerText = maxClash.divergence > 0 ? `${maxClash.divergence.toFixed(2)} Divergence` : '0.15 Spread';
+  }
 
   // Interactivity for the 3 Signal Cards
   const alarmistCard = document.getElementById('signal-alarmist-card');
@@ -1910,28 +2081,25 @@ function renderDailyPulse() {
 
   if (alarmistCard && mostAlarmist && mostAlarmist.id !== 'all') {
     alarmistCard.onclick = () => {
-      state.filters.source = mostAlarmist.id;
-      if (elements.filterSource) elements.filterSource.value = mostAlarmist.id;
-      updateFilterIndicator();
-      renderHeadlines();
-      updateAppUI();
-      document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+      toggleSourceFilter(mostAlarmist.id);
+      document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
     };
   }
   if (upliftingCard && mostUplifting && mostUplifting.id !== 'all') {
     upliftingCard.onclick = () => {
-      state.filters.source = mostUplifting.id;
-      if (elements.filterSource) elements.filterSource.value = mostUplifting.id;
-      updateFilterIndicator();
-      renderHeadlines();
-      updateAppUI();
-      document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+      toggleSourceFilter(mostUplifting.id);
+      document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
     };
   }
   if (polCard) {
     polCard.onclick = () => {
-      const heatmap = document.getElementById('heatmap-section');
-      if (heatmap) heatmap.scrollIntoView({ behavior: 'smooth' });
+      if (maxClash.outletA && maxClash.outletB) {
+        elements.h2hSourceA.value = maxClash.outletA.id;
+        elements.h2hSourceB.value = maxClash.outletB.id;
+        renderHeadToHead();
+        const h2h = document.getElementById('h2h-section');
+        if (h2h) h2h.scrollIntoView({ behavior: 'smooth' });
+      }
     };
   }
 
@@ -1954,15 +2122,22 @@ function renderDailyPulse() {
       if (data && data.count > 0) {
         const avg = Number((data.total / data.count).toFixed(2));
         const valClass = avg < -0.15 ? 'neg' : (avg > 0.15 ? 'pos' : 'neu');
+        const isActive = state.filters.category === cat;
         const chip = document.createElement('button');
-        chip.className = 'beat-chip';
+        chip.className = `beat-chip ${isActive ? 'active' : ''}`;
+        chip.setAttribute('data-cat', cat);
+        chip.setAttribute('title', isActive ? 'Click to clear topic filter' : `Filter entire dashboard to ${cat} news`);
         chip.innerHTML = `<span>${catIcons[cat] || '📰'} ${cat.charAt(0).toUpperCase() + cat.slice(1)}</span> <span class="beat-chip-val ${valClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>`;
         chip.onclick = () => {
-          state.filters.category = cat;
-          if (elements.filterCategory) elements.filterCategory.value = cat;
-          updateTopicPillsActive(cat);
-          renderHeadlines();
-          document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+          if (state.filters.category === cat) {
+            state.filters.category = 'all';
+          } else {
+            state.filters.category = cat;
+          }
+          if (elements.filterCategory) elements.filterCategory.value = state.filters.category;
+          updateTopicPillsActive(state.filters.category);
+          updateFilterIndicator();
+          updateAppUI();
         };
         chipsContainer.appendChild(chip);
       }
@@ -2010,8 +2185,17 @@ function renderHeatmapMatrix() {
   // Category rows
   categories.forEach(cat => {
     const label = document.createElement('div');
-    label.className = 'heatmap-row-label';
+    label.className = `heatmap-row-label ${state.filters.category === cat ? 'active' : ''}`;
     label.innerText = catLabels[cat] || cat;
+    label.style.cursor = 'pointer';
+    label.title = `Click to filter entire dashboard to ${cat}`;
+    label.onclick = () => {
+      state.filters.category = state.filters.category === cat ? 'all' : cat;
+      if (elements.filterCategory) elements.filterCategory.value = state.filters.category;
+      updateTopicPillsActive(state.filters.category);
+      updateFilterIndicator();
+      updateAppUI();
+    };
     container.appendChild(label);
 
     sourceIds.forEach(id => {
@@ -2047,12 +2231,12 @@ function renderHeatmapMatrix() {
         cell.onclick = () => {
           state.filters.source = id;
           state.filters.category = cat;
-          elements.filterSource.value = id;
-          elements.filterCategory.value = cat;
+          if (elements.filterSource) elements.filterSource.value = id;
+          if (elements.filterCategory) elements.filterCategory.value = cat;
           updateFilterIndicator();
           updateTopicPillsActive(cat);
           renderHeadlines();
-          document.querySelector('.headlines-section').scrollIntoView({ behavior: 'smooth' });
+          document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
         };
       }
       container.appendChild(cell);
@@ -2066,10 +2250,11 @@ function setupTopicPills() {
   pills.forEach(pill => {
     pill.addEventListener('click', () => {
       const topic = pill.dataset.topic;
-      state.filters.category = topic;
-      elements.filterCategory.value = topic;
-      updateTopicPillsActive(topic);
-      renderHeadlines();
+      state.filters.category = state.filters.category === topic ? 'all' : topic;
+      if (elements.filterCategory) elements.filterCategory.value = state.filters.category;
+      updateTopicPillsActive(state.filters.category);
+      updateFilterIndicator();
+      updateAppUI();
     });
   });
 }
@@ -2077,11 +2262,13 @@ function setupTopicPills() {
 function updateTopicPillsActive(topic) {
   const pills = document.querySelectorAll('.topic-pill-btn');
   pills.forEach(p => {
-    if (p.dataset.topic === topic) {
-      p.classList.add('active');
-    } else {
-      p.classList.remove('active');
-    }
+    p.classList.toggle('active', p.dataset.topic === topic);
+  });
+
+  const beatChips = document.querySelectorAll('.beat-chip');
+  beatChips.forEach(chip => {
+    const chipCat = chip.getAttribute('data-cat');
+    chip.classList.toggle('active', chipCat === topic);
   });
 }
 

@@ -34,31 +34,16 @@
       </div>
       
       <div class="header-actions">
+        <div class="header-status-indicator" title="Autonomous cloud ingestion pipeline">
+          <span class="status-dot green"></span>
+          <span id="last-updated-text" class="status-text">Synced: Just now</span>
+        </div>
         <a href="https://github.com/caiolaborda/vibe-o-meter" target="_blank" rel="noopener noreferrer" class="btn btn-secondary flex-center" title="View Source on GitHub" style="text-decoration:none; gap: 0.4rem; font-weight:600; padding: 0.45rem 0.9rem; border-radius: 8px;">
           <i data-lucide="github"></i>
           <span>GitHub</span>
         </a>
       </div>
     </header>
-
-    <!-- METRICS & CONTROLS -->
-    <section class="control-bar-section">
-      <div class="control-bar card">
-        <div class="status-indicator">
-          <span class="status-dot green"></span>
-          <span id="last-updated-text">Autonomous Pipeline Active</span>
-        </div>
-        <div class="analyzer-badge flex-center" style="gap: 0.75rem; flex-wrap: wrap;">
-          <span class="badge-label">Model View:</span>
-          <div class="sentiment-mode-toggle flex-center" style="gap: 0.25rem; background: var(--bg-primary); padding: 0.2rem; border-radius: 8px; border: 1px solid var(--border-color); flex-wrap: wrap;">
-            <button id="mode-gemini-btn" class="toggle-tab active" style="background: var(--accent-color); color: #fff; border: none; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: var(--font-main);">Google Gemini (AI)</button>
-            <button id="mode-vader-btn" class="toggle-tab" style="background: transparent; color: var(--text-secondary); border: none; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: var(--font-main);">VADER Lexicon</button>
-            <button id="mode-global-btn" class="toggle-tab" style="background: transparent; color: var(--text-secondary); border: none; padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: var(--font-main);">Ensemble Avg</button>
-          </div>
-          <span id="analyzer-used-badge" class="badge" style="font-size:0.75rem; padding: 0.15rem 0.5rem; display: none;">None</span>
-        </div>
-      </div>
-    </section>
 
     <!-- STICKY QUICK JUMP SUB-NAV -->
     <nav class="quick-nav-bar" id="quick-nav-bar">
@@ -68,6 +53,7 @@
         <a href="#heatmap-section" class="nav-pill"><i data-lucide="layout-grid"></i><span>Topic Heatmap</span></a>
         <a href="#comparison-section" class="nav-pill"><i data-lucide="columns-3"></i><span>Outlets</span></a>
         <a href="#h2h-section" class="nav-pill"><i data-lucide="swords"></i><span>Head-to-Head</span></a>
+        <a href="#methodology-section" class="nav-pill"><i data-lucide="help-circle"></i><span>Methodology</span></a>
         <a href="#feed-section" class="nav-pill"><i data-lucide="newspaper"></i><span>Headline Feed</span></a>
       </div>
       <div class="quick-nav-actions">
@@ -78,65 +64,70 @@
           <strong id="quick-source-name">BBC</strong>
           <button id="quick-source-clear-btn" class="quick-clear-btn" aria-label="Clear source filter">&times;</button>
         </div>
+        <!-- Active Topic Filter Indicator in Header Bar -->
+        <div id="quick-category-indicator" class="quick-source-pill topic-pill-active" style="display:none;" title="Click ✕ to clear topic filter">
+          <span class="quick-filter-dot topic-dot"></span>
+          <span class="quick-filter-prefix">Topic:</span>
+          <strong id="quick-category-name">World</strong>
+          <button id="quick-category-clear-btn" class="quick-clear-btn" aria-label="Clear topic filter">&times;</button>
+        </div>
         <!-- Timeframe Selector -->
         <div class="quick-timeframe-wrap" title="Filter dashboard data by timeframe">
           <i data-lucide="clock" class="quick-time-icon"></i>
           <select id="quick-timeframe-select" class="quick-time-select" aria-label="Select timeframe">
-            <option value="all">All Time</option>
-            <option value="24h">Past 24h</option>
+            <option value="3h">Past 3 Hours</option>
+            <option value="6h">Past 6 Hours</option>
+            <option value="12h">Past 12 Hours</option>
+            <option value="24h" selected>Past 24 Hours</option>
             <option value="3d">Past 3 Days</option>
             <option value="7d">Past 7 Days</option>
+            <option value="30d">Past 30 Days</option>
+            <option value="all">All Time</option>
           </select>
         </div>
       </div>
     </nav>
 
-    <!-- HERO: EXECUTIVE VIBE PULSE LANDING -->
+    <!-- HERO: GLOBAL NEWS VIBE LANDING -->
     <section class="pulse-hero-section" id="pulse-section">
       <div class="pulse-hero-card card">
         
-        <!-- Top Status Bar -->
+        <!-- Big Clean Hero Banner with Integrated Meta -->
         <div class="pulse-top-bar">
-          <div class="pulse-badge-group">
-            <span class="pulse-live-dot"></span>
-            <span class="pulse-tag-label"><i data-lucide="sparkles"></i> AI Executive Vibe Pulse</span>
+          <div class="pulse-main-banner">
+            <div class="pulse-banner-icon">🌍</div>
+            <div class="pulse-banner-content">
+              <h1 class="pulse-banner-title">
+                <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
+                <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
+                <span id="global-mood-badge" class="pulse-hero-mood-badge">Leaning Gloomy</span>
+              </h1>
+            </div>
           </div>
           <div class="pulse-meta-info">
-            <span id="pulse-article-count" class="pulse-count-text">1,743 Headlines Analyzed</span>
+            <span id="pulse-article-count" class="pulse-count-text">318 Headlines Analyzed</span>
             <span class="pulse-meta-divider">•</span>
-            <span id="pulse-timeframe-badge" class="pulse-time-text">All-Time View</span>
-          </div>
-        </div>
-
-        <!-- 1. The Big Simple Primary Vibe Metric -->
-        <div class="pulse-main-banner">
-          <div class="pulse-banner-icon">🌍</div>
-          <div class="pulse-banner-content">
-            <h1 class="pulse-banner-title">
-              <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
-              <span id="global-mood-score" class="pulse-hero-score neg">-0.16</span>
-              <span id="global-mood-badge" class="pulse-hero-mood-badge">Leaning Gloomy</span>
-            </h1>
+            <span id="pulse-timeframe-badge" class="pulse-time-text">Past 24 Hours</span>
           </div>
         </div>
 
         <!-- 2. The 3 Key Signals Horizontal Strip -->
         <div class="pulse-signals-strip">
-          <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter by most alarmist outlet">
+          <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
             <div class="signal-header">
               <span class="signal-icon neg">📉</span>
-              <span class="signal-label">Most Alarmist</span>
+              <span class="signal-label">Most Alarmist Outlet</span>
             </div>
             <div class="signal-body">
               <strong id="pulse-alarmist-name" class="signal-name">Sky News</strong>
-              <span id="pulse-alarmist-score" class="signal-score badge neg">-0.36</span>
+              <span id="pulse-alarmist-score" class="signal-score badge neg">-0.47</span>
             </div>
           </div>
 
-          <div class="pulse-signal-card" id="signal-uplifting-card" title="Click to filter by most uplifting outlet">
+          <div class="pulse-signal-card" id="signal-uplifting-card" title="Click to filter headlines by most uplifting outlet">
             <div class="signal-header">
               <span class="signal-icon pos">📈</span>
-              <span class="signal-label">Most Uplifting</span>
+              <span class="signal-label">Most Uplifting Outlet</span>
             </div>
             <div class="signal-body">
               <strong id="pulse-uplifting-name" class="signal-name">CNBC News</strong>
@@ -144,14 +135,17 @@
             </div>
           </div>
 
-          <div class="pulse-signal-card" id="signal-polarization-card" title="Topic with the largest divergence across coverage">
+          <div class="pulse-signal-card" id="signal-polarization-card" title="Two outlets with the largest divergence on the same topic — click to compare head-to-head">
             <div class="signal-header">
               <span class="signal-icon warn">⚡</span>
-              <span class="signal-label">Biggest Polarization</span>
+              <span class="signal-label">Biggest Outlet Clash</span>
             </div>
             <div class="signal-body">
-              <strong id="pulse-polarization-name" class="signal-name">World vs Science</strong>
-              <span id="pulse-polarization-score" class="signal-score badge warn">0.84 Spread</span>
+              <div style="display:flex; flex-direction:column; overflow:hidden;">
+                <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
+                <span id="pulse-polarization-sub" style="font-size:0.72rem; color:var(--text-muted); font-weight:500;">on Business</span>
+              </div>
+              <span id="pulse-polarization-score" class="signal-score badge warn">1.08 Divergence</span>
             </div>
           </div>
         </div>
@@ -172,11 +166,11 @@
           </blockquote>
         </div>
 
-        <!-- 4. Topic Vibes Bar (Renamed from Beat) -->
+        <!-- 4. Topic Vibes Bar (Interactive Global Topic Filter) -->
         <div class="pulse-topics-bar">
-          <span class="pulse-topics-label">
+          <span class="pulse-topics-label" title="Click any topic pill to filter the entire dashboard">
             <i data-lucide="layers"></i>
-            TOPIC VIBES:
+            FILTER BY TOPIC:
           </span>
           <div class="pulse-topic-chips" id="pulse-category-chips">
             <!-- Dynamically populated chips in app.js -->
@@ -197,27 +191,12 @@
       <div class="spectrum-card card" id="spectrum-card-wrapper" style="position: relative; overflow: visible;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
           <!-- Scale Labels -->
-          <div class="spectrum-labels" style="display: flex; gap: 1rem; font-size: 0.85rem; font-weight: 500;">
-            <span class="label-neg"><i data-lucide="frown"></i> Doom (-1.0)</span>
+          <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
+            <span class="label-neg"><i data-lucide="frown"></i> Alarmist (-1.0)</span>
             <span class="label-neu">Neutral (0.0)</span>
             <span class="label-pos">Optimistic (+1.0) <i data-lucide="smile"></i></span>
           </div>
 
-          <!-- Time Range Selector (Up Top) -->
-          <div class="spectrum-time-filter" style="display: flex; align-items: center; gap: 0.5rem;">
-            <label for="filter-time" style="font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Timeframe:</label>
-            <select id="filter-time" class="select-input" style="height: 32px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-family: var(--font-main); font-weight: 600; font-size: 0.75rem; padding: 0 0.5rem; outline: none; cursor: pointer; min-width: 140px;">
-              <option value="all" selected>All Time</option>
-              <option value="3h">Last 3 Hours</option>
-              <option value="6h">Last 6 Hours</option>
-              <option value="12h">Last 12 Hours</option>
-              <option value="24h">Last 24 Hours</option>
-              <option value="3d">Last 3 Days</option>
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-            </select>
-          </div>
-          
           <!-- View Toggle Switcher -->
           <div class="spectrum-view-toggle toggle-container" style="display: flex; background: var(--bg-secondary); padding: 2px; border-radius: 8px; border: 1px solid var(--border-color);">
             <button id="view-toggle-averages" class="btn btn-sm toggle-tab active" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: var(--accent-color); color: #fff; box-shadow: 0 2px 6px rgba(99,102,241,0.25);">
@@ -308,6 +287,17 @@
         </div>
       </div>
       <div class="collapsible-content" id="sources-wrapper">
+        <!-- Region Filter Pills -->
+        <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center;">
+          <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.35rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
+          <button class="region-pill active" data-region="all">All Outlets (13)</button>
+          <button class="region-pill" data-region="US">🇺🇸 United States (7)</button>
+          <button class="region-pill" data-region="UK">🇬🇧 United Kingdom (3)</button>
+          <button class="region-pill" data-region="EU">🇩🇪 Europe (1)</button>
+          <button class="region-pill" data-region="ME">🇶🇦 Middle East (1)</button>
+          <button class="region-pill" data-region="GLOBAL">🌐 Global Wire (2)</button>
+        </div>
+
         <div id="sources-grid" class="sources-grid">
           <!-- News source cards will be injected here dynamically -->
           <div class="loading-state">
@@ -397,6 +387,129 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW SENTIMENT WORKS / METHODOLOGY -->
+    <section class="methodology-section" id="methodology-section">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-title flex-center">
+            <i data-lucide="help-circle"></i>
+            How News Sentiment Analysis Works
+          </h2>
+          <p class="section-desc">Why traditional dictionary keyword counting fails on journalism, and how Gemini AI decodes contextual valence.</p>
+        </div>
+        <div class="section-header-actions flex-center">
+          <button class="section-collapse-btn" data-target="methodology-wrapper" title="Toggle Section">
+            <i data-lucide="chevron-up"></i>
+            <span>Collapse</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="collapsible-content" id="methodology-wrapper">
+        <div class="methodology-container card">
+          <!-- Overview Cards -->
+          <div class="methodology-intro-grid">
+            <div class="methodology-intro-card">
+              <div class="intro-icon-box neg">
+                <i data-lucide="x-circle"></i>
+              </div>
+              <div class="intro-content">
+                <h3>The Flaw with Keyword Dictionaries</h3>
+                <p>Lexicon tools like VADER or AFINN count negative words in isolation. In journalism, words like <em>"strike"</em>, <em>"defense"</em>, <em>"crash"</em>, or <em>"investigation"</em> are routine factual reporting. A space rocket test "crashing" into the ocean is neutral science, but keyword counters score it as a disaster.</p>
+              </div>
+            </div>
+
+            <div class="methodology-intro-card">
+              <div class="intro-icon-box pos">
+                <i data-lucide="brain"></i>
+              </div>
+              <div class="intro-content">
+                <h3>The Gemini Semantic Engine</h3>
+                <p>Our autonomous engine evaluates full journalistic tone, geopolitical weight, and systemic outcome on a continuous <strong>-1.00 (Severe Crisis)</strong> to <strong>+1.00 (Inspiring Breakthrough)</strong> spectrum. It recognizes that hostage releases are positive even in wartime, and democratic elections are neutral governance.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 Valence Bands Strip -->
+          <div class="valence-bands-container">
+            <h4 class="methodology-subheading"><i data-lucide="sliders"></i> The 5 Semantic Valence Bands</h4>
+            <div class="valence-bands-grid">
+              <div class="valence-band-card band-crisis">
+                <div class="band-tag">-1.00 to -0.45</div>
+                <div class="band-title">Severe Crisis / Doom</div>
+                <p class="band-desc">Armed conflict, mass casualties, infrastructure destruction, catastrophic natural disasters.</p>
+              </div>
+              <div class="valence-band-card band-gloomy">
+                <div class="band-tag">-0.45 to -0.15</div>
+                <div class="band-title">Leaning Gloomy</div>
+                <p class="band-desc">Inflation pressure, political gridlock, regulatory scrutiny, diplomatic tensions, layoffs.</p>
+              </div>
+              <div class="valence-band-card band-neutral">
+                <div class="band-tag">-0.15 to +0.15</div>
+                <div class="band-title">Objective / Balanced</div>
+                <p class="band-desc">Standard parliamentary votes, routine data releases, election dates, factual reporting.</p>
+              </div>
+              <div class="valence-band-card band-positive">
+                <div class="band-tag">+0.15 to +0.45</div>
+                <div class="band-title">Leaning Positive</div>
+                <p class="band-desc">Diplomatic dialogue, steady GDP growth, infrastructure investment, trade agreements.</p>
+              </div>
+              <div class="valence-band-card band-inspiring">
+                <div class="band-tag">+0.45 to +1.00</div>
+                <div class="band-title">Inspiring / Breakthrough</div>
+                <p class="band-desc">Life-saving medical discoveries, clean energy milestones, hostage releases, humanitarian rescue.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-World Case Studies -->
+          <div class="case-studies-container">
+            <h4 class="methodology-subheading"><i data-lucide="file-check"></i> Real-World Evaluation Case Studies</h4>
+            <div class="case-studies-grid">
+              
+              <div class="case-study-card">
+                <div class="case-study-header">
+                  <span class="case-badge cat-world">World</span>
+                  <span class="case-score neg">-0.85</span>
+                </div>
+                <h5 class="case-headline">"Russian missile strikes damage thermal power plants across central Ukraine"</h5>
+                <p class="case-reasoning"><strong>AI Evaluation:</strong> Severe armed conflict targeting civilian critical infrastructure with direct humanitarian harm and widespread freezing hazard during winter.</p>
+              </div>
+
+              <div class="case-study-card">
+                <div class="case-study-header">
+                  <span class="case-badge cat-politics">Politics</span>
+                  <span class="case-score neu">0.00</span>
+                </div>
+                <h5 class="case-headline">"Congressional committee advances bipartisan transportation appropriations bill"</h5>
+                <p class="case-reasoning"><strong>AI Evaluation:</strong> Standard democratic process and regular legislative governance. Purely informational; neither an economic disaster nor a societal celebration.</p>
+              </div>
+
+              <div class="case-study-card">
+                <div class="case-study-header">
+                  <span class="case-badge cat-science">Science</span>
+                  <span class="case-score pos">+0.82</span>
+                </div>
+                <h5 class="case-headline">"Clinical trial demonstrates 90% complete remission in targeted leukemia therapy"</h5>
+                <p class="case-reasoning"><strong>AI Evaluation:</strong> Significant medical breakthrough directly saving human lives and advancing cancer therapeutics. High optimism with transformative public health impact.</p>
+              </div>
+
+              <div class="case-study-card">
+                <div class="case-study-header">
+                  <span class="case-badge cat-world">World</span>
+                  <span class="case-score pos">+0.54</span>
+                </div>
+                <h5 class="case-headline">"Hostages reunited with families following fragile humanitarian ceasefire"</h5>
+                <p class="case-reasoning"><strong>AI Evaluation:</strong> Deep humanitarian relief and family reunification. While the war context is grim, the specific development represents genuine positive relief and hope.</p>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
