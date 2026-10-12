@@ -2,8 +2,8 @@ name: Automated News Sync & Deploy
 
 on:
   schedule:
-    # Runs every 4 hours automatically (100% free within GitHub Actions 2,000 min/mo tier)
-    - cron: '0 */4 * * *'
+    # Runs hourly at minute 25 (off-peak to avoid GitHub Actions queue delays)
+    - cron: '25 * * * *'
   workflow_dispatch: # Allows manual trigger from the GitHub Actions tab anytime
   push:
     branches:
