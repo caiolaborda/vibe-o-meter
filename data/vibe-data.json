@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-12T15:36:54.851Z",
+  "lastUpdated": "2026-10-12T15:44:04.697Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-12",
   "editorialSummary": "Good morning, executives: today the global mood sits at a mildly depressed -0.158, dragged down primarily by Sky News leading the charge into the abyss at -0.358 while CNN bravely pretends everything is fine at a flat zero. Fortunately, our 1,743 analyzed headlines reveal a neat little schizophrenia: while world news and health are busy forecasting the apocalypse, environment and science are huffing pure copium with positive vibes to keep us from canceling the future altogether.",
   "globalStats": {
     "globalSentiment": -0.163,
-    "totalArticles": 1797,
+    "totalArticles": 1805,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
@@ -20,8 +20,8 @@
       "business": -0.11,
       "politics": -0.201,
       "entertainment": 0.015,
-      "world": -0.59,
-      "technology": -0.012,
+      "world": -0.591,
+      "technology": -0.015,
       "sports": 0.061,
       "other": -0.04,
       "health": -0.274,
@@ -33895,13 +33895,31 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.248,
+      "averageSentiment": -0.251,
       "distribution": {
         "positive": 26,
         "neutral": 66,
-        "negative": 103
+        "negative": 104
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Oil tanker reportedly attacked in Strait of Hormuz region",
+          "description": "Plumes of black smoke rise from a Petro Dolphin oil tanker by a drone attack off the coast of Oman.",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/10/12/oil-tanker-reportedly-attacked-in-strait-of-hormuz-region?traffic_source=rss",
+          "pubDate": "Mon, 12 Oct 2026 15:19:23 +0000",
+          "sentimentLocal": -0.926,
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.727,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.73) and AFINN-111 (-0.13).",
+          "categoryLocal": "other",
+          "sentiment": -0.78,
+          "explanation": "An active drone attack on an oil tanker causing explosions and smoke represents a severe hostile event.",
+          "category": "world",
+          "sentimentGemini": -0.78,
+          "explanationGemini": "An active drone attack on an oil tanker causing explosions and smoke represents a severe hostile event.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Will Ukraine survive the winter?",
@@ -40235,13 +40253,31 @@
     },
     "cnbc": {
       "name": "CNBC News",
-      "averageSentiment": -0.075,
+      "averageSentiment": -0.077,
       "distribution": {
         "positive": 31,
-        "neutral": 64,
-        "negative": 47
+        "neutral": 65,
+        "negative": 48
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Inflation likely peaked for 2026 but will remain sticky, according to prediction markets",
+          "description": "Traders think there's little chance core inflation, which excludes food and energy prices, will fall to 2.2% this year.",
+          "link": "https://www.cnbc.com/2026/10/12/inflation-will-remain-sticky-in-2026-according-to-prediction-markets.html",
+          "pubDate": "Mon, 12 Oct 2026 15:37:26 GMT",
+          "sentimentLocal": 0.412,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.573,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.57) and AFINN-111 (0.25).",
+          "categoryLocal": "business",
+          "sentiment": -0.15,
+          "explanation": "Sticky inflation remaining above desired targets reflects mild economic adversity.",
+          "category": "business",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Sticky inflation remaining above desired targets reflects mild economic adversity.",
+          "categoryGemini": "business"
+        },
         {
           "sourceId": "cnbc",
           "title": "Rep. Ilhan Omar’s home raided in federal criminal investigation",
@@ -40259,6 +40295,24 @@
           "sentimentGemini": -0.45,
           "explanationGemini": "A high-profile congressional representative's residence is raided as part of an active federal criminal inquiry.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "cnbc",
+          "title": "McDonald's is leaning into chicken and drinks to grow. New data shows it could be a tough task",
+          "description": "McDonald's is targeting growth in chicken and beverages, but Consumer Edge data shows Chick-fil-A and coffee chains gaining in customer spending.",
+          "link": "https://www.cnbc.com/2026/10/12/mcdonalds-chicken-beverage-growth.html",
+          "pubDate": "Mon, 12 Oct 2026 14:56:42 GMT",
+          "sentimentLocal": 0.571,
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.643,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.64) and AFINN-111 (0.50).",
+          "categoryLocal": "entertainment",
+          "sentiment": -0.18,
+          "explanation": "Competitive pressure and difficult corporate growth targets indicate minor business friction.",
+          "category": "business",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "Competitive pressure and difficult corporate growth targets indicate minor business friction.",
+          "categoryGemini": "business"
         },
         {
           "sourceId": "cnbc",
@@ -45599,13 +45653,67 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.19,
+      "averageSentiment": -0.191,
       "distribution": {
         "positive": 38,
-        "neutral": 63,
-        "negative": 117
+        "neutral": 64,
+        "negative": 119
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "US immigration authorities raid Democratic congresswoman Ilhan Omar's home - Reuters",
+          "description": "US immigration authorities raid Democratic congresswoman Ilhan Omar's home Reuters",
+          "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxOMDJQVmVIaFZGdTRES18xTGZOQTgtMzMyWGVOb2VxOUxpWUpQNDlhXzZIdXU0bE81bHVqZ2dRcnVqeE1NWkhtNXNQMTZHb0RtWUhibjBiVkF5MWdSTHJZLW0yNjJrWFYxRVpHQjBnZHJDWGhwVTBIanpDak5iLWc0Y1NIVjN1VmRhTVV2WXE1X0VHQ2gwZXNwb2FIQlEwaGtDWFVnMGpDTlQzLVd2SlNXcVB6dmpDYzJmMURtbUdQYmVra3dtc0ViRWl6NU4?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 15:35:07 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": -0.42,
+          "explanation": "A federal law enforcement raid on a high-profile lawmaker's home is a major political and institutional conflict.",
+          "category": "politics",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "A federal law enforcement raid on a high-profile lawmaker's home is a major political and institutional conflict.",
+          "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Explainer: What's in the diesel deal between Putin and Trump? - Reuters",
+          "description": "Explainer: What's in the diesel deal between Putin and Trump? Reuters",
+          "link": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPQVYyWUE3V0taZldlY0hsb2o0Rko0Y0QxTGJrbk80SHhyT3VKcWR1LTNfMFFEcEowbklSemZfRHp0Vk51cTBIQWFxNTBMSGZWTGZJejR4TUtoN1V6NGpWcnJtZWhScXY2MGotd1E4eW05UHd1cVZWb3NJLVI2NXl0QnJlRWlMeW1sVVFKSm1mQnBUd29yZVE?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 15:31:03 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentiment": 0.12,
+          "explanation": "A political and economic deal between world leaders is a constructive diplomatic development.",
+          "category": "politics",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "A political and economic deal between world leaders is a constructive diplomatic development.",
+          "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Hackers heat French supermarket fridges, sparking fires and food losses - Reuters",
+          "description": "Hackers heat French supermarket fridges, sparking fires and food losses Reuters",
+          "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxOLU1iNVd4N0RyM29yWVFhSldLS2lsa0YydGZld3hRWTFONXlPWGhMcHVNcDB2N3JUSjdiNU1OVURBY0taUVVhMFBOTFNmZHV6dVREX2hsdjBEQ3g3RWRQa0dGLUZQUTZNTERGNlFnT1YzNUFHVVNGd3JLVDNCMnVINHo2Y285UF9sUktjblE1Sm9jcXFuZWZPUFk4cVJpZTNERzZJM2tVT2RzVWVKZXNhQ3NCYzZyeWU1LUM5UEVMRnB6V3ZpUm9IbU5PdzlvX0h2R3ZF?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 15:23:26 GMT",
+          "sentimentLocal": -0.705,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.66,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.66) and AFINN-111 (-0.75).",
+          "categoryLocal": "business",
+          "sentiment": -0.58,
+          "explanation": "Malicious cyberattacks causing physical fires and significant property damage constitute a serious destructive incident.",
+          "category": "technology",
+          "sentimentGemini": -0.58,
+          "explanationGemini": "Malicious cyberattacks causing physical fires and significant property damage constitute a serious destructive incident.",
+          "categoryGemini": "technology"
+        },
         {
           "sourceId": "reuters",
           "title": "Heavy police presence calms tensions after Poland school attacks, Tusk says - Reuters",
@@ -52464,7 +52572,7 @@
       "averageSentiment": -0.096,
       "distribution": {
         "positive": 39,
-        "neutral": 62,
+        "neutral": 64,
         "negative": 77
       },
       "articles": [
@@ -52484,6 +52592,24 @@
           "category": "business",
           "sentimentGemini": -0.48,
           "explanationGemini": "Significant financial outflow in mortgage bond funds indicates severe market distress and investor anxiety.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Kazakhstan Starts Gold Sales as Treasuries Burnish Dollar Appeal - Bloomberg.com",
+          "description": "Kazakhstan Starts Gold Sales as Treasuries Burnish Dollar Appeal Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxOMHVjMXcwT3kzaG5yQXhsbkpwcEZPZmJOQ2VwLWthRGYzclFYNHhpOXNuaVpRbXo3MGNubWVsVFdwcVVhZDlOdWNsOFlKTGEwVXoxM2EwNklRSXhCWHVmeUwyckdBNjd2VDZrZXQyNThiYmxmVjBrUVRIWExBUVdFcE5aNWZZeVQwNWpKLVNacXB1ZzdBUjZuS3VyaTlfcEJ5aWg5TmZmQ2RneVpWU19FNkItTGQyQQ?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:16:46 GMT",
+          "sentimentLocal": 0.461,
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.421,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.42) and AFINN-111 (0.50).",
+          "categoryLocal": "business",
+          "sentiment": -0.05,
+          "explanation": "Routine central bank asset adjustments and treasury shifts represent standard financial market procedures.",
+          "category": "business",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "Routine central bank asset adjustments and treasury shifts represent standard financial market procedures.",
           "categoryGemini": "business"
         },
         {
@@ -52521,6 +52647,24 @@
           "sentimentGemini": -0.22,
           "explanationGemini": "High-level military strategy discussions involving active geopolitical conflict reflect underlying tension.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Goldman’s $2.3 Billion Deal Puts Tax-Smart ETFs Under Scrutiny - Bloomberg.com",
+          "description": "Goldman’s $2.3 Billion Deal Puts Tax-Smart ETFs Under Scrutiny Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxOSjFiVmdnMjFFUnMzZEszOUZzOUVhTXhycjZJZWpZdF9LZElYaHF0LVZfWWVkYm9NWGtZRHdfcVVoamVULXVwT2lTT0lGMDJxQ2VHbzBTanFXVnJ3SGV1ZzFHeTI4WUxoWGhpMDFGWDd0YldBZUk4NE1QTzlnZlRISU8zRzJmZkNqbW4ySkx1NkY0N1hmeXRMX1M1b01iR0haMm0yTXJESVZqMUVjcXJCOW9B?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 13:52:19 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentiment": -0.12,
+          "explanation": "A multi-billion dollar financial deal drawing regulatory scrutiny introduces mild controversy and tension.",
+          "category": "business",
+          "sentimentGemini": -0.12,
+          "explanationGemini": "A multi-billion dollar financial deal drawing regulatory scrutiny introduces mild controversy and tension.",
+          "categoryGemini": "business"
         },
         {
           "sourceId": "bloomberg",
