@@ -1,15 +1,15 @@
 {
-  "lastUpdated": "2026-10-12T17:13:11.910Z",
+  "lastUpdated": "2026-10-12T17:16:56.601Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-12",
-  "editorialSummary": "Good morning, executives: today the global mood sits at a mildly depressed -0.158, dragged down primarily by Sky News leading the charge into the abyss at -0.358 while CNN bravely pretends everything is fine at a flat zero. Fortunately, our 1,743 analyzed headlines reveal a neat little schizophrenia: while world news and health are busy forecasting the apocalypse, environment and science are huffing pure copium with positive vibes to keep us from canceling the future altogether.",
+  "editorialSummary": "With a global sentiment hovering at a bleak -0.166, today's news cycle reads like a group therapy session led by Sky News, where the world is perpetually ending across every geopolitical and health beat. Fortunately, our overachieving nerds in science and the environment are desperately trying to mouth \"it's going to be okay\" from the back of the room, while CNN bravely sits on its hands, managing to feel nothing at all.",
   "globalStats": {
-    "globalSentiment": -0.167,
-    "totalArticles": 1866,
+    "globalSentiment": -0.166,
+    "totalArticles": 1868,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
-      "score": -0.361
+      "score": -0.362
     },
     "mostPositiveOutlet": {
       "id": "cnn",
@@ -17,19 +17,19 @@
       "score": 0
     },
     "categoryAverages": {
-      "world": -0.591,
+      "world": -0.589,
+      "other": -0.043,
       "business": -0.111,
-      "politics": -0.206,
-      "entertainment": 0.01,
+      "politics": -0.205,
+      "entertainment": 0.014,
       "technology": -0.021,
-      "sports": 0.066,
-      "other": -0.042,
+      "sports": 0.067,
       "health": -0.273,
-      "science": 0.21,
+      "science": 0.212,
       "education": -0.22,
       "environment": 0.38
     },
-    "editorialSummary": "Good morning, executives: today the global mood sits at a mildly depressed -0.158, dragged down primarily by Sky News leading the charge into the abyss at -0.358 while CNN bravely pretends everything is fine at a flat zero. Fortunately, our 1,743 analyzed headlines reveal a neat little schizophrenia: while world news and health are busy forecasting the apocalypse, environment and science are huffing pure copium with positive vibes to keep us from canceling the future altogether.",
+    "editorialSummary": "With a global sentiment hovering at a bleak -0.166, today's news cycle reads like a group therapy session led by Sky News, where the world is perpetually ending across every geopolitical and health beat. Fortunately, our overachieving nerds in science and the environment are desperately trying to mouth \"it's going to be okay\" from the back of the room, while CNN bravely sits on its hands, managing to feel nothing at all.",
     "editorialSummaryDate": "2026-10-12"
   },
   "sources": {
@@ -54,10 +54,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.65) and AFINN-111 (-0.13).",
           "categoryLocal": "politics",
           "sentiment": -0.82,
-          "explanation": "Active military strikes hitting critical energy infrastructure during wartime result in severe humanitarian and physical damage.",
+          "explanation": "Active military strikes on critical civilian infrastructure during wartime constitute severe negative events.",
           "category": "world",
           "sentimentGemini": -0.82,
-          "explanationGemini": "Active military strikes hitting critical energy infrastructure during wartime result in severe humanitarian and physical damage.",
+          "explanationGemini": "Active military strikes on critical civilian infrastructure during wartime constitute severe negative events.",
           "categoryGemini": "world"
         },
         {
@@ -72,10 +72,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.92) and AFINN-111 (-0.63).",
           "categoryLocal": "politics",
           "sentiment": -0.75,
-          "explanation": "An entrenched, devastating civil war with global consequences inflicts severe human suffering.",
+          "explanation": "An entrenched, devastating civil war with international repercussions carries a deeply negative valence.",
           "category": "world",
           "sentimentGemini": -0.75,
-          "explanationGemini": "An entrenched, devastating civil war with global consequences inflicts severe human suffering.",
+          "explanationGemini": "An entrenched, devastating civil war with international repercussions carries a deeply negative valence.",
           "categoryGemini": "world"
         },
         {
@@ -90,10 +90,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.53) and AFINN-111 (-0.25).",
           "categoryLocal": "politics",
           "sentiment": -0.45,
-          "explanation": "Diplomatic friction and active security threats involving a foreign state summon severe condemnation.",
+          "explanation": "Diplomatic friction and direct threats of state-backed violence on UK soil indicate serious international tension.",
           "category": "world",
           "sentimentGemini": -0.45,
-          "explanationGemini": "Diplomatic friction and active security threats involving a foreign state summon severe condemnation.",
+          "explanationGemini": "Diplomatic friction and direct threats of state-backed violence on UK soil indicate serious international tension.",
           "categoryGemini": "world"
         },
         {
@@ -107,11 +107,11 @@
           "sentimentVADER": 0.273,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.27) and AFINN-111 (-0.25).",
           "categoryLocal": "politics",
-          "sentiment": -0.68,
-          "explanation": "Ongoing warfare and winter electricity outages for citizens represent a deeply negative humanitarian situation.",
+          "sentiment": -0.55,
+          "explanation": "The ongoing conflict and civilian suffering amid winter electricity outages reflect heavy distress.",
           "category": "world",
-          "sentimentGemini": -0.68,
-          "explanationGemini": "Ongoing warfare and winter electricity outages for citizens represent a deeply negative humanitarian situation.",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "The ongoing conflict and civilian suffering amid winter electricity outages reflect heavy distress.",
           "categoryGemini": "world"
         },
         {
@@ -125,12 +125,12 @@
           "sentimentVADER": -0.9,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.90) and AFINN-111 (-0.50).",
           "categoryLocal": "health",
-          "sentiment": -0.78,
-          "explanation": "A fatal wildlife attack resulting in a man's death is a tragic, highly negative incident.",
-          "category": "world",
-          "sentimentGemini": -0.78,
-          "explanationGemini": "A fatal wildlife attack resulting in a man's death is a tragic, highly negative incident.",
-          "categoryGemini": "world"
+          "sentiment": -0.85,
+          "explanation": "A tragic fatal animal attack and subsequent safety inquiry represent a severe, life-loss event.",
+          "category": "other",
+          "sentimentGemini": -0.85,
+          "explanationGemini": "A tragic fatal animal attack and subsequent safety inquiry represent a severe, life-loss event.",
+          "categoryGemini": "other"
         },
         {
           "sourceId": "bbc",
@@ -4341,11 +4341,11 @@
     },
     "nyt": {
       "name": "The New York Times",
-      "averageSentiment": -0.19,
+      "averageSentiment": -0.189,
       "distribution": {
         "positive": 22,
-        "neutral": 59,
-        "negative": 84
+        "neutral": 60,
+        "negative": 83
       },
       "articles": [
         {
@@ -4360,10 +4360,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.82) and AFINN-111 (0.00).",
           "categoryLocal": "sports",
           "sentiment": -0.15,
-          "explanation": "A personal story of coping with grief through community and sports carries a poignant yet constructive tone.",
+          "explanation": "While touching, the story centers around the profound personal grief of losing a son.",
           "category": "entertainment",
           "sentimentGemini": -0.15,
-          "explanationGemini": "A personal story of coping with grief through community and sports carries a poignant yet constructive tone.",
+          "explanationGemini": "While touching, the story centers around the profound personal grief of losing a son.",
           "categoryGemini": "entertainment"
         },
         {
@@ -4377,11 +4377,11 @@
           "sentimentVADER": -0.872,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.87) and AFINN-111 (-0.63).",
           "categoryLocal": "politics",
-          "sentiment": -0.65,
-          "explanation": "Geopolitical maneuvering that fuels an active economic war and sustains military aggression is deeply negative.",
+          "sentiment": -0.62,
+          "explanation": "Geopolitical maneuvering that supports an aggressor nation's economic war machine is highly conflictual.",
           "category": "world",
-          "sentimentGemini": -0.65,
-          "explanationGemini": "Geopolitical maneuvering that fuels an active economic war and sustains military aggression is deeply negative.",
+          "sentimentGemini": -0.62,
+          "explanationGemini": "Geopolitical maneuvering that supports an aggressor nation's economic war machine is highly conflictual.",
           "categoryGemini": "world"
         },
         {
@@ -4395,11 +4395,11 @@
           "sentimentVADER": 0.751,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.75) and AFINN-111 (0.25).",
           "categoryLocal": "other",
-          "sentiment": -0.22,
-          "explanation": "Financial instability regarding retirement funds and impending benefit reductions introduce mild economic anxiety.",
+          "sentiment": -0.32,
+          "explanation": "Highlighting impending funding shortfalls and potential benefit reductions for retirees creates economic anxiety.",
           "category": "business",
-          "sentimentGemini": -0.22,
-          "explanationGemini": "Financial instability regarding retirement funds and impending benefit reductions introduce mild economic anxiety.",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Highlighting impending funding shortfalls and potential benefit reductions for retirees creates economic anxiety.",
           "categoryGemini": "business"
         },
         {
@@ -4413,11 +4413,11 @@
           "sentimentVADER": -0.599,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.60) and AFINN-111 (-0.25).",
           "categoryLocal": "other",
-          "sentiment": -0.25,
-          "explanation": "The auctioning of a deceased author's possessions underscores the solemnity of death and loss.",
+          "sentiment": 0.05,
+          "explanation": "A routine cultural and literary auction event is largely neutral procedural news.",
           "category": "entertainment",
-          "sentimentGemini": -0.25,
-          "explanationGemini": "The auctioning of a deceased author's possessions underscores the solemnity of death and loss.",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "A routine cultural and literary auction event is largely neutral procedural news.",
           "categoryGemini": "entertainment"
         },
         {
@@ -4809,11 +4809,11 @@
           "sentimentVADER": -0.527,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.53) and AFINN-111 (-0.25).",
           "categoryLocal": "health",
-          "sentiment": -0.35,
-          "explanation": "Exposing human-rights violations and health concerns within an industry is a negative revelation.",
+          "sentiment": -0.42,
+          "explanation": "An investigation revealing severe human rights violations and health concerns in the farmed fish industry is concerning.",
           "category": "business",
-          "sentimentGemini": -0.35,
-          "explanationGemini": "Exposing human-rights violations and health concerns within an industry is a negative revelation.",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "An investigation revealing severe human rights violations and health concerns in the farmed fish industry is concerning.",
           "categoryGemini": "business"
         },
         {
@@ -13629,7 +13629,7 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.1,
+      "averageSentiment": -0.101,
       "distribution": {
         "positive": 51,
         "neutral": 67,
@@ -13641,17 +13641,35 @@
           "title": "Iran’s Revolutionary Guards ‘almost certainly’ behind RAF Fairford threats, says Burnham",
           "description": "UK to bring further sanctions against Tehran and IRGC after assessment Iran was likely to have coordinated incident Andy Burnham said Iran’s Islamic Revolutionary Guard Corps were “almost certainly” behind threats to RAF Fairford, the firmest attribution of responsibility made so far by the UK after an incident late last month. The prime minister told MPs the UK would bring further sanctions against Tehran and the IRGC in the aftermath of an a...",
           "link": "https://www.theguardian.com/uk-news/2026/oct/12/iran-revolutionary-guards-irgc-raf-fairford-threats",
-          "pubDate": "Mon, 12 Oct 2026 16:57:10 GMT",
+          "pubDate": "Mon, 12 Oct 2026 17:08:11 GMT",
           "sentimentLocal": -1,
           "sentimentAFINN": -0.375,
           "sentimentVADER": -0.681,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.68) and AFINN-111 (-0.38).",
           "categoryLocal": "politics",
-          "sentiment": -0.45,
-          "explanation": "Attribution of hostile security threats to a foreign state met with planned sanctions indicates escalating international tension.",
+          "sentiment": -0.48,
+          "explanation": "Attribution of hostile state-backed threats on military facilities leads to diplomatic escalation and sanctions.",
           "category": "politics",
-          "sentimentGemini": -0.45,
-          "explanationGemini": "Attribution of hostile security threats to a foreign state met with planned sanctions indicates escalating international tension.",
+          "sentimentGemini": -0.48,
+          "explanationGemini": "Attribution of hostile state-backed threats on military facilities leads to diplomatic escalation and sanctions.",
+          "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Burnham says ‘public will be the boss’ in any future decision about closer relationship with the EU – UK politics live",
+          "description": "The prime minister tells MPs the next summit with the EU will be held on 20 November Burnham to urge MPs to embrace closer ties with EU Zia Yusuf, Reform UK’s home affairs spokesperson, is speaking now. He started his speech with an account of a 73-year-old woman dying in North Wales after having to wait 23 hours for an ambulance, and he sought to link this to immigration. He said: The Royal College of Emergency Medicine estimates that 15,000 ...",
+          "link": "https://www.theguardian.com/politics/live/2026/oct/12/uk-politics-live-tories-andy-burnham-russian-interference-brexit-eu-latest",
+          "pubDate": "Mon, 12 Oct 2026 17:06:15 GMT",
+          "sentimentLocal": -0.289,
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.077,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.08) and AFINN-111 (-0.50).",
+          "categoryLocal": "politics",
+          "sentiment": -0.35,
+          "explanation": "Political debate juxtaposed with severe healthcare crises and tragic patient wait times creates a negative tone.",
+          "category": "politics",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "Political debate juxtaposed with severe healthcare crises and tragic patient wait times creates a negative tone.",
           "categoryGemini": "politics"
         },
         {
@@ -13665,30 +13683,12 @@
           "sentimentVADER": 0.858,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.86) and AFINN-111 (-0.50).",
           "categoryLocal": "technology",
-          "sentiment": -0.38,
-          "explanation": "An elite athlete being dropped from a national team amid misconduct allegations is a solemn and negative development.",
+          "sentiment": -0.4,
+          "explanation": "An elite athlete being dropped abruptly from a national team due to misconduct allegations is a negative sports event.",
           "category": "sports",
-          "sentimentGemini": -0.38,
-          "explanationGemini": "An elite athlete being dropped from a national team amid misconduct allegations is a solemn and negative development.",
+          "sentimentGemini": -0.4,
+          "explanationGemini": "An elite athlete being dropped abruptly from a national team due to misconduct allegations is a negative sports event.",
           "categoryGemini": "sports"
-        },
-        {
-          "sourceId": "guardian",
-          "title": "Burnham says ‘public will be the boss’ in any future decision about closer relationship with the EU – UK politics live",
-          "description": "The prime minister tells MPs the next summit with the EU will be held on 20 November Burnham to urge MPs to embrace closer ties with EU Zia Yusuf, Reform UK’s home affairs spokesperson, is speaking now. He started his speech with an account of a 73-year-old woman dying in North Wales after having to wait 23 hours for an ambulance, and he sought to link this to immigration. He said: The Royal College of Emergency Medicine estimates that 15,000 ...",
-          "link": "https://www.theguardian.com/politics/live/2026/oct/12/uk-politics-live-tories-andy-burnham-russian-interference-brexit-eu-latest",
-          "pubDate": "Mon, 12 Oct 2026 16:36:47 GMT",
-          "sentimentLocal": -0.289,
-          "sentimentAFINN": -0.5,
-          "sentimentVADER": -0.077,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.08) and AFINN-111 (-0.50).",
-          "categoryLocal": "politics",
-          "sentiment": -0.42,
-          "explanation": "Political debate juxtaposed with a tragic account of a patient dying after a lengthy ambulance wait leans negative.",
-          "category": "politics",
-          "sentimentGemini": -0.42,
-          "explanationGemini": "Political debate juxtaposed with a tragic account of a patient dying after a lengthy ambulance wait leans negative.",
-          "categoryGemini": "politics"
         },
         {
           "sourceId": "guardian",
@@ -13899,11 +13899,11 @@
           "sentimentVADER": 0.402,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.40) and AFINN-111 (-0.75).",
           "categoryLocal": "politics",
-          "sentiment": -0.32,
-          "explanation": "Warnings regarding inevitable AI-driven cyber-attacks on critical healthcare infrastructure highlight significant systemic vulnerabilities.",
+          "sentiment": -0.38,
+          "explanation": "Warnings of inevitable, AI-driven cyber-attacks on national critical infrastructure pose severe security concerns.",
           "category": "technology",
-          "sentimentGemini": -0.32,
-          "explanationGemini": "Warnings regarding inevitable AI-driven cyber-attacks on critical healthcare infrastructure highlight significant systemic vulnerabilities.",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "Warnings of inevitable, AI-driven cyber-attacks on national critical infrastructure pose severe security concerns.",
           "categoryGemini": "technology"
         },
         {
@@ -13953,11 +13953,11 @@
           "sentimentVADER": 0.765,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.77) and AFINN-111 (0.75).",
           "categoryLocal": "world",
-          "sentiment": -0.2,
-          "explanation": "A political scandal involving unpublicized roles and hidden campaign tactics creates mild political friction.",
+          "sentiment": -0.22,
+          "explanation": "A political transparency and strategy scandal involving a hidden advisory role brings mild reputational conflict.",
           "category": "politics",
-          "sentimentGemini": -0.2,
-          "explanationGemini": "A political scandal involving unpublicized roles and hidden campaign tactics creates mild political friction.",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "A political transparency and strategy scandal involving a hidden advisory role brings mild reputational conflict.",
           "categoryGemini": "politics"
         },
         {
@@ -23013,7 +23013,7 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.12,
+      "averageSentiment": -0.119,
       "distribution": {
         "positive": 43,
         "neutral": 87,
@@ -23031,12 +23031,12 @@
           "sentimentVADER": -0.477,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.48) and AFINN-111 (-0.75).",
           "categoryLocal": "sports",
-          "sentiment": -0.48,
-          "explanation": "Widespread foreign espionage and arrests point to active, pervasive international security threats.",
-          "category": "politics",
-          "sentimentGemini": -0.48,
-          "explanationGemini": "Widespread foreign espionage and arrests point to active, pervasive international security threats.",
-          "categoryGemini": "politics"
+          "sentiment": -0.52,
+          "explanation": "Widespread foreign espionage arrests and severe national security warnings reflect heightened geopolitical conflict.",
+          "category": "world",
+          "sentimentGemini": -0.52,
+          "explanationGemini": "Widespread foreign espionage arrests and severe national security warnings reflect heightened geopolitical conflict.",
+          "categoryGemini": "world"
         },
         {
           "sourceId": "fox",
@@ -23049,11 +23049,11 @@
           "sentimentVADER": 0.942,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.94) and AFINN-111 (1.00).",
           "categoryLocal": "sports",
-          "sentiment": 0.42,
-          "explanation": "A major championship victory in professional wrestling represents a significant career triumph.",
+          "sentiment": 0.45,
+          "explanation": "A historic athletic victory capturing a major professional wrestling world championship is a celebratory sports triumph.",
           "category": "sports",
-          "sentimentGemini": 0.42,
-          "explanationGemini": "A major championship victory in professional wrestling represents a significant career triumph.",
+          "sentimentGemini": 0.45,
+          "explanationGemini": "A historic athletic victory capturing a major professional wrestling world championship is a celebratory sports triumph.",
           "categoryGemini": "sports"
         },
         {
@@ -23067,11 +23067,11 @@
           "sentimentVADER": 0.967,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.97) and AFINN-111 (1.00).",
           "categoryLocal": "sports",
-          "sentiment": 0.35,
-          "explanation": "A successful sports win in a high-stakes playoff game delivers a positive and exciting outcome.",
+          "sentiment": 0.4,
+          "explanation": "A successful opening playoff game win for a top-performing baseball team is a positive sports achievement.",
           "category": "sports",
-          "sentimentGemini": 0.35,
-          "explanationGemini": "A successful sports win in a high-stakes playoff game delivers a positive and exciting outcome.",
+          "sentimentGemini": 0.4,
+          "explanationGemini": "A successful opening playoff game win for a top-performing baseball team is a positive sports achievement.",
           "categoryGemini": "sports"
         },
         {
@@ -23085,11 +23085,11 @@
           "sentimentVADER": 0.978,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.98) and AFINN-111 (1.00).",
           "categoryLocal": "sports",
-          "sentiment": 0.45,
-          "explanation": "Achieving dual honors of a hall of fame induction and a championship title win is a celebratory career milestone.",
+          "sentiment": 0.48,
+          "explanation": "A celebrated sports figure receiving a Hall of Fame induction and winning a championship on the same night is highly positive.",
           "category": "sports",
-          "sentimentGemini": 0.45,
-          "explanationGemini": "Achieving dual honors of a hall of fame induction and a championship title win is a celebratory career milestone.",
+          "sentimentGemini": 0.48,
+          "explanationGemini": "A celebrated sports figure receiving a Hall of Fame induction and winning a championship on the same night is highly positive.",
           "categoryGemini": "sports"
         },
         {
@@ -23103,11 +23103,11 @@
           "sentimentVADER": 0.934,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.93) and AFINN-111 (0.50).",
           "categoryLocal": "sports",
-          "sentiment": 0.4,
-          "explanation": "Capturing a major wrestling championship after returning to the top of the division is a triumphant athletic success.",
+          "sentiment": 0.42,
+          "explanation": "A major championship win and career milestone in professional wrestling represents a rewarding sporting success.",
           "category": "sports",
-          "sentimentGemini": 0.4,
-          "explanationGemini": "Capturing a major wrestling championship after returning to the top of the division is a triumphant athletic success.",
+          "sentimentGemini": 0.42,
+          "explanationGemini": "A major championship win and career milestone in professional wrestling represents a rewarding sporting success.",
           "categoryGemini": "sports"
         },
         {
@@ -23121,11 +23121,11 @@
           "sentimentVADER": 0.637,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.64) and AFINN-111 (0.50).",
           "categoryLocal": "entertainment",
-          "sentiment": 0.35,
-          "explanation": "Jason Hotch wins a major professional wrestling championship, marking a significant competitive victory.",
+          "sentiment": 0.28,
+          "explanation": "Jason Hotch winning the TNA International Championship represents a standard positive sports entertainment outcome.",
           "category": "sports",
-          "sentimentGemini": 0.35,
-          "explanationGemini": "Jason Hotch wins a major professional wrestling championship, marking a significant competitive victory.",
+          "sentimentGemini": 0.28,
+          "explanationGemini": "Jason Hotch winning the TNA International Championship represents a standard positive sports entertainment outcome.",
           "categoryGemini": "sports"
         },
         {
@@ -23139,11 +23139,11 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "sports",
-          "sentiment": -0.22,
-          "explanation": "Teenagers pulling a menacing-looking prank with tactical gear and faux rifles caused local alarm and police intervention.",
+          "sentiment": -0.15,
+          "explanation": "Teens carrying fake rifles caused a brief public scare, creating mild local tension before being identified as a prank.",
           "category": "other",
-          "sentimentGemini": -0.22,
-          "explanationGemini": "Teenagers pulling a menacing-looking prank with tactical gear and faux rifles caused local alarm and police intervention.",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Teens carrying fake rifles caused a brief public scare, creating mild local tension before being identified as a prank.",
           "categoryGemini": "other"
         },
         {
@@ -23157,11 +23157,11 @@
           "sentimentVADER": -0.899,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.90) and AFINN-111 (-1.00).",
           "categoryLocal": "politics",
-          "sentiment": -0.25,
-          "explanation": "Hillary Clinton discusses political disillusionment among voters while referencing her painful 2016 electoral loss.",
+          "sentiment": -0.22,
+          "explanation": "Discussing voter disillusionment and historical electoral losses reflects political frustration and mild negativity.",
           "category": "politics",
-          "sentimentGemini": -0.25,
-          "explanationGemini": "Hillary Clinton discusses political disillusionment among voters while referencing her painful 2016 electoral loss.",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Discussing voter disillusionment and historical electoral losses reflects political frustration and mild negativity.",
           "categoryGemini": "politics"
         },
         {
@@ -23175,11 +23175,11 @@
           "sentimentVADER": -0.863,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.86) and AFINN-111 (-1.00).",
           "categoryLocal": "world",
-          "sentiment": -0.52,
-          "explanation": "A professor falsely accused of horrific murders by a social media influencer details severe ongoing trauma and fear for her children.",
+          "sentiment": -0.45,
+          "explanation": "A professor dealing with false accusations, ongoing fear for her children's safety, and sleepless nights highlights severe personal trauma.",
           "category": "other",
-          "sentimentGemini": -0.52,
-          "explanationGemini": "A professor falsely accused of horrific murders by a social media influencer details severe ongoing trauma and fear for her children.",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "A professor dealing with false accusations, ongoing fear for her children's safety, and sleepless nights highlights severe personal trauma.",
           "categoryGemini": "other"
         },
         {
@@ -23193,11 +23193,11 @@
           "sentimentVADER": 0.805,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.80) and AFINN-111 (0.63).",
           "categoryLocal": "sports",
-          "sentiment": -0.15,
-          "explanation": "A contentious college football finish sparks coaching complaints and controversy over officiating.",
+          "sentiment": -0.18,
+          "explanation": "An intense college football loss involving controversial officiating generates frustration and athletic disappointment.",
           "category": "sports",
-          "sentimentGemini": -0.15,
-          "explanationGemini": "A contentious college football finish sparks coaching complaints and controversy over officiating.",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "An intense college football loss involving controversial officiating generates frustration and athletic disappointment.",
           "categoryGemini": "sports"
         },
         {
@@ -23211,11 +23211,11 @@
           "sentimentVADER": -0.881,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.88) and AFINN-111 (-0.75).",
           "categoryLocal": "business",
-          "sentiment": -0.32,
-          "explanation": "Massive financial investments in college football rosters fail to deliver, causing panic and frustration among donors and fans.",
+          "sentiment": -0.25,
+          "explanation": "Disappointing returns on massive investments in college football rosters lead to panic among donors and fans.",
           "category": "sports",
-          "sentimentGemini": -0.32,
-          "explanationGemini": "Massive financial investments in college football rosters fail to deliver, causing panic and frustration among donors and fans.",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "Disappointing returns on massive investments in college football rosters lead to panic among donors and fans.",
           "categoryGemini": "sports"
         },
         {
@@ -34363,11 +34363,11 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.26,
+      "averageSentiment": -0.259,
       "distribution": {
         "positive": 26,
-        "neutral": 68,
-        "negative": 111
+        "neutral": 67,
+        "negative": 112
       },
       "articles": [
         {
@@ -34382,10 +34382,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.89) and AFINN-111 (-1.00).",
           "categoryLocal": "other",
           "sentiment": -0.78,
-          "explanation": "An accidental explosion kills a teenager and injures dozens of people in northern Israel.",
+          "explanation": "An unexploded ordnance detonation resulting in a teenager's death and dozens of injuries is a severe tragic event.",
           "category": "world",
           "sentimentGemini": -0.78,
-          "explanationGemini": "An accidental explosion kills a teenager and injures dozens of people in northern Israel.",
+          "explanationGemini": "An unexploded ordnance detonation resulting in a teenager's death and dozens of injuries is a severe tragic event.",
           "categoryGemini": "world"
         },
         {
@@ -34399,11 +34399,11 @@
           "sentimentVADER": 0.649,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.65) and AFINN-111 (-0.25).",
           "categoryLocal": "other",
-          "sentiment": -0.35,
-          "explanation": "Political protests erupt in India's capital over contested voter list purges favoring the ruling party.",
+          "sentiment": -0.32,
+          "explanation": "Escalating protests over disputed voter lists in the capital represent significant political friction and democratic strain.",
           "category": "politics",
-          "sentimentGemini": -0.35,
-          "explanationGemini": "Political protests erupt in India's capital over contested voter list purges favoring the ruling party.",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Escalating protests over disputed voter lists in the capital represent significant political friction and democratic strain.",
           "categoryGemini": "politics"
         },
         {
@@ -34417,11 +34417,11 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "other",
-          "sentiment": -0.15,
-          "explanation": "The Pope continues working following an announcement regarding lung surgery, representing health concerns tempered by ongoing duty.",
+          "sentiment": -0.35,
+          "explanation": "An announcement regarding the Pope undergoing lung surgery involves a solemn health concern.",
           "category": "world",
-          "sentimentGemini": -0.15,
-          "explanationGemini": "The Pope continues working following an announcement regarding lung surgery, representing health concerns tempered by ongoing duty.",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "An announcement regarding the Pope undergoing lung surgery involves a solemn health concern.",
           "categoryGemini": "world"
         },
         {
@@ -34436,10 +34436,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "business",
           "sentiment": 0.05,
-          "explanation": "A routine diplomatic initiative and trade renegotiation announcement by a political leader.",
+          "explanation": "A prime minister planning trade deal renegotiations is standard diplomatic and administrative procedure.",
           "category": "politics",
           "sentimentGemini": 0.05,
-          "explanationGemini": "A routine diplomatic initiative and trade renegotiation announcement by a political leader.",
+          "explanationGemini": "A prime minister planning trade deal renegotiations is standard diplomatic and administrative procedure.",
           "categoryGemini": "politics"
         },
         {
@@ -34453,11 +34453,11 @@
           "sentimentVADER": -0.796,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.80) and AFINN-111 (-0.75).",
           "categoryLocal": "other",
-          "sentiment": -0.45,
-          "explanation": "A school shooting in France leaves two injured before a staff member bravely disarms the suspect.",
+          "sentiment": -0.42,
+          "explanation": "A school shooting where a pupil was detained and staff members injured involves serious violence, mitigated by quick intervention.",
           "category": "world",
-          "sentimentGemini": -0.45,
-          "explanationGemini": "A school shooting in France leaves two injured before a staff member bravely disarms the suspect.",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "A school shooting where a pupil was detained and staff members injured involves serious violence, mitigated by quick intervention.",
           "categoryGemini": "world"
         },
         {
@@ -34472,10 +34472,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.65) and AFINN-111 (0.50).",
           "categoryLocal": "other",
           "sentiment": -0.25,
-          "explanation": "A serious international legal test surrounds genocide allegations and the protection of the Rohingya people.",
+          "explanation": "Discussing international legal rulings on genocide and protection for the Rohingya highlights ongoing global humanitarian crises.",
           "category": "world",
           "sentimentGemini": -0.25,
-          "explanationGemini": "A serious international legal test surrounds genocide allegations and the protection of the Rohingya people.",
+          "explanationGemini": "Discussing international legal rulings on genocide and protection for the Rohingya highlights ongoing global humanitarian crises.",
           "categoryGemini": "world"
         },
         {
@@ -34489,11 +34489,11 @@
           "sentimentVADER": -0.542,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-0.25).",
           "categoryLocal": "world",
-          "sentiment": -0.82,
-          "explanation": "Deadly air strikes on gold miners highlight severe regional instability and border violence in Sudan.",
+          "sentiment": -0.72,
+          "explanation": "Deadly air raids on miners reflecting regional border lawlessness constitute a severe violent incident.",
           "category": "world",
-          "sentimentGemini": -0.82,
-          "explanationGemini": "Deadly air strikes on gold miners highlight severe regional instability and border violence in Sudan.",
+          "sentimentGemini": -0.72,
+          "explanationGemini": "Deadly air raids on miners reflecting regional border lawlessness constitute a severe violent incident.",
           "categoryGemini": "world"
         },
         {
@@ -34543,11 +34543,11 @@
           "sentimentVADER": -0.67,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.67) and AFINN-111 (-0.63).",
           "categoryLocal": "politics",
-          "sentiment": -0.55,
-          "explanation": "US federal agents conduct a criminal investigation search on a sitting member of Congress's home.",
+          "sentiment": -0.38,
+          "explanation": "US authorities executing a search warrant on a congresswoman's home as part of a criminal investigation is a major negative political event.",
           "category": "politics",
-          "sentimentGemini": -0.55,
-          "explanationGemini": "US federal agents conduct a criminal investigation search on a sitting member of Congress's home.",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "US authorities executing a search warrant on a congresswoman's home as part of a criminal investigation is a major negative political event.",
           "categoryGemini": "politics"
         },
         {
@@ -34724,10 +34724,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-0.38).",
           "categoryLocal": "world",
           "sentiment": -0.78,
-          "explanation": "An explosion near the Lebanese border results in at least one fatality and multiple injuries.",
+          "explanation": "An explosion near a border killing at least one person and injuring many is a deeply tragic event.",
           "category": "world",
           "sentimentGemini": -0.78,
-          "explanationGemini": "An explosion near the Lebanese border results in at least one fatality and multiple injuries.",
+          "explanationGemini": "An explosion near a border killing at least one person and injuring many is a deeply tragic event.",
           "categoryGemini": "world"
         },
         {
@@ -39104,11 +39104,11 @@
           "sentimentVADER": 0.906,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.91) and AFINN-111 (0.25).",
           "categoryLocal": "politics",
-          "sentiment": -0.38,
-          "explanation": "Massive opposition protests and legal challenges occur following the controversial removal of millions from voter rolls.",
+          "sentiment": -0.32,
+          "explanation": "Opposition parties marching over contested voter list revisions highlights institutional conflict and democratic friction.",
           "category": "politics",
-          "sentimentGemini": -0.38,
-          "explanationGemini": "Massive opposition protests and legal challenges occur following the controversial removal of millions from voter rolls.",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Opposition parties marching over contested voter list revisions highlights institutional conflict and democratic friction.",
           "categoryGemini": "politics"
         },
         {
@@ -40904,10 +40904,46 @@
       "averageSentiment": -0.079,
       "distribution": {
         "positive": 31,
-        "neutral": 68,
-        "negative": 52
+        "neutral": 70,
+        "negative": 51
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Higher rates could be needed to avoid 'inflationary mindset' taking hold, says Fed's Hammack",
+          "description": "The Cleveland Fed president said that tighter monetary policy would be needed to bring down inflation.",
+          "link": "https://www.cnbc.com/2026/10/12/beth-hammack-fed-inflation-policy.html",
+          "pubDate": "Mon, 12 Oct 2026 17:15:21 GMT",
+          "sentimentLocal": -0.21,
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.296,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.30) and AFINN-111 (-0.13).",
+          "categoryLocal": "politics",
+          "sentiment": -0.15,
+          "explanation": "Discussion of potential interest rate hikes signals mild economic friction and tighter monetary policy constraints.",
+          "category": "business",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Discussion of potential interest rate hikes signals mild economic friction and tighter monetary policy constraints.",
+          "categoryGemini": "business"
+        },
+        {
+          "sourceId": "cnbc",
+          "title": "Meta debuts Muse Wonder AI model in latest test of users' willingness to pay",
+          "description": "Meta introduced Muse Wonder, its latest AI model, but users have to pay for subscriptions to the Muse app to access it.",
+          "link": "https://www.cnbc.com/2026/10/12/meta-muse-wonder-ai-model-agent.html",
+          "pubDate": "Mon, 12 Oct 2026 17:14:59 GMT",
+          "sentimentLocal": -0.032,
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.064,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.06) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentiment": 0.05,
+          "explanation": "A routine commercial tech product launch behind a paywall is standard business news.",
+          "category": "technology",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "A routine commercial tech product launch behind a paywall is standard business news.",
+          "categoryGemini": "technology"
+        },
         {
           "sourceId": "cnbc",
           "title": "Fed's Hammack says higher rates could be needed as risks of 'inflationary mindset' forming grow",
@@ -40919,30 +40955,12 @@
           "sentimentVADER": -0.273,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.27) and AFINN-111 (-0.25).",
           "categoryLocal": "politics",
-          "sentiment": -0.18,
-          "explanation": "Federal Reserve warnings about inflation risks and the potential need for tighter, higher interest rates.",
+          "sentiment": -0.15,
+          "explanation": "Discussion of potential interest rate hikes to combat inflation introduces mild economic friction for markets.",
           "category": "business",
-          "sentimentGemini": -0.18,
-          "explanationGemini": "Federal Reserve warnings about inflation risks and the potential need for tighter, higher interest rates.",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Discussion of potential interest rate hikes to combat inflation introduces mild economic friction for markets.",
           "categoryGemini": "business"
-        },
-        {
-          "sourceId": "cnbc",
-          "title": "Meta debuts Muse Wonder AI model in latest test of users' willingness to pay",
-          "description": "Meta introduced Muse Wonder, its latest AI model, but users have to pay for subscriptions to the Muse app to access it.",
-          "link": "https://www.cnbc.com/2026/10/12/meta-muse-wonder-ai-model-agent.html",
-          "pubDate": "Mon, 12 Oct 2026 17:05:02 GMT",
-          "sentimentLocal": -0.032,
-          "sentimentAFINN": 0,
-          "sentimentVADER": -0.064,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.06) and AFINN-111 (0.00).",
-          "categoryLocal": "technology",
-          "sentiment": 0.05,
-          "explanation": "A routine tech product launch introducing a new AI model behind a subscription paywall.",
-          "category": "technology",
-          "sentimentGemini": 0.05,
-          "explanationGemini": "A routine tech product launch introducing a new AI model behind a subscription paywall.",
-          "categoryGemini": "technology"
         },
         {
           "sourceId": "cnbc",
@@ -40956,10 +40974,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.53) and AFINN-111 (0.25).",
           "categoryLocal": "health",
           "sentiment": 0.12,
-          "explanation": "Market activity and stock performance discussion for a major healthcare company represent mild constructive business news.",
+          "explanation": "Routine financial market commentary involving stock price movements.",
           "category": "business",
           "sentimentGemini": 0.12,
-          "explanationGemini": "Market activity and stock performance discussion for a major healthcare company represent mild constructive business news.",
+          "explanationGemini": "Routine financial market commentary involving stock price movements.",
           "categoryGemini": "business"
         },
         {
@@ -40974,10 +40992,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.44) and AFINN-111 (0.38).",
           "categoryLocal": "business",
           "sentiment": 0.15,
-          "explanation": "Corporate commentary on avoided takeovers and stock benefits indicates positive financial sentiment.",
+          "explanation": "Business analysis discussing positive implications for a company's stock.",
           "category": "business",
           "sentimentGemini": 0.15,
-          "explanationGemini": "Corporate commentary on avoided takeovers and stock benefits indicates positive financial sentiment.",
+          "explanationGemini": "Business analysis discussing positive implications for a company's stock.",
           "categoryGemini": "business"
         },
         {
@@ -40991,11 +41009,11 @@
           "sentimentVADER": 0.459,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.46) and AFINN-111 (0.00).",
           "categoryLocal": "politics",
-          "sentiment": -0.28,
-          "explanation": "Political friction and criticism arise over eased sanctions and an international diesel deal.",
+          "sentiment": -0.35,
+          "explanation": "Defending a controversial diesel deal amid international pushback and criticism from allies signifies ongoing diplomatic friction.",
           "category": "politics",
-          "sentimentGemini": -0.28,
-          "explanationGemini": "Political friction and criticism arise over eased sanctions and an international diesel deal.",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "Defending a controversial diesel deal amid international pushback and criticism from allies signifies ongoing diplomatic friction.",
           "categoryGemini": "politics"
         },
         {
@@ -41009,11 +41027,11 @@
           "sentimentVADER": -0.44,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.44) and AFINN-111 (-0.13).",
           "categoryLocal": "other",
-          "sentiment": -0.55,
-          "explanation": "An airline delays a major international flight route launch due to security concerns following airport attacks.",
+          "sentiment": -0.45,
+          "explanation": "Suspending or delaying a major new flight route because of airport attacks reflects security threats and business disruption.",
           "category": "business",
-          "sentimentGemini": -0.55,
-          "explanationGemini": "An airline delays a major international flight route launch due to security concerns following airport attacks.",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "Suspending or delaying a major new flight route because of airport attacks reflects security threats and business disruption.",
           "categoryGemini": "business"
         },
         {
@@ -41063,11 +41081,11 @@
           "sentimentVADER": -0.839,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.84) and AFINN-111 (-0.63).",
           "categoryLocal": "technology",
-          "sentiment": -0.18,
-          "explanation": "Discussion surrounding digital-age parenting anxiety touches upon a relatable psychological stressor.",
+          "sentiment": -0.22,
+          "explanation": "Discusses common psychological stress and anxiety related to modern parenting.",
           "category": "health",
-          "sentimentGemini": -0.18,
-          "explanationGemini": "Discussion surrounding digital-age parenting anxiety touches upon a relatable psychological stressor.",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Discusses common psychological stress and anxiety related to modern parenting.",
           "categoryGemini": "health"
         },
         {
@@ -44209,7 +44227,7 @@
     },
     "skynews": {
       "name": "Sky News",
-      "averageSentiment": -0.361,
+      "averageSentiment": -0.362,
       "distribution": {
         "positive": 6,
         "neutral": 19,
@@ -44228,10 +44246,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.84) and AFINN-111 (-0.63).",
           "categoryLocal": "business",
           "sentiment": -0.68,
-          "explanation": "A malicious cyber attack causing physical fires and significant food loss represents a severe infrastructure threat.",
+          "explanation": "A destructive cyber attack causing property damage and major food loss.",
           "category": "technology",
           "sentimentGemini": -0.68,
-          "explanationGemini": "A malicious cyber attack causing physical fires and significant food loss represents a severe infrastructure threat.",
+          "explanationGemini": "A destructive cyber attack causing property damage and major food loss.",
           "categoryGemini": "technology"
         },
         {
@@ -44246,10 +44264,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (-0.25).",
           "categoryLocal": "politics",
           "sentiment": -0.45,
-          "explanation": "A high-profile federal raid on a lawmaker's home involving accusations of political intimidation creates significant political tension.",
+          "explanation": "High-tension political conflict involving a federal raid on a lawmaker's home.",
           "category": "politics",
           "sentimentGemini": -0.45,
-          "explanationGemini": "A high-profile federal raid on a lawmaker's home involving accusations of political intimidation creates significant political tension.",
+          "explanationGemini": "High-tension political conflict involving a federal raid on a lawmaker's home.",
           "categoryGemini": "politics"
         },
         {
@@ -45791,11 +45809,11 @@
           "sentimentVADER": 0.758,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.76) and AFINN-111 (0.75).",
           "categoryLocal": "entertainment",
-          "sentiment": 0.04,
-          "explanation": "Informational tax newsletter content serves as a routine and procedural financial guidance update.",
+          "sentiment": -0.05,
+          "explanation": "Informational personal finance and tax guidance.",
           "category": "business",
-          "sentimentGemini": 0.04,
-          "explanationGemini": "Informational tax newsletter content serves as a routine and procedural financial guidance update.",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "Informational personal finance and tax guidance.",
           "categoryGemini": "business"
         },
         {
@@ -46483,11 +46501,29 @@
       "name": "Reuters",
       "averageSentiment": -0.195,
       "distribution": {
-        "positive": 38,
-        "neutral": 67,
-        "negative": 125
+        "positive": 39,
+        "neutral": 66,
+        "negative": 126
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Nigeria's Dangote refinery extends $1.6 billion IPO to broaden African investor access - Reuters",
+          "description": "Nigeria's Dangote refinery extends $1.6 billion IPO to broaden African investor access Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOZl80NVdQTnNCVjV6SkIxU0ZpNGpmREZyUG8zRmpjUDZfY05NOWhBeUdXb2VWWTVDc1pvWEs3YmE3cGRKQW5kQXB6N1NhUHA1WGlpOHR6S05SQW1OOUROQ21ubTNqOWYxdldSbllkT2tLMW11V2pLNm02V0Y3WlkydTdvZk9aM2h6bUVwUjNmYlFGLTBReTN4T2l6clRPTUFIa0NGdzJFTEQ4d1dJaVZVVUhuejB3bXdEREgxNmZ6Ty1WdDVRVUJrY3VB?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 16:11:17 GMT",
+          "sentimentLocal": 0.25,
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.25,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.25) and AFINN-111 (0.25).",
+          "categoryLocal": "other",
+          "sentiment": 0.28,
+          "explanation": "Constructive major financial expansion aiming to broaden investor access.",
+          "category": "business",
+          "sentimentGemini": 0.28,
+          "explanationGemini": "Constructive major financial expansion aiming to broaden investor access.",
+          "categoryGemini": "business"
+        },
         {
           "sourceId": "reuters",
           "title": "UK PM Burnham says Iran's IRGC likely behind RAF Fairford incident - Reuters",
@@ -46499,11 +46535,11 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "other",
-          "sentiment": -0.62,
-          "explanation": "Attribution of a security incident or hostile act to a foreign state actor involves serious geopolitical conflict.",
+          "sentiment": -0.58,
+          "explanation": "Serious international security incident implicating a foreign military force.",
           "category": "world",
-          "sentimentGemini": -0.62,
-          "explanationGemini": "Attribution of a security incident or hostile act to a foreign state actor involves serious geopolitical conflict.",
+          "sentimentGemini": -0.58,
+          "explanationGemini": "Serious international security incident implicating a foreign military force.",
           "categoryGemini": "world"
         },
         {
@@ -46517,11 +46553,11 @@
           "sentimentVADER": 0.494,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.49) and AFINN-111 (0.25).",
           "categoryLocal": "technology",
-          "sentiment": -0.25,
-          "explanation": "A major tech firm flagging volatile demand and lowering forecasts indicates cooling business conditions.",
+          "sentiment": -0.28,
+          "explanation": "Corporate downgrade and warning of economic volatility.",
           "category": "business",
-          "sentimentGemini": -0.25,
-          "explanationGemini": "A major tech firm flagging volatile demand and lowering forecasts indicates cooling business conditions.",
+          "sentimentGemini": -0.28,
+          "explanationGemini": "Corporate downgrade and warning of economic volatility.",
           "categoryGemini": "business"
         },
         {
@@ -46535,11 +46571,11 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "politics",
-          "sentiment": -0.12,
-          "explanation": "Diplomatic or economic deals involving sanctioned nations like Russia generate mild international friction.",
+          "sentiment": -0.15,
+          "explanation": "Geopolitical economic deal carrying mild diplomatic controversy.",
           "category": "world",
-          "sentimentGemini": -0.12,
-          "explanationGemini": "Diplomatic or economic deals involving sanctioned nations like Russia generate mild international friction.",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Geopolitical economic deal carrying mild diplomatic controversy.",
           "categoryGemini": "world"
         },
         {
@@ -46554,10 +46590,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.90) and AFINN-111 (-1.00).",
           "categoryLocal": "technology",
           "sentiment": -0.42,
-          "explanation": "A worst-in-14-years drop in global smartphone shipments highlights significant economic contraction in the tech sector.",
+          "explanation": "Significant economic contraction and supply chain failure in the tech sector.",
           "category": "business",
           "sentimentGemini": -0.42,
-          "explanationGemini": "A worst-in-14-years drop in global smartphone shipments highlights significant economic contraction in the tech sector.",
+          "explanationGemini": "Significant economic contraction and supply chain failure in the tech sector.",
           "categoryGemini": "business"
         },
         {
@@ -46571,11 +46607,11 @@
           "sentimentVADER": 0.103,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.10) and AFINN-111 (-0.50).",
           "categoryLocal": "politics",
-          "sentiment": -0.22,
-          "explanation": "Political pushback and bipartisan complaints regarding a controversial international deal signal diplomatic and domestic friction.",
+          "sentiment": -0.25,
+          "explanation": "Political friction and bipartisan pushback over a controversial international agreement.",
           "category": "politics",
-          "sentimentGemini": -0.22,
-          "explanationGemini": "Political pushback and bipartisan complaints regarding a controversial international deal signal diplomatic and domestic friction.",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "Political friction and bipartisan pushback over a controversial international agreement.",
           "categoryGemini": "politics"
         },
         {
@@ -46590,10 +46626,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "other",
           "sentiment": 0.08,
-          "explanation": "A corporate restructuring deal to take a company private is a standard financial transaction.",
+          "explanation": "Standard corporate restructuring and transition to private ownership.",
           "category": "business",
           "sentimentGemini": 0.08,
-          "explanationGemini": "A corporate restructuring deal to take a company private is a standard financial transaction.",
+          "explanationGemini": "Standard corporate restructuring and transition to private ownership.",
           "categoryGemini": "business"
         },
         {
@@ -46607,11 +46643,11 @@
           "sentimentVADER": 0.494,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.49) and AFINN-111 (0.00).",
           "categoryLocal": "politics",
-          "sentiment": -0.78,
-          "explanation": "Ongoing military strikes against energy targets despite announced ceasefires represent active wartime destruction.",
+          "sentiment": -0.82,
+          "explanation": "Active military strikes on critical infrastructure despite stated ceasefire efforts.",
           "category": "world",
-          "sentimentGemini": -0.78,
-          "explanationGemini": "Ongoing military strikes against energy targets despite announced ceasefires represent active wartime destruction.",
+          "sentimentGemini": -0.82,
+          "explanationGemini": "Active military strikes on critical infrastructure despite stated ceasefire efforts.",
           "categoryGemini": "world"
         },
         {
@@ -46679,11 +46715,11 @@
           "sentimentVADER": -0.527,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.53) and AFINN-111 (-0.25).",
           "categoryLocal": "business",
-          "sentiment": -0.35,
-          "explanation": "Surging yields and heightened bond market pressure reflect growing economic instability and financial strain.",
+          "sentiment": -0.32,
+          "explanation": "Negative financial market pressure and bond volatility.",
           "category": "business",
-          "sentimentGemini": -0.35,
-          "explanationGemini": "Surging yields and heightened bond market pressure reflect growing economic instability and financial strain.",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Negative financial market pressure and bond volatility.",
           "categoryGemini": "business"
         },
         {
@@ -46706,21 +46742,21 @@
         },
         {
           "sourceId": "reuters",
-          "title": "Nigeria's Dangote oil refinery IPO to be extended by 10 days, executive and adviser say - Reuters",
-          "description": "Nigeria's Dangote oil refinery IPO to be extended by 10 days, executive and adviser say Reuters",
-          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOZl80NVdQTnNCVjV6SkIxU0ZpNGpmREZyUG8zRmpjUDZfY05NOWhBeUdXb2VWWTVDc1pvWEs3YmE3cGRKQW5kQXB6N1NhUHA1WGlpOHR6S05SQW1OOUROQ21ubTNqOWYxdldSbllkT2tLMW11V2pLNm02V0Y3WlkydTdvZk9aM2h6bUVwUjNmYlFGLTBReTN4T2l6clRPTUFIa0NGdzJFTEQ4d1dJaVZVVUhuejB3bXdEREgxNmZ6Ty1WdDVRVUJrY3VB?oc=5",
-          "pubDate": "Mon, 12 Oct 2026 14:31:24 GMT",
-          "sentimentLocal": 0,
-          "sentimentAFINN": 0,
-          "sentimentVADER": 0,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
-          "categoryLocal": "other",
-          "sentiment": 0.05,
-          "explanation": "Extending an initial public offering timeline is a standard administrative adjustment in financial markets.",
-          "category": "business",
-          "sentimentGemini": 0.05,
-          "explanationGemini": "Extending an initial public offering timeline is a standard administrative adjustment in financial markets.",
-          "categoryGemini": "business"
+          "title": "NATO general sets out tough military response to any 'foolish' Russian attack - Reuters",
+          "description": "NATO general sets out tough military response to any 'foolish' Russian attack Reuters",
+          "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxOOTJaSDd1eGFCbTBiUDJRNmpVVUtJck1fR05QX0NEV0VEV0tnNS1YMnc5d00tTDktSzFHcU1IcXUxakR1NkJyTzZCUDVoM054NEFhMUhtUFlXenZseWF3M2dQSG95X19jYlJxSkRfb0hpTHJkcVd2TTZuX2RwSnF0LVNkR3NKLXV5cFdXUjRNLTY1ZTg1ZU9qWTZmNkdCZ3dtODIwOVNHNndXaUgwT1p5SkFaZHk?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 14:08:09 GMT",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.802,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.80) and AFINN-111 (-0.25).",
+          "categoryLocal": "world",
+          "sentiment": -0.35,
+          "explanation": "Heightened military tensions and deterrence threats between major powers.",
+          "category": "world",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "Heightened military tensions and deterrence threats between major powers.",
+          "categoryGemini": "world"
         },
         {
           "sourceId": "reuters",
@@ -51366,6 +51402,24 @@
       "articles": [
         {
           "sourceId": "ap",
+          "title": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' - AP News",
+          "description": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' AP News",
+          "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNQjdzXzdVOVh5OVVkeXRrSlNpQXBuMTBWQzhqRDUtbG9uY1ZET0trR0xXNmlIQUhBY1hRS1BsVm8yRENMUE1MZTRxaEtsUmFoaEFUSXFuTXpqeVpqMHd5a1ZYOEtnT3ZvV1NhNmZYMUg0WnlGenFVal82aFp3c2psT25Fc0dRSUNWbkNobw?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 17:01:00 GMT",
+          "sentimentLocal": -0.764,
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.778,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.78) and AFINN-111 (-0.75).",
+          "categoryLocal": "other",
+          "sentiment": -0.45,
+          "explanation": "High-stakes political criminal investigation involving a sitting lawmaker.",
+          "category": "politics",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "High-stakes political criminal investigation involving a sitting lawmaker.",
+          "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "ap",
           "title": "French police detain student suspected of shooting the principal and a teacher at his school - AP News",
           "description": "French police detain student suspected of shooting the principal and a teacher at his school AP News",
           "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNdEhfVl9sNm1fRlFvbFktWDNqckIzUmY5dUVXOHlUUmVhVHJxM09aVU9pUEtRWWkxWm10Q0JRMnNyMjNDRG5yV0lOWWJNRHNEQk1qemZLUTdvMkhUNHpTWm5QQ21JTW0yZ2dqV3Bwbk5MaVZoYzdSNjVLSzhEdGxDTDJoZDM2eHhEeFE?oc=5",
@@ -51375,11 +51429,11 @@
           "sentimentVADER": -0.813,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.81) and AFINN-111 (-0.75).",
           "categoryLocal": "other",
-          "sentiment": -0.48,
-          "explanation": "A school shooting resulting in injuries to staff, followed by an arrest, is a grave criminal and safety incident.",
+          "sentiment": -0.55,
+          "explanation": "School shooting incident resolved by police apprehension of the suspect.",
           "category": "world",
-          "sentimentGemini": -0.48,
-          "explanationGemini": "A school shooting resulting in injuries to staff, followed by an arrest, is a grave criminal and safety incident.",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "School shooting incident resolved by police apprehension of the suspect.",
           "categoryGemini": "world"
         },
         {
@@ -51393,11 +51447,11 @@
           "sentimentVADER": 0.527,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.53) and AFINN-111 (0.50).",
           "categoryLocal": "sports",
-          "sentiment": 0.75,
-          "explanation": "Winning the Nobel Prize for economic research represents a historic and prestigious intellectual achievement.",
+          "sentiment": 0.85,
+          "explanation": "Prestigious international scientific recognition for vital economic research.",
           "category": "science",
-          "sentimentGemini": 0.75,
-          "explanationGemini": "Winning the Nobel Prize for economic research represents a historic and prestigious intellectual achievement.",
+          "sentimentGemini": 0.85,
+          "explanationGemini": "Prestigious international scientific recognition for vital economic research.",
           "categoryGemini": "science"
         },
         {
@@ -51452,24 +51506,6 @@
           "category": "politics",
           "sentimentGemini": -0.48,
           "explanationGemini": "A federal criminal investigation and home search involving a sitting lawmaker is a significant political scandal.",
-          "categoryGemini": "politics"
-        },
-        {
-          "sourceId": "ap",
-          "title": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' - AP News",
-          "description": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' AP News",
-          "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNQjdzXzdVOVh5OVVkeXRrSlNpQXBuMTBWQzhqRDUtbG9uY1ZET0trR0xXNmlIQUhBY1hRS1BsVm8yRENMUE1MZTRxaEtsUmFoaEFUSXFuTXpqeVpqMHd5a1ZYOEtnT3ZvV1NhNmZYMUg0WnlGenFVal82aFp3c2psT25Fc0dRSUNWbkNobw?oc=5",
-          "pubDate": "Mon, 12 Oct 2026 12:28:54 GMT",
-          "sentimentLocal": -0.764,
-          "sentimentAFINN": -0.75,
-          "sentimentVADER": -0.778,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.78) and AFINN-111 (-0.75).",
-          "categoryLocal": "other",
-          "sentiment": -0.45,
-          "explanation": "A criminal probe and law enforcement search targeting a sitting member of Congress constitutes serious political conflict.",
-          "category": "politics",
-          "sentimentGemini": -0.45,
-          "explanationGemini": "A criminal probe and law enforcement search targeting a sitting member of Congress constitutes serious political conflict.",
           "categoryGemini": "politics"
         },
         {
@@ -53686,10 +53722,10 @@
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.83) and AFINN-111 (0.25).",
           "categoryLocal": "other",
           "sentiment": 0.18,
-          "explanation": "Law firm expansion and hiring moves reflect positive corporate growth within the legal and financial sector.",
+          "explanation": "The hiring of new legal partners for corporate expansion represents a positive business development.",
           "category": "business",
           "sentimentGemini": 0.18,
-          "explanationGemini": "Law firm expansion and hiring moves reflect positive corporate growth within the legal and financial sector.",
+          "explanationGemini": "The hiring of new legal partners for corporate expansion represents a positive business development.",
           "categoryGemini": "business"
         },
         {
@@ -53793,11 +53829,11 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "business",
-          "sentiment": -0.45,
-          "explanation": "Federal agents searching a lawmaker's home is a high-stakes, contentious legal and political event.",
+          "sentiment": -0.52,
+          "explanation": "A federal law enforcement search of a sitting lawmaker's residence is a severe political and legal scandal.",
           "category": "politics",
-          "sentimentGemini": -0.45,
-          "explanationGemini": "Federal agents searching a lawmaker's home is a high-stakes, contentious legal and political event.",
+          "sentimentGemini": -0.52,
+          "explanationGemini": "A federal law enforcement search of a sitting lawmaker's residence is a severe political and legal scandal.",
           "categoryGemini": "politics"
         },
         {
@@ -53919,11 +53955,11 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "politics",
-          "sentiment": 0.05,
-          "explanation": "This policy adjustment regarding artificial intelligence regulation represents a routine administrative shift without immediate crisis or triumph.",
+          "sentiment": 0.12,
+          "explanation": "Constructive regulatory policy adjustment regarding artificial intelligence safety.",
           "category": "technology",
-          "sentimentGemini": 0.05,
-          "explanationGemini": "This policy adjustment regarding artificial intelligence regulation represents a routine administrative shift without immediate crisis or triumph.",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "Constructive regulatory policy adjustment regarding artificial intelligence safety.",
           "categoryGemini": "technology"
         },
         {
@@ -57924,18 +57960,18 @@
       }
     },
     {
-      "timestamp": "2026-10-12T17:13:11.910Z",
+      "timestamp": "2026-10-12T17:15:46.924Z",
       "analyzer": "Gemini (gemini-3.5-flash-lite)",
       "averages": {
         "bbc": -0.197,
-        "nyt": -0.19,
+        "nyt": -0.189,
         "cnn": 0,
-        "guardian": -0.1,
-        "fox": -0.12,
-        "aljazeera": -0.26,
+        "guardian": -0.101,
+        "fox": -0.119,
+        "aljazeera": -0.259,
         "npr": -0.196,
         "cnbc": -0.079,
-        "skynews": -0.361,
+        "skynews": -0.362,
         "spiegel": -0.186,
         "reuters": -0.195,
         "ap": -0.199,
