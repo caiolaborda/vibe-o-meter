@@ -1079,7 +1079,7 @@ function renderSpectrum() {
       const markerColor = getValenceColor(avg);
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
-      const yOffset = yLevel * 22;
+      const yOffset = yLevel * 36;
       
       const marker = document.createElement('div');
       marker.className = `outlet-marker ${state.filters.source === id ? 'active' : ''}`;

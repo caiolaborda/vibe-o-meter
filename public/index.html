@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=2.8">
+  <link rel="stylesheet" href="style.css?v=2.9">
 </head>
 <body>
 
@@ -64,14 +64,12 @@
         <!-- Big Clean Hero Banner with Integrated Meta -->
         <div class="pulse-top-bar">
           <div class="pulse-main-banner">
-            <div class="pulse-banner-icon">🌍</div>
-            <div class="pulse-banner-content">
-              <h1 class="pulse-banner-title">
-                <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
-                <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
-                <span id="global-mood-badge" class="pulse-hero-mood-badge">Leaning Gloomy</span>
-              </h1>
-            </div>
+            <h1 class="pulse-banner-title">
+              <span class="pulse-banner-icon">🌍</span>
+              <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
+              <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
+              <span id="global-mood-badge" class="pulse-hero-mood-badge">Leaning Gloomy</span>
+            </h1>
           </div>
           <div class="pulse-meta-info">
             <span id="pulse-article-count" class="pulse-count-text">197 Headlines Analyzed</span>
@@ -81,9 +79,11 @@
         </div>
 
         <!-- Daily Editorial Briefing (Editorial Serif Narrative Lead) -->
-        <p id="daily-editorial-summary" class="hero-editorial-lead">
-          Loading today's briefing...
-        </p>
+        <div class="hero-editorial-lead-wrap">
+          <p id="daily-editorial-summary" class="hero-editorial-lead">
+            Loading today's briefing...
+          </p>
+        </div>
 
         <!-- 3. The 3 Key Signals Horizontal Strip -->
         <div class="pulse-signals-strip">
@@ -328,7 +328,7 @@
       </div>
 
       <!-- Spotlight Banner for Filtered Source -->
-      <div id="spotlight-banner" class="card" style="display: none; margin-bottom: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); flex-direction: column; gap: 1rem; border-radius: 16px; box-shadow: var(--card-shadow);">
+      <div id="spotlight-banner" class="card spotlight-banner-card" style="display: none;">
         <!-- Content will be injected dynamically -->
       </div>
 
@@ -361,15 +361,11 @@
       <div class="timeline-card card">
         <div class="timeline-header-row">
           <div style="display:flex; align-items:center; gap:0.75rem;">
-            <div style="background:rgba(99,102,241,0.1); color:var(--accent-color); padding:0.4rem 0.75rem; border-radius:8px; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:0.35rem;">
+            <div style="background:rgba(29,78,216,0.08); color:var(--accent-color); padding:0.4rem 0.75rem; border-radius:8px; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:0.35rem; font-family:var(--font-mono);">
               <i data-lucide="history" style="width:14px;height:14px;"></i>
               <span id="timeline-snapshot-count">21 Snapshots Recorded</span>
             </div>
             <span id="timeline-time-range" style="font-size:0.78rem; color:var(--text-muted); font-weight:500;">Multi-week historical tracking</span>
-          </div>
-          <div class="timeline-controls">
-            <button id="timeline-range-all" class="btn btn-sm toggle-tab active" style="padding:0.3rem 0.7rem; font-size:0.75rem; border-radius:6px; font-weight:600; cursor:pointer;">All Snapshots</button>
-            <button id="timeline-range-recent" class="btn btn-sm toggle-tab" style="padding:0.3rem 0.7rem; font-size:0.75rem; border-radius:6px; font-weight:600; cursor:pointer; background:transparent; color:var(--text-secondary);">Last 7 Days</button>
           </div>
         </div>
 
@@ -431,19 +427,8 @@
 
   <!-- TAB 3: OUTLET DEEP DIVES -->
   <main id="tab-panel-deepdives" class="tab-panel hidden">
-    <!-- Deep Dive Intro Header -->
-    <div class="section-header-row" style="margin-bottom: 0.5rem;">
-      <div>
-        <h2 class="section-title flex-center">
-          <i data-lucide="compass"></i>
-          Outlet Deep Dives &amp; Comparisons
-        </h2>
-        <p class="section-desc">Inspect newsroom-specific sentiment distributions, compare coverage head-to-head, and browse filtered source reporting.</p>
-      </div>
-    </div>
-
     <!-- Spotlight Banner for Filtered Source -->
-    <div id="deepdive-spotlight-banner" class="card" style="display: none; margin-bottom: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); flex-direction: column; gap: 1rem; border-radius: 16px; box-shadow: var(--card-shadow);">
+    <div id="deepdive-spotlight-banner" class="card spotlight-banner-card" style="display: none;">
       <!-- Content will be injected dynamically -->
     </div>
 
