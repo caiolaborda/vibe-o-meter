@@ -69,8 +69,12 @@ async function generateDailyBriefing(options = {}) {
   const mostCalmToday = rankedOutlets24[rankedOutlets24.length - 1] || { name: 'Public Broadcasters', avg: 0 };
 
   const sortedArticles = [...articles24].sort((a, b) => a.score - b.score);
-  const darkestStories = sortedArticles.slice(0, 3).map(a => `${a.outlet}: "${a.title}"`).join('\n- ');
-  const brightestStories = sortedArticles.slice(-3).reverse().map(a => `${a.outlet}: "${a.title}"`).join('\n- ');
+  const sampleHeadlines = [
+    ...sortedArticles.slice(0, 4),
+    ...sortedArticles.slice(Math.max(0, Math.floor(sortedArticles.length / 2) - 2), Math.floor(sortedArticles.length / 2) + 2),
+    ...sortedArticles.slice(-4).reverse()
+  ].filter((a, i, arr) => a && arr.findIndex(x => x.title === a.title) === i)
+   .map(a => `- [${a.outlet}] "${a.title}"`).join('\n');
 
   let briefingText = '';
   const apiKey = process.env.GEMINI_API_KEY;
@@ -89,32 +93,32 @@ async function generateDailyBriefing(options = {}) {
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
-          generationConfig: { temperature: 0.7 }
+          generationConfig: { temperature: 0.8 }
         });
 
-        const prompt = `You are the lead satirist for "There's No Such Thing As Good News", an autonomous daily audit of global media pessimism.
+        const prompt = `You are a razor-sharp, deadpan news satirist writing the daily front-page mood kicker for "There's No Such Thing As Good News" (an autonomous daily audit of media pessimism).
 
-Write today's executive briefing strictly in the "Micro-Dispatch" style:
-- TONE: Minimalist, rhythmic, dry, cynical, and instantly memorable (strictly under 35 words total).
-- CADENCE: Staccato structure, fast tempo, zero filler or purple prose. No clause stacking.
-- STRUCTURE: 2 to 3 short, punchy sentences.
-  * Sentence 1: A dry, deadpan opening kicker on the day's mood.
-  * Sentence 2: Terrestrial chaos (war, politics, crime, or markets flinching).
-  * Sentence 3: The cynical contrast (e.g. deep-space, astronomy, or science nerds acting as humanity's escape hatch or designated driver).
-- GOLD STANDARD BENCHMARK:
-  "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
-- STRICT NEGATIVE CONSTRAINTS:
-  * NO NUMBERS, DECIMALS, STATS, OR PERCENTAGES (no "-0.21", "197 headlines", etc.).
-  * NO RUN-ON SENTENCES or convoluted clause chains. Keep it lean, crisp, and under 35 words.
-  * Output ONLY the raw paragraph text. No quotation marks, no markdown headers, no bullet points.
+YOUR GOAL:
+Scan today's headlines and write a crisp, cynical, 1-to-3 sentence observation capturing the day's collective news vibe.
 
-Context from the past 24 hours across ${articles24.length} news headlines:
-- Outlets leading the doom & panic today: ${mostAlarmistToday.name}
-- Outlets maintaining the most composure/calm today: ${mostCalmToday.name}
-- Sample darkest headlines from today:
-- ${darkestStories || 'Murders, political raids, and international conflicts'}
-- Sample brightest headlines from today:
-- ${brightestStories || 'Nobel Prize awards, Mars rover discoveries, and astronomy breakthroughs'}`;
+THE VIBE WE WANT:
+- Ultra-lean, punchy, and fast-paced (strictly under 35 words total).
+- Deadpan, wry, and observational—like a sharp newsroom veteran summing up the wires with an effortless shrug and a smirk.
+- NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. Do not follow a robotic "Sentence 1 is this, Sentence 2 is that" structure. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
+- Avoid purple prose, convoluted run-ons, or forced metaphors. Keep it natural, rhythmic, and memorable.
+
+TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy its words):
+"Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
+
+STRICT RULES:
+- NO NUMBERS, DECIMALS, PERCENTAGES, OR STATS (no "-0.21", "24 hours", "197 articles", etc.).
+- Output ONLY the raw paragraph text. No quotation marks, no markdown headers, no bullet points.
+
+TODAY'S HEADLINES CONTEXT:
+- Outlets leading the panic: ${mostAlarmistToday.name}
+- Outlets holding composure: ${mostCalmToday.name}
+- Representative stories across the wire:
+${sampleHeadlines || '- War strikes, political clashes, economic jitters, and scientific breakthroughs'}`;
 
         const res = await model.generateContent(prompt);
         const text = res.response.text().trim().replace(/^["']|["']$/g, '');
