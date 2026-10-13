@@ -92,7 +92,21 @@ async function generateDailyBriefing(options = {}) {
           generationConfig: { temperature: 0.7 }
         });
 
-        const prompt = `You are a witty, razor-sharp news satirist writing the daily executive briefing for a global news mood monitor titled "There's No Such Thing As Good News".
+        const prompt = `You are the lead satirist for "There's No Such Thing As Good News", an autonomous daily audit of global media pessimism.
+
+Write today's executive briefing strictly in the "Micro-Dispatch" style:
+- TONE: Minimalist, rhythmic, dry, cynical, and instantly memorable (strictly under 35 words total).
+- CADENCE: Staccato structure, fast tempo, zero filler or purple prose. No clause stacking.
+- STRUCTURE: 2 to 3 short, punchy sentences.
+  * Sentence 1: A dry, deadpan opening kicker on the day's mood.
+  * Sentence 2: Terrestrial chaos (war, politics, crime, or markets flinching).
+  * Sentence 3: The cynical contrast (e.g. deep-space, astronomy, or science nerds acting as humanity's escape hatch or designated driver).
+- GOLD STANDARD BENCHMARK:
+  "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
+- STRICT NEGATIVE CONSTRAINTS:
+  * NO NUMBERS, DECIMALS, STATS, OR PERCENTAGES (no "-0.21", "197 headlines", etc.).
+  * NO RUN-ON SENTENCES or convoluted clause chains. Keep it lean, crisp, and under 35 words.
+  * Output ONLY the raw paragraph text. No quotation marks, no markdown headers, no bullet points.
 
 Context from the past 24 hours across ${articles24.length} news headlines:
 - Outlets leading the doom & panic today: ${mostAlarmistToday.name}
@@ -100,13 +114,7 @@ Context from the past 24 hours across ${articles24.length} news headlines:
 - Sample darkest headlines from today:
 - ${darkestStories || 'Murders, political raids, and international conflicts'}
 - Sample brightest headlines from today:
-- ${brightestStories || 'Nobel Prize awards, Mars rover discoveries, and astronomy breakthroughs'}
-
-Task & Editorial Rules:
-1. Write a short, sweet, hilarious, and cynical 2-to-3 sentence executive summary of the last 24 hours of global news.
-2. ABSOLUTELY NO NUMBERS, DECIMALS, PERCENTAGES, OR STATS (no "-0.40", "0.15", or "70%"). Express the entire vibe through sharp narrative interpretation, clever metaphors, and biting wit.
-3. Compare today's earthly geopolitical panic with the science/tech nerds celebrating space rovers, exoplanets, or prize-winning theories.
-4. Output ONLY the 2-3 sentences.`;
+- ${brightestStories || 'Nobel Prize awards, Mars rover discoveries, and astronomy breakthroughs'}`;
 
         const res = await model.generateContent(prompt);
         const text = res.response.text().trim().replace(/^["']|["']$/g, '');
@@ -121,11 +129,10 @@ Task & Editorial Rules:
     }
   }
 
-  // Witty deterministic fallback if AI call fails or key is missing
+  // Witty deterministic fallback (Option 3 Micro-Dispatch) if AI call fails or key is missing
   if (!briefingText) {
-    const alarmistText = mostAlarmistToday ? `${mostAlarmistToday.name} is leading today's existential panic` : 'Geopolitical dread is in full swing';
-    briefingText = `Global headlines over the last 24 hours lean decidedly gloomy, with ${alarmistText} while public broadcasters quietly try to maintain composure. Fortunately, our overachieving science editors are desperately pointing to distant exoplanets as a backup plan.`;
-    console.log('[Briefing] Generated via deterministic synthesis:', briefingText);
+    briefingText = "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
+    console.log('[Briefing] Generated via deterministic Micro-Dispatch fallback:', briefingText);
   }
 
   // Update in-memory data

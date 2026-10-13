@@ -2684,12 +2684,7 @@ function renderDailyPulse() {
     if (summaryText) {
       summaryEl.innerText = summaryText;
     } else {
-      const topNegCat = Object.keys(catStats).sort((a, b) => (catStats[a].total / catStats[a].count) - (catStats[b].total / catStats[b].count))[0] || 'world';
-      const topPosCat = Object.keys(catStats).sort((a, b) => (catStats[b].total / catStats[b].count) - (catStats[a].total / catStats[a].count))[0] || 'science';
-      const catPretty = { world: 'Global Affairs', politics: 'Politics', business: 'Business', technology: 'Technology', science: 'Science & Space', health: 'Health' };
-      const negName = catPretty[topNegCat] || topNegCat;
-      const posName = catPretty[topPosCat] || topPosCat;
-      summaryEl.innerText = `Global news sentiment leans ${globalAvg < -0.1 ? 'decidedly gloomy' : 'tentatively balanced'} today. Coverage of ${negName} accounts for the bulk of alarmist headlines, while reporting around ${posName} provides a rare dose of optimism.`;
+      summaryEl.innerText = "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
     }
   }
 
