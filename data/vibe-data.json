@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-13T12:54:04.768Z",
+  "lastUpdated": "2026-10-13T12:55:44.581Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-13",
   "editorialSummary": "Across 2,027 headlines, the global media pulse hovers at a dejected -0.172, proving once again that geopolitical catastrophe (-0.582) pays the bills while a plucky alliance of environmentalists and lab-coat-wearing optimists tries to sweet-talk us into a brighter tomorrow. Even CNN couldn't scrape together a single positive thought today, while Sky News essentially strapped itself to a lead balloon at -0.368.",
   "globalStats": {
-    "globalSentiment": -0.182,
-    "totalArticles": 2362,
+    "globalSentiment": -0.183,
+    "totalArticles": 2371,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
@@ -14,12 +14,12 @@
     "mostPositiveOutlet": {
       "id": "cnbc",
       "name": "CNBC News",
-      "score": -0.084
+      "score": -0.088
     },
     "categoryAverages": {
-      "world": -0.579,
+      "world": -0.578,
       "other": -0.063,
-      "business": -0.106,
+      "business": -0.105,
       "technology": -0.037,
       "entertainment": -0.06,
       "politics": -0.206,
@@ -35,13 +35,31 @@
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.2,
+      "averageSentiment": -0.203,
       "distribution": {
         "positive": 39,
         "neutral": 83,
-        "negative": 125
+        "negative": 126
       },
       "articles": [
+        {
+          "sourceId": "bbc",
+          "title": "Man killed in tiger attack identified as William Chapman",
+          "description": "A health and safety investigation is under way at Yorkshire Wildlife Park following the incident.",
+          "link": "https://www.bbc.co.uk/news/articles/c3ewegny45jvo?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Tue, 13 Oct 2026 12:54:07 GMT",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.7,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-0.38).",
+          "categoryLocal": "health",
+          "sentiment": -0.78,
+          "explanation": "A tragic fatality resulting from a fatal animal attack constitutes a severe human-interest catastrophe.",
+          "category": "world",
+          "sentimentGemini": -0.78,
+          "explanationGemini": "A tragic fatality resulting from a fatal animal attack constitutes a severe human-interest catastrophe.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "bbc",
           "title": "William Chapman identified as man killed in tiger attack",
@@ -5241,13 +5259,31 @@
     },
     "nyt": {
       "name": "The New York Times",
-      "averageSentiment": -0.193,
+      "averageSentiment": -0.194,
       "distribution": {
         "positive": 25,
         "neutral": 70,
-        "negative": 106
+        "negative": 107
       },
       "articles": [
+        {
+          "sourceId": "nyt",
+          "title": "Zelensky Comment Raises Fear That U.S. Is Cutting Intelligence Sharing",
+          "description": "The Ukrainian leader said Kyiv had no early warning from its Western partners before a Russian ballistic missile attack. But some such attacks do go undetected.",
+          "link": "https://www.nytimes.com/2026/10/13/world/europe/ukraine-trump-intelligence.html",
+          "pubDate": "Tue, 13 Oct 2026 12:46:21 +0000",
+          "sentimentLocal": -1,
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.813,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.81) and AFINN-111 (-1.00).",
+          "categoryLocal": "world",
+          "sentiment": -0.45,
+          "explanation": "Fears regarding reduced intelligence sharing during an active war zone context generate significant geopolitical tension and vulnerability.",
+          "category": "world",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "Fears regarding reduced intelligence sharing during an active war zone context generate significant geopolitical tension and vulnerability.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "nyt",
           "title": "Top G.O.P. Groups Pull Support From First House Incumbents",
@@ -14620,7 +14656,7 @@
       "distribution": {
         "positive": 0,
         "neutral": 11,
-        "negative": 19
+        "negative": 20
       },
       "articles": [
         {
@@ -15054,6 +15090,24 @@
           "sentimentGemini": 0.05,
           "explanationGemini": "Large political donations are a routine, procedural part of modern electoral financing and campaign backing.",
           "categoryGemini": "business"
+        },
+        {
+          "sourceId": "cnn",
+          "title": "Rep. Ilhan Omar responds after federal officers search her home - CNN",
+          "description": "Rep. Ilhan Omar responds after federal officers search her home CNN",
+          "link": "https://news.google.com/rss/articles/CBMibkFVX3lxTFB0Y083elJfaUZINjN2UnFjeWxYOEtyaWszQXR6djVZN1h4cXRPNTdueS16MWlQZ01pMUJvOTRjVDhSV2VpeG1yOEpiZkRCOFpJTDFib2s2VkE2Um5xb1c2OGRFQ2R6V1dqUWZLZ2x3?oc=5",
+          "pubDate": "Mon, 12 Oct 2026 13:43:05 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentiment": -0.35,
+          "explanation": "Federal law enforcement searching a lawmaker's home is a serious, conflict-laden political development.",
+          "category": "politics",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "Federal law enforcement searching a lawmaker's home is a serious, conflict-laden political development.",
+          "categoryGemini": "politics"
         },
         {
           "sourceId": "cnn",
@@ -38005,13 +38059,31 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.288,
+      "averageSentiment": -0.289,
       "distribution": {
         "positive": 31,
         "neutral": 76,
-        "negative": 161
+        "negative": 162
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "African Union holds Kigali talks as fighting continues in eastern DRC",
+          "description": "Three former African presidents discussed security commitments, refugee protection and regional cooperation.",
+          "link": "https://www.aljazeera.com/news/2026/10/13/african-union-holds-kigali-talks-as-fighting-continues-in-eastern-drc?traffic_source=rss",
+          "pubDate": "Tue, 13 Oct 2026 12:40:26 +0000",
+          "sentimentLocal": -0.074,
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": 0.103,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.10) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentiment": -0.42,
+          "explanation": "Diplomatic talks occur amidst ongoing armed conflict and refugee crises in the eastern DRC.",
+          "category": "world",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "Diplomatic talks occur amidst ongoing armed conflict and refugee crises in the eastern DRC.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Australia bowl out South Africa to win first Test in Durban",
@@ -45929,13 +46001,31 @@
     },
     "cnbc": {
       "name": "CNBC News",
-      "averageSentiment": -0.084,
+      "averageSentiment": -0.088,
       "distribution": {
         "positive": 41,
         "neutral": 79,
-        "negative": 65
+        "negative": 66
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Six Flags shares decline following report of deadly roller coaster incident",
+          "description": "One person died and several others were injured in an incident involving the Goliath roller coaster at Six Flags Over Georgia, according to reports.",
+          "link": "https://www.cnbc.com/2026/10/13/six-flags-shares-plunge-after-hours-deadly-roller-coaster-incident-goliath-georgia.html",
+          "pubDate": "Tue, 13 Oct 2026 12:54:14 GMT",
+          "sentimentLocal": -0.75,
+          "sentimentAFINN": -0.875,
+          "sentimentVADER": -0.625,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.62) and AFINN-111 (-0.88).",
+          "categoryLocal": "sports",
+          "sentiment": -0.72,
+          "explanation": "A fatal amusement park accident resulting in death and injuries carries a deeply negative emotional valence.",
+          "category": "business",
+          "sentimentGemini": -0.72,
+          "explanationGemini": "A fatal amusement park accident resulting in death and injuries carries a deeply negative emotional valence.",
+          "categoryGemini": "business"
+        },
         {
           "sourceId": "cnbc",
           "title": "Paul Tudor Jones says 2027 could be a really challenging year for the stock market",
@@ -52337,13 +52427,31 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.197,
+      "averageSentiment": -0.196,
       "distribution": {
-        "positive": 50,
+        "positive": 52,
         "neutral": 86,
-        "negative": 165
+        "negative": 167
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Iran and Russia ramping up hybrid campaigns in Britain, UK spy chief says - Reuters",
+          "description": "Iran and Russia ramping up hybrid campaigns in Britain, UK spy chief says Reuters",
+          "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxOel94VDNzeEx1LXhzdm9vX0xSSUhyQUswNTAwUWhsVklGcEtQRm1KYlpUWXhKOUo5cE1tdTJXQV85eVZic05iV3gyVXNIZTJwV2xCRmo0QkFtMDFXMWNWR3lhaS05dHN2UVNtREJodXZLMllfOTBYdUpHelFKS1JQbUVxUFU4NzhTTUswVVlvX21QcXByY0F4akJ1ZGNtSDZ0aExrZHBYVlR4aGlCYTJz?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 12:18:32 GMT",
+          "sentimentLocal": 0,
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "world",
+          "sentiment": -0.55,
+          "explanation": "Hostile hybrid warfare campaigns by foreign powers against the UK represent significant national security friction.",
+          "category": "world",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "Hostile hybrid warfare campaigns by foreign powers against the UK represent significant national security friction.",
+          "categoryGemini": "world"
+        },
         {
           "sourceId": "reuters",
           "title": "Rwanda to bring F1 back to Africa for first time since 1993 - Reuters",
@@ -52361,6 +52469,24 @@
           "sentimentGemini": 0.48,
           "explanationGemini": "Bringing Formula 1 back to Rwanda after decades is a major positive cultural and sporting milestone.",
           "categoryGemini": "sports"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Goldman Sachs beats quarterly profit estimates on equities strength - Reuters",
+          "description": "Goldman Sachs beats quarterly profit estimates on equities strength Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxPV1BMNkJOM2lfbGYxNGhhcGsydkZDbUIxWFNwM1pDUFdCbWphMnZLM0VoRzBubFdfeXNnVHBtLV95WVZYdW5kLThuOEVfYmZTRUxLV0VSenczY0Voc19TUFJkYTJTS21UNU5HMFlIWExPUWxwUGkyOU9VOEt6NENxTWN5SHJCanZaMW1Ud2RiZzZQelBCMTRMejdRMEVPZUN1bHpLUWJUd3JHOWc?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 12:08:23 GMT",
+          "sentimentLocal": 0.952,
+          "sentimentAFINN": 1,
+          "sentimentVADER": 0.904,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.90) and AFINN-111 (1.00).",
+          "categoryLocal": "other",
+          "sentiment": 0.28,
+          "explanation": "Exceeding quarterly profit expectations represents positive economic performance and financial stabilization.",
+          "category": "business",
+          "sentimentGemini": 0.28,
+          "explanationGemini": "Exceeding quarterly profit expectations represents positive economic performance and financial stabilization.",
+          "categoryGemini": "business"
         },
         {
           "sourceId": "reuters",
@@ -52415,6 +52541,24 @@
           "sentimentGemini": -0.18,
           "explanationGemini": "Political pardons favoring one party generate controversy and perceived bias.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Wells Fargo profit rises on robust loan growth, interest income - Reuters",
+          "description": "Wells Fargo profit rises on robust loan growth, interest income Reuters",
+          "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxPZ3h0SU11NWFMTHJPeWw2ZGlmZlJ5RzNzRm9FZWZ3MURpVmtwajFQV2RnRDkxeVJVXzZGcEduYzF1RFdtT0RKYkRub1pfazFCbUNiWHllejh6V3Y2TVZnU1gzNV9qSkExVGhoWk1WampqaHduYjVoNGRVQ2NBb3lueThEZExQaTlQb1J0SmpLdUg5akhSY1NXNFNjY1d5dmx3SEhscjd4MFFyTFZtR0FtNkRB?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 11:15:42 GMT",
+          "sentimentLocal": 0.986,
+          "sentimentAFINN": 1,
+          "sentimentVADER": 0.971,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.97) and AFINN-111 (1.00).",
+          "categoryLocal": "other",
+          "sentiment": 0.25,
+          "explanation": "Rising corporate profits driven by loan growth reflect constructive business activity.",
+          "category": "business",
+          "sentimentGemini": 0.25,
+          "explanationGemini": "Rising corporate profits driven by loan growth reflect constructive business activity.",
+          "categoryGemini": "business"
         },
         {
           "sourceId": "reuters",
@@ -52613,6 +52757,24 @@
           "sentimentGemini": -0.34,
           "explanationGemini": "A sales slump and declining deliveries indicate negative corporate performance.",
           "categoryGemini": "business"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Russia calls French seizure of alleged shadow fleet tanker a violation of international law, RIA reports - Reuters",
+          "description": "Russia calls French seizure of alleged shadow fleet tanker a violation of international law, RIA reports Reuters",
+          "link": "https://news.google.com/rss/articles/CBMixwFBVV95cUxOYkZiVzlsbWNyMXA5cV8tX1Z3UVEwUzY0cEt1RjBKOW0xWDc4RFRzRzBwYzNUdEVrQjhJY3JObi1LZjNqVnpjZ1QyUng5TjlFeExVd1NYWk45ZjB2SXduaE9qR1h1V1RyRldpTFU3bUhtb1ZfWHkwN1E3cDNDQm9NbnhtSHRWWUdHYzRKdUlxcHAwWmNScFE1V3VhX2JwMVVaaU9XZmpILTBIZmVLLWUwMUtuTEJ6NnEwbEZsTk5jbUJqT1pOWHBV?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 09:06:01 GMT",
+          "sentimentLocal": -0.625,
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.751,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.75) and AFINN-111 (-0.50).",
+          "categoryLocal": "world",
+          "sentiment": -0.32,
+          "explanation": "A formal diplomatic dispute and accusation of international law violations over a seized tanker creates bilateral tension.",
+          "category": "world",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "A formal diplomatic dispute and accusation of international law violations over a seized tanker creates bilateral tension.",
+          "categoryGemini": "world"
         },
         {
           "sourceId": "reuters",
