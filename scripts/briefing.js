@@ -33,18 +33,44 @@ async function generateDailyBriefing(options = {}) {
 
   console.log(`[Briefing] Generating executive vibe briefing for ${todayDateStr}...`);
 
-  // Extract key aggregate statistics
+  // Extract strictly last-24-hours statistics and representative stories
   const sources = data.sources || {};
-  const sortedOutlets = Object.entries(sources)
-    .filter(([_, s]) => s.articles && s.articles.length > 0)
-    .map(([id, s]) => ({ id, name: s.name, score: s.averageSentiment }))
-    .sort((a, b) => a.score - b.score);
+  const cutoff24 = now - 24 * 60 * 60 * 1000;
+  const outlets24 = {};
+  const articles24 = [];
 
-  const mostNegativeOutlet = sortedOutlets[0] || null;
-  const mostPositiveOutlet = sortedOutlets[sortedOutlets.length - 1] || null;
-  const globalSentiment = data.globalStats?.globalSentiment ?? 0;
-  const categoryAverages = data.globalStats?.categoryAverages ?? {};
-  const totalArticles = data.globalStats?.totalArticles ?? 0;
+  Object.entries(sources).forEach(([id, s]) => {
+    (s.articles || []).forEach(art => {
+      const pubTime = new Date(art.pubDate);
+      if (pubTime >= cutoff24 && !isNaN(pubTime)) {
+        if (!outlets24[id]) outlets24[id] = { name: s.name, scores: [] };
+        const score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentGemini || 0);
+        outlets24[id].scores.push(score);
+        articles24.push({
+          outlet: s.name,
+          title: art.title,
+          score,
+          category: art.category || 'other'
+        });
+      }
+    });
+  });
+
+  const rankedOutlets24 = Object.values(outlets24)
+    .filter(o => o.scores.length > 0)
+    .map(o => ({
+      name: o.name,
+      count: o.scores.length,
+      avg: o.scores.reduce((a, b) => a + b, 0) / o.scores.length
+    }))
+    .sort((a, b) => a.avg - b.avg);
+
+  const mostAlarmistToday = rankedOutlets24[0] || { name: 'Breaking News Wires', avg: -0.4 };
+  const mostCalmToday = rankedOutlets24[rankedOutlets24.length - 1] || { name: 'Public Broadcasters', avg: 0 };
+
+  const sortedArticles = [...articles24].sort((a, b) => a.score - b.score);
+  const darkestStories = sortedArticles.slice(0, 3).map(a => `${a.outlet}: "${a.title}"`).join('\n- ');
+  const brightestStories = sortedArticles.slice(-3).reverse().map(a => `${a.outlet}: "${a.title}"`).join('\n- ');
 
   let briefingText = '';
   const apiKey = process.env.GEMINI_API_KEY;
@@ -63,16 +89,21 @@ async function generateDailyBriefing(options = {}) {
           generationConfig: { temperature: 0.7 }
         });
 
-      const prompt = `You are a witty, razor-sharp, tongue-in-cheek news editor writing the daily "Executive Vibe Pulse" for a global news sentiment monitor.
-Key metrics today:
-- Global Media Sentiment: ${globalSentiment > 0 ? '+' : ''}${globalSentiment} (scale: -1.0 pure doom to +1.0 pure optimism)
-- Most Gloomy Outlet: ${mostNegativeOutlet ? `${mostNegativeOutlet.name} (${mostNegativeOutlet.score})` : 'N/A'}
-- Most Cheerful Outlet: ${mostPositiveOutlet ? `${mostPositiveOutlet.name} (${mostPositiveOutlet.score})` : 'N/A'}
-- Category Breakdown: ${JSON.stringify(categoryAverages)}
-- Headlines Analyzed: ${totalArticles}
+        const prompt = `You are a witty, razor-sharp news satirist writing the daily executive briefing for a global news mood monitor titled "There's No Such Thing As Good News".
 
-Task:
-Write a clever, slightly cynical 2-to-3 sentence executive briefing on the mood of the world's news media today. Touch on the friction between geopolitical doom-mongering and optimistic science/tech beats. Keep it punchy, memorable, and intelligent. Return ONLY the 2-3 sentences.`;
+Context from the past 24 hours across ${articles24.length} news headlines:
+- Outlets leading the doom & panic today: ${mostAlarmistToday.name}
+- Outlets maintaining the most composure/calm today: ${mostCalmToday.name}
+- Sample darkest headlines from today:
+- ${darkestStories || 'Murders, political raids, and international conflicts'}
+- Sample brightest headlines from today:
+- ${brightestStories || 'Nobel Prize awards, Mars rover discoveries, and astronomy breakthroughs'}
+
+Task & Editorial Rules:
+1. Write a short, sweet, hilarious, and cynical 2-to-3 sentence executive summary of the last 24 hours of global news.
+2. ABSOLUTELY NO NUMBERS, DECIMALS, PERCENTAGES, OR STATS (no "-0.40", "0.15", or "70%"). Express the entire vibe through sharp narrative interpretation, clever metaphors, and biting wit.
+3. Compare today's earthly geopolitical panic with the science/tech nerds celebrating space rovers, exoplanets, or prize-winning theories.
+4. Output ONLY the 2-3 sentences.`;
 
         const res = await model.generateContent(prompt);
         const text = res.response.text().trim().replace(/^["']|["']$/g, '');
@@ -89,12 +120,8 @@ Write a clever, slightly cynical 2-to-3 sentence executive briefing on the mood 
 
   // Witty deterministic fallback if AI call fails or key is missing
   if (!briefingText) {
-    const moodAdj = globalSentiment < -0.2 ? 'decidedly apocalyptic' : (globalSentiment < -0.05 ? 'cautiously grumpy' : (globalSentiment > 0.1 ? 'suspiciously upbeat' : 'ambivalently neutral'));
-    const alarmistText = mostNegativeOutlet ? `${mostNegativeOutlet.name} is leading today's existential dread charge` : 'Geopolitical dread is in full swing';
-    const brightSpot = categoryAverages.science > 0 || categoryAverages.technology > 0 
-      ? 'while tech and science sections desperately try to pump dopamine into our feeds' 
-      : 'with barely a cheerful headline in sight';
-    briefingText = `Earth's media vibe lands at a ${moodAdj} ${globalSentiment > 0 ? '+' : ''}${globalSentiment} today. ${alarmistText}, ${brightSpot}. Brace yourselves accordingly.`;
+    const alarmistText = mostAlarmistToday ? `${mostAlarmistToday.name} is leading today's existential panic` : 'Geopolitical dread is in full swing';
+    briefingText = `Global headlines over the last 24 hours lean decidedly gloomy, with ${alarmistText} while public broadcasters quietly try to maintain composure. Fortunately, our overachieving science editors are desperately pointing to distant exoplanets as a backup plan.`;
     console.log('[Briefing] Generated via deterministic synthesis:', briefingText);
   }
 
