@@ -51,7 +51,11 @@ const NEWS_SOURCES = [
   { id: 'spiegel', name: 'Spiegel International', feedUrl: 'https://www.spiegel.de/international/index.rss' },
   { id: 'reuters', name: 'Reuters', feedUrl: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' }
+  { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' },
+  { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
+  { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml' },
+  { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
+  { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' }
 ];
 
 const MAX_ARTICLES_PER_SOURCE = 500;
@@ -162,11 +166,9 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel) {
   const modelsToTry = [
     requestedModel,
     process.env.GEMINI_MODEL,
-    'gemini-3.8-flash',
-    'gemini-3.7-flash',
-    'gemini-3.6-flash',
+    'gemini-3.5-flash',
     'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite'
+    'gemini-3.8-flash'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   const BATCH_SIZE = 20;
@@ -414,7 +416,24 @@ async function main() {
     }
   }
 
-  console.log(`[Queue] Found ${unanalyzedArticles.length} new articles requiring sentiment analysis.`);
+  // Also pull in backlogged pending articles from historical cache if any exist (up to 40 per run, or up to 120 if --backlog specified)
+  const maxBacklog = process.argv.includes('--backlog') ? 120 : 40;
+  let backlogAdded = 0;
+  if (preferredAnalyzer === 'gemini') {
+    const unanalyzedKeys = new Set(unanalyzedArticles.map(a => `${a.sourceId}_${a.title.trim().toLowerCase()}`));
+    for (const [key, article] of existingMap.entries()) {
+      if (backlogAdded >= maxBacklog) break;
+      if (article.sentimentGemini === undefined || article.sentimentGemini === null) {
+        if (!unanalyzedKeys.has(key)) {
+          unanalyzedArticles.push(article);
+          unanalyzedKeys.add(key);
+          backlogAdded++;
+        }
+      }
+    }
+  }
+
+  console.log(`[Queue] Found ${unanalyzedArticles.length} articles requiring sentiment analysis (${backlogAdded} pulled from historical backlog).`);
 
   // 2. Perform Local Lexicon Analysis purely as secondary comparative reference fields (AFINN / VADER)
   // NEVER as primary sentiment (strictly zero offline fallback policy).
@@ -690,6 +709,27 @@ async function main() {
   console.log(`⚡ Public baked data: public/data/data.json (${(fs.statSync(path.join(PUBLIC_DATA_DIR, 'data.json')).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`🚀 Ultra-light summary: public/data/summary.json (${(fs.statSync(path.join(PUBLIC_DATA_DIR, 'summary.json')).size / 1024).toFixed(1)} KB)`);
   console.log('==============================================');
+
+  // 8. Optional On-Demand Auto-Push (for instant Antigravity or local CLI trigger)
+  if (process.argv.includes('--push')) {
+    const { execSync } = require('child_process');
+    try {
+      console.log('[Git] Staging updated vibe datasets...');
+      execSync('git add data/vibe-data.json public/data/', { stdio: 'inherit' });
+      const status = execSync('git status --porcelain', { encoding: 'utf8' });
+      if (status.includes('data/')) {
+        console.log('[Git] Committing fresh vibe data...');
+        execSync('git commit -m "chore(data): on-demand vibe sync [skip ci]"', { stdio: 'inherit' });
+        console.log('[Git] Pushing to origin/main...');
+        execSync('git push origin main', { stdio: 'inherit' });
+        console.log('🚀 Pushed successfully to GitHub! Live site is deploying updated data.');
+      } else {
+        console.log('[Git] No new data changes to commit.');
+      }
+    } catch (gitErr) {
+      console.warn('[Git] Note: Could not auto-push to git:', gitErr.message);
+    }
+  }
 }
 
 main().catch(err => {

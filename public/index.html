@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>No Good News | There's No Such Thing as Good News</title>
-  <!-- Google Fonts: Outfit -->
+  <!-- Google Fonts: Newsreader (Editorial Serif), Plus Jakarta Sans (Modern Sans UI), JetBrains Mono (Tabular Data) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=2.7">
+  <link rel="stylesheet" href="style.css?v=2.8">
 </head>
 <body>
 
@@ -34,6 +34,18 @@
       </div>
       
       <div class="header-actions">
+        <!-- Two-Sided App Edition Switcher (No Good News vs The Silver Lining) -->
+        <div class="edition-toggle-wrap" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and the Positive Newsroom">
+          <button id="edition-btn-doom" class="edition-pill-btn active" data-edition="doom">
+            <i data-lucide="newspaper"></i>
+            <span>No Good News</span>
+          </button>
+          <button id="edition-btn-silver" class="edition-pill-btn" data-edition="silver">
+            <i data-lucide="sun"></i>
+            <span>The Silver Lining</span>
+          </button>
+        </div>
+
         <div class="header-status-indicator" title="Autonomous cloud ingestion pipeline">
           <span class="status-dot green"></span>
           <span id="last-updated-text" class="status-text">Synced: Just now</span>
@@ -273,7 +285,7 @@
 
         <!-- SVG Timeline Chart Container -->
         <div class="timeline-chart-wrap" id="timeline-chart-wrap">
-          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 800 220" preserveAspectRatio="none">
+          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 940 300">
             <!-- Dynamically rendered in app.js -->
           </svg>
           <div id="timeline-tooltip-box" class="timeline-tooltip-box"></div>
@@ -286,7 +298,7 @@
             Topic Sentiment Dynamics in Current Window
           </h4>
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">
-            Relative sentiment score across key news beats. Science and tech consistently offer refuge from political and armed conflict despair.
+            Relative sentiment score across key news beats. Science and tech consistently offer refuge from political and international despair.
           </p>
           <div class="topic-trajectories-grid" id="topic-trajectories-grid">
             <!-- Dynamically rendered in app.js -->
@@ -597,7 +609,7 @@
             <i data-lucide="flame" style="width: 14px; height: 14px; color: #f97316;"></i> Quick Topics:
           </span>
           <button class="topic-pill-btn active" data-topic="all">All Stories</button>
-          <button class="topic-pill-btn" data-topic="world">🌍 World & Conflict</button>
+          <button class="topic-pill-btn" data-topic="world">🌍 World &amp; Global Affairs</button>
           <button class="topic-pill-btn" data-topic="politics">🗳️ Politics</button>
           <button class="topic-pill-btn" data-topic="business">📈 Business & Inflation</button>
           <button class="topic-pill-btn" data-topic="technology">⚡ Tech & AI</button>

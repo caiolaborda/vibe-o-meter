@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "sync": "node scripts/sync.js"
+    "sync": "node scripts/sync.js",
+    "sync:now": "node scripts/sync.js --push",
+    "sync:backlog": "node scripts/sync.js --backlog --push"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

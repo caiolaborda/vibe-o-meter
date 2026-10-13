@@ -47,7 +47,11 @@ const NEWS_SOURCES = [
   { id: 'spiegel', name: 'Spiegel International', feedUrl: 'https://www.spiegel.de/international/index.rss' },
   { id: 'reuters', name: 'Reuters', feedUrl: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' }
+  { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' },
+  { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
+  { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml' },
+  { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
+  { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' }
 ];
 
 const MAX_ARTICLES_PER_SOURCE = 500; // Store up to 500 articles in history per news source
@@ -557,6 +561,26 @@ app.post('/api/clear-cache', (req, res) => {
     console.error('Failed to clear cache:', err);
     return res.status(500).json({ error: 'Failed to clear cache: ' + err.message });
   }
+});
+
+// GET trigger-sync (on-demand trigger from browser, curl, or Antigravity)
+app.get('/api/trigger-sync', (req, res) => {
+  const { fork } = require('child_process');
+  const push = req.query.push === 'true' || req.query.push === '1';
+  const args = [];
+  if (push) args.push('--push');
+  
+  const child = fork(path.join(__dirname, 'scripts', 'sync.js'), args, {
+    detached: true,
+    stdio: 'ignore'
+  });
+  child.unref();
+
+  return res.json({
+    status: 'triggered',
+    message: 'On-demand sync started in background' + (push ? ' with auto-push to GitHub' : ''),
+    timestamp: new Date().toISOString()
+  });
 });
 
 // POST sync news (accumulates and keeps historical records!)

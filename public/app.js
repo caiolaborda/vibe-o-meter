@@ -24,7 +24,8 @@ let state = {
   sort: {
     field: 'date', // 'date' or 'vibe'
     order: 'desc' // 'desc' or 'asc'
-  }
+  },
+  edition: 'doom' // 'doom' (No Good News) or 'silver' (The Silver Lining)
 };
 
 let resolvedSources = {};
@@ -43,7 +44,11 @@ const SOURCE_META = {
   spiegel: { initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', flag: '🇩🇪' },
   reuters: { initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' },
   ap: { initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' },
-  bloomberg: { initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', flag: '🇺🇸' }
+  bloomberg: { initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', flag: '🇺🇸' },
+  dw: { initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', flag: '🇩🇪' },
+  wsj: { initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', flag: '🇺🇸' },
+  france24: { initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', flag: '🇫🇷' },
+  politico: { initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', flag: '🇺🇸' }
 };
 
 // RSS Feed URLs for copying
@@ -60,7 +65,11 @@ const SOURCE_FEEDS = {
   spiegel: 'https://www.spiegel.de/international/index.rss',
   reuters: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en',
   ap: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en',
-  bloomberg: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en'
+  bloomberg: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en',
+  dw: 'https://rss.dw.com/rdf/rss-en-all',
+  wsj: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
+  france24: 'https://www.france24.com/en/rss',
+  politico: 'https://rss.politico.com/politics-news.xml'
 };
 
 // DOM Elements
@@ -245,6 +254,37 @@ function setupEventListeners() {
       state.filters.category = 'all';
       if (elements.filterCategory) elements.filterCategory.value = 'all';
       updateTopicPillsActive('all');
+      updateFilterIndicator();
+      updateAppUI();
+    });
+  }
+
+  // Two-Sided App Edition Switcher (No Good News vs The Silver Lining)
+  const editionDoom = document.getElementById('edition-btn-doom');
+  const editionSilver = document.getElementById('edition-btn-silver');
+  if (editionDoom && editionSilver) {
+    editionDoom.addEventListener('click', () => {
+      state.edition = 'doom';
+      editionDoom.classList.add('active');
+      editionSilver.classList.remove('active');
+      document.body.classList.remove('silver-lining-edition');
+      state.filters.vibe = 'all';
+      if (elements.filterVibe) elements.filterVibe.value = 'all';
+      const brandP = document.querySelector('.brand-text p');
+      if (brandP) brandP.innerText = "There's no such thing as good news — An autonomous daily audit of global media pessimism";
+      updateFilterIndicator();
+      updateAppUI();
+    });
+
+    editionSilver.addEventListener('click', () => {
+      state.edition = 'silver';
+      editionSilver.classList.add('active');
+      editionDoom.classList.remove('active');
+      document.body.classList.add('silver-lining-edition');
+      state.filters.vibe = 'positive';
+      if (elements.filterVibe) elements.filterVibe.value = 'positive';
+      const brandP = document.querySelector('.brand-text p');
+      if (brandP) brandP.innerText = "The Silver Lining Edition — Extracting constructive breakthroughs, optimism & solutions from the wire";
       updateFilterIndicator();
       updateAppUI();
     });
@@ -1507,25 +1547,65 @@ function setExtremesForColumn(articles, colSuffix) {
 function renderSentimentTimeline() {
   const chartSvg = document.getElementById('timeline-chart-svg');
   const countEl = document.getElementById('timeline-snapshot-count');
+  const timeRangeEl = document.getElementById('timeline-time-range');
   const tooltip = document.getElementById('timeline-tooltip-box');
   const topicsGrid = document.getElementById('topic-trajectories-grid');
   if (!chartSvg) return;
 
   const rawSeries = state.timeSeries || [];
-  if (countEl) countEl.innerText = `${rawSeries.length} Snapshots Recorded`;
 
-  // Filter series if needed
-  let series = [...rawSeries];
+  // Determine active timeframe window (from header date switcher or local buttons)
+  const timeframe = state.filters.time || 'all';
+  const now = Date.now();
+  let cutoff = 0;
+  let timeframeLabel = 'All Historical Snapshots';
+
   if (state.timelineRange === 'recent') {
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    series = series.filter(s => new Date(s.timestamp) >= sevenDaysAgo);
+    cutoff = now - 7 * 24 * 60 * 60 * 1000;
+    timeframeLabel = 'Past 7 Days';
+  } else if (timeframe === '3h') {
+    cutoff = now - 3 * 3600 * 1000;
+    timeframeLabel = 'Past 3 Hours';
+  } else if (timeframe === '6h') {
+    cutoff = now - 6 * 3600 * 1000;
+    timeframeLabel = 'Past 6 Hours';
+  } else if (timeframe === '12h') {
+    cutoff = now - 12 * 3600 * 1000;
+    timeframeLabel = 'Past 12 Hours';
+  } else if (timeframe === '24h') {
+    cutoff = now - 24 * 3600 * 1000;
+    timeframeLabel = 'Past 24 Hours';
+  } else if (timeframe === '3d') {
+    cutoff = now - 3 * 86400 * 1000;
+    timeframeLabel = 'Past 3 Days';
+  } else if (timeframe === '7d') {
+    cutoff = now - 7 * 86400 * 1000;
+    timeframeLabel = 'Past 7 Days';
+  } else if (timeframe === '30d') {
+    cutoff = now - 30 * 86400 * 1000;
+    timeframeLabel = 'Past 30 Days';
   }
-  if (series.length === 0) series = rawSeries.slice(-10);
 
-  // SVG dimensions
-  const width = 800;
-  const height = 220;
-  const padding = { top: 25, right: 30, bottom: 35, left: 45 };
+  let series = cutoff > 0 ? rawSeries.filter(s => new Date(s.timestamp).getTime() >= cutoff) : [...rawSeries];
+
+  // If fewer than 2 snapshots exist in a tight window, show recent snapshots with a helpful indicator
+  let isWindowFallback = false;
+  if (series.length < 2) {
+    series = rawSeries.slice(-8);
+    isWindowFallback = true;
+  }
+
+  if (countEl) countEl.innerText = `${series.length} Snapshots`;
+  if (timeRangeEl) {
+    timeRangeEl.innerText = isWindowFallback && cutoff > 0
+      ? `${timeframeLabel} (Showing ${series.length} recent snapshots)`
+      : `${timeframeLabel} Trajectory`;
+  }
+
+  // SVG dimensions: upgraded to 940 x 300 with generous label paddings
+  const width = 940;
+  const height = 300;
+  const padding = { top: 35, right: 40, bottom: 50, left: 65 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
@@ -1543,16 +1623,19 @@ function renderSentimentTimeline() {
   });
 
   if (points.length < 2) {
-    chartSvg.innerHTML = `<text x="400" y="110" text-anchor="middle" fill="var(--text-muted)" font-size="14">Collecting snapshots over time...</text>`;
+    chartSvg.innerHTML = `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" fill="var(--text-muted)" font-family="var(--font-sans)" font-size="14">Collecting snapshots over time...</text>`;
     return;
   }
 
-  // Y-domain: from -0.55 to +0.25
-  const minY = -0.55;
-  const maxY = 0.25;
+  // Dynamic Y-Domain: scale to data but always include 0.00 neutrality baseline
+  const scores = points.map(p => p.score);
+  const dataMin = Math.min(...scores);
+  const dataMax = Math.max(...scores);
+  const minY = Math.min(-0.35, Math.floor((dataMin - 0.06) * 10) / 10);
+  const maxY = Math.max(0.15, Math.ceil((dataMax + 0.06) * 10) / 10);
   const getY = (val) => padding.top + chartH - ((val - minY) / (maxY - minY)) * chartH;
-  const getX = (idx) => padding.left + (idx / (points.length - 1)) * chartW;
-  const zeroY = getY(0);
+  const getX = (idx) => padding.left + (idx / Math.max(1, points.length - 1)) * chartW;
+  const zeroY = Math.max(padding.top, Math.min(padding.top + chartH, getY(0)));
 
   // Path data for the curve
   let pathD = `M ${getX(0)} ${getY(points[0].score)}`;
@@ -1568,36 +1651,43 @@ function renderSentimentTimeline() {
   // Area under path down to zero
   const areaD = `${pathD} L ${getX(points.length - 1)} ${zeroY} L ${getX(0)} ${zeroY} Z`;
 
-  // Grid lines and labels
-  const gridTicks = [
-    { val: 0.2, label: '+0.20' },
-    { val: 0.0, label: ' 0.00' },
-    { val: -0.2, label: '-0.20' },
-    { val: -0.4, label: '-0.40' }
-  ];
-
+  // Grid lines and labels (clean 0.1 intervals)
   let gridHTML = '';
-  gridTicks.forEach(t => {
-    const y = getY(t.val);
-    const isZero = t.val === 0;
+  for (let v = minY; v <= maxY + 0.01; v += 0.1) {
+    const rounded = Math.round(v * 10) / 10;
+    const y = getY(rounded);
+    const isZero = Math.abs(rounded) < 0.001;
+    const label = rounded > 0 ? `+${rounded.toFixed(2)}` : (isZero ? '0.00' : rounded.toFixed(2));
     gridHTML += `
       <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" 
             stroke="${isZero ? 'var(--text-muted)' : 'var(--border-color)'}" 
             stroke-width="${isZero ? '1.5' : '1'}" 
-            stroke-dasharray="${isZero ? '4,4' : '2,2'}" opacity="${isZero ? '0.6' : '0.3'}"/>
-      <text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" font-size="10" font-weight="600" fill="var(--text-muted)">${t.label}</text>
+            stroke-dasharray="${isZero ? '4,4' : '2,2'}" opacity="${isZero ? '0.65' : '0.45'}"/>
+      <text x="${padding.left - 12}" y="${y + 4}" text-anchor="end" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="${isZero ? 'var(--text-primary)' : 'var(--text-muted)'}">${label}</text>
     `;
-  });
+  }
 
-  // Time labels on X axis
+  // Zero line editorial tag
+  gridHTML += `
+    <text x="${width - padding.right}" y="${zeroY - 6}" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="600" fill="var(--text-muted)" opacity="0.75">Neutrality Baseline (0.00)</text>
+  `;
+
+  // Time labels on X axis: cleanly formatted, no squishing, evenly spaced
   let xLabelsHTML = '';
-  const step = Math.max(1, Math.floor(points.length / 5));
+  const numLabels = Math.min(6, points.length);
+  const step = Math.max(1, Math.floor(points.length / numLabels));
+
   for (let i = 0; i < points.length; i += step) {
     const x = getX(i);
     const d = new Date(points[i].timestamp);
-    const dateLabel = `${d.getDate()}/${d.getMonth() + 1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+    let dateLabel = '';
+    if (cutoff > 0 && (now - cutoff) <= 24 * 3600 * 1000) {
+      dateLabel = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+    } else {
+      dateLabel = `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
     xLabelsHTML += `
-      <text x="${x}" y="${height - 10}" text-anchor="middle" font-size="10" font-weight="500" fill="var(--text-muted)">${dateLabel}</text>
+      <text x="${x}" y="${height - 16}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="500" fill="var(--text-muted)">${dateLabel}</text>
     `;
   }
 
@@ -1608,7 +1698,7 @@ function renderSentimentTimeline() {
     const y = getY(pt.score);
     const color = pt.score > 0.1 ? 'var(--pos-color)' : (pt.score < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
     dotsHTML += `
-      <circle cx="${x}" cy="${y}" r="4" fill="${color}" stroke="var(--bg-primary)" stroke-width="2" style="cursor:pointer; transition:transform 0.15s ease;"
+      <circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="var(--bg-secondary)" stroke-width="2" style="cursor:pointer; transition:transform 0.15s ease;"
               data-idx="${idx}" class="timeline-dot"/>
     `;
   });
@@ -1692,7 +1782,7 @@ function renderSentimentTimeline() {
       business: { name: 'Business & Economy', icon: '📈' },
       health: { name: 'Health & Medicine', icon: '🏥' },
       politics: { name: 'Politics & Governance', icon: '🗳️' },
-      world: { name: 'World & Conflict', icon: '🌍' }
+      world: { name: 'World & Global Affairs', icon: '🌍' }
     };
 
     topicsGrid.innerHTML = Object.keys(categoryNames).map(catKey => {
@@ -2136,26 +2226,42 @@ function renderSpotlightBanner(filteredArticles) {
   // Get logo credentials
   const meta = SOURCE_META[sourceId] || { initials: sourceId.toUpperCase().slice(0, 3), color: 'var(--accent-color)' };
   
-  // beeswarm alignment helper: check for collisions on X and increment Y
-  const dotPositions = [];
-  const dotsHTML = scored.map((art, idx) => {
+  // Smart Beeswarm Distribution Calculation:
+  // Dynamically calculate collision columns to determine step and dot size so dots never overflow
+  const horizontalThreshold = 2.2; // % width collision window
+  const colStacks = [];
+  
+  // First pass: compute stack levels for each item
+  const itemStacks = scored.map(art => {
     const score = art.sentiment;
-    const posPct = ((score + 1) / 2) * 100;
+    const xPct = 4 + (((score + 1) / 2) * 92);
     
-    let yOffset = 0;
+    let stackLevel = 0;
     let collision = true;
     while (collision) {
       collision = false;
-      for (const pos of dotPositions) {
-        // If dots are within 2.2% of each other horizontally and have the same Y stack level, push it up
-        if (Math.abs(pos.x - posPct) < 2.2 && pos.y === yOffset) {
-          yOffset += 14; // stack vertically by 14px
+      for (const placed of colStacks) {
+        if (Math.abs(placed.x - xPct) < horizontalThreshold && placed.stack === stackLevel) {
+          stackLevel++;
           collision = true;
           break;
         }
       }
     }
-    dotPositions.push({ x: posPct, y: yOffset });
+    colStacks.push({ x: xPct, stack: stackLevel });
+    return { art, score, xPct, stackLevel };
+  });
+
+  const maxStackLevel = colStacks.reduce((max, item) => Math.max(max, item.stack), 0);
+  const containerHeight = Math.max(125, Math.min(160, 50 + maxStackLevel * 10));
+  const availableH = containerHeight - 44; // keep inside box
+  const stepY = maxStackLevel > 0 ? Math.min(13, Math.max(4.5, availableH / (maxStackLevel + 1))) : 12;
+  const dotSize = maxStackLevel > 14 ? 8 : (maxStackLevel > 8 ? 10 : 12);
+  const dotRadius = dotSize / 2;
+
+  const dotsHTML = itemStacks.map((item, idx) => {
+    const { art, score, xPct, stackLevel } = item;
+    const yOffset = Math.min(availableH, stackLevel * stepY);
     
     let color = 'var(--neu-color)';
     if (score > 0.15) color = 'var(--pos-color)';
@@ -2169,7 +2275,7 @@ function renderSpotlightBanner(filteredArticles) {
            onclick="scrollToArticle('${cardId}')"
            onmouseenter="showSpotlightTooltip(event, '${cleanTitle}', ${score})"
            onmouseleave="hideSpotlightTooltip()"
-           style="position: absolute; left: calc(${posPct}% - 6px); bottom: calc(20px + ${yOffset}px); width: 12px; height: 12px; border-radius: 50%; background-color: ${color}; border: 1.5px solid var(--bg-secondary); cursor: pointer; transition: all 0.2s; z-index: 5;">
+           style="position: absolute; left: calc(${xPct}% - ${dotRadius}px); bottom: calc(24px + ${yOffset}px); width: ${dotSize}px; height: ${dotSize}px; border-radius: 50%; background-color: ${color}; border: 1.5px solid var(--bg-card); cursor: pointer; transition: transform 0.15s ease, filter 0.15s ease; z-index: ${5 + Math.min(20, stackLevel)};">
       </div>
     `;
   }).join('');
@@ -2179,10 +2285,10 @@ function renderSpotlightBanner(filteredArticles) {
     <div class="spotlight-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
       <div style="display: flex; align-items: center; gap: 0.75rem;">
         <div style="background-color: ${meta.color}; color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">${meta.initials}</div>
-        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--text-primary);">${source.name} Spotlight</h3>
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--text-primary); font-family: var(--font-serif);">${source.name} Spotlight</h3>
       </div>
       <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span class="score-badge ${moodClass}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem;">${badgeText}</span>
+        <span class="score-badge ${moodClass}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">${badgeText}</span>
         <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">(${total} Articles)</span>
       </div>
     </div>
@@ -2191,7 +2297,7 @@ function renderSpotlightBanner(filteredArticles) {
     <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 100%;">
       <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">
         <span>Coverage Tone</span>
-        <span>${negPct}% Negative / ${neuPct}% Neutral / ${posPct}% Positive</span>
+        <span style="font-family: var(--font-mono);">${negPct}% Negative / ${neuPct}% Neutral / ${posPct}% Positive</span>
       </div>
       <div class="dist-bar-track" style="height: 6px; border-radius: 3px; display: flex; overflow: hidden; background-color: var(--bg-tertiary); width: 100%;">
         <div class="dist-slice neg" style="width: ${negPct}%; background-color: var(--neg-color);"></div>
@@ -2202,24 +2308,35 @@ function renderSpotlightBanner(filteredArticles) {
     
     <!-- Sentiment Beeswarm Plot -->
     <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin-top: 0.5rem; position: relative;">
-      <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Article Sentiment Distribution:</div>
-      <div id="spotlight-axis-container" style="position: relative; height: 90px; background: var(--bg-tertiary); border-radius: 16px; border: 1px solid var(--border-color); width: 100%; overflow: visible; display: flex; align-items: center;">
+      <div style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display:flex; justify-content:space-between;">
+        <span>Article Sentiment Distribution</span>
+        <span style="font-family:var(--font-mono); font-size:0.68rem; opacity:0.8;">Max Stack: ${maxStackLevel + 1} articles</span>
+      </div>
+      <div id="spotlight-axis-container" style="position: relative; height: ${containerHeight}px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border-color); width: 100%; overflow: hidden; display: flex; align-items: center;">
         
+        <!-- Editorial Valence Zones -->
+        <div style="position: absolute; left: 0; width: 33%; top: 0; bottom: 0; background: rgba(197, 34, 31, 0.035); border-right: 1px dashed rgba(197, 34, 31, 0.18); pointer-events: none;"></div>
+        <div style="position: absolute; left: 33%; width: 27%; top: 0; bottom: 0; background: transparent; pointer-events: none;"></div>
+        <div style="position: absolute; left: 60%; right: 0; top: 0; bottom: 0; background: rgba(21, 128, 61, 0.035); border-left: 1px dashed rgba(21, 128, 61, 0.18); pointer-events: none;"></div>
+
         <!-- Track Baseline -->
-        <div style="position: absolute; left: 12px; right: 12px; bottom: 18px; height: 2px; background: var(--border-color); z-index: 1;"></div>
+        <div style="position: absolute; left: 16px; right: 16px; bottom: 20px; height: 1.5px; background: var(--border-color); z-index: 1;"></div>
         
+        <!-- Zero Line Marker -->
+        <div style="position: absolute; left: 50%; bottom: 16px; top: 10px; width: 1px; border-left: 1px dashed var(--text-muted); opacity: 0.35; z-index: 1; pointer-events: none;"></div>
+
         <!-- Track labels -->
-        <span style="position: absolute; left: 12px; bottom: 4px; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; opacity: 0.6; pointer-events: none; z-index: 2;">Alarmist (-1.0)</span>
-        <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; opacity: 0.6; pointer-events: none; z-index: 2;">Neutral (0.0)</span>
-        <span style="position: absolute; right: 12px; bottom: 4px; font-size: 0.65rem; color: var(--text-secondary); font-weight: 700; opacity: 0.6; pointer-events: none; z-index: 2;">Positive (+1.0)</span>
+        <span style="position: absolute; left: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--neg-color); font-weight: 600; pointer-events: none; z-index: 2;">Alarmist (-1.0)</span>
+        <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); font-weight: 600; pointer-events: none; z-index: 2;">Neutral (0.0)</span>
+        <span style="position: absolute; right: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--pos-color); font-weight: 600; pointer-events: none; z-index: 2;">Positive (+1.0)</span>
         
         <!-- Plot Circles -->
         ${dotsHTML}
       </div>
-      <div style="font-size: 0.65rem; color: var(--text-secondary); text-align: center; font-style: italic; opacity: 0.8; margin-top: 0.15rem;">Hover over dots to inspect scores; click a dot to scroll and flash that article card. Stacked dots represent density.</div>
+      <div style="font-size: 0.68rem; color: var(--text-secondary); text-align: center; font-style: italic; opacity: 0.85; margin-top: 0.15rem;">Hover over dots to inspect article score; click to jump directly to article card. Density scales dynamically to prevent overflow.</div>
       
       <!-- Custom Tooltip Element -->
-      <div id="spotlight-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, bottom 0.08s ease-out;"></div>
+      <div id="spotlight-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 280px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, bottom 0.08s ease-out;"></div>
     </div>
   `;
 }
@@ -2384,7 +2501,9 @@ function renderDailyPulse() {
   else if (state.filters.time === 'all') timeframeLabel = 'All-Time';
 
   if (headingEl) {
-    if (state.filters.category !== 'all') {
+    if (state.edition === 'silver') {
+      headingEl.innerText = "Today's Constructive News Signal:";
+    } else if (state.filters.category !== 'all') {
       const catCap = state.filters.category.charAt(0).toUpperCase() + state.filters.category.slice(1);
       headingEl.innerText = `${catCap} News Vibe:`;
     } else if (state.filters.time === '24h') {
@@ -2417,7 +2536,10 @@ function renderDailyPulse() {
 
   if (badgeEl) {
     badgeEl.className = 'pulse-hero-mood-badge';
-    if (globalAvg < -0.3) {
+    if (state.edition === 'silver') {
+      badgeEl.innerText = '☀️ Silver Lining Focus';
+      badgeEl.classList.add('pos');
+    } else if (globalAvg < -0.3) {
       badgeEl.innerText = 'Elevated Alarmism / Doom';
       badgeEl.classList.add('neg');
     } else if (globalAvg < -0.05) {
