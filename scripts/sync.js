@@ -160,11 +160,14 @@ function tryRepairJsonArray(text) {
 async function analyzeWithGemini(headlines, apiKey, requestedModel) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
-    'gemini-3.5-flash-lite',
+    requestedModel,
+    process.env.GEMINI_MODEL,
     'gemini-3.8-flash',
-    'gemini-3.5-flash',
-    requestedModel || process.env.GEMINI_MODEL
-  ].filter(Boolean);
+    'gemini-3.7-flash',
+    'gemini-3.6-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite'
+  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   const BATCH_SIZE = 20;
   const allResults = [];
@@ -235,7 +238,9 @@ Return ONLY valid JSON.`;
             chunk.forEach((item, idx) => {
               const match = parsed.find(r => r.index === idx) || { score: 0, category: 'other' };
               allResults.push({
-                ...item,
+                sourceId: item.sourceId,
+                title: item.title,
+                link: item.link,
                 sentiment: Number(match.score) || 0,
                 sentimentGemini: Number(match.score) || 0,
                 category: match.category || 'other',
@@ -249,24 +254,18 @@ Return ONLY valid JSON.`;
             break;
           }
         } catch (err) {
+          const isDemandSpike = err.message && (err.message.includes('503') || err.message.includes('429') || err.message.includes('high demand') || err.message.includes('timed out'));
           console.warn(`[Gemini] Model ${modelName} attempt ${attempt} warning:`, err.message || err);
           if (attempt < 2) {
-            await new Promise(r => setTimeout(r, 2000));
+            const waitMs = isDemandSpike ? 3500 : 1500;
+            await new Promise(r => setTimeout(r, waitMs));
           }
         }
       }
     }
 
     if (!batchSuccess) {
-      console.warn(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1} failed across models; assigning calibrated local fallback.`);
-      chunk.forEach(item => {
-        allResults.push({
-          ...item,
-          sentiment: item.sentimentLocal || 0,
-          category: item.categoryLocal || 'other',
-          explanation: item.explanationLocal || 'Fallback local analysis.'
-        });
-      });
+      console.warn(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1} (${chunk.length} items) could not be evaluated due to temporary upstream spikes. STRICT ZERO-OFFLINE POLICY: Skipping batch without offline fallback. Articles remain queued for next sync.`);
     }
 
     if (i + BATCH_SIZE < headlines.length) {
@@ -417,45 +416,57 @@ async function main() {
 
   console.log(`[Queue] Found ${unanalyzedArticles.length} new articles requiring sentiment analysis.`);
 
-  // 2. Perform Local Lexicon Analysis for all new articles
+  // 2. Perform Local Lexicon Analysis purely as secondary comparative reference fields (AFINN / VADER)
+  // NEVER as primary sentiment (strictly zero offline fallback policy).
   if (unanalyzedArticles.length > 0) {
     const localScores = analyzeLocally(unanalyzedArticles);
     localScores.forEach((res, idx) => {
       const target = unanalyzedArticles[idx];
-      target.sentimentLocal = res.sentimentLocal;
       target.sentimentAFINN = res.sentimentAFINN;
       target.sentimentVADER = res.sentimentVADER;
       target.explanationLocal = res.explanation;
       target.categoryLocal = res.category;
-      target.sentiment = res.sentimentLocal;
-      target.explanation = res.explanation;
-      target.category = res.category;
+      // Do NOT set target.sentiment = res.sentimentLocal
+      // Primary sentiment remains unassigned until evaluated by Gemini
     });
   }
 
   // 3. Perform AI Analysis if keys are available
-  let activeAnalyzerLabel = 'Local Ensemble (VADER + AFINN)';
-  if (unanalyzedArticles.length > 0) {
-    let aiSuccess = false;
+  let activeAnalyzerLabel = currentCache.analyzerUsed || 'Gemini';
+  let newlyAnalyzedCount = 0;
+  let aiSuccess = false;
 
+  if (unanalyzedArticles.length > 0) {
     // Try Gemini
     if (preferredAnalyzer === 'gemini' && geminiKey) {
       try {
         console.log(`[AI] Processing ${unanalyzedArticles.length} articles with Gemini (${geminiModel})...`);
         const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiKey, geminiModel);
-        geminiRes.results.forEach((res, idx) => {
-          const target = unanalyzedArticles[idx];
-          target.sentimentGemini = res.sentiment;
-          target.explanationGemini = res.explanation;
-          target.categoryGemini = res.category;
-          target.sentiment = res.sentiment;
-          target.explanation = res.explanation;
-          target.category = res.category;
+        
+        const articleMap = new Map();
+        unanalyzedArticles.forEach(a => articleMap.set(`${a.sourceId}_${a.title.trim().toLowerCase()}`, a));
+
+        geminiRes.results.forEach(res => {
+          const key = `${res.sourceId}_${res.title.trim().toLowerCase()}`;
+          const target = articleMap.get(key);
+          if (target) {
+            target.sentimentGemini = res.sentiment;
+            target.explanationGemini = res.explanation;
+            target.categoryGemini = res.category;
+            target.sentiment = res.sentiment;
+            target.explanation = res.explanation;
+            target.category = res.category;
+            newlyAnalyzedCount++;
+          }
         });
-        activeAnalyzerLabel = `Gemini (${geminiRes.modelUsed})`;
-        aiSuccess = true;
+
+        if (newlyAnalyzedCount > 0) {
+          activeAnalyzerLabel = `Gemini (${geminiRes.modelUsed})`;
+          aiSuccess = true;
+          console.log(`[Gemini] Successfully evaluated ${newlyAnalyzedCount} articles.`);
+        }
       } catch (geminiErr) {
-        console.error('[Gemini] Analysis failed, falling back:', geminiErr.message);
+        console.error('[Gemini] Analysis failed:', geminiErr.message);
       }
     }
 
@@ -466,18 +477,28 @@ async function main() {
         const groqRes = await analyzeWithGroq(unanalyzedArticles, groqKey, groqModel);
         groqRes.results.forEach((res, idx) => {
           const target = unanalyzedArticles[idx];
-          target.sentimentGroq = res.sentiment;
-          target.explanationGroq = res.explanation;
-          target.categoryGroq = res.category;
-          target.sentiment = res.sentiment;
-          target.explanation = res.explanation;
-          target.category = res.category;
+          if (target) {
+            target.sentimentGroq = res.sentiment;
+            target.explanationGroq = res.explanation;
+            target.categoryGroq = res.category;
+            target.sentiment = res.sentiment;
+            target.explanation = res.explanation;
+            target.category = res.category;
+            newlyAnalyzedCount++;
+          }
         });
-        activeAnalyzerLabel = `Groq (${groqRes.modelUsed})`;
-        aiSuccess = true;
+        if (newlyAnalyzedCount > 0) {
+          activeAnalyzerLabel = `Groq (${groqRes.modelUsed})`;
+          aiSuccess = true;
+        }
       } catch (groqErr) {
         console.error('[Groq] Analysis failed:', groqErr.message);
       }
+    }
+
+    if (!aiSuccess && unanalyzedArticles.length > 0) {
+      console.warn(`[Sync] Notice: AI was unavailable to evaluate the ${unanalyzedArticles.length} queued articles during this cycle.`);
+      console.warn(`[Sync] STRICT ZERO-OFFLINE POLICY: Skipping without assigning local fallback. Articles remain queued for next sync.`);
     }
   } else if (currentCache.analyzerUsed) {
     activeAnalyzerLabel = currentCache.analyzerUsed;
@@ -511,17 +532,22 @@ async function main() {
     let posCount = 0;
     let neuCount = 0;
     let negCount = 0;
+    let scoredCount = 0;
 
     combined.forEach(art => {
-      const s = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
-      totalScore += s;
-      if (s > 0.15) posCount++;
-      else if (s < -0.15) negCount++;
-      else neuCount++;
+      // ONLY pure Gemini evaluations count towards scores
+      if (typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'))) {
+        const s = art.sentimentGemini;
+        totalScore += s;
+        scoredCount++;
+        if (s > 0.15) posCount++;
+        else if (s < -0.15) negCount++;
+        else neuCount++;
+      }
     });
 
     const count = combined.length;
-    const avg = count > 0 ? Number((totalScore / count).toFixed(3)) : 0;
+    const avg = scoredCount > 0 ? Number((totalScore / scoredCount).toFixed(3)) : 0;
 
     // Full detailed source entry
     finalSources[source.id] = {
@@ -533,7 +559,7 @@ async function main() {
     };
 
     // Lightweight summary source entry (for instant <15KB initial load)
-    const sortedBySentiment = [...combined].sort((a, b) => a.sentiment - b.sentiment);
+    const sortedBySentiment = [...combined].sort((a, b) => (a.sentiment ?? 0) - (b.sentiment ?? 0));
     summarySources[source.id] = {
       name: source.name,
       averageSentiment: avg,
@@ -546,13 +572,25 @@ async function main() {
     };
   }
 
+  // If new articles arrived but AI was temporarily 503 across all attempts:
+  // Do NOT corrupt or overwrite datasets with empty/fallback data.
+  if (unanalyzedArticles.length > 0 && newlyAnalyzedCount === 0 && !aiSuccess) {
+    console.warn('==============================================');
+    console.warn('⚠️ Sync Notice: Upstream AI was unavailable during this run (e.g. 503 spike).');
+    console.warn(`⏳ ${unanalyzedArticles.length} articles remain queued for subsequent sync.`);
+    console.warn('🛡️ STRICT ZERO-OFFLINE POLICY: No local fallback assigned.');
+    console.warn('🛡️ Historical data and metrics preserved without modification.');
+    console.warn('==============================================');
+    return;
+  }
+
   // 5. Append time series snapshot
   const timeSeries = currentCache.timeSeries || [];
   const now = new Date();
   const lastEntry = timeSeries[timeSeries.length - 1];
   const shouldAppendSnapshot = !lastEntry || (now - new Date(lastEntry.timestamp)) >= 30 * 60 * 1000;
 
-  if (shouldAppendSnapshot) {
+  if (shouldAppendSnapshot && newlyAnalyzedCount > 0) {
     const averages = {};
     Object.keys(finalSources).forEach(id => {
       averages[id] = finalSources[id].averageSentiment;
@@ -571,13 +609,15 @@ async function main() {
 
   Object.values(finalSources).forEach(src => {
     (src.articles || []).forEach(art => {
-      allArticlesTotal++;
-      const s = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
-      allArticlesScore += s;
-      const cat = art.category || 'other';
-      if (!categoryStats[cat]) categoryStats[cat] = { total: 0, count: 0 };
-      categoryStats[cat].total += s;
-      categoryStats[cat].count++;
+      if (typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'))) {
+        allArticlesTotal++;
+        const s = art.sentimentGemini;
+        allArticlesScore += s;
+        const cat = art.categoryGemini || art.category || 'other';
+        if (!categoryStats[cat]) categoryStats[cat] = { total: 0, count: 0 };
+        categoryStats[cat].total += s;
+        categoryStats[cat].count++;
+      }
     });
   });
 

@@ -715,13 +715,15 @@ function getResolvedSources() {
           : (art.sentiment || 0);
         explanation = art.explanationLocal || art.explanation || 'Analyzed locally using averaged VADER and AFINN-111.';
       } else if (state.sentimentMode === 'gemini') {
-        if (art.sentimentGemini !== undefined && art.sentimentGemini !== null) {
+        const hasGemini = typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'));
+        if (hasGemini) {
           score = art.sentimentGemini;
           explanation = art.explanationGemini || `Analyzed using Google Gemini. Score: ${score.toFixed(2)}.`;
           category = art.categoryGemini || category;
         } else {
-          score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
-          explanation = art.explanation || art.explanationLocal || 'Fallback local analysis.';
+          score = null;
+          explanation = 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).';
+          category = art.categoryGemini || category || 'other';
         }
       } else if (state.sentimentMode === 'openrouter') {
         if (art.sentimentOpenRouter !== undefined && art.sentimentOpenRouter !== null) {
@@ -1894,8 +1896,9 @@ function renderHeadlines() {
   }
   
   articles.forEach((art, index) => {
-    const validScore = typeof art.sentiment === 'number' ? art.sentiment : (typeof art.sentimentLocal === 'number' ? art.sentimentLocal : 0);
-    const itemVibe = getMoodClass(validScore);
+    const hasValidScore = typeof art.sentiment === 'number';
+    const validScore = hasValidScore ? art.sentiment : 0;
+    const itemVibe = hasValidScore ? getMoodClass(validScore) : 'neutral';
     const dateObj = new Date(art.pubDate);
     const dateFormatted = dateObj.toLocaleDateString(undefined, {
       month: 'short',
@@ -1912,7 +1915,9 @@ function renderHeadlines() {
     const feedUrl = SOURCE_FEEDS[art.sourceId] || '';
     const brandMeta = SOURCE_META[art.sourceId] || { initials: art.sourceId, color: '#999' };
     
-    const scoreBadgeHTML = `<span class="article-vibe-score ${itemVibe}">${validScore > 0 ? '+' : ''}${validScore.toFixed(2)}</span>`;
+    const scoreBadgeHTML = hasValidScore
+      ? `<span class="article-vibe-score ${itemVibe}">${validScore > 0 ? '+' : ''}${validScore.toFixed(2)}</span>`
+      : `<span class="article-vibe-score neu" style="font-size:0.68rem; opacity:0.85; padding: 0.15rem 0.5rem;">Pending AI</span>`;
 
     card.innerHTML = `
       <div class="article-top-bar">

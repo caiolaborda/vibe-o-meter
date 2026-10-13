@@ -1,18 +1,16 @@
-name: Automated News Sync & Deploy
+name: Autonomous News Ingestion & Sentiment Audit
 
 on:
   schedule:
-    # Runs hourly at minute 25 (off-peak to avoid GitHub Actions queue delays)
-    - cron: '25 * * * *'
-  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab anytime
+    # Runs twice an hour (every 30 minutes)
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - 'public/**'
       - 'scripts/**'
-      - 'data/**'
-      - '.github/workflows/**'
+      - '.github/workflows/news-sync.yml'
 
 permissions:
   contents: write
@@ -45,7 +43,7 @@ jobs:
       - name: Run Headless Sync Script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-3.5-flash-lite' }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-3.8-flash' }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'llama-3.1-8b-instant' }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
@@ -53,25 +51,31 @@ jobs:
         run: node scripts/sync.js
 
       - name: Commit updated vibe datasets
+        id: commit_step
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add data/vibe-data.json public/data/
           if git diff --staged --quiet; then
-            echo "No data changes to commit."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No new data changes to commit."
           else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
             git commit -m "chore(data): auto-update vibe sentiment data [skip ci]"
             git push origin HEAD:${{ github.ref }}
           fi
 
       - name: Setup GitHub Pages
+        if: steps.commit_step.outputs.has_changes == 'true'
         uses: actions/configure-pages@v4
 
       - name: Upload static website artifact
+        if: steps.commit_step.outputs.has_changes == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'public/'
 
       - name: Deploy to GitHub Pages
+        if: steps.commit_step.outputs.has_changes == 'true'
         id: deployment
         uses: actions/deploy-pages@v4

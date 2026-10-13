@@ -75,10 +75,13 @@ async function generateDailyBriefing(options = {}) {
   let briefingText = '';
   const apiKey = process.env.GEMINI_API_KEY;
   const modelsToTry = [
+    process.env.GEMINI_MODEL,
+    'gemini-3.8-flash',
+    'gemini-3.7-flash',
+    'gemini-3.6-flash',
     'gemini-3.5-flash-lite',
-    'gemini-3.5-flash',
-    process.env.GEMINI_MODEL
-  ].filter(Boolean);
+    'gemini-3.1-flash-lite'
+  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   if (apiKey) {
     const genAI = new GoogleGenerativeAI(apiKey);
