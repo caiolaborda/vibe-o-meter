@@ -655,6 +655,18 @@ function switchTab(tabId) {
     }
   });
 
+  // Toggle hero landing section visibility (only displayed on Daily Pulse, hidden on other tabs)
+  const heroSection = document.getElementById('pulse-section');
+  if (heroSection) {
+    if (tabId === 'pulse') {
+      heroSection.classList.remove('hidden');
+      heroSection.style.display = 'block';
+    } else {
+      heroSection.classList.add('hidden');
+      heroSection.style.display = 'none';
+    }
+  }
+
   // Recreate icons in newly shown panel
   if (window.lucide && lucide.createIcons) {
     lucide.createIcons();
