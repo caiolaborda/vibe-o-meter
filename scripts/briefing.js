@@ -102,7 +102,7 @@ YOUR GOAL:
 Scan today's headlines and write a crisp, cynical, 1-to-3 sentence observation capturing the day's collective news vibe.
 
 THE VIBE WE WANT:
-- Ultra-lean, punchy, and fast-paced (strictly under 35 words total).
+- Lean, punchy, and fast-paced (aim for ~25 to 50 words max).
 - Deadpan, wry, and observational—like a sharp newsroom veteran summing up the wires with an effortless shrug and a smirk.
 - NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. Do not follow a robotic "Sentence 1 is this, Sentence 2 is that" structure. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
 - Avoid purple prose, convoluted run-ons, or forced metaphors. Keep it natural, rhythmic, and memorable.
@@ -112,6 +112,7 @@ TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy 
 
 STRICT RULES:
 - NO NUMBERS, DECIMALS, PERCENTAGES, OR STATS (no "-0.21", "24 hours", "197 articles", etc.).
+- KEEP IT TIGHT (strictly under 50 words total).
 - Output ONLY the raw paragraph text. No quotation marks, no markdown headers, no bullet points.
 
 TODAY'S HEADLINES CONTEXT:
