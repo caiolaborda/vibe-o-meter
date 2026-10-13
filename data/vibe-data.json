@@ -1,31 +1,31 @@
 {
-  "lastUpdated": "2026-10-13T13:15:17.218Z",
+  "lastUpdated": "2026-10-13T13:29:09.169Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-13",
   "editorialSummary": "While humanity remained enthusiastically committed to a domestic portfolio of gruesome arson, luggage-bound ex-partners, and Al Jazeera-certified panic spirals, the ivory-tower nerds simply shrugged and won Nobel Prizes for dodging economic ruin. Meanwhile, NASA’s overachieving rover set new distance records across a desolate Martian wasteland, proving once and for all that mindless planetary abandonment is looking like a remarkably sound financial investment.",
   "globalStats": {
-    "globalSentiment": -0.183,
-    "totalArticles": 2382,
+    "globalSentiment": -0.232,
+    "totalArticles": 1858,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
-      "score": -0.363
+      "score": -0.457
     },
     "mostPositiveOutlet": {
       "id": "cnbc",
       "name": "CNBC News",
-      "score": -0.087
+      "score": -0.115
     },
     "categoryAverages": {
-      "world": -0.578,
-      "other": -0.062,
+      "world": -0.582,
+      "other": -0.391,
       "business": -0.104,
-      "technology": -0.037,
-      "entertainment": -0.066,
-      "politics": -0.206,
-      "health": -0.224,
+      "technology": -0.069,
+      "entertainment": -0.047,
+      "politics": -0.225,
+      "health": -0.21,
       "sports": 0.059,
-      "science": 0.225,
+      "science": 0.257,
       "education": -0.22,
       "environment": 0.38
     },
@@ -35,11 +35,11 @@
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.203,
+      "averageSentiment": -0.253,
       "distribution": {
-        "positive": 39,
-        "neutral": 83,
-        "negative": 126
+        "positive": 28,
+        "neutral": 53,
+        "negative": 114
       },
       "articles": [
         {
@@ -77,6 +77,23 @@
           "sentimentGemini": -0.72,
           "explanationGemini": "The tragic fatality resulting from a wild animal attack constitutes a severe personal and public safety tragedy.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Watch: What newly released calls tell us about Christa Pike's botched execution",
+          "description": "A series of calls, obtained by the Associated Press, reveal emergency services were delayed in reaching Pike.",
+          "link": "https://www.bbc.co.uk/news/videos/cqpvgrkp0xpyo?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Tue, 13 Oct 2026 12:03:51 GMT",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.40) and AFINN-111 (-0.25).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "The report highlights a failure in emergency protocols during a state-sanctioned execution, reflecting a grim and systemic administrative failure.",
+          "categoryGemini": "other",
+          "sentiment": -0.55,
+          "explanation": "The report highlights a failure in emergency protocols during a state-sanctioned execution, reflecting a grim and systemic administrative failure.",
+          "category": "other"
         },
         {
           "sourceId": "bbc",
@@ -5043,11 +5060,11 @@
     },
     "nyt": {
       "name": "The New York Times",
-      "averageSentiment": -0.197,
+      "averageSentiment": -0.253,
       "distribution": {
-        "positive": 25,
-        "neutral": 70,
-        "negative": 108
+        "positive": 16,
+        "neutral": 39,
+        "negative": 96
       },
       "articles": [
         {
@@ -5457,8 +5474,12 @@
           "sentimentVADER": -0.727,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.73) and AFINN-111 (-0.75).",
           "categoryLocal": "politics",
-          "explanation": "Analyzed locally with news-calibrated VADER (-0.73) and AFINN-111 (-0.75).",
-          "category": "politics"
+          "explanation": "The article describes political disinformation and personal attacks against a candidate, creating a climate of mild political friction.",
+          "category": "politics",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "The article describes political disinformation and personal attacks against a candidate, creating a climate of mild political friction.",
+          "categoryGemini": "politics",
+          "sentiment": -0.22
         },
         {
           "sourceId": "nyt",
@@ -14242,11 +14263,11 @@
     },
     "cnn": {
       "name": "CNN",
-      "averageSentiment": -0.34,
+      "averageSentiment": -0.385,
       "distribution": {
         "positive": 0,
-        "neutral": 12,
-        "negative": 20
+        "neutral": 9,
+        "negative": 21
       },
       "articles": [
         {
@@ -14269,6 +14290,23 @@
         },
         {
           "sourceId": "cnn",
+          "title": "Several sailors missing after drone strike sinks merchant vessel near Bulgarian waters - CNN",
+          "description": "Several sailors missing after drone strike sinks merchant vessel near Bulgarian waters CNN",
+          "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxQZm9MRGpDd2F5OFZQeDdUb2w5R3l0ak5NSHZJcmliN1hqLW9RTVAzWnMtX0hXSk02WjdtcVhfdC0wdkg0T01Pc3pqQ0QxNl9FUmVvRXlpT0lxdWhFQmNMMGdFM2FWeVJyWEhRa1hvODZZcHdGcWQ2by1uUFFRNFFDZkVSNTdxbzJiZF9URGJETS1rMzBxTnBBX0U3clJGUTNUdlp1Y3hEWmIzbjluTXBXWVpsYW1oMjBKUThaYjVvaXE?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 11:12:02 GMT",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.66,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.66) and AFINN-111 (-0.75).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.88,
+          "explanationGemini": "The sinking of a merchant vessel by a drone strike with missing sailors constitutes a violent and tragic maritime incident.",
+          "categoryGemini": "world",
+          "sentiment": -0.88,
+          "explanation": "The sinking of a merchant vessel by a drone strike with missing sailors constitutes a violent and tragic maritime incident.",
+          "category": "world"
+        },
+        {
+          "sourceId": "cnn",
           "title": "Germany’s Nuremberg airport closes due to aviation emergency - CNN",
           "description": "Germany’s Nuremberg airport closes due to aviation emergency CNN",
           "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxOQTJrWGJCTkw5U3U4QkE2c21QRld1ZV81dk52V2M4dXRGQ2tvVDJ0bVJ5N2ExdmRWbDZvaC1OaC1xTmJ4WklIS21HTkZ5WWhubm1BTEUyaE1ua1hFM0pSdVB6NFgyU01GaWlzenJZSDVtUjBOcHJ1SmllRzVFNEpZZQ?oc=5",
@@ -14284,6 +14322,23 @@
           "sentimentGemini": -0.62,
           "explanationGemini": "An unexpected aviation emergency forcing the closure of an airport is a disruptive and potentially dangerous incident.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "cnn",
+          "title": "Why Meta is betting its future on computers you wear on your face - CNN",
+          "description": "Why Meta is betting its future on computers you wear on your face CNN",
+          "link": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9DcHQ2QU5udUVWYms5VHY4OUliWmx1cUhVRkR5MFVDZTRKbHdTTkVJLXh5Y3ktekJOZVp1RFBJX2JGZUJvQlptUXVUbE5aOUtvTXQtM01xSkZnSnJWLXRmUU5ObzlOd1U1cS1FUGY3UEo?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 11:00:45 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "This is a neutral business analysis of a company's strategic pivot toward wearable technology.",
+          "categoryGemini": "technology",
+          "sentiment": 0.05,
+          "explanation": "This is a neutral business analysis of a company's strategic pivot toward wearable technology.",
+          "category": "technology"
         },
         {
           "sourceId": "cnn",
@@ -14314,8 +14369,12 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "other",
-          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
-          "category": "other"
+          "explanation": "The headline explores a potential medical breakthrough regarding the anti-aging properties of existing drugs, which is a constructive scientific inquiry.",
+          "category": "health",
+          "sentimentGemini": 0.15,
+          "explanationGemini": "The headline explores a potential medical breakthrough regarding the anti-aging properties of existing drugs, which is a constructive scientific inquiry.",
+          "categoryGemini": "health",
+          "sentiment": 0.15
         },
         {
           "sourceId": "cnn",
@@ -14825,11 +14884,11 @@
     },
     "guardian": {
       "name": "The Guardian",
-      "averageSentiment": -0.123,
+      "averageSentiment": -0.163,
       "distribution": {
-        "positive": 57,
-        "neutral": 78,
-        "negative": 117
+        "positive": 45,
+        "neutral": 48,
+        "negative": 105
       },
       "articles": [
         {
@@ -24785,13 +24844,47 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.158,
+      "averageSentiment": -0.181,
       "distribution": {
-        "positive": 51,
-        "neutral": 111,
-        "negative": 139
+        "positive": 41,
+        "neutral": 71,
+        "negative": 121
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "Tennis star's pickleball match turns nasty when player won't stop yelling, Herbert's a mess & a crazy Vegas L",
+          "description": "Welcome to Screencaps, \"America's Best Daily Column,\" as named by the readers. Screencaps, which publishes seven-days-a-week, is a mix of sports, pop culture, and emails from sane readers from around the world. This column isn't for the coastal elites. Give us a week to steal your heart. Our track record is pretty good. Let's have some fun.For tennis star-turned pickleball star Genie Bouchard, she's had enough of Maria Ford's antics on the cou...",
+          "link": "https://www.foxnews.com/outkick-sports/tennis-star-pickleball-match-turns-nasty-player-wont-stop-yelling-herberts-mess-crazy-vegas-l",
+          "pubDate": "Tue, 13 Oct 2026 09:14:59 -0400",
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.54,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.54) and AFINN-111 (0.63).",
+          "categoryLocal": "entertainment",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "The report details interpersonal conflict and unprofessional behavior during a sporting event, reflecting minor social tension.",
+          "categoryGemini": "sports",
+          "sentiment": -0.15,
+          "explanation": "The report details interpersonal conflict and unprofessional behavior during a sporting event, reflecting minor social tension.",
+          "category": "sports"
+        },
+        {
+          "sourceId": "fox",
+          "title": "Riley Green and Peyton Manning team up for surprise country song ahead of Alabama vs Tennessee",
+          "description": "Riley Green released a very unexpected surprise for fans, and it includes NFL legend Peyton Manning.Green is one of the most successful singers in the country music world, and there's a serious argument that could be made that he's currently in the top three.What's not up for debate is that the man is incredibly popular. His music covers the entire spectrum of the country genre.RILEY GREEN DROPS 19-TRACK ALBUM 'THAT'S JUST ME' AND COUNTRY MUSI...",
+          "link": "https://www.foxnews.com/outkick-culture/riley-green-peyton-manning-team-surprise-country-song-alabama-vs-tennessee",
+          "pubDate": "Tue, 13 Oct 2026 09:12:05 -0400",
+          "sentimentAFINN": 1,
+          "sentimentVADER": 0.865,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.86) and AFINN-111 (1.00).",
+          "categoryLocal": "entertainment",
+          "sentimentGemini": 0.25,
+          "explanationGemini": "The collaboration between a popular musician and a sports icon is a positive, lighthearted cultural event.",
+          "categoryGemini": "entertainment",
+          "sentiment": 0.25,
+          "explanation": "The collaboration between a popular musician and a sports icon is a positive, lighthearted cultural event.",
+          "category": "entertainment"
+        },
         {
           "sourceId": "fox",
           "title": "WWE stars enter The Chat as company teams up with WhatsApp to elevate NFL Sundays for passionate fans",
@@ -24803,8 +24896,12 @@
           "sentimentVADER": 0.882,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.88) and AFINN-111 (1.00).",
           "categoryLocal": "entertainment",
-          "explanation": "Analyzed locally with news-calibrated VADER (0.88) and AFINN-111 (1.00).",
-          "category": "entertainment"
+          "explanation": "A partnership between a sports organization and a communication platform is a routine business development aimed at fan engagement.",
+          "category": "sports",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "A partnership between a sports organization and a communication platform is a routine business development aimed at fan engagement.",
+          "categoryGemini": "sports",
+          "sentiment": 0.12
         },
         {
           "sourceId": "fox",
@@ -24817,8 +24914,12 @@
           "sentimentVADER": 0.511,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.51) and AFINN-111 (0.38).",
           "categoryLocal": "politics",
-          "explanation": "Analyzed locally with news-calibrated VADER (0.51) and AFINN-111 (0.38).",
-          "category": "politics"
+          "explanation": "This is a standard analytical report on electoral polling and political trends, which is inherently neutral.",
+          "category": "politics",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "This is a standard analytical report on electoral polling and political trends, which is inherently neutral.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05
         },
         {
           "sourceId": "fox",
@@ -24831,8 +24932,12 @@
           "sentimentVADER": -0.704,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-1.00).",
           "categoryLocal": "entertainment",
-          "explanation": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-1.00).",
-          "category": "entertainment"
+          "explanation": "The story covers a minor personal anecdote regarding a coach's family reaction to a sports loss, which is low-stakes and mildly negative.",
+          "category": "sports",
+          "sentimentGemini": -0.12,
+          "explanationGemini": "The story covers a minor personal anecdote regarding a coach's family reaction to a sports loss, which is low-stakes and mildly negative.",
+          "categoryGemini": "sports",
+          "sentiment": -0.12
         },
         {
           "sourceId": "fox",
@@ -24845,8 +24950,12 @@
           "sentimentVADER": -0.677,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.68) and AFINN-111 (-1.00).",
           "categoryLocal": "entertainment",
-          "explanation": "Analyzed locally with news-calibrated VADER (-0.68) and AFINN-111 (-1.00).",
-          "category": "entertainment"
+          "explanation": "A professional consequence for insensitive public remarks regarding a violent tragedy reflects a negative situation involving workplace conduct.",
+          "category": "entertainment",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "A professional consequence for insensitive public remarks regarding a violent tragedy reflects a negative situation involving workplace conduct.",
+          "categoryGemini": "entertainment",
+          "sentiment": -0.35
         },
         {
           "sourceId": "fox",
@@ -37207,13 +37316,115 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.289,
+      "averageSentiment": -0.35,
       "distribution": {
-        "positive": 31,
-        "neutral": 76,
-        "negative": 163
+        "positive": 22,
+        "neutral": 39,
+        "negative": 152
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "French fridge fright: Why supermarkets have become target for hackers",
+          "description": "More than 500 shops across France were hit in a major cyberattack on freezers, which caused tonnes of food to perish.",
+          "link": "https://www.aljazeera.com/economy/2026/10/13/french-fridge-fright-why-supermarkets-have-become-target-for-hackers?traffic_source=rss",
+          "pubDate": "Tue, 13 Oct 2026 13:08:46 +0000",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.40) and AFINN-111 (-0.25).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "A major cyberattack causing significant food waste and economic damage is a serious disruptive event.",
+          "categoryGemini": "technology",
+          "sentiment": -0.45,
+          "explanation": "A major cyberattack causing significant food waste and economic damage is a serious disruptive event.",
+          "category": "technology"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Trump’s diesel deal opens a new rift with Europe over Ukraine",
+          "description": "Trump calls for Zelenskyy to be replaced, while Europe devotes summit to funding Ukraine.",
+          "link": "https://www.aljazeera.com/news/2026/10/13/trumps-diesel-deal-opens-a-new-rift-with-europe-over-ukraine?traffic_source=rss",
+          "pubDate": "Tue, 13 Oct 2026 13:06:42 +0000",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.382,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.38) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "The report highlights diplomatic friction and policy disagreements between major international powers regarding the war in Ukraine.",
+          "categoryGemini": "politics",
+          "sentiment": -0.25,
+          "explanation": "The report highlights diplomatic friction and policy disagreements between major international powers regarding the war in Ukraine.",
+          "category": "politics"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Iran sees ‘false flag’ operations after UK blames IRGC for airbase incident",
+          "description": "Iran has been accused of being behind a plot against an airbase in the UK.",
+          "link": "https://www.aljazeera.com/news/2026/10/13/iran-sees-false-flag-operations-after-uk-blames-irgc-for-airbase-incident?traffic_source=rss",
+          "pubDate": "Tue, 13 Oct 2026 13:03:56 +0000",
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.599,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.60) and AFINN-111 (-0.50).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.28,
+          "explanationGemini": "Accusations of state-sponsored sabotage and subsequent denials represent significant diplomatic tension.",
+          "categoryGemini": "world",
+          "sentiment": -0.28,
+          "explanation": "Accusations of state-sponsored sabotage and subsequent denials represent significant diplomatic tension.",
+          "category": "world"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Iran threatens Gulf data centres: How exposed is the region’s internet?",
+          "description": "Iran has warned that cables and data centres in the region could be attacked, as Houthi allies hold internet chokepoint.",
+          "link": "https://www.aljazeera.com/news/2026/10/13/iran-threatens-gulf-data-centres-how-exposed-is-the-regions-internet?traffic_source=rss",
+          "pubDate": "Tue, 13 Oct 2026 13:03:33 +0000",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.791,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.79) and AFINN-111 (-0.75).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "Direct threats to critical internet infrastructure constitute a serious escalation in regional security concerns.",
+          "categoryGemini": "technology",
+          "sentiment": -0.35,
+          "explanation": "Direct threats to critical internet infrastructure constitute a serious escalation in regional security concerns.",
+          "category": "technology"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Rwanda to host a Grand Prix in 2030s as Formula One returns to Africa",
+          "description": "Rwanda has secured a 10-year deal to host F1 races at a purpose-built race track on the outskirts of the capital, Kigali.",
+          "link": "https://www.aljazeera.com/sports/2026/10/13/rwanda-to-host-a-grand-prix-in-2030s-as-formula-one-returns-to-africa?traffic_source=rss",
+          "pubDate": "Tue, 13 Oct 2026 12:59:27 +0000",
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.691,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.69) and AFINN-111 (0.63).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.32,
+          "explanationGemini": "The return of a major international sporting event to a new region is a positive development for cultural and economic growth.",
+          "categoryGemini": "sports",
+          "sentiment": 0.32,
+          "explanation": "The return of a major international sporting event to a new region is a positive development for cultural and economic growth.",
+          "category": "sports"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Deadly Houthi attacks in Yemen’s Taiz as government forces advance in Marib",
+          "description": "Government forces engage in intense clashes as Houthi shelling targets residential areas and hospitals in Taiz.",
+          "link": "https://www.aljazeera.com/news/2026/10/13/deadly-houthi-attacks-in-yemens-taiz-as-government-forces-advance-in-marib?traffic_source=rss",
+          "pubDate": "Tue, 13 Oct 2026 12:57:33 +0000",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.052,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.05) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.85,
+          "explanationGemini": "Active shelling of residential areas and hospitals resulting in casualties is a severe humanitarian catastrophe.",
+          "categoryGemini": "world",
+          "sentiment": -0.85,
+          "explanation": "Active shelling of residential areas and hospitals resulting in casualties is a severe humanitarian catastrophe.",
+          "category": "world"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Greta Thunberg says French students are being “robbed” amid nationwide prot",
@@ -37225,8 +37436,12 @@
           "sentimentVADER": -0.226,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.23) and AFINN-111 (-0.25).",
           "categoryLocal": "science",
-          "explanation": "Analyzed locally with news-calibrated VADER (-0.23) and AFINN-111 (-0.25).",
-          "category": "science"
+          "explanation": "Widespread student protests indicate social unrest and political dissatisfaction in France.",
+          "category": "politics",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "Widespread student protests indicate social unrest and political dissatisfaction in France.",
+          "categoryGemini": "politics",
+          "sentiment": -0.25
         },
         {
           "sourceId": "aljazeera",
@@ -42844,11 +43059,11 @@
     },
     "npr": {
       "name": "NPR News",
-      "averageSentiment": -0.175,
+      "averageSentiment": -0.225,
       "distribution": {
-        "positive": 19,
-        "neutral": 28,
-        "negative": 41
+        "positive": 13,
+        "neutral": 16,
+        "negative": 36
       },
       "articles": [
         {
@@ -42907,24 +43122,6 @@
         },
         {
           "sourceId": "npr",
-          "title": "One way to protect coral reefs? Bring back seabirds",
-          "description": "Coral reefs are facing increasing threats around the globe. But on a remote Pacific island, scientists have found that reefs can get help from a surprising ally: seabirds.(Image credit: Claire Harbage)",
-          "link": "https://www.npr.org/2026/10/13/nx-s1-5901320/coral-reefs-palmyra-atoll-birds-restoration",
-          "pubDate": "Tue, 13 Oct 2026 05:00:00 -0400",
-          "sentimentLocal": 0.555,
-          "sentimentAFINN": 0.375,
-          "sentimentVADER": 0.735,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.74) and AFINN-111 (0.38).",
-          "categoryLocal": "other",
-          "sentiment": 0.42,
-          "explanation": "A constructive environmental discovery shows how seabirds naturally help protect and restore coral reefs.",
-          "category": "science",
-          "sentimentGemini": 0.42,
-          "explanationGemini": "A constructive environmental discovery shows how seabirds naturally help protect and restore coral reefs.",
-          "categoryGemini": "science"
-        },
-        {
-          "sourceId": "npr",
           "title": "Win or lose, independent candidates want to meet voters in the middle",
           "description": "Nearly 200 independent candidates in more than 100 congressional races are trying to prove there's an alternative to the two party system — even though the chance of winning is very low. (Image credit: Becky Bohrer)",
           "link": "https://www.npr.org/2026/10/13/nx-s1-5994388/2026-elections-midterm-independent-candidates",
@@ -42958,6 +43155,24 @@
           "sentimentGemini": 0,
           "explanationGemini": "Neutral journalistic advice and perspective on interpreting pre-election polls.",
           "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "npr",
+          "title": "One way to protect coral reefs? Bring back seabirds",
+          "description": "Coral reefs are facing increasing threats around the globe. But on a remote Pacific island, scientists have found that reefs can get help from a surprising ally: seabirds.(Image credit: Claire Harbage)",
+          "link": "https://www.npr.org/2026/10/13/nx-s1-5901320/coral-reefs-palmyra-atoll-birds-restoration",
+          "pubDate": "Tue, 13 Oct 2026 05:00:00 -0400",
+          "sentimentLocal": 0.555,
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0.735,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.74) and AFINN-111 (0.38).",
+          "categoryLocal": "other",
+          "sentiment": 0.42,
+          "explanation": "A constructive environmental discovery shows how seabirds naturally help protect and restore coral reefs.",
+          "category": "science",
+          "sentimentGemini": 0.42,
+          "explanationGemini": "A constructive environmental discovery shows how seabirds naturally help protect and restore coral reefs.",
+          "categoryGemini": "science"
         },
         {
           "sourceId": "npr",
@@ -44819,13 +45034,47 @@
     },
     "cnbc": {
       "name": "CNBC News",
-      "averageSentiment": -0.087,
+      "averageSentiment": -0.115,
       "distribution": {
-        "positive": 41,
-        "neutral": 80,
+        "positive": 36,
+        "neutral": 43,
         "negative": 67
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Martin Shkreli violated lifetime pharma industry ban, FTC and states say in contempt claim",
+          "description": "Shkreli was banned from the pharmaceutical industry after a trial found that he organized an illegal scheme to perpetuate a monopoly for the drug Daraprim.",
+          "link": "https://www.cnbc.com/2026/10/13/martin-shkreli-ftc-pharma-contempt.html",
+          "pubDate": "Tue, 13 Oct 2026 13:22:34 GMT",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.955,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.95) and AFINN-111 (-1.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "A legal contempt claim regarding the violation of a regulatory ban highlights ongoing corporate misconduct.",
+          "categoryGemini": "business",
+          "sentiment": -0.42,
+          "explanation": "A legal contempt claim regarding the violation of a regulatory ban highlights ongoing corporate misconduct.",
+          "category": "business"
+        },
+        {
+          "sourceId": "cnbc",
+          "title": "Micron drops 5% as tech stocks rattled by China chip breakthrough claims",
+          "description": "Technology stocks tumbled Tuesday as a sell-off in U.S. semiconductor shares spilled into Asian and European markets.",
+          "link": "https://www.cnbc.com/2026/10/13/sk-hynix-softbank-samsung-electronics-shares-tech-stocks-fall.html",
+          "pubDate": "Tue, 13 Oct 2026 13:13:57 GMT",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.296,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.30) and AFINN-111 (0.50).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "A market sell-off triggered by competitive technological claims reflects negative economic sentiment and sector volatility.",
+          "categoryGemini": "business",
+          "sentiment": -0.25,
+          "explanation": "A market sell-off triggered by competitive technological claims reflects negative economic sentiment and sector volatility.",
+          "category": "business"
+        },
         {
           "sourceId": "cnbc",
           "title": "Jim Cramer's top 10 things to watch in the stock market Tuesday",
@@ -48617,11 +48866,11 @@
     },
     "skynews": {
       "name": "Sky News",
-      "averageSentiment": -0.363,
+      "averageSentiment": -0.457,
       "distribution": {
-        "positive": 8,
-        "neutral": 20,
-        "negative": 50
+        "positive": 6,
+        "neutral": 6,
+        "negative": 48
       },
       "articles": [
         {
@@ -48695,6 +48944,23 @@
           "sentimentGemini": -0.58,
           "explanationGemini": "An actor being arrested and accused of multiple assaults on flight crew, police, and a nurse is a serious criminal incident.",
           "categoryGemini": "entertainment"
+        },
+        {
+          "sourceId": "skynews",
+          "title": "'Yes cuzzie': Prisoners celebrate as hundreds freed in second swathe of early releases",
+          "description": "Prisoners rejoiced as they left jail early during the second stage of a government scheme to ease overcrowding.",
+          "link": "https://news.sky.com/story/hundreds-more-prisoners-to-be-freed-as-stage-two-of-early-release-scheme-begins-13598700",
+          "pubDate": "Tue, 13 Oct 2026 06:50:00 +0100",
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.791,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.79) and AFINN-111 (0.63).",
+          "categoryLocal": "politics",
+          "sentimentGemini": 0.35,
+          "explanationGemini": "Prisoners celebrating early release to relieve overcrowding represents a constructive institutional change and relief for inmates.",
+          "categoryGemini": "politics",
+          "sentiment": 0.35,
+          "explanation": "Prisoners celebrating early release to relieve overcrowding represents a constructive institutional change and relief for inmates.",
+          "category": "politics"
         },
         {
           "sourceId": "skynews",
@@ -50380,11 +50646,11 @@
     },
     "spiegel": {
       "name": "Spiegel International",
-      "averageSentiment": -0.186,
+      "averageSentiment": -0.414,
       "distribution": {
-        "positive": 1,
-        "neutral": 21,
-        "negative": 9
+        "positive": 2,
+        "neutral": 2,
+        "negative": 16
       },
       "articles": [
         {
@@ -50593,15 +50859,19 @@
           "pubDate": "Thu, 9 Jul 2026 12:01:00 +0200",
           "sentimentLocal": -0.517,
           "sentimentAFINN": -0.375,
-          "sentimentVADER": -0.6597,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: -0.66) and AFINN-111 (score: -0.38) models.",
-          "categoryLocal": "technology",
-          "explanation": "Analyzed locally using averaged VADER (score: -0.66) and AFINN-111 (score: -0.38) models.",
-          "category": "other",
+          "sentimentVADER": -0.66,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.66) and AFINN-111 (-0.38).",
+          "categoryLocal": "entertainment",
+          "explanation": "Deepening military cooperation between adversarial powers like Russia and China increases geopolitical tension and security risks.",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.66) and AFINN-111 (score: -0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "Deepening military cooperation between adversarial powers like Russia and China increases geopolitical tension and security risks.",
+          "categoryGemini": "world",
+          "sentiment": -0.45
         },
         {
           "sourceId": "spiegel",
@@ -50611,15 +50881,19 @@
           "pubDate": "Wed, 8 Jul 2026 08:54:00 +0200",
           "sentimentLocal": 0.442,
           "sentimentAFINN": 0.375,
-          "sentimentVADER": 0.5095,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: 0.51) and AFINN-111 (score: 0.38) models.",
+          "sentimentVADER": 0.509,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.51) and AFINN-111 (0.38).",
           "categoryLocal": "other",
-          "explanation": "Analyzed locally using averaged VADER (score: 0.51) and AFINN-111 (score: 0.38) models.",
-          "category": "other",
+          "explanation": "Archival historical investigations into Nazi SS databases touch upon severe historical atrocities and trauma.",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.51) and AFINN-111 (score: 0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "Archival historical investigations into Nazi SS databases touch upon severe historical atrocities and trauma.",
+          "categoryGemini": "world",
+          "sentiment": -0.25
         },
         {
           "sourceId": "spiegel",
@@ -50629,15 +50903,19 @@
           "pubDate": "Mon, 6 Jul 2026 09:21:00 +0200",
           "sentimentLocal": 0.176,
           "sentimentAFINN": 0.25,
-          "sentimentVADER": 0.1027,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: 0.10) and AFINN-111 (score: 0.25) models.",
+          "sentimentVADER": 0.103,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.10) and AFINN-111 (0.25).",
           "categoryLocal": "politics",
-          "explanation": "Analyzed locally using averaged VADER (score: 0.10) and AFINN-111 (score: 0.25) models.",
-          "category": "other",
+          "explanation": "Critical commentary on democratic fragility and political polarization introduces mild political tension.",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.10) and AFINN-111 (score: 0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Critical commentary on democratic fragility and political polarization introduces mild political tension.",
+          "categoryGemini": "politics",
+          "sentiment": -0.15
         },
         {
           "sourceId": "spiegel",
@@ -50648,14 +50926,18 @@
           "sentimentLocal": 0,
           "sentimentAFINN": 0,
           "sentimentVADER": 0,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.00) models.",
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "politics",
-          "explanation": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.00) models.",
-          "category": "other",
+          "explanation": "Reporting on foreign influence and governance issues in Venezuela highlights ongoing political instability.",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Reporting on foreign influence and governance issues in Venezuela highlights ongoing political instability.",
+          "categoryGemini": "world",
+          "sentiment": -0.22
         },
         {
           "sourceId": "spiegel",
@@ -50665,15 +50947,19 @@
           "pubDate": "Wed, 1 Jul 2026 14:19:00 +0200",
           "sentimentLocal": -0.983,
           "sentimentAFINN": -1,
-          "sentimentVADER": -0.9664,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: -0.97) and AFINN-111 (score: -1.00) models.",
+          "sentimentVADER": -0.966,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.97) and AFINN-111 (-1.00).",
           "categoryLocal": "world",
-          "explanation": "Analyzed locally using averaged VADER (score: -0.97) and AFINN-111 (score: -1.00) models.",
-          "category": "other",
+          "explanation": "An active investigation into an elementary school attack killing children constitutes severe humanitarian trauma and potential war crimes.",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.97) and AFINN-111 (score: -1.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.85,
+          "explanationGemini": "An active investigation into an elementary school attack killing children constitutes severe humanitarian trauma and potential war crimes.",
+          "categoryGemini": "world",
+          "sentiment": -0.85
         },
         {
           "sourceId": "spiegel",
@@ -50683,15 +50969,19 @@
           "pubDate": "Fri, 26 Jun 2026 12:52:00 +0200",
           "sentimentLocal": -0.528,
           "sentimentAFINN": -0.375,
-          "sentimentVADER": -0.6808,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: -0.68) and AFINN-111 (score: -0.38) models.",
+          "sentimentVADER": -0.681,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.68) and AFINN-111 (-0.38).",
           "categoryLocal": "business",
-          "explanation": "Analyzed locally using averaged VADER (score: -0.68) and AFINN-111 (score: -0.38) models.",
-          "category": "other",
+          "explanation": "Frustration among island residents regarding climate change narratives reflects environmental stress and fatigue.",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.68) and AFINN-111 (score: -0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "Frustration among island residents regarding climate change narratives reflects environmental stress and fatigue.",
+          "categoryGemini": "world",
+          "sentiment": -0.18
         },
         {
           "sourceId": "spiegel",
@@ -50702,14 +50992,18 @@
           "sentimentLocal": -0.273,
           "sentimentAFINN": -0.25,
           "sentimentVADER": -0.296,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: -0.30) and AFINN-111 (score: -0.25) models.",
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.30) and AFINN-111 (-0.25).",
           "categoryLocal": "other",
-          "explanation": "Analyzed locally using averaged VADER (score: -0.30) and AFINN-111 (score: -0.25) models.",
-          "category": "other",
+          "explanation": "The mysterious disappearance of a young woman linked to a notorious criminal scandal involves deep personal tragedy and unresolved trauma.",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.30) and AFINN-111 (score: -0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "The mysterious disappearance of a young woman linked to a notorious criminal scandal involves deep personal tragedy and unresolved trauma.",
+          "categoryGemini": "world",
+          "sentiment": -0.55
         },
         {
           "sourceId": "spiegel",
@@ -50719,15 +51013,19 @@
           "pubDate": "Wed, 10 Jun 2026 17:51:00 +0200",
           "sentimentLocal": 0.315,
           "sentimentAFINN": 0.25,
-          "sentimentVADER": 0.3804,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: 0.38) and AFINN-111 (score: 0.25) models.",
-          "categoryLocal": "technology",
-          "explanation": "Analyzed locally using averaged VADER (score: 0.38) and AFINN-111 (score: 0.25) models.",
-          "category": "other",
+          "sentimentVADER": 0.38,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.38) and AFINN-111 (0.25).",
+          "categoryLocal": "science",
+          "explanation": "Shortcomings in industrial carbon capture projects highlight setbacks in critical climate change mitigation efforts.",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.38) and AFINN-111 (score: 0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": -0.28,
+          "explanationGemini": "Shortcomings in industrial carbon capture projects highlight setbacks in critical climate change mitigation efforts.",
+          "categoryGemini": "business",
+          "sentiment": -0.28
         },
         {
           "sourceId": "spiegel",
@@ -50737,15 +51035,19 @@
           "pubDate": "Mon, 8 Jun 2026 10:29:00 +0200",
           "sentimentLocal": -0.512,
           "sentimentAFINN": -0.375,
-          "sentimentVADER": -0.6486,
-          "explanationLocal": "Analyzed locally using averaged VADER (score: -0.65) and AFINN-111 (score: -0.38) models.",
+          "sentimentVADER": -0.649,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.65) and AFINN-111 (-0.38).",
           "categoryLocal": "other",
-          "explanation": "Analyzed locally using averaged VADER (score: -0.65) and AFINN-111 (score: -0.38) models.",
-          "category": "other",
+          "explanation": "The political removal of a long-standing autocrat and the revitalization of democracy represent a major positive political shift.",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.65) and AFINN-111 (score: -0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentGemini": 0.42,
+          "explanationGemini": "The political removal of a long-standing autocrat and the revitalization of democracy represent a major positive political shift.",
+          "categoryGemini": "politics",
+          "sentiment": 0.42
         },
         {
           "sourceId": "spiegel",
@@ -50949,13 +51251,47 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.196,
+      "averageSentiment": -0.244,
       "distribution": {
-        "positive": 52,
-        "neutral": 86,
-        "negative": 167
+        "positive": 38,
+        "neutral": 55,
+        "negative": 156
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "France seizes another 'shadow fleet' tanker; Russia decries 'piracy' - Reuters",
+          "description": "France seizes another 'shadow fleet' tanker; Russia decries 'piracy' Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPX3FfbUhFOUJOOFY4ZFlHYnc4YnJqYWRUUHdsTWp6aXVLekZBczUwTFlMazdRR3NtajhFMUUtclJqLWUtbTNmSnlOcmJBdTF0Z2tWRGFvbWljbTJfQnhwcWROeHh4NFIzMHhuUHFNaGZ6MEpHX3B3dFJHTWVFMU1qdmNMNDJUdFpVN3FnbUZPUmRxUEhPUG5Gcm5EYnJnVXdwSmxvQ1Y4TFc?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 12:34:06 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "The seizure of a shadow fleet tanker and accusations of piracy reflect escalating geopolitical and trade conflicts.",
+          "categoryGemini": "world",
+          "sentiment": -0.32,
+          "explanation": "The seizure of a shadow fleet tanker and accusations of piracy reflect escalating geopolitical and trade conflicts.",
+          "category": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "IMF flags risks to global economy from AI market correction, war and debt - Reuters",
+          "description": "IMF flags risks to global economy from AI market correction, war and debt Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOTXc4YzNuVFU1U2dtSjE1SG9xRUIxZTRtMU1xdXNodDkxMTRGaE9yQTJIVVVoeVJjdnFsbi0yeUJ6a09ZbGJ0Z3N5V1NiV1RGZlVDekptcUVqcTVtNGRsdDNpZkd1akEyN2hybUx5aFlXM05pZENOVFdfTXI3XzBxaGRMZ0NVcFFRVXZRbHlZYUNleHhiTTJ1UTN0dXJ6U0h2V3ZoWGdqOWp5SmdCMjFab1doZw?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 12:31:54 GMT",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.943,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.94) and AFINN-111 (-1.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "IMF warnings regarding systemic global risks like market corrections, war, and debt introduce significant economic apprehension.",
+          "categoryGemini": "business",
+          "sentiment": -0.35,
+          "explanation": "IMF warnings regarding systemic global risks like market corrections, war, and debt introduce significant economic apprehension.",
+          "category": "business"
+        },
         {
           "sourceId": "reuters",
           "title": "Iran and Russia ramping up hybrid campaigns in Britain, UK spy chief says - Reuters",
@@ -51045,6 +51381,23 @@
           "sentimentGemini": -0.18,
           "explanationGemini": "Student protests involving prominent figures generate mild socio-political friction.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Freight rates for Russian Urals oil shipments to India hit fresh records in early October - Reuters",
+          "description": "Freight rates for Russian Urals oil shipments to India hit fresh records in early October Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxNcVpHcU5oOWl3WUt1NFlQNi1Ld3JVQWI5Z0l3Z3p4UTFGSDdsMk5Yak5zdy16Z1NCcl9NMzBqbkgxaEdSLUtBSWVJWXQ5MnBiTzlDMXUyZE5iemFmQlJ2b3JlRWgxTlRMdnhHMVptZXhvMUtwMHZpb3IwM0VOZEUyLXpVenhqb2toWmJUdU9kQ25odHY2enA2a2xvd19mQ2U0WTVIVUlYa0kzYUdWYUVIaGtQSVdZY2pGVC15b2pEZlZhRDVteFVlOGFCOA?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 11:35:43 GMT",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.557,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.56) and AFINN-111 (0.25).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.2,
+          "explanationGemini": "Record high freight rates for oil shipments indicate supply chain pressures and rising costs.",
+          "categoryGemini": "business",
+          "sentiment": -0.2,
+          "explanation": "Record high freight rates for oil shipments indicate supply chain pressures and rising costs.",
+          "category": "business"
         },
         {
           "sourceId": "reuters",
@@ -56939,11 +57292,11 @@
     },
     "ap": {
       "name": "Associated Press",
-      "averageSentiment": -0.222,
+      "averageSentiment": -0.319,
       "distribution": {
-        "positive": 17,
-        "neutral": 41,
-        "negative": 61
+        "positive": 15,
+        "neutral": 10,
+        "negative": 59
       },
       "articles": [
         {
@@ -59289,13 +59642,47 @@
     },
     "bloomberg": {
       "name": "Bloomberg",
-      "averageSentiment": -0.095,
+      "averageSentiment": -0.133,
       "distribution": {
-        "positive": 64,
-        "neutral": 87,
-        "negative": 116
+        "positive": 53,
+        "neutral": 51,
+        "negative": 110
       },
       "articles": [
+        {
+          "sourceId": "bloomberg",
+          "title": "Apple Unveils $299 HomeView Hub as Part of New Smart Home Push - Bloomberg.com",
+          "description": "Apple Unveils $299 HomeView Hub as Part of New Smart Home Push Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxOTW8xZ2UzTWxzcVBtaDcyZVJTS3JQa0RJd2V4SzJhYjFTbEsydXZxdktNR3hhTnZ3dDhtVVFpR0xNTkhuQ19GUmJUM3RQRl9taEwwTnhFOUJGc2FraW1paV8yWXY5dTFGS011NmI1eWg3SG9wY0kzNW9hWUhEVVE5ZlhzR2RnUG1raENrY2Q3cXZyUlR0eEctTDZTSG1HTGtVS0JjaGpZZHp5dUJPc202MW42YzFYMXpSM0s2Rk5vLXM?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 13:00:13 GMT",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.66,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.66) and AFINN-111 (0.25).",
+          "categoryLocal": "technology",
+          "sentimentGemini": 0.15,
+          "explanationGemini": "A major technology company releasing a new smart home product represents standard, constructive market activity.",
+          "categoryGemini": "technology",
+          "sentiment": 0.15,
+          "explanation": "A major technology company releasing a new smart home product represents standard, constructive market activity.",
+          "category": "technology"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Citi’s Traders, Money-Movers Help Drive Bank Past Profit Target - Bloomberg.com",
+          "description": "Citi’s Traders, Money-Movers Help Drive Bank Past Profit Target Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOTEJxcFJwSDE0LVFfV3dkZ00zUFRUNDVsY0s0UEVNSXVFaDNKY3NnUlhVVTI3UHZoTXpfXzJlZTFFTlJVWE1BUjdKbmw5ZGNqU3lYeDgxMGoxRE8yYllWQzN5dnIwcUpmX21VZWJjOFJhY3E0aW1HdlhHVVB5aUt2TTNtZExQc29iZzZ1N3cxazdsUzZyWWlaNjhfYkI4ZC16ODBkaTh6b0hsMm5QT0pabThxVQ?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 12:09:03 GMT",
+          "sentimentAFINN": 1,
+          "sentimentVADER": 0.881,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.88) and AFINN-111 (1.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.28,
+          "explanationGemini": "Strong financial performance exceeding corporate profit targets demonstrates economic stabilization and success.",
+          "categoryGemini": "business",
+          "sentiment": 0.28,
+          "explanation": "Strong financial performance exceeding corporate profit targets demonstrates economic stabilization and success.",
+          "category": "business"
+        },
         {
           "sourceId": "bloomberg",
           "title": "Goldman Equity Traders Top Estimates as Fixed Income Falls Short - Bloomberg.com",
@@ -59307,8 +59694,12 @@
           "sentimentVADER": 0.382,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.38) and AFINN-111 (0.50).",
           "categoryLocal": "business",
-          "explanation": "Analyzed locally with news-calibrated VADER (0.38) and AFINN-111 (0.50).",
-          "category": "business"
+          "explanation": "Exceeding revenue estimates in equity trading highlights positive corporate financial performance despite mixed sector results.",
+          "category": "business",
+          "sentimentGemini": 0.18,
+          "explanationGemini": "Exceeding revenue estimates in equity trading highlights positive corporate financial performance despite mixed sector results.",
+          "categoryGemini": "business",
+          "sentiment": 0.18
         },
         {
           "sourceId": "bloomberg",
@@ -59345,6 +59736,23 @@
           "sentimentGemini": -0.62,
           "explanationGemini": "Diplomatic escalation following military drone attacks on shipping lanes signifies serious international conflict.",
           "categoryGemini": "world"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "AI Is Changing Motherhood for the Worse - Bloomberg.com",
+          "description": "AI Is Changing Motherhood for the Worse Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPdkRNWUtLd2FfU0lEcDZRTXladERMQjFVelE3SC04N2MtRFFBQWwtLTdyVUp2OGpybjRtaG1fX1RDSlMzZHk5Z3dXVGlkNVg5enQ2RWZtb2RLcGo5OGVfRk9FbjUtUHlSbXR1eWxTb0VlelVIazJjTVdSSjEwcTVaVUFWOERreHE5ZUhrSFd1NjA5NkVWT0ZFMGlDNVFNNmFPQlppWXI1OGRTdw?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 11:00:10 GMT",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.735,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.74) and AFINN-111 (-0.75).",
+          "categoryLocal": "technology",
+          "sentimentGemini": -0.3,
+          "explanationGemini": "Negative societal impacts of artificial intelligence on motherhood highlight technological disruption and personal stress.",
+          "categoryGemini": "technology",
+          "sentiment": -0.3,
+          "explanation": "Negative societal impacts of artificial intelligence on motherhood highlight technological disruption and personal stress.",
+          "category": "technology"
         },
         {
           "sourceId": "bloomberg",
@@ -59393,8 +59801,12 @@
           "sentimentVADER": 0,
           "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
           "categoryLocal": "other",
-          "explanation": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
-          "category": "other"
+          "explanation": "Small businesses struggling with soaring costs by shutting off air conditioning and cutting hours signals severe economic distress.",
+          "category": "business",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "Small businesses struggling with soaring costs by shutting off air conditioning and cutting hours signals severe economic distress.",
+          "categoryGemini": "business",
+          "sentiment": -0.42
         },
         {
           "sourceId": "bloomberg",
@@ -64972,6 +65384,25 @@
         "reuters": -0.197,
         "ap": -0.222,
         "bloomberg": -0.098
+      }
+    },
+    {
+      "timestamp": "2026-10-13T13:29:09.169Z",
+      "analyzer": "Gemini (gemini-3.5-flash-lite)",
+      "averages": {
+        "bbc": -0.253,
+        "nyt": -0.253,
+        "cnn": -0.385,
+        "guardian": -0.163,
+        "fox": -0.181,
+        "aljazeera": -0.35,
+        "npr": -0.225,
+        "cnbc": -0.115,
+        "skynews": -0.457,
+        "spiegel": -0.414,
+        "reuters": -0.244,
+        "ap": -0.319,
+        "bloomberg": -0.133
       }
     }
   ]
