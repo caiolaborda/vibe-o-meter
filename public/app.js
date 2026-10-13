@@ -885,6 +885,18 @@ function populateFilterOptions() {
   if (sources.some(s => s.id === prevB)) elements.h2hSourceB.value = prevB;
 }
 
+// Map continuous sentiment score to calibrated color matching source bubble rings
+function getValenceColor(score) {
+  if (score === null || score === undefined || isNaN(score)) return '#64748b';
+  if (score < -0.25) return '#dc2626'; // dark crimson (severe crisis)
+  if (score < -0.12) return '#ef4444'; // negative coral / alarmist
+  if (score < -0.02) return '#f97316'; // amber-orange / leaning gloomy
+  if (score > 0.25) return '#15803d'; // deep positive emerald
+  if (score > 0.12) return '#22c55e'; // positive emerald
+  if (score > 0.02) return '#10b981'; // gentle positive
+  return '#64748b'; // objective neutral slate
+}
+
 // Draw the Vibe Spectrum Axis (Hero Averages vs Beeswarm Lanes)
 function renderSpectrum() {
   const sources = resolvedSources || getResolvedSources();
@@ -919,6 +931,35 @@ function renderSpectrum() {
     const domainMin = Math.floor((minAvg - pad) * 10) / 10;
     const domainMax = Math.ceil((maxAvg + pad) * 10) / 10;
     const domainSpan = Math.max(0.15, domainMax - domainMin);
+
+    // Calibrate the track's color gradient dynamically across the normed domain
+    // so the track background precisely reflects the colors of the source circles!
+    const trackElem = document.querySelector('.spectrum-track');
+    if (trackElem) {
+      const stops = [];
+      const numSteps = 12;
+      for (let s = 0; s <= numSteps; s++) {
+        const pct = (s / numSteps) * 100;
+        // In the marker positioning, percentage maps from 6% to 94% across [domainMin, domainMax]
+        const scoreAtPct = domainMin + (domainSpan * ((pct - 6) / 88));
+        const color = getValenceColor(scoreAtPct);
+        stops.push(`${color} ${pct.toFixed(1)}%`);
+      }
+      trackElem.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
+    }
+
+    // Also calibrate the subtle backdrop glow of the container to match
+    const containerElem = document.getElementById('averages-view-container');
+    if (containerElem) {
+      const bgStops = [];
+      for (let s = 0; s <= 6; s++) {
+        const pct = (s / 6) * 100;
+        const scoreAtPct = domainMin + (domainSpan * ((pct - 6) / 88));
+        const color = getValenceColor(scoreAtPct);
+        bgStops.push(`${color}0a ${pct.toFixed(1)}%`);
+      }
+      containerElem.style.background = `linear-gradient(to right, ${bgStops.join(', ')})`;
+    }
 
     // Update dynamic tick labels
     const ticksContainer = document.querySelector('.spectrum-ticks');
@@ -963,19 +1004,8 @@ function renderSpectrum() {
       }
       markerPositions.push({ x: finalX, y: yLevel });
       
-      // Absolute valence color (negative numbers like -0.09 must NEVER be green!)
-      let markerColor = '#64748b'; // neutral slate
-      if (avg < -0.15) {
-        markerColor = '#ef4444'; // negative coral / alarmist
-      } else if (avg < -0.02) {
-        markerColor = '#f97316'; // amber-orange / leaning gloomy
-      } else if (avg > 0.15) {
-        markerColor = '#22c55e'; // positive emerald
-      } else if (avg > 0.02) {
-        markerColor = '#10b981'; // gentle positive
-      } else {
-        markerColor = '#64748b'; // objective neutral
-      }
+      // Absolute valence color calibrated identically to the track gradient
+      const markerColor = getValenceColor(avg);
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
       const yOffset = yLevel * 44;
@@ -1949,7 +1979,7 @@ function renderHeadlines() {
       </button>
       
       <div id="${elementId}" class="article-reasoning-panel">
-        <strong>Vibe Profile Details:</strong> ${art.explanation || 'No reasoning available.'}
+        <strong>Vibe Profile Details:</strong> ${hasValidScore && art.explanation && !art.explanation.includes('locally') ? art.explanation : 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).'}
       </div>
     `;
     

@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=2.6">
+  <link rel="stylesheet" href="style.css?v=2.7">
 </head>
 <body>
 
@@ -207,8 +207,8 @@
         </div>
         
         <!-- View A: Old Averages View Container (Single Track) -->
-        <div id="averages-view-container" class="spectrum-track-container" style="position: relative; height: 280px; margin: 1.5rem 0; display: block; background: linear-gradient(to right, rgba(220, 38, 38, 0.035) 0%, rgba(255, 138, 101, 0.02) 25%, rgba(71, 85, 105, 0.01) 50%, rgba(129, 199, 132, 0.02) 75%, rgba(22, 163, 74, 0.035) 100%); border-radius: 14px; border: 1px solid var(--border-color); overflow: visible;">
-          <div class="spectrum-track" style="height: 10px; border-radius: 5px; background: linear-gradient(to right, var(--neg-color) 0%, #ff8a65 25%, var(--neu-color) 50%, #81c784 75%, var(--pos-color) 100%); position: absolute; bottom: 35px; left: 24px; right: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);"></div>
+        <div id="averages-view-container" class="spectrum-track-container" style="position: relative; height: 280px; margin: 1.5rem 0; display: block; border-radius: 14px; border: 1px solid var(--border-color); overflow: visible; transition: background 0.3s ease;">
+          <div class="spectrum-track" style="height: 10px; border-radius: 5px; position: absolute; bottom: 35px; left: 24px; right: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.15); transition: background 0.3s ease;"></div>
           <div class="spectrum-ticks" style="display: flex; justify-content: space-between; position: absolute; bottom: 32px; left: 24px; right: 24px; pointer-events: none;">
             <span style="width: 2px; height: 16px; background-color: var(--border-color);"></span>
             <span style="width: 2px; height: 16px; background-color: var(--border-color);"></span>
@@ -680,6 +680,6 @@
 
   </div>
 
-  <script src="app.js?v=2.6"></script>
+  <script src="app.js?v=2.7"></script>
 </body>
 </html>

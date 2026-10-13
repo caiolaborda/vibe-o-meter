@@ -305,7 +305,8 @@ h1, h2, h3, h4 {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 2rem;
+  padding: 1.75rem 2rem;
+  border-radius: 20px;
 }
 
 .spectrum-labels {
@@ -2339,12 +2340,20 @@ h1, h2, h3, h4 {
 
 /* --- DASHBOARD TABBED ARCHITECTURE --- */
 .tab-panel {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
   animation: fadeInTab 0.22s ease-out;
 }
 
 .tab-panel.hidden {
   display: none !important;
+}
+
+.tab-panel > section {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes fadeInTab {
@@ -2388,18 +2397,18 @@ h1, h2, h3, h4 {
 
 /* --- SENTIMENT TIMELINE VISUALIZATION --- */
 .timeline-section {
-  margin-bottom: 2rem;
+  margin: 0;
 }
 
 .timeline-card {
-  padding: 1.5rem;
+  padding: 1.75rem 2rem;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .timeline-header-row {
