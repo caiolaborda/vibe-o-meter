@@ -1039,8 +1039,8 @@ function renderSpectrum() {
       for (let t = 0; t <= 4; t++) {
         const tickScore = domainMin + (domainSpan * (t / 4));
         const span = document.createElement('span');
-        span.style.cssText = 'position: relative; width: 2px; height: 16px; background-color: var(--border-color);';
-        span.innerHTML = `<span style="position: absolute; top: 18px; left: 50%; transform: translateX(-50%); font-size: 0.68rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">${tickScore > 0 ? '+' : ''}${tickScore.toFixed(2)}</span>`;
+        span.style.cssText = 'position: relative; width: 2px; height: 14px; background-color: var(--border-color);';
+        span.innerHTML = `<span style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 0.68rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">${tickScore > 0 ? '+' : ''}${tickScore.toFixed(2)}</span>`;
         ticksContainer.appendChild(span);
       }
     }
@@ -1079,12 +1079,12 @@ function renderSpectrum() {
       const markerColor = getValenceColor(avg);
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
-      const yOffset = yLevel * 28;
+      const yOffset = yLevel * 36;
       
       const marker = document.createElement('div');
       marker.className = `outlet-marker ${state.filters.source === id ? 'active' : ''}`;
       marker.style.left = `${finalX}%`;
-      marker.style.bottom = `${-12 + yOffset}px`;
+      marker.style.bottom = `${5 + yOffset}px`;
       marker.setAttribute('data-id', id);
       
       marker.innerHTML = `
