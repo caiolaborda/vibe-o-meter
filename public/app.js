@@ -2699,8 +2699,17 @@ function renderDailyPulse() {
 
   if (alarmistNameEl && mostAlarmist) alarmistNameEl.innerText = mostAlarmist.name;
   if (alarmistScoreEl && mostAlarmist) alarmistScoreEl.innerText = (mostAlarmist.score > 0 ? '+' : '') + mostAlarmist.score.toFixed(2);
+  const alarmistSubEl = document.getElementById('pulse-alarmist-sub');
+  if (alarmistSubEl && mostAlarmist) {
+    alarmistSubEl.innerText = `Most pessimistic tone today`;
+  }
+
   if (upliftingNameEl && mostUplifting) upliftingNameEl.innerText = mostUplifting.name;
   if (upliftingScoreEl && mostUplifting) upliftingScoreEl.innerText = (mostUplifting.score > 0 ? '+' : '') + mostUplifting.score.toFixed(2);
+  const upliftingSubEl = document.getElementById('pulse-uplifting-sub');
+  if (upliftingSubEl && mostUplifting) {
+    upliftingSubEl.innerText = `Holding relative editorial composure`;
+  }
   
   if (polNameEl) {
     polNameEl.innerText = maxClash.outletA && maxClash.outletB 
@@ -2708,10 +2717,10 @@ function renderDailyPulse() {
       : 'Cross-Outlet Consensus';
   }
   if (polSubEl) {
-    polSubEl.innerText = maxClash.catName ? `on ${maxClash.catName} news` : 'Across all topics';
+    polSubEl.innerText = maxClash.catName ? `Topic: ${maxClash.catName}` : 'Across all topics';
   }
   if (polScoreEl) {
-    polScoreEl.innerText = maxClash.divergence > 0 ? `${maxClash.divergence.toFixed(2)} Divergence` : '0.15 Spread';
+    polScoreEl.innerText = maxClash.divergence > 0 ? `${maxClash.divergence.toFixed(2)} Spread` : '0.15 Spread';
   }
 
   // Interactivity for the 3 Signal Cards
@@ -2781,6 +2790,10 @@ function renderDailyPulse() {
         chipsContainer.appendChild(chip);
       }
     });
+  }
+
+  if (typeof lucide !== 'undefined' && lucide.createIcons) {
+    lucide.createIcons();
   }
 }
 

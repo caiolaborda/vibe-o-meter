@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=2.9">
+  <link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
 
@@ -64,8 +64,10 @@
         <!-- Big Clean Hero Banner with Integrated Meta -->
         <div class="pulse-top-bar">
           <div class="pulse-main-banner">
+            <span class="pulse-globe-badge">
+              <i data-lucide="globe"></i>
+            </span>
             <h1 class="pulse-banner-title">
-              <span class="pulse-banner-icon">🌍</span>
               <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
               <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
               <span id="global-mood-badge" class="pulse-hero-mood-badge">Leaning Gloomy</span>
@@ -73,8 +75,6 @@
           </div>
           <div class="pulse-meta-info">
             <span id="pulse-article-count" class="pulse-count-text">197 Headlines Analyzed</span>
-            <span class="pulse-meta-divider">•</span>
-            <span id="pulse-timeframe-badge" class="pulse-time-text">Past 24 Hours</span>
           </div>
         </div>
 
@@ -89,47 +89,53 @@
         <div class="pulse-signals-strip">
           <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
             <div class="signal-header">
-              <span class="signal-icon neg">📉</span>
-              <span class="signal-label">Most Alarmist Outlet</span>
+              <span class="signal-label neg">
+                <i data-lucide="arrow-down-right"></i>
+                <span>Most Alarmist Outlet</span>
+              </span>
+              <span id="pulse-alarmist-score" class="signal-score badge neg">-0.47</span>
             </div>
             <div class="signal-body">
               <strong id="pulse-alarmist-name" class="signal-name">Sky News</strong>
-              <span id="pulse-alarmist-score" class="signal-score badge neg">-0.47</span>
+              <span id="pulse-alarmist-sub" class="signal-sub">Most pessimistic tone today</span>
             </div>
           </div>
 
           <div class="pulse-signal-card" id="signal-uplifting-card" title="Click to filter headlines by most uplifting outlet">
             <div class="signal-header">
-              <span class="signal-icon pos">📈</span>
-              <span class="signal-label">Most Uplifting Outlet</span>
+              <span class="signal-label pos">
+                <i data-lucide="arrow-up-right"></i>
+                <span>Most Uplifting Outlet</span>
+              </span>
+              <span id="pulse-uplifting-score" class="signal-score badge pos">-0.07</span>
             </div>
             <div class="signal-body">
               <strong id="pulse-uplifting-name" class="signal-name">CNBC News</strong>
-              <span id="pulse-uplifting-score" class="signal-score badge pos">-0.07</span>
+              <span id="pulse-uplifting-sub" class="signal-sub">Holding relative composure</span>
             </div>
           </div>
 
           <div class="pulse-signal-card" id="signal-polarization-card" title="Two outlets with the largest divergence on the same topic — click to compare head-to-head">
             <div class="signal-header">
-              <span class="signal-icon warn">⚡</span>
-              <span class="signal-label">Biggest Outlet Clash</span>
+              <span class="signal-label warn">
+                <i data-lucide="split"></i>
+                <span>Biggest Outlet Clash</span>
+              </span>
+              <span id="pulse-polarization-score" class="signal-score badge warn">1.08 Spread</span>
             </div>
             <div class="signal-body">
-              <div style="display:flex; flex-direction:column; overflow:hidden;">
-                <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
-                <span id="pulse-polarization-sub" style="font-size:0.72rem; color:var(--text-muted); font-weight:500;">on Business</span>
-              </div>
-              <span id="pulse-polarization-score" class="signal-score badge warn">1.08 Divergence</span>
+              <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
+              <span id="pulse-polarization-sub" class="signal-sub">Topic: Business</span>
             </div>
           </div>
         </div>
 
         <!-- 4. Topic Vibes Bar (Interactive Global Topic Filter) -->
         <div class="pulse-topics-bar">
-          <span class="pulse-topics-label" title="Click any topic pill to filter the entire dashboard">
+          <div class="pulse-topics-label-wrap">
             <i data-lucide="layers"></i>
-            FILTER BY TOPIC:
-          </span>
+            <span>Filter by Beat:</span>
+          </div>
           <div class="pulse-topic-chips" id="pulse-category-chips">
             <!-- Dynamically populated chips in app.js -->
           </div>
