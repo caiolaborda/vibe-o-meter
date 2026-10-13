@@ -47,7 +47,7 @@ const SOURCE_META = {
 const SOURCE_FEEDS = {
   bbc: 'https://feeds.bbci.co.uk/news/rss.xml',
   nyt: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
-  cnn: 'http://rss.cnn.com/rss/edition.rss',
+  cnn: 'https://news.google.com/rss/search?q=site:cnn.com&hl=en-US&gl=US&ceid=US:en',
   guardian: 'https://www.theguardian.com/international/rss',
   fox: 'https://moxie.foxnews.com/feed-uploader/v/web/home/latest.xml',
   aljazeera: 'https://www.aljazeera.com/xml/rss/all.xml',
@@ -984,17 +984,17 @@ function renderSpectrum() {
         `;
       }).join('');
       
-      const averageMarkerHTML = `
+      const averageMarkerHTML = data.scoredCount > 0 ? `
         <div style="position: absolute; left: calc(${avgPct}% - 1px); top: 15%; bottom: 15%; width: 2px; background-color: ${meta.color}; z-index: 2; opacity: 0.6;" title="Average: ${avg.toFixed(2)}"></div>
         <div style="position: absolute; left: calc(${avgPct}% - 4px); top: 4%; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid ${meta.color}; z-index: 3;" title="Average: ${avg.toFixed(2)}"></div>
-      `;
+      ` : '';
       
       const trackHTML = `
         <div class="lane-track-container" style="position: relative; flex-grow: 1; height: 34px; background: var(--bg-secondary); border-radius: 17px; border: 1px solid var(--border-color); display: flex; align-items: center; overflow: hidden;">
           <div style="position: absolute; left: 12px; right: 12px; height: 1.5px; background: var(--border-color); opacity: 0.4; z-index: 1; top: 50%;"></div>
           ${averageMarkerHTML}
-          <div style="position: absolute; left: 12px; right: 12px; top: 0; bottom: 0; overflow: hidden;">
-            ${dotsHTML}
+          <div style="position: absolute; left: 12px; right: 12px; top: 0; bottom: 0; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+            ${dotsHTML || '<span style="font-size: 0.7rem; color: var(--text-muted); font-style: italic; z-index: 2;">No articles in selected timeframe</span>'}
           </div>
         </div>
       `;
