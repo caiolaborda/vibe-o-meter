@@ -98,12 +98,15 @@ async function generateDailyBriefing(options = {}) {
 
         const prompt = `You are a razor-sharp, deadpan news satirist writing the daily front-page mood kicker for "There's No Such Thing As Good News" (an autonomous daily audit of media pessimism).
 
+IMPORTANT MEDIA SCOPE:
+These are the world's premier international news wires, global broadsheets, and major broadcast networks (BBC, Reuters, Associated Press, Bloomberg, The New York Times, CNN, etc.). NEVER refer to this reporting as "local news" — treat this as the collective output of the global media apparatus.
+
 YOUR GOAL:
 Scan today's headlines and write a crisp, cynical, 1-to-3 sentence observation capturing the day's collective news vibe.
 
 THE VIBE WE WANT:
 - Lean, punchy, and fast-paced (aim for ~25 to 50 words max).
-- Deadpan, wry, and observational—like a sharp newsroom veteran summing up the wires with an effortless shrug and a smirk.
+- Deadpan, wry, and observational—like a sharp newsroom veteran summing up the global wires with an effortless shrug and a smirk.
 - NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. Do not follow a robotic "Sentence 1 is this, Sentence 2 is that" structure. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
 - Avoid purple prose, convoluted run-ons, or forced metaphors. Keep it natural, rhythmic, and memorable.
 
@@ -112,13 +115,14 @@ TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy 
 
 STRICT RULES:
 - NO NUMBERS, DECIMALS, PERCENTAGES, OR STATS (no "-0.21", "24 hours", "197 articles", etc.).
+- NEVER refer to this as "local news" or "regional news".
 - KEEP IT TIGHT (strictly under 50 words total).
 - Output ONLY the raw paragraph text. No quotation marks, no markdown headers, no bullet points.
 
-TODAY'S HEADLINES CONTEXT:
+TODAY'S GLOBAL HEADLINES CONTEXT:
 - Outlets leading the panic: ${mostAlarmistToday.name}
 - Outlets holding composure: ${mostCalmToday.name}
-- Representative stories across the wire:
+- Representative stories across the global wire:
 ${sampleHeadlines || '- War strikes, political clashes, economic jitters, and scientific breakthroughs'}`;
 
         const res = await model.generateContent(prompt);
