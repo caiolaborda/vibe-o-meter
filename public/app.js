@@ -168,24 +168,20 @@ function setupEventListeners() {
   if (timelineAllBtn && timelineRecentBtn) {
     timelineAllBtn.addEventListener('click', () => {
       state.timelineRange = 'all';
-      timelineAllBtn.classList.add('active');
-      timelineAllBtn.style.background = 'var(--accent-color)';
-      timelineAllBtn.style.color = '#fff';
-      timelineRecentBtn.classList.remove('active');
-      timelineRecentBtn.style.background = 'transparent';
-      timelineRecentBtn.style.color = 'var(--text-secondary)';
-      renderSentimentTimeline();
+      state.filters.time = 'all';
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = 'all';
+      if (elements.filterTime) elements.filterTime.value = 'all';
+      updateTimelineButtonsUI();
+      updateAppUI();
     });
 
     timelineRecentBtn.addEventListener('click', () => {
       state.timelineRange = 'recent';
-      timelineRecentBtn.classList.add('active');
-      timelineRecentBtn.style.background = 'var(--accent-color)';
-      timelineRecentBtn.style.color = '#fff';
-      timelineAllBtn.classList.remove('active');
-      timelineAllBtn.style.background = 'transparent';
-      timelineAllBtn.style.color = 'var(--text-secondary)';
-      renderSentimentTimeline();
+      state.filters.time = '7d';
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = '7d';
+      if (elements.filterTime) elements.filterTime.value = '7d';
+      updateTimelineButtonsUI();
+      updateAppUI();
     });
   }
 
@@ -230,6 +226,8 @@ function setupEventListeners() {
     elements.filterTime.addEventListener('change', (e) => {
       state.filters.time = e.target.value;
       if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
+      state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
+      updateTimelineButtonsUI();
       updateAppUI();
     });
   }
@@ -238,6 +236,8 @@ function setupEventListeners() {
     elements.quickTimeframeSelect.addEventListener('change', (e) => {
       state.filters.time = e.target.value;
       if (elements.filterTime) elements.filterTime.value = e.target.value;
+      state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
+      updateTimelineButtonsUI();
       updateAppUI();
     });
   }
@@ -1079,12 +1079,12 @@ function renderSpectrum() {
       const markerColor = getValenceColor(avg);
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
-      const yOffset = yLevel * 44;
+      const yOffset = yLevel * 28;
       
       const marker = document.createElement('div');
       marker.className = `outlet-marker ${state.filters.source === id ? 'active' : ''}`;
       marker.style.left = `${finalX}%`;
-      marker.style.bottom = `${12 + yOffset}px`;
+      marker.style.bottom = `${-12 + yOffset}px`;
       marker.setAttribute('data-id', id);
       
       marker.innerHTML = `
@@ -1574,6 +1574,34 @@ function setExtremesForColumn(articles, colSuffix) {
   posMetaElem.innerText = `Sentiment: ${best.sentiment.toFixed(2)} | Date: ${new Date(best.pubDate).toLocaleDateString()}`;
 }
 
+// Update Timeline range buttons styling in sync with global filters
+function updateTimelineButtonsUI() {
+  const timelineAllBtn = document.getElementById('timeline-range-all');
+  const timelineRecentBtn = document.getElementById('timeline-range-recent');
+  if (!timelineAllBtn || !timelineRecentBtn) return;
+  const isAll = state.filters.time === 'all';
+  timelineAllBtn.classList.toggle('active', isAll);
+  timelineAllBtn.style.background = isAll ? 'var(--accent-color)' : 'transparent';
+  timelineAllBtn.style.color = isAll ? '#fff' : 'var(--text-secondary)';
+
+  const isRecent = state.filters.time === '7d' || state.timelineRange === 'recent';
+  timelineRecentBtn.classList.toggle('active', isRecent);
+  timelineRecentBtn.style.background = isRecent ? 'var(--accent-color)' : 'transparent';
+  timelineRecentBtn.style.color = isRecent ? '#fff' : 'var(--text-secondary)';
+}
+
+// Select topic/category filter and jump to feed
+function selectCategoryFilter(category) {
+  state.filters.category = category;
+  if (elements.filterCategory) elements.filterCategory.value = category;
+  updateTopicPillsActive(category);
+  updateAppUI();
+  switchTab('pulse');
+  const target = document.getElementById('feed-section');
+  if (target) target.scrollIntoView({ behavior: 'smooth' });
+}
+window.selectCategoryFilter = selectCategoryFilter;
+
 // Render Historical Sentiment Timeline & Topic Dynamics
 function renderSentimentTimeline() {
   const chartSvg = document.getElementById('timeline-chart-svg');
@@ -1585,16 +1613,13 @@ function renderSentimentTimeline() {
 
   const rawSeries = state.timeSeries || [];
 
-  // Determine active timeframe window (from header date switcher or local buttons)
+  // Determine active timeframe window (strictly from header date switcher or local buttons)
   const timeframe = state.filters.time || 'all';
   const now = Date.now();
   let cutoff = 0;
   let timeframeLabel = 'All Historical Snapshots';
 
-  if (state.timelineRange === 'recent') {
-    cutoff = now - 7 * 24 * 60 * 60 * 1000;
-    timeframeLabel = 'Past 7 Days';
-  } else if (timeframe === '3h') {
+  if (timeframe === '3h') {
     cutoff = now - 3 * 3600 * 1000;
     timeframeLabel = 'Past 3 Hours';
   } else if (timeframe === '6h') {
@@ -1609,7 +1634,7 @@ function renderSentimentTimeline() {
   } else if (timeframe === '3d') {
     cutoff = now - 3 * 86400 * 1000;
     timeframeLabel = 'Past 3 Days';
-  } else if (timeframe === '7d') {
+  } else if (timeframe === '7d' || state.timelineRange === 'recent') {
     cutoff = now - 7 * 86400 * 1000;
     timeframeLabel = 'Past 7 Days';
   } else if (timeframe === '30d') {
@@ -1617,41 +1642,54 @@ function renderSentimentTimeline() {
     timeframeLabel = 'Past 30 Days';
   }
 
+  // Filter snapshots by timeframe
   let series = cutoff > 0 ? rawSeries.filter(s => new Date(s.timestamp).getTime() >= cutoff) : [...rawSeries];
 
   // If fewer than 2 snapshots exist in a tight window, show recent snapshots with a helpful indicator
   let isWindowFallback = false;
-  if (series.length < 2) {
+  if (series.length < 2 && rawSeries.length >= 2) {
     series = rawSeries.slice(-8);
     isWindowFallback = true;
   }
 
-  if (countEl) countEl.innerText = `${series.length} Snapshots`;
-  if (timeRangeEl) {
-    timeRangeEl.innerText = isWindowFallback && cutoff > 0
-      ? `${timeframeLabel} (Showing ${series.length} recent snapshots)`
-      : `${timeframeLabel} Trajectory`;
-  }
+  // Active source filtering
+  const selectedSource = state.filters.source && state.filters.source !== 'all' ? state.filters.source : null;
+  const sourceName = selectedSource ? (SOURCE_META[selectedSource]?.name || (state.sources[selectedSource] ? state.sources[selectedSource].name : selectedSource)) : 'Global';
 
-  // SVG dimensions: upgraded to 940 x 300 with generous label paddings
-  const width = 940;
-  const height = 300;
-  const padding = { top: 35, right: 40, bottom: 50, left: 65 };
-  const chartW = width - padding.left - padding.right;
-  const chartH = height - padding.top - padding.bottom;
-
-  // Compute global average per snapshot
+  // Compute sentiment score per snapshot (outlet-specific if filtered, otherwise global cross-outlet average)
   const points = series.map((s, idx) => {
-    const avgs = Object.values(s.averages || {});
-    const globalAvg = avgs.length > 0 ? (avgs.reduce((a, b) => a + b, 0) / avgs.length) : 0;
+    let score = null;
+    if (selectedSource) {
+      if (typeof s.averages?.[selectedSource] === 'number') {
+        score = s.averages[selectedSource];
+      }
+    } else {
+      const avgs = Object.values(s.averages || {});
+      score = avgs.length > 0 ? (avgs.reduce((a, b) => a + b, 0) / avgs.length) : null;
+    }
     return {
       index: idx,
       timestamp: s.timestamp,
       analyzer: s.analyzer,
       averages: s.averages || {},
-      score: globalAvg
+      score: score
     };
-  });
+  }).filter(p => p.score !== null);
+
+  if (countEl) countEl.innerText = `${points.length} Snapshots`;
+  if (timeRangeEl) {
+    const filterPrefix = selectedSource ? `${sourceName}: ` : '';
+    timeRangeEl.innerText = isWindowFallback && cutoff > 0
+      ? `${filterPrefix}${timeframeLabel} (Showing ${points.length} recent snapshots)`
+      : `${filterPrefix}${timeframeLabel} Trajectory`;
+  }
+
+  // SVG dimensions: upgraded to 960 x 320 with generous label paddings
+  const width = 960;
+  const height = 320;
+  const padding = { top: 35, right: 35, bottom: 55, left: 65 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
 
   if (points.length < 2) {
     chartSvg.innerHTML = `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" fill="var(--text-muted)" font-family="var(--font-sans)" font-size="14">Collecting snapshots over time...</text>`;
@@ -1662,8 +1700,8 @@ function renderSentimentTimeline() {
   const scores = points.map(p => p.score);
   const dataMin = Math.min(...scores);
   const dataMax = Math.max(...scores);
-  const minY = Math.min(-0.35, Math.floor((dataMin - 0.06) * 10) / 10);
-  const maxY = Math.max(0.15, Math.ceil((dataMax + 0.06) * 10) / 10);
+  const minY = Math.min(-0.35, Math.floor((dataMin - 0.08) * 10) / 10);
+  const maxY = Math.max(0.15, Math.ceil((dataMax + 0.08) * 10) / 10);
   const getY = (val) => padding.top + chartH - ((val - minY) / (maxY - minY)) * chartH;
   const getX = (idx) => padding.left + (idx / Math.max(1, points.length - 1)) * chartW;
   const zeroY = Math.max(padding.top, Math.min(padding.top + chartH, getY(0)));
@@ -1712,13 +1750,14 @@ function renderSentimentTimeline() {
     const x = getX(i);
     const d = new Date(points[i].timestamp);
     let dateLabel = '';
-    if (cutoff > 0 && (now - cutoff) <= 24 * 3600 * 1000) {
+    const spanMs = points.length > 1 ? (new Date(points[points.length - 1].timestamp) - new Date(points[0].timestamp)) : 0;
+    if (spanMs <= 24 * 3600 * 1000) {
       dateLabel = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
     } else {
       dateLabel = `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
     xLabelsHTML += `
-      <text x="${x}" y="${height - 16}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="500" fill="var(--text-muted)">${dateLabel}</text>
+      <text x="${x}" y="${height - 18}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="500" fill="var(--text-muted)">${dateLabel}</text>
     `;
   }
 
@@ -1765,19 +1804,28 @@ function renderSentimentTimeline() {
       const moodText = pt.score < -0.3 ? 'Alarmist / Doom' : (pt.score < -0.05 ? 'Leaning Gloomy' : (pt.score > 0.1 ? 'Optimistic' : 'Neutral'));
       const scoreColor = pt.score > 0 ? 'var(--pos-color)' : 'var(--neg-color)';
       
-      const outletEntries = Object.entries(pt.averages).sort((a,b) => a[1] - b[1]);
-      const lowest = outletEntries[0];
-      const highest = outletEntries[outletEntries.length - 1];
+      let tooltipContent = '';
+      if (selectedSource) {
+        tooltipContent = `
+          <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
+          <div style="font-size:0.75rem; color:${scoreColor}; font-weight:700;">${sourceName}: ${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</div>
+        `;
+      } else {
+        const outletEntries = Object.entries(pt.averages).sort((a,b) => a[1] - b[1]);
+        const lowest = outletEntries[0];
+        const highest = outletEntries[outletEntries.length - 1];
+        tooltipContent = `
+          <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
+          <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-bottom:0.25rem;">
+            <span style="color:var(--text-secondary);">Global Vibe:</span>
+            <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
+          </div>
+          ${lowest ? `<div style="font-size:0.7rem; color:var(--neg-color);">📉 Darkest: ${(SOURCE_META[lowest[0]]?.name || lowest[0])} (${lowest[1].toFixed(2)})</div>` : ''}
+          ${highest ? `<div style="font-size:0.7rem; color:var(--pos-color);">📈 Brightest: ${(SOURCE_META[highest[0]]?.name || highest[0])} (${highest[1].toFixed(2)})</div>` : ''}
+        `;
+      }
 
-      tooltip.innerHTML = `
-        <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
-        <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-bottom:0.25rem;">
-          <span style="color:var(--text-secondary);">Global Vibe:</span>
-          <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
-        </div>
-        ${lowest ? `<div style="font-size:0.7rem; color:var(--neg-color);">📉 Darkest: ${(SOURCE_META[lowest[0]]?.name || lowest[0])} (${lowest[1].toFixed(2)})</div>` : ''}
-        ${highest ? `<div style="font-size:0.7rem; color:var(--pos-color);">📈 Brightest: ${(SOURCE_META[highest[0]]?.name || highest[0])} (${highest[1].toFixed(2)})</div>` : ''}
-      `;
+      tooltip.innerHTML = tooltipContent;
       tooltip.style.display = 'block';
 
       const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
@@ -1797,8 +1845,14 @@ function renderSentimentTimeline() {
   if (topicsGrid) {
     const topicAvgs = {};
     const topicCounts = {};
-    Object.values(state.sources || {}).forEach(s => {
+    const activeSources = selectedSource ? { [selectedSource]: state.sources[selectedSource] } : state.sources;
+
+    Object.values(activeSources || {}).forEach(s => {
       (s.articles || []).forEach(a => {
+        if (cutoff > 0) {
+          const pub = new Date(a.pubDate).getTime();
+          if (!isNaN(pub) && pub < cutoff) return;
+        }
         const cat = a.category || 'other';
         if (!topicAvgs[cat]) { topicAvgs[cat] = 0; topicCounts[cat] = 0; }
         const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini || 0);
@@ -1823,9 +1877,10 @@ function renderSentimentTimeline() {
       const pct = Math.max(0, Math.min(100, ((avg + 1) / 2) * 100));
       const scoreClass = avg > 0.1 ? 'pos' : (avg < -0.1 ? 'neg' : 'neu');
       const fillColor = avg > 0.1 ? 'var(--pos-color)' : (avg < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
+      const isSelected = state.filters.category === catKey;
 
       return `
-        <div class="topic-trajectory-card" onclick="selectCategoryFilter('${catKey}')" style="cursor:pointer;" title="Click to view ${meta.name} headlines">
+        <div class="topic-trajectory-card ${isSelected ? 'topic-traj-card-active' : ''}" onclick="selectCategoryFilter('${catKey}')" style="cursor:pointer; ${isSelected ? 'border: 2px solid var(--accent-color);' : ''}" title="Click to view ${meta.name} headlines">
           <div class="topic-traj-header">
             <span>${meta.icon} ${meta.name}</span>
             <span class="topic-traj-score ${scoreClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>
@@ -2631,7 +2686,10 @@ function renderDailyPulse() {
     } else {
       const topNegCat = Object.keys(catStats).sort((a, b) => (catStats[a].total / catStats[a].count) - (catStats[b].total / catStats[b].count))[0] || 'world';
       const topPosCat = Object.keys(catStats).sort((a, b) => (catStats[b].total / catStats[b].count) - (catStats[a].total / catStats[a].count))[0] || 'science';
-      summaryEl.innerText = `Global news sentiment leans ${globalAvg < -0.1 ? 'cautious' : 'balanced'} today (${globalAvg > 0 ? '+' : ''}${globalAvg}). Coverage of ${topNegCat.toUpperCase()} drives the strongest negative sentiment, while ${topPosCat.toUpperCase()} remains a resilient bright spot.`;
+      const catPretty = { world: 'Global Affairs', politics: 'Politics', business: 'Business', technology: 'Technology', science: 'Science & Space', health: 'Health' };
+      const negName = catPretty[topNegCat] || topNegCat;
+      const posName = catPretty[topPosCat] || topPosCat;
+      summaryEl.innerText = `Global news sentiment leans ${globalAvg < -0.1 ? 'decidedly gloomy' : 'tentatively balanced'} today. Coverage of ${negName} accounts for the bulk of alarmist headlines, while reporting around ${posName} provides a rare dose of optimism.`;
     }
   }
 

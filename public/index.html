@@ -66,10 +66,6 @@
           <div class="pulse-main-banner">
             <div class="pulse-banner-icon">🌍</div>
             <div class="pulse-banner-content">
-              <div class="pulse-kicker-strip">
-                <span class="pulse-live-dot"></span>
-                <span class="pulse-tag-label">Live Editorial Dispatch • Global Mood Audit</span>
-              </div>
               <h1 class="pulse-banner-title">
                 <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
                 <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
@@ -84,20 +80,10 @@
           </div>
         </div>
 
-        <!-- 2. Daily AI Editorial Briefing (Lead Narrative Quote - ABOVE Key Signals) -->
-        <div class="pulse-editorial-container">
-          <div class="editorial-kicker">
-            <i data-lucide="sparkles"></i>
-            <span>24-Hour Executive Synthesis</span>
-          </div>
-          <blockquote id="daily-editorial-summary" class="editorial-quote-text">
-            Loading today's briefing...
-          </blockquote>
-          <div class="editorial-byline">
-            <i data-lucide="bot" style="width:13px; height:13px; color:var(--accent-color);"></i>
-            <span>Synthesized autonomously from cross-outlet reporting by Gemini AI</span>
-          </div>
-        </div>
+        <!-- Daily Editorial Briefing (Editorial Serif Narrative Lead) -->
+        <p id="daily-editorial-summary" class="hero-editorial-lead">
+          Loading today's briefing...
+        </p>
 
         <!-- 3. The 3 Key Signals Horizontal Strip -->
         <div class="pulse-signals-strip">
@@ -230,9 +216,9 @@
         </div>
         
         <!-- View A: Old Averages View Container (Single Track) -->
-        <div id="averages-view-container" class="spectrum-track-container" style="position: relative; height: 280px; margin: 1.5rem 0; display: block; border-radius: 14px; border: 1px solid var(--border-color); overflow: visible; transition: background 0.3s ease;">
-          <div class="spectrum-track" style="height: 10px; border-radius: 5px; position: absolute; bottom: 35px; left: 24px; right: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.15); transition: background 0.3s ease;"></div>
-          <div class="spectrum-ticks" style="display: flex; justify-content: space-between; position: absolute; bottom: 32px; left: 24px; right: 24px; pointer-events: none;">
+        <div id="averages-view-container" class="spectrum-track-container" style="position: relative; height: 130px; margin: 0.5rem 0 1rem 0; display: block; border-radius: 14px; border: 1px solid var(--border-color); overflow: visible; transition: background 0.3s ease;">
+          <div class="spectrum-track" style="height: 10px; border-radius: 5px; position: absolute; bottom: 22px; left: 24px; right: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.15); transition: background 0.3s ease;"></div>
+          <div class="spectrum-ticks" style="display: flex; justify-content: space-between; position: absolute; bottom: 20px; left: 24px; right: 24px; pointer-events: none;">
             <span style="width: 2px; height: 16px; background-color: var(--border-color);"></span>
             <span style="width: 2px; height: 16px; background-color: var(--border-color);"></span>
             <span style="width: 2px; height: 16px; background-color: var(--border-color);"></span>
@@ -240,7 +226,7 @@
             <span style="width: 2px; height: 16px; background-color: var(--border-color);"></span>
           </div>
           <!-- Outlet Markers will be injected here dynamically -->
-          <div id="spectrum-markers-container" style="position: absolute; bottom: 35px; left: 24px; right: 24px; height: 0px;"></div>
+          <div id="spectrum-markers-container" style="position: absolute; bottom: 22px; left: 24px; right: 24px; height: 0px;"></div>
         </div>
 
         <!-- View B: New Distribution View Container (Lanes) -->
@@ -264,7 +250,7 @@
       <div class="headlines-section-header">
         <h2 class="section-title flex-center">
           <i data-lucide="newspaper"></i>
-          Live Headline Stream
+          Headlines Feed
         </h2>
         <div id="active-filter-indicator" class="filter-indicator" style="display: none;">
           Filtered to: <strong id="filter-name">-</strong>
@@ -389,7 +375,7 @@
 
         <!-- SVG Timeline Chart Container -->
         <div class="timeline-chart-wrap" id="timeline-chart-wrap">
-          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 940 300">
+          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 960 320">
             <!-- Dynamically rendered in app.js -->
           </svg>
           <div id="timeline-tooltip-box" class="timeline-tooltip-box"></div>
