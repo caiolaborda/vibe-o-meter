@@ -1,14 +1,17 @@
-// --- VIBE-O-METER CLIENT APP ---
+// --- NO GOOD NEWS CLIENT APP ---
 
 // App State
 let state = {
   sources: {},
   lastUpdated: null,
   analyzerUsed: 'Google Gemini (AI)',
-  sentimentMode: 'gemini', // 'gemini', 'vader', 'global'
+  sentimentMode: 'gemini',
   spectrumViewMode: 'averages', // 'averages' or 'distribution'
   showAllOutlets: false,
   activeRegion: 'all', // 'all', 'US', 'UK', 'EU', 'ME', 'GLOBAL'
+  activeTab: 'pulse', // 'pulse', 'trends', 'feed', 'methodology'
+  timelineRange: 'all', // 'all' or 'recent'
+  timeSeries: [],
   isSyncing: false,
   syncMessage: '',
   filters: {
@@ -123,6 +126,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Setup Event Listeners
 function setupEventListeners() {
+  // Dashboard Tab Switching
+  document.querySelectorAll('.nav-pill-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.dataset.tab;
+      switchTab(tabId);
+    });
+  });
+
+  // Handle initial tab from URL hash if provided
+  const initialHash = window.location.hash.replace('#', '');
+  if (['pulse', 'trends', 'feed', 'methodology'].includes(initialHash)) {
+    switchTab(initialHash);
+  }
+
+  // Handle browser back / forward navigation
+  window.addEventListener('hashchange', () => {
+    const currentHash = window.location.hash.replace('#', '');
+    if (['pulse', 'trends', 'feed', 'methodology'].includes(currentHash) && state.activeTab !== currentHash) {
+      switchTab(currentHash);
+    }
+  });
+
+  // Timeline Range Buttons
+  const timelineAllBtn = document.getElementById('timeline-range-all');
+  const timelineRecentBtn = document.getElementById('timeline-range-recent');
+  if (timelineAllBtn && timelineRecentBtn) {
+    timelineAllBtn.addEventListener('click', () => {
+      state.timelineRange = 'all';
+      timelineAllBtn.classList.add('active');
+      timelineAllBtn.style.background = 'var(--accent-color)';
+      timelineAllBtn.style.color = '#fff';
+      timelineRecentBtn.classList.remove('active');
+      timelineRecentBtn.style.background = 'transparent';
+      timelineRecentBtn.style.color = 'var(--text-secondary)';
+      renderSentimentTimeline();
+    });
+
+    timelineRecentBtn.addEventListener('click', () => {
+      state.timelineRange = 'recent';
+      timelineRecentBtn.classList.add('active');
+      timelineRecentBtn.style.background = 'var(--accent-color)';
+      timelineRecentBtn.style.color = '#fff';
+      timelineAllBtn.classList.remove('active');
+      timelineAllBtn.style.background = 'transparent';
+      timelineAllBtn.style.color = 'var(--text-secondary)';
+      renderSentimentTimeline();
+    });
+  }
+
   // Setup quick topic pills
   setupTopicPills();
   
@@ -355,6 +407,7 @@ async function fetchData() {
       state.editorialSummary = data.editorialSummary || (data.globalStats && data.globalStats.editorialSummary) || '';
       state.editorialSummaryDate = data.editorialSummaryDate || (data.globalStats && data.globalStats.editorialSummaryDate) || '';
       state.globalStats = data.globalStats || {};
+      state.timeSeries = data.timeSeries || [];
 
       updateAppUI();
     } else {
@@ -512,6 +565,62 @@ function switchSentimentMode(mode) {
     updateAppUI();
   }
 }
+
+// Switch Dashboard Tab (Pulse, Trends, Feed, Methodology)
+function switchTab(tabId) {
+  if (!['pulse', 'trends', 'feed', 'methodology'].includes(tabId)) {
+    tabId = 'pulse';
+  }
+  state.activeTab = tabId;
+
+  // Update tab buttons
+  document.querySelectorAll('.nav-pill-btn[data-tab]').forEach(btn => {
+    const isActive = btn.dataset.tab === tabId;
+    btn.classList.toggle('active', isActive);
+  });
+
+  // Update tab panels
+  const panels = {
+    pulse: document.getElementById('tab-panel-pulse'),
+    trends: document.getElementById('tab-panel-trends'),
+    feed: document.getElementById('tab-panel-feed'),
+    methodology: document.getElementById('tab-panel-methodology')
+  };
+
+  Object.entries(panels).forEach(([id, panel]) => {
+    if (panel) {
+      if (id === tabId) {
+        panel.classList.remove('hidden');
+      } else {
+        panel.classList.add('hidden');
+      }
+    }
+  });
+
+  // Recreate icons in newly shown panel
+  if (window.lucide && lucide.createIcons) {
+    lucide.createIcons();
+  }
+
+  // Trigger specialized view renders if needed
+  if (tabId === 'trends') {
+    renderSentimentTimeline();
+    renderHeatmapMatrix();
+    renderComparisonMatrix();
+    renderHeadToHead();
+  } else if (tabId === 'pulse') {
+    renderDailyPulse();
+    renderSpectrum();
+  } else if (tabId === 'feed') {
+    renderHeadlines();
+  }
+
+  // Update hash without jumping page scroll
+  if (history.replaceState) {
+    history.replaceState(null, null, '#' + tabId);
+  }
+}
+window.switchTab = switchTab;
 
 // Switch active spectrum view mode (Averages vs Beeswarm Lanes)
 function switchSpectrumViewMode(mode) {
@@ -740,6 +849,7 @@ function updateAppUI() {
   renderComparisonMatrix();
   renderHeadToHead();
   renderHeadlines();
+  renderSentimentTimeline();
 }
 
 // Populate source options dynamically in drop-down filters
@@ -1361,6 +1471,225 @@ function setExtremesForColumn(articles, colSuffix) {
   posMetaElem.innerText = `Sentiment: ${best.sentiment.toFixed(2)} | Date: ${new Date(best.pubDate).toLocaleDateString()}`;
 }
 
+// Render Historical Sentiment Timeline & Topic Dynamics
+function renderSentimentTimeline() {
+  const chartSvg = document.getElementById('timeline-chart-svg');
+  const countEl = document.getElementById('timeline-snapshot-count');
+  const tooltip = document.getElementById('timeline-tooltip-box');
+  const topicsGrid = document.getElementById('topic-trajectories-grid');
+  if (!chartSvg) return;
+
+  const rawSeries = state.timeSeries || [];
+  if (countEl) countEl.innerText = `${rawSeries.length} Snapshots Recorded`;
+
+  // Filter series if needed
+  let series = [...rawSeries];
+  if (state.timelineRange === 'recent') {
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    series = series.filter(s => new Date(s.timestamp) >= sevenDaysAgo);
+  }
+  if (series.length === 0) series = rawSeries.slice(-10);
+
+  // SVG dimensions
+  const width = 800;
+  const height = 220;
+  const padding = { top: 25, right: 30, bottom: 35, left: 45 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  // Compute global average per snapshot
+  const points = series.map((s, idx) => {
+    const avgs = Object.values(s.averages || {});
+    const globalAvg = avgs.length > 0 ? (avgs.reduce((a, b) => a + b, 0) / avgs.length) : 0;
+    return {
+      index: idx,
+      timestamp: s.timestamp,
+      analyzer: s.analyzer,
+      averages: s.averages || {},
+      score: globalAvg
+    };
+  });
+
+  if (points.length < 2) {
+    chartSvg.innerHTML = `<text x="400" y="110" text-anchor="middle" fill="var(--text-muted)" font-size="14">Collecting snapshots over time...</text>`;
+    return;
+  }
+
+  // Y-domain: from -0.55 to +0.25
+  const minY = -0.55;
+  const maxY = 0.25;
+  const getY = (val) => padding.top + chartH - ((val - minY) / (maxY - minY)) * chartH;
+  const getX = (idx) => padding.left + (idx / (points.length - 1)) * chartW;
+  const zeroY = getY(0);
+
+  // Path data for the curve
+  let pathD = `M ${getX(0)} ${getY(points[0].score)}`;
+  for (let i = 1; i < points.length; i++) {
+    const x0 = getX(i - 1);
+    const y0 = getY(points[i - 1].score);
+    const x1 = getX(i);
+    const y1 = getY(points[i].score);
+    const mx = (x0 + x1) / 2;
+    pathD += ` C ${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`;
+  }
+
+  // Area under path down to zero
+  const areaD = `${pathD} L ${getX(points.length - 1)} ${zeroY} L ${getX(0)} ${zeroY} Z`;
+
+  // Grid lines and labels
+  const gridTicks = [
+    { val: 0.2, label: '+0.20' },
+    { val: 0.0, label: ' 0.00' },
+    { val: -0.2, label: '-0.20' },
+    { val: -0.4, label: '-0.40' }
+  ];
+
+  let gridHTML = '';
+  gridTicks.forEach(t => {
+    const y = getY(t.val);
+    const isZero = t.val === 0;
+    gridHTML += `
+      <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" 
+            stroke="${isZero ? 'var(--text-muted)' : 'var(--border-color)'}" 
+            stroke-width="${isZero ? '1.5' : '1'}" 
+            stroke-dasharray="${isZero ? '4,4' : '2,2'}" opacity="${isZero ? '0.6' : '0.3'}"/>
+      <text x="${padding.left - 8}" y="${y + 4}" text-anchor="end" font-size="10" font-weight="600" fill="var(--text-muted)">${t.label}</text>
+    `;
+  });
+
+  // Time labels on X axis
+  let xLabelsHTML = '';
+  const step = Math.max(1, Math.floor(points.length / 5));
+  for (let i = 0; i < points.length; i += step) {
+    const x = getX(i);
+    const d = new Date(points[i].timestamp);
+    const dateLabel = `${d.getDate()}/${d.getMonth() + 1} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+    xLabelsHTML += `
+      <text x="${x}" y="${height - 10}" text-anchor="middle" font-size="10" font-weight="500" fill="var(--text-muted)">${dateLabel}</text>
+    `;
+  }
+
+  // Dots for each snapshot
+  let dotsHTML = '';
+  points.forEach((pt, idx) => {
+    const x = getX(idx);
+    const y = getY(pt.score);
+    const color = pt.score > 0.1 ? 'var(--pos-color)' : (pt.score < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
+    dotsHTML += `
+      <circle cx="${x}" cy="${y}" r="4" fill="${color}" stroke="var(--bg-primary)" stroke-width="2" style="cursor:pointer; transition:transform 0.15s ease;"
+              data-idx="${idx}" class="timeline-dot"/>
+    `;
+  });
+
+  chartSvg.innerHTML = `
+    <defs>
+      <linearGradient id="timelineAreaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.18"/>
+        <stop offset="50%" stop-color="#6366f1" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="#64748b" stop-opacity="0.02"/>
+      </linearGradient>
+      <linearGradient id="timelineLineGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#ef4444"/>
+        <stop offset="50%" stop-color="#6366f1"/>
+        <stop offset="100%" stop-color="#10b981"/>
+      </linearGradient>
+    </defs>
+    ${gridHTML}
+    ${xLabelsHTML}
+    <path d="${areaD}" fill="url(#timelineAreaGrad)"/>
+    <path d="${pathD}" fill="none" stroke="url(#timelineLineGrad)" stroke-width="3" stroke-linecap="round"/>
+    ${dotsHTML}
+  `;
+
+  // Attach hover events to dots
+  chartSvg.querySelectorAll('.timeline-dot').forEach(dot => {
+    dot.addEventListener('mouseenter', () => {
+      const idx = parseInt(dot.getAttribute('data-idx'));
+      const pt = points[idx];
+      if (!pt || !tooltip) return;
+
+      const dateStr = new Date(pt.timestamp).toLocaleString();
+      const moodText = pt.score < -0.3 ? 'Alarmist / Doom' : (pt.score < -0.05 ? 'Leaning Gloomy' : (pt.score > 0.1 ? 'Optimistic' : 'Neutral'));
+      const scoreColor = pt.score > 0 ? 'var(--pos-color)' : 'var(--neg-color)';
+      
+      const outletEntries = Object.entries(pt.averages).sort((a,b) => a[1] - b[1]);
+      const lowest = outletEntries[0];
+      const highest = outletEntries[outletEntries.length - 1];
+
+      tooltip.innerHTML = `
+        <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
+        <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-bottom:0.25rem;">
+          <span style="color:var(--text-secondary);">Global Vibe:</span>
+          <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
+        </div>
+        ${lowest ? `<div style="font-size:0.7rem; color:var(--neg-color);">📉 Darkest: ${(SOURCE_META[lowest[0]]?.name || lowest[0])} (${lowest[1].toFixed(2)})</div>` : ''}
+        ${highest ? `<div style="font-size:0.7rem; color:var(--pos-color);">📈 Brightest: ${(SOURCE_META[highest[0]]?.name || highest[0])} (${highest[1].toFixed(2)})</div>` : ''}
+      `;
+      tooltip.style.display = 'block';
+
+      const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
+      const dotRect = dot.getBoundingClientRect();
+      tooltip.style.left = `${dotRect.left - wrapRect.left + 4}px`;
+      tooltip.style.top = `${dotRect.top - wrapRect.top - 8}px`;
+      dot.setAttribute('r', '7');
+    });
+
+    dot.addEventListener('mouseleave', () => {
+      if (tooltip) tooltip.style.display = 'none';
+      dot.setAttribute('r', '4');
+    });
+  });
+
+  // Render Topic Dynamics Breakdown
+  if (topicsGrid) {
+    const topicAvgs = {};
+    const topicCounts = {};
+    Object.values(state.sources || {}).forEach(s => {
+      (s.articles || []).forEach(a => {
+        const cat = a.category || 'other';
+        if (!topicAvgs[cat]) { topicAvgs[cat] = 0; topicCounts[cat] = 0; }
+        const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini || 0);
+        topicAvgs[cat] += sc;
+        topicCounts[cat]++;
+      });
+    });
+
+    const categoryNames = {
+      science: { name: 'Science & Space', icon: '🚀' },
+      technology: { name: 'Tech & AI', icon: '⚡' },
+      business: { name: 'Business & Economy', icon: '📈' },
+      health: { name: 'Health & Medicine', icon: '🏥' },
+      politics: { name: 'Politics & Governance', icon: '🗳️' },
+      world: { name: 'World & Conflict', icon: '🌍' }
+    };
+
+    topicsGrid.innerHTML = Object.keys(categoryNames).map(catKey => {
+      const count = topicCounts[catKey] || 0;
+      const avg = count > 0 ? (topicAvgs[catKey] / count) : 0;
+      const meta = categoryNames[catKey];
+      const pct = Math.max(0, Math.min(100, ((avg + 1) / 2) * 100));
+      const scoreClass = avg > 0.1 ? 'pos' : (avg < -0.1 ? 'neg' : 'neu');
+      const fillColor = avg > 0.1 ? 'var(--pos-color)' : (avg < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
+
+      return `
+        <div class="topic-trajectory-card" onclick="selectCategoryFilter('${catKey}')" style="cursor:pointer;" title="Click to view ${meta.name} headlines">
+          <div class="topic-traj-header">
+            <span>${meta.icon} ${meta.name}</span>
+            <span class="topic-traj-score ${scoreClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>
+          </div>
+          <div class="topic-traj-bar-wrap">
+            <div class="topic-traj-bar-fill" style="width: ${pct}%; background-color: ${fillColor};"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-muted); font-weight:600;">
+            <span>${count} Articles</span>
+            <span>${avg > 0.15 ? 'Optimistic' : (avg < -0.15 ? 'Alarmist' : 'Balanced')}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
 // Helpers
 function getMoodClass(score) {
   if (score === null || score === undefined) return 'none';
@@ -1379,6 +1708,11 @@ function toggleSourceFilter(sourceId) {
     // Set filter
     state.filters.source = sourceId;
     elements.filterSource.value = sourceId;
+    // Switch to Headline Feed tab so user instantly sees filtered articles
+    if (state.activeTab !== 'feed') {
+      switchTab('feed');
+      document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
+    }
   }
   
   updateFilterIndicator();

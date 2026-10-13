@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vibe-O-Meter | News Sentiment Comparison</title>
+  <title>No Good News | There's No Such Thing as Good News</title>
   <!-- Google Fonts: Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=2.5">
+  <link rel="stylesheet" href="style.css?v=2.6">
 </head>
 <body>
 
@@ -25,11 +25,11 @@
     <header class="app-header">
       <div class="brand">
         <div class="logo-icon">
-          <i data-lucide="gauge"></i>
+          <i data-lucide="newspaper"></i>
         </div>
         <div class="brand-text">
-          <h1>Vibe-O-Meter</h1>
-          <p>Real-time comparative analysis of major news sources</p>
+          <h1>No Good News</h1>
+          <p>There's no such thing as good news — An autonomous daily audit of global media pessimism</p>
         </div>
       </div>
       
@@ -45,16 +45,21 @@
       </div>
     </header>
 
-    <!-- STICKY QUICK JUMP SUB-NAV -->
+    <!-- STICKY DASHBOARD TABS & QUICK CONTROLS -->
     <nav class="quick-nav-bar" id="quick-nav-bar">
       <div class="quick-nav-links">
-        <a href="#pulse-section" class="nav-pill active"><i data-lucide="sparkles"></i><span>Pulse</span></a>
-        <a href="#spectrum-section" class="nav-pill"><i data-lucide="arrow-left-right"></i><span>Spectrum</span></a>
-        <a href="#heatmap-section" class="nav-pill"><i data-lucide="layout-grid"></i><span>Topic Heatmap</span></a>
-        <a href="#comparison-section" class="nav-pill"><i data-lucide="columns-3"></i><span>Outlets</span></a>
-        <a href="#h2h-section" class="nav-pill"><i data-lucide="swords"></i><span>Head-to-Head</span></a>
-        <a href="#methodology-section" class="nav-pill"><i data-lucide="help-circle"></i><span>Methodology</span></a>
-        <a href="#feed-section" class="nav-pill"><i data-lucide="newspaper"></i><span>Headline Feed</span></a>
+        <button class="nav-pill-btn active" data-tab="pulse" id="tab-btn-pulse">
+          <i data-lucide="sparkles"></i><span>Daily Pulse</span>
+        </button>
+        <button class="nav-pill-btn" data-tab="trends" id="tab-btn-trends">
+          <i data-lucide="line-chart"></i><span>Trends &amp; Deep Dive</span>
+        </button>
+        <button class="nav-pill-btn" data-tab="feed" id="tab-btn-feed">
+          <i data-lucide="newspaper"></i><span>Headline Feed</span>
+        </button>
+        <button class="nav-pill-btn" data-tab="methodology" id="tab-btn-methodology">
+          <i data-lucide="help-circle"></i><span>Methodology</span>
+        </button>
       </div>
       <div class="quick-nav-actions">
         <!-- Active Source Filter Indicator in Header Bar -->
@@ -88,8 +93,10 @@
       </div>
     </nav>
 
-    <!-- HERO: GLOBAL NEWS VIBE LANDING -->
-    <section class="pulse-hero-section" id="pulse-section">
+    <!-- TAB 1: DAILY PULSE -->
+    <main id="tab-panel-pulse" class="tab-panel">
+      <!-- HERO: GLOBAL NEWS VIBE LANDING -->
+      <section class="pulse-hero-section" id="pulse-section">
       <div class="pulse-hero-card card">
         
         <!-- Big Clean Hero Banner with Integrated Meta -->
@@ -225,6 +232,65 @@
         
         <div class="spectrum-legend">
           <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to filter headlines below.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- TAB 2: TRENDS & DEEP DIVE -->
+  <main id="tab-panel-trends" class="tab-panel hidden">
+    
+    <!-- GLOBAL NEWS VIBE TIMELINE & TOPIC DYNAMICS -->
+    <section class="timeline-section" id="timeline-section">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-title flex-center">
+            <i data-lucide="trending-up"></i>
+            Global Sentiment Timeline
+          </h2>
+          <p class="section-desc">Historical trajectory of media optimism vs. pessimism over time, synthesized across all outlets.</p>
+        </div>
+        <div class="timeline-legend">
+          <span class="flex-center" style="gap:0.35rem;"><span style="width:10px; height:10px; border-radius:50%; background:var(--accent-color);"></span> Global Mood Trajectory</span>
+          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:1.5px; background:var(--border-color); border-top:1.5px dashed var(--text-muted);"></span> Neutral Baseline (0.00)</span>
+        </div>
+      </div>
+
+      <div class="timeline-card card">
+        <div class="timeline-header-row">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <div style="background:rgba(99,102,241,0.1); color:var(--accent-color); padding:0.4rem 0.75rem; border-radius:8px; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:0.35rem;">
+              <i data-lucide="history" style="width:14px;height:14px;"></i>
+              <span id="timeline-snapshot-count">21 Snapshots Recorded</span>
+            </div>
+            <span id="timeline-time-range" style="font-size:0.78rem; color:var(--text-muted); font-weight:500;">Multi-week historical tracking</span>
+          </div>
+          <div class="timeline-controls">
+            <button id="timeline-range-all" class="btn btn-sm toggle-tab active" style="padding:0.3rem 0.7rem; font-size:0.75rem; border-radius:6px; font-weight:600; cursor:pointer;">All Snapshots</button>
+            <button id="timeline-range-recent" class="btn btn-sm toggle-tab" style="padding:0.3rem 0.7rem; font-size:0.75rem; border-radius:6px; font-weight:600; cursor:pointer; background:transparent; color:var(--text-secondary);">Last 7 Days</button>
+          </div>
+        </div>
+
+        <!-- SVG Timeline Chart Container -->
+        <div class="timeline-chart-wrap" id="timeline-chart-wrap">
+          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 800 220" preserveAspectRatio="none">
+            <!-- Dynamically rendered in app.js -->
+          </svg>
+          <div id="timeline-tooltip-box" class="timeline-tooltip-box"></div>
+        </div>
+
+        <!-- Topic Dynamics Breakdown -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.4rem;">
+            <i data-lucide="layers" style="width:15px;height:15px;color:var(--accent-color);"></i>
+            Topic Sentiment Dynamics in Current Window
+          </h4>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">
+            Relative sentiment score across key news beats. Science and tech consistently offer refuge from political and armed conflict despair.
+          </p>
+          <div class="topic-trajectories-grid" id="topic-trajectories-grid">
+            <!-- Dynamically rendered in app.js -->
+          </div>
         </div>
       </div>
     </section>
@@ -381,7 +447,10 @@
         </div>
       </div>
     </section>
+  </main>
 
+  <!-- TAB 4: METHODOLOGY -->
+  <main id="tab-panel-methodology" class="tab-panel hidden">
     <!-- HOW SENTIMENT WORKS / METHODOLOGY -->
     <section class="methodology-section" id="methodology-section">
       <div class="section-header-row">
@@ -504,7 +573,10 @@
         </div>
       </div>
     </section>
+  </main>
 
+  <!-- TAB 3: HEADLINE FEED -->
+  <main id="tab-panel-feed" class="tab-panel hidden">
     <!-- HEADLINES EXPLORER -->
     <section class="headlines-section" id="feed-section">
       <div class="headlines-section-header">
@@ -599,11 +671,12 @@
         <!-- Articles will be injected here dynamically -->
       </div>
     </section>
+  </main>
 
-    <!-- FOOTER -->
-    <footer class="app-footer">
-      <p>&copy; 2026 Vibe-O-Meter of News Sources. Autonomous news sentiment analysis powered by Gemini 3.8 Flash &amp; GitHub Pages.</p>
-    </footer>
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <p>&copy; 2026 No Good News. Autonomous daily news sentiment audit powered by Gemini 3.8 Flash &amp; GitHub Pages.</p>
+  </footer>
 
   </div>
 
