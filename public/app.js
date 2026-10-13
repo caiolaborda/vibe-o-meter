@@ -9,7 +9,7 @@ let state = {
   spectrumViewMode: 'averages', // 'averages' or 'distribution'
   showAllOutlets: false,
   activeRegion: 'all', // 'all', 'US', 'UK', 'EU', 'ME', 'GLOBAL'
-  activeTab: 'pulse', // 'pulse', 'trends', 'feed', 'methodology'
+  activeTab: 'pulse', // 'pulse', 'trends', 'deepdives', 'methodology'
   timelineRange: 'all', // 'all' or 'recent'
   timeSeries: [],
   isSyncing: false,
@@ -25,7 +25,7 @@ let state = {
     field: 'date', // 'date' or 'vibe'
     order: 'desc' // 'desc' or 'asc'
   },
-  edition: 'doom' // 'doom' (No Good News) or 'silver' (The Silver Lining)
+  edition: 'doom' // 'doom' (No Good News) or 'silver' (Some Good News)
 };
 
 let resolvedSources = {};
@@ -85,12 +85,17 @@ const elements = {
   h2hSourceA: document.getElementById('h2h-source-a'),
   h2hSourceB: document.getElementById('h2h-source-b'),
   headlinesContainer: document.getElementById('headlines-container'),
+  deepdiveHeadlinesContainer: document.getElementById('deepdive-headlines-container'),
   
   // Model View Toggle (optional)
   modeGeminiBtn: document.getElementById('mode-gemini-btn'),
   modeVaderBtn: document.getElementById('mode-vader-btn'),
   modeGlobalBtn: document.getElementById('mode-global-btn'),
   spotlightBanner: document.getElementById('spotlight-banner'),
+  deepdiveSpotlightBanner: document.getElementById('deepdive-spotlight-banner'),
+  deepdiveFilterIndicator: document.getElementById('deepdive-filter-indicator'),
+  deepdiveFilterName: document.getElementById('deepdive-filter-name'),
+  deepdiveClearFilterBtn: document.getElementById('deepdive-clear-filter-btn'),
   
   // Filters
   filterSource: document.getElementById('filter-source'),
@@ -145,15 +150,15 @@ function setupEventListeners() {
 
   // Handle initial tab from URL hash if provided
   const initialHash = window.location.hash.replace('#', '');
-  if (['pulse', 'trends', 'feed', 'methodology'].includes(initialHash)) {
-    switchTab(initialHash);
+  if (['pulse', 'trends', 'deepdives', 'feed', 'methodology'].includes(initialHash)) {
+    switchTab(initialHash === 'feed' ? 'pulse' : initialHash);
   }
 
   // Handle browser back / forward navigation
   window.addEventListener('hashchange', () => {
     const currentHash = window.location.hash.replace('#', '');
-    if (['pulse', 'trends', 'feed', 'methodology'].includes(currentHash) && state.activeTab !== currentHash) {
-      switchTab(currentHash);
+    if (['pulse', 'trends', 'deepdives', 'feed', 'methodology'].includes(currentHash) && state.activeTab !== currentHash) {
+      switchTab(currentHash === 'feed' ? 'pulse' : currentHash);
     }
   });
 
@@ -259,7 +264,19 @@ function setupEventListeners() {
     });
   }
 
-  // Two-Sided App Edition Switcher (No Good News vs The Silver Lining)
+  if (elements.deepdiveClearFilterBtn) {
+    elements.deepdiveClearFilterBtn.addEventListener('click', () => {
+      state.filters.source = 'all';
+      if (elements.filterSource) elements.filterSource.value = 'all';
+      document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
+      updateFilterIndicator();
+      renderHeadlines();
+      updateAppUI();
+    });
+  }
+
+  // Two-Sided App Edition Switcher (No Good News vs Some Good News)
   const editionDoom = document.getElementById('edition-btn-doom');
   const editionSilver = document.getElementById('edition-btn-silver');
   if (editionDoom && editionSilver) {
@@ -284,7 +301,7 @@ function setupEventListeners() {
       state.filters.vibe = 'positive';
       if (elements.filterVibe) elements.filterVibe.value = 'positive';
       const brandP = document.querySelector('.brand-text p');
-      if (brandP) brandP.innerText = "The Silver Lining Edition — Extracting constructive breakthroughs, optimism & solutions from the wire";
+      if (brandP) brandP.innerText = "Some Good News Edition — Extracting constructive breakthroughs, optimism & solutions from the wire";
       updateFilterIndicator();
       updateAppUI();
     });
@@ -606,9 +623,10 @@ function switchSentimentMode(mode) {
   }
 }
 
-// Switch Dashboard Tab (Pulse, Trends, Feed, Methodology)
+// Switch Dashboard Tab (Pulse, Trends, Deep Dives, Methodology)
 function switchTab(tabId) {
-  if (!['pulse', 'trends', 'feed', 'methodology'].includes(tabId)) {
+  if (tabId === 'feed') tabId = 'pulse';
+  if (!['pulse', 'trends', 'deepdives', 'methodology'].includes(tabId)) {
     tabId = 'pulse';
   }
   state.activeTab = tabId;
@@ -623,7 +641,7 @@ function switchTab(tabId) {
   const panels = {
     pulse: document.getElementById('tab-panel-pulse'),
     trends: document.getElementById('tab-panel-trends'),
-    feed: document.getElementById('tab-panel-feed'),
+    deepdives: document.getElementById('tab-panel-deepdives'),
     methodology: document.getElementById('tab-panel-methodology')
   };
 
@@ -646,12 +664,13 @@ function switchTab(tabId) {
   if (tabId === 'trends') {
     renderSentimentTimeline();
     renderHeatmapMatrix();
+  } else if (tabId === 'deepdives') {
     renderComparisonMatrix();
     renderHeadToHead();
+    renderHeadlines();
   } else if (tabId === 'pulse') {
     renderDailyPulse();
     renderSpectrum();
-  } else if (tabId === 'feed') {
     renderHeadlines();
   }
 
@@ -1825,15 +1844,23 @@ function toggleSourceFilter(sourceId) {
   if (state.filters.source === sourceId) {
     // Clear filter
     state.filters.source = 'all';
-    elements.filterSource.value = 'all';
+    if (elements.filterSource) elements.filterSource.value = 'all';
   } else {
     // Set filter
     state.filters.source = sourceId;
-    elements.filterSource.value = sourceId;
-    // Switch to Headline Feed tab so user instantly sees filtered articles
-    if (state.activeTab !== 'feed') {
-      switchTab('feed');
-      document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
+    if (elements.filterSource) elements.filterSource.value = sourceId;
+    
+    // Navigate to appropriate feed/spotlight based on active tab
+    if (state.activeTab === 'deepdives') {
+      const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
+      target?.scrollIntoView({ behavior: 'smooth' });
+    } else if (state.activeTab === 'pulse') {
+      const target = document.getElementById('spotlight-banner') || document.getElementById('feed-section');
+      target?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      switchTab('deepdives');
+      const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
+      target?.scrollIntoView({ behavior: 'smooth' });
     }
   }
   
@@ -1882,18 +1909,22 @@ function updateFilterIndicator() {
   const isSourceActive = state.filters.source !== 'all' && state.sources[state.filters.source];
   if (isSourceActive) {
     const srcName = state.sources[state.filters.source].name;
-    elements.filterName.innerText = srcName;
-    elements.activeFilterIndicator.style.display = 'flex';
+    if (elements.filterName) elements.filterName.innerText = srcName;
+    if (elements.activeFilterIndicator) elements.activeFilterIndicator.style.display = 'flex';
+
+    if (elements.deepdiveFilterName && elements.deepdiveFilterIndicator) {
+      elements.deepdiveFilterName.innerText = srcName;
+      elements.deepdiveFilterIndicator.style.display = 'flex';
+    }
 
     if (elements.quickSourceIndicator && elements.quickSourceName) {
       elements.quickSourceName.innerText = srcName;
       elements.quickSourceIndicator.style.display = 'inline-flex';
     }
   } else {
-    elements.activeFilterIndicator.style.display = 'none';
-    if (elements.quickSourceIndicator) {
-      elements.quickSourceIndicator.style.display = 'none';
-    }
+    if (elements.activeFilterIndicator) elements.activeFilterIndicator.style.display = 'none';
+    if (elements.deepdiveFilterIndicator) elements.deepdiveFilterIndicator.style.display = 'none';
+    if (elements.quickSourceIndicator) elements.quickSourceIndicator.style.display = 'none';
   }
 
   // Active Topic Filter Indicator in Sticky Header Bar
@@ -2000,80 +2031,93 @@ function renderHeadlines() {
     return state.sort.order === 'desc' ? comparison : -comparison;
   });
   
+function createArticleCard(art, index, prefix = 'pulse') {
+  const hasValidScore = typeof art.sentiment === 'number';
+  const validScore = hasValidScore ? art.sentiment : 0;
+  const itemVibe = hasValidScore ? getMoodClass(validScore) : 'neutral';
+  const dateObj = new Date(art.pubDate);
+  const dateFormatted = dateObj.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
+  const elementId = `article-explain-${prefix}-${index}`;
+  const cardId = `art-card-${prefix}-${art.sourceId}-${index}`;
+  const card = document.createElement('div');
+  card.className = `article-card card ${itemVibe}`;
+  card.id = cardId;
+  
+  const feedUrl = SOURCE_FEEDS[art.sourceId] || '';
+  const brandMeta = SOURCE_META[art.sourceId] || { initials: art.sourceId, color: '#999' };
+  
+  const scoreBadgeHTML = hasValidScore
+    ? `<span class="article-vibe-score ${itemVibe}">${validScore > 0 ? '+' : ''}${validScore.toFixed(2)}</span>`
+    : `<span class="article-vibe-score neu" style="font-size:0.68rem; opacity:0.85; padding: 0.15rem 0.5rem;">Pending AI</span>`;
+
+  card.innerHTML = `
+    <div class="article-top-bar">
+      <div class="article-badges">
+        <span class="source-badge" style="background-color: ${brandMeta.color}">${art.sourceName}</span>
+        <span class="cat-badge ${art.category || 'other'}">${art.category || 'other'}</span>
+        ${scoreBadgeHTML}
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <span class="article-date">${dateFormatted}</span>
+        <div class="article-actions" style="display: flex; gap: 0.25rem;">
+          <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="Open original article" style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; transition: all 0.2s;">
+            <i data-lucide="external-link" style="width: 13px; height: 13px;"></i>
+          </a>
+          <button onclick="copyToClipboard('${feedUrl}', this)" class="action-icon-btn" title="Copy source RSS feed URL" style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; transition: all 0.2s; padding: 0;">
+            <i data-lucide="copy" style="width: 13px; height: 13px;"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="article-headline-link">${art.title}</a>
+    
+    <p class="article-description">${art.description || ''}</p>
+    
+    <button class="article-reasoning-toggle" onclick="toggleReasoningPanel('${elementId}', this)">
+      <i data-lucide="chevron-right" style="width: 14px; height: 14px; transition: transform 0.2s;"></i>
+      <span>Show analysis details</span>
+    </button>
+    
+    <div id="${elementId}" class="article-reasoning-panel">
+      <strong>Vibe Profile Details:</strong> ${hasValidScore && art.explanation && !art.explanation.includes('locally') ? art.explanation : 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).'}
+    </div>
+  `;
+  return card;
+}
+
   // 3.5. Render Spotlight Banner if filtered to a specific news source
   renderSpotlightBanner(articles);
   
-  // 4. Render articles
-  if (articles.length === 0) {
-    elements.headlinesContainer.innerHTML = `
-      <div class="empty-state">
-        <i data-lucide="info"></i>
-        <span>No articles match the current filter criteria.</span>
-      </div>
-    `;
-    lucide.createIcons();
-    return;
-  }
-  
-  articles.forEach((art, index) => {
-    const hasValidScore = typeof art.sentiment === 'number';
-    const validScore = hasValidScore ? art.sentiment : 0;
-    const itemVibe = hasValidScore ? getMoodClass(validScore) : 'neutral';
-    const dateObj = new Date(art.pubDate);
-    const dateFormatted = dateObj.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    
-    const elementId = `article-explain-${index}`;
-    const card = document.createElement('div');
-    card.className = `article-card card ${itemVibe}`;
-    card.id = `art-card-${art.sourceId}-${index}`;
-    
-    const feedUrl = SOURCE_FEEDS[art.sourceId] || '';
-    const brandMeta = SOURCE_META[art.sourceId] || { initials: art.sourceId, color: '#999' };
-    
-    const scoreBadgeHTML = hasValidScore
-      ? `<span class="article-vibe-score ${itemVibe}">${validScore > 0 ? '+' : ''}${validScore.toFixed(2)}</span>`
-      : `<span class="article-vibe-score neu" style="font-size:0.68rem; opacity:0.85; padding: 0.15rem 0.5rem;">Pending AI</span>`;
+  // 4. Render articles across active headline containers
+  const containers = [
+    { el: elements.headlinesContainer, prefix: 'pulse' },
+    { el: elements.deepdiveHeadlinesContainer, prefix: 'dd' }
+  ];
 
-    card.innerHTML = `
-      <div class="article-top-bar">
-        <div class="article-badges">
-          <span class="source-badge" style="background-color: ${brandMeta.color}">${art.sourceName}</span>
-          <span class="cat-badge ${art.category || 'other'}">${art.category || 'other'}</span>
-          ${scoreBadgeHTML}
-        </div>
-        <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <span class="article-date">${dateFormatted}</span>
-          <div class="article-actions" style="display: flex; gap: 0.25rem;">
-            <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="Open original article" style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; transition: all 0.2s;">
-              <i data-lucide="external-link" style="width: 13px; height: 13px;"></i>
-            </a>
-            <button onclick="copyToClipboard('${feedUrl}', this)" class="action-icon-btn" title="Copy source RSS feed URL" style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; transition: all 0.2s; padding: 0;">
-              <i data-lucide="copy" style="width: 13px; height: 13px;"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="article-headline-link">${art.title}</a>
-      
-      <p class="article-description">${art.description || ''}</p>
-      
-      <button class="article-reasoning-toggle" onclick="toggleReasoningPanel('${elementId}', this)">
-        <i data-lucide="chevron-right" style="width: 14px; height: 14px; transition: transform 0.2s;"></i>
-        <span>Show analysis details</span>
-      </button>
-      
-      <div id="${elementId}" class="article-reasoning-panel">
-        <strong>Vibe Profile Details:</strong> ${hasValidScore && art.explanation && !art.explanation.includes('locally') ? art.explanation : 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).'}
-      </div>
-    `;
-    
-    elements.headlinesContainer.appendChild(card);
+  const emptyHTML = `
+    <div class="empty-state">
+      <i data-lucide="info"></i>
+      <span>No articles match the current filter criteria.</span>
+    </div>
+  `;
+
+  containers.forEach(({ el, prefix }) => {
+    if (!el) return;
+    el.innerHTML = '';
+    if (articles.length === 0) {
+      el.innerHTML = emptyHTML;
+    } else {
+      articles.forEach((art, index) => {
+        el.appendChild(createArticleCard(art, index, prefix));
+      });
+    }
   });
   
   lucide.createIcons();
@@ -2191,10 +2235,15 @@ function setupSpectrumMagnification() {
 
 // Render Spotlight Banner for a filtered source showing interactive article sentiment plot
 function renderSpotlightBanner(filteredArticles) {
-  if (!elements.spotlightBanner) return;
+  const banners = [
+    { el: elements.spotlightBanner, prefix: 'pulse' },
+    { el: elements.deepdiveSpotlightBanner, prefix: 'dd' }
+  ];
   
   if (state.filters.source === 'all' || filteredArticles.length === 0) {
-    elements.spotlightBanner.style.display = 'none';
+    banners.forEach(({ el }) => {
+      if (el) el.style.display = 'none';
+    });
     return;
   }
   
@@ -2259,91 +2308,97 @@ function renderSpotlightBanner(filteredArticles) {
   const dotSize = maxStackLevel > 14 ? 8 : (maxStackLevel > 8 ? 10 : 12);
   const dotRadius = dotSize / 2;
 
-  const dotsHTML = itemStacks.map((item, idx) => {
-    const { art, score, xPct, stackLevel } = item;
-    const yOffset = Math.min(availableH, stackLevel * stepY);
-    
-    let color = 'var(--neu-color)';
-    if (score > 0.15) color = 'var(--pos-color)';
-    else if (score < -0.15) color = 'var(--neg-color)';
-    
-    const cardId = `art-card-${sourceId}-${idx}`;
-    const cleanTitle = art.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    
-    return `
-      <div class="spotlight-dot" 
-           onclick="scrollToArticle('${cardId}')"
-           onmouseenter="showSpotlightTooltip(event, '${cleanTitle}', ${score})"
-           onmouseleave="hideSpotlightTooltip()"
-           style="position: absolute; left: calc(${xPct}% - ${dotRadius}px); bottom: calc(24px + ${yOffset}px); width: ${dotSize}px; height: ${dotSize}px; border-radius: 50%; background-color: ${color}; border: 1.5px solid var(--bg-card); cursor: pointer; transition: transform 0.15s ease, filter 0.15s ease; z-index: ${5 + Math.min(20, stackLevel)};">
+  banners.forEach(({ el, prefix }) => {
+    if (!el) return;
+
+    const dotsHTML = itemStacks.map((item, idx) => {
+      const { art, score, xPct, stackLevel } = item;
+      const yOffset = Math.min(availableH, stackLevel * stepY);
+      
+      let color = 'var(--neu-color)';
+      if (score > 0.15) color = 'var(--pos-color)';
+      else if (score < -0.15) color = 'var(--neg-color)';
+      
+      const cardId = `art-card-${prefix}-${sourceId}-${idx}`;
+      const cleanTitle = art.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      
+      return `
+        <div class="spotlight-dot" 
+             onclick="scrollToArticle('${cardId}')"
+             onmouseenter="showSpotlightTooltip(event, '${cleanTitle}', ${score})"
+             onmouseleave="hideSpotlightTooltip()"
+             style="position: absolute; left: calc(${xPct}% - ${dotRadius}px); bottom: calc(24px + ${yOffset}px); width: ${dotSize}px; height: ${dotSize}px; border-radius: 50%; background-color: ${color}; border: 1.5px solid var(--bg-card); cursor: pointer; transition: transform 0.15s ease, filter 0.15s ease; z-index: ${5 + Math.min(20, stackLevel)};">
+        </div>
+      `;
+    }).join('');
+
+    el.style.display = 'flex';
+    el.innerHTML = `
+      <div class="spotlight-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="background-color: ${meta.color}; color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">${meta.initials}</div>
+          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--text-primary); font-family: var(--font-serif);">${source.name} Spotlight</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span class="score-badge ${moodClass}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">${badgeText}</span>
+          <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">(${total} Articles)</span>
+        </div>
+      </div>
+      
+      <!-- Coverage Distribution Bar -->
+      <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 100%;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">
+          <span>Coverage Tone</span>
+          <span style="font-family: var(--font-mono);">${negPct}% Negative / ${neuPct}% Neutral / ${posPct}% Positive</span>
+        </div>
+        <div class="dist-bar-track" style="height: 6px; border-radius: 3px; display: flex; overflow: hidden; background-color: var(--bg-tertiary); width: 100%;">
+          <div class="dist-slice neg" style="width: ${negPct}%; background-color: var(--neg-color);"></div>
+          <div class="dist-slice neu" style="width: ${neuPct}%; background-color: var(--neu-color);"></div>
+          <div class="dist-slice pos" style="width: ${posPct}%; background-color: var(--pos-color);"></div>
+        </div>
+      </div>
+      
+      <!-- Sentiment Beeswarm Plot -->
+      <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin-top: 0.5rem; position: relative;">
+        <div style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display:flex; justify-content:space-between;">
+          <span>Article Sentiment Distribution</span>
+          <span style="font-family:var(--font-mono); font-size:0.68rem; opacity:0.8;">Max Stack: ${maxStackLevel + 1} articles</span>
+        </div>
+        <div style="position: relative; height: ${containerHeight}px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border-color); width: 100%; overflow: hidden; display: flex; align-items: center;">
+          
+          <!-- Editorial Valence Zones -->
+          <div style="position: absolute; left: 0; width: 33%; top: 0; bottom: 0; background: rgba(197, 34, 31, 0.035); border-right: 1px dashed rgba(197, 34, 31, 0.18); pointer-events: none;"></div>
+          <div style="position: absolute; left: 33%; width: 27%; top: 0; bottom: 0; background: transparent; pointer-events: none;"></div>
+          <div style="position: absolute; left: 60%; right: 0; top: 0; bottom: 0; background: rgba(21, 128, 61, 0.035); border-left: 1px dashed rgba(21, 128, 61, 0.18); pointer-events: none;"></div>
+
+          <!-- Track Baseline -->
+          <div style="position: absolute; left: 16px; right: 16px; bottom: 20px; height: 1.5px; background: var(--border-color); z-index: 1;"></div>
+          
+          <!-- Zero Line Marker -->
+          <div style="position: absolute; left: 50%; bottom: 16px; top: 10px; width: 1px; border-left: 1px dashed var(--text-muted); opacity: 0.35; z-index: 1; pointer-events: none;"></div>
+
+          <!-- Track labels -->
+          <span style="position: absolute; left: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--neg-color); font-weight: 600; pointer-events: none; z-index: 2;">Alarmist (-1.0)</span>
+          <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); font-weight: 600; pointer-events: none; z-index: 2;">Neutral (0.0)</span>
+          <span style="position: absolute; right: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--pos-color); font-weight: 600; pointer-events: none; z-index: 2;">Positive (+1.0)</span>
+          
+          <!-- Plot Circles -->
+          ${dotsHTML}
+        </div>
+        <div style="font-size: 0.68rem; color: var(--text-secondary); text-align: center; font-style: italic; opacity: 0.85; margin-top: 0.15rem;">Hover over dots to inspect article score; click to jump directly to article card. Density scales dynamically to prevent overflow.</div>
+        
+        <!-- Custom Tooltip Element -->
+        <div class="spotlight-tooltip card" style="position: absolute; display: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 280px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, bottom 0.08s ease-out;"></div>
       </div>
     `;
-  }).join('');
-
-  elements.spotlightBanner.style.display = 'flex';
-  elements.spotlightBanner.innerHTML = `
-    <div class="spotlight-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <div style="background-color: ${meta.color}; color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">${meta.initials}</div>
-        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--text-primary); font-family: var(--font-serif);">${source.name} Spotlight</h3>
-      </div>
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span class="score-badge ${moodClass}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">${badgeText}</span>
-        <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">(${total} Articles)</span>
-      </div>
-    </div>
-    
-    <!-- Coverage Distribution Bar -->
-    <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 100%;">
-      <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">
-        <span>Coverage Tone</span>
-        <span style="font-family: var(--font-mono);">${negPct}% Negative / ${neuPct}% Neutral / ${posPct}% Positive</span>
-      </div>
-      <div class="dist-bar-track" style="height: 6px; border-radius: 3px; display: flex; overflow: hidden; background-color: var(--bg-tertiary); width: 100%;">
-        <div class="dist-slice neg" style="width: ${negPct}%; background-color: var(--neg-color);"></div>
-        <div class="dist-slice neu" style="width: ${neuPct}%; background-color: var(--neu-color);"></div>
-        <div class="dist-slice pos" style="width: ${posPct}%; background-color: var(--pos-color);"></div>
-      </div>
-    </div>
-    
-    <!-- Sentiment Beeswarm Plot -->
-    <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin-top: 0.5rem; position: relative;">
-      <div style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display:flex; justify-content:space-between;">
-        <span>Article Sentiment Distribution</span>
-        <span style="font-family:var(--font-mono); font-size:0.68rem; opacity:0.8;">Max Stack: ${maxStackLevel + 1} articles</span>
-      </div>
-      <div id="spotlight-axis-container" style="position: relative; height: ${containerHeight}px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border-color); width: 100%; overflow: hidden; display: flex; align-items: center;">
-        
-        <!-- Editorial Valence Zones -->
-        <div style="position: absolute; left: 0; width: 33%; top: 0; bottom: 0; background: rgba(197, 34, 31, 0.035); border-right: 1px dashed rgba(197, 34, 31, 0.18); pointer-events: none;"></div>
-        <div style="position: absolute; left: 33%; width: 27%; top: 0; bottom: 0; background: transparent; pointer-events: none;"></div>
-        <div style="position: absolute; left: 60%; right: 0; top: 0; bottom: 0; background: rgba(21, 128, 61, 0.035); border-left: 1px dashed rgba(21, 128, 61, 0.18); pointer-events: none;"></div>
-
-        <!-- Track Baseline -->
-        <div style="position: absolute; left: 16px; right: 16px; bottom: 20px; height: 1.5px; background: var(--border-color); z-index: 1;"></div>
-        
-        <!-- Zero Line Marker -->
-        <div style="position: absolute; left: 50%; bottom: 16px; top: 10px; width: 1px; border-left: 1px dashed var(--text-muted); opacity: 0.35; z-index: 1; pointer-events: none;"></div>
-
-        <!-- Track labels -->
-        <span style="position: absolute; left: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--neg-color); font-weight: 600; pointer-events: none; z-index: 2;">Alarmist (-1.0)</span>
-        <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); font-weight: 600; pointer-events: none; z-index: 2;">Neutral (0.0)</span>
-        <span style="position: absolute; right: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--pos-color); font-weight: 600; pointer-events: none; z-index: 2;">Positive (+1.0)</span>
-        
-        <!-- Plot Circles -->
-        ${dotsHTML}
-      </div>
-      <div style="font-size: 0.68rem; color: var(--text-secondary); text-align: center; font-style: italic; opacity: 0.85; margin-top: 0.15rem;">Hover over dots to inspect article score; click to jump directly to article card. Density scales dynamically to prevent overflow.</div>
-      
-      <!-- Custom Tooltip Element -->
-      <div id="spotlight-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 280px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, bottom 0.08s ease-out;"></div>
-    </div>
-  `;
+  });
 }
 
 // Custom Tooltip Show/Hide handlers
 window.showSpotlightTooltip = function(e, title, score) {
-  const tooltip = document.getElementById('spotlight-tooltip');
+  const banner = e.target.closest('.card') || elements.spotlightBanner;
+  if (!banner) return;
+  const tooltip = banner.querySelector('.spotlight-tooltip');
   if (!tooltip) return;
   
   let mood = 'Neutral';
@@ -2361,8 +2416,7 @@ window.showSpotlightTooltip = function(e, title, score) {
   
   tooltip.style.display = 'block';
   
-  // Position relative to spotlightBanner card (the wrapper containing spotlight-tooltip)
-  const banner = elements.spotlightBanner;
+  // Position relative to banner card (the wrapper containing spotlight-tooltip)
   const bannerRect = banner.getBoundingClientRect();
   const dotRect = e.target.getBoundingClientRect();
   
@@ -2375,13 +2429,17 @@ window.showSpotlightTooltip = function(e, title, score) {
 };
 
 window.hideSpotlightTooltip = function() {
-  const tooltip = document.getElementById('spotlight-tooltip');
-  if (tooltip) tooltip.style.display = 'none';
+  document.querySelectorAll('.spotlight-tooltip').forEach(tooltip => {
+    tooltip.style.display = 'none';
+  });
 };
 
 // Scroll to article card and flash highlight border
 window.scrollToArticle = function(cardId) {
-  const card = document.getElementById(cardId);
+  let card = document.getElementById(cardId);
+  if (!card) {
+    card = document.getElementById(`art-card-pulse-${cardId}`) || document.getElementById(`art-card-dd-${cardId}`);
+  }
   if (card) {
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     card.classList.add('highlight-flash');
@@ -2537,7 +2595,7 @@ function renderDailyPulse() {
   if (badgeEl) {
     badgeEl.className = 'pulse-hero-mood-badge';
     if (state.edition === 'silver') {
-      badgeEl.innerText = '☀️ Silver Lining Focus';
+      badgeEl.innerText = '☀️ Some Good News Focus';
       badgeEl.classList.add('pos');
     } else if (globalAvg < -0.3) {
       badgeEl.innerText = 'Elevated Alarmism / Doom';
@@ -2599,13 +2657,11 @@ function renderDailyPulse() {
   if (alarmistCard && mostAlarmist && mostAlarmist.id !== 'all') {
     alarmistCard.onclick = () => {
       toggleSourceFilter(mostAlarmist.id);
-      document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
     };
   }
   if (upliftingCard && mostUplifting && mostUplifting.id !== 'all') {
     upliftingCard.onclick = () => {
       toggleSourceFilter(mostUplifting.id);
-      document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
     };
   }
   if (polCard) {
@@ -2613,6 +2669,7 @@ function renderDailyPulse() {
       if (maxClash.outletA && maxClash.outletB) {
         elements.h2hSourceA.value = maxClash.outletA.id;
         elements.h2hSourceB.value = maxClash.outletB.id;
+        switchTab('deepdives');
         renderHeadToHead();
         const h2h = document.getElementById('h2h-section');
         if (h2h) h2h.scrollIntoView({ behavior: 'smooth' });
@@ -2753,7 +2810,9 @@ function renderHeatmapMatrix() {
           updateFilterIndicator();
           updateTopicPillsActive(cat);
           renderHeadlines();
-          document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
+          switchTab('deepdives');
+          const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
+          target?.scrollIntoView({ behavior: 'smooth' });
         };
       }
       container.appendChild(cell);
@@ -2800,7 +2859,6 @@ function renderHeatmapMatrix() {
       cell.title = `${src.name} Overall Average: ${avg > 0 ? '+' : ''}${avg} (${scored.length} total articles). Click to filter stream!`;
       cell.onclick = () => {
         toggleSourceFilter(id);
-        document.querySelector('.headlines-section')?.scrollIntoView({ behavior: 'smooth' });
       };
     }
     container.appendChild(cell);

@@ -34,15 +34,15 @@
       </div>
       
       <div class="header-actions">
-        <!-- Two-Sided App Edition Switcher (No Good News vs The Silver Lining) -->
-        <div class="edition-toggle-wrap" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and the Positive Newsroom">
+        <!-- Two-Sided App Edition Switcher (No Good News vs Some Good News) -->
+        <div class="edition-toggle-wrap" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and Some Good News">
           <button id="edition-btn-doom" class="edition-pill-btn active" data-edition="doom">
             <i data-lucide="newspaper"></i>
             <span>No Good News</span>
           </button>
           <button id="edition-btn-silver" class="edition-pill-btn" data-edition="silver">
             <i data-lucide="sun"></i>
-            <span>The Silver Lining</span>
+            <span>Some Good News</span>
           </button>
         </div>
 
@@ -64,10 +64,10 @@
           <i data-lucide="sparkles"></i><span>Daily Pulse</span>
         </button>
         <button class="nav-pill-btn" data-tab="trends" id="tab-btn-trends">
-          <i data-lucide="line-chart"></i><span>Trends &amp; Deep Dive</span>
+          <i data-lucide="line-chart"></i><span>Macro Trends</span>
         </button>
-        <button class="nav-pill-btn" data-tab="feed" id="tab-btn-feed">
-          <i data-lucide="newspaper"></i><span>Headline Feed</span>
+        <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
+          <i data-lucide="compass"></i><span>Outlet Deep Dives</span>
         </button>
         <button class="nav-pill-btn" data-tab="methodology" id="tab-btn-methodology">
           <i data-lucide="help-circle"></i><span>Methodology</span>
@@ -247,6 +247,99 @@
         </div>
       </div>
     </section>
+
+    <!-- HEADLINES EXPLORER (DIRECTLY BELOW SPECTRUM ON DAILY PULSE) -->
+    <section class="headlines-section" id="feed-section">
+      <div class="headlines-section-header">
+        <h2 class="section-title flex-center">
+          <i data-lucide="newspaper"></i>
+          Live Headline Stream
+        </h2>
+        <div id="active-filter-indicator" class="filter-indicator" style="display: none;">
+          Filtered to: <strong id="filter-name">-</strong>
+          <button id="clear-filter-btn" class="clear-btn">&times; Clear</button>
+        </div>
+      </div>
+      
+      <div class="headlines-filter-bar card">
+        <!-- Quick Trending Topic Pills -->
+        <div class="trending-pills-row">
+          <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
+            <i data-lucide="flame" style="width: 14px; height: 14px; color: #f97316;"></i> Quick Topics:
+          </span>
+          <button class="topic-pill-btn active" data-topic="all">All Stories</button>
+          <button class="topic-pill-btn" data-topic="world">🌍 World &amp; Global Affairs</button>
+          <button class="topic-pill-btn" data-topic="politics">🗳️ Politics</button>
+          <button class="topic-pill-btn" data-topic="business">📈 Business &amp; Inflation</button>
+          <button class="topic-pill-btn" data-topic="technology">⚡ Tech &amp; AI</button>
+          <button class="topic-pill-btn" data-topic="science">🚀 Science &amp; Space</button>
+          <button class="topic-pill-btn" data-topic="health">🏥 Health</button>
+        </div>
+
+        <div class="filter-controls">
+          <div class="control-group">
+            <label for="filter-source"><i data-lucide="globe"></i> Source</label>
+            <select id="filter-source" class="select-input">
+              <option value="all">All Sources</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="filter-category"><i data-lucide="tag"></i> Category</label>
+            <select id="filter-category" class="select-input">
+              <option value="all">All Categories</option>
+              <option value="politics">Politics</option>
+              <option value="world">World &amp; Global Affairs</option>
+              <option value="business">Business</option>
+              <option value="technology">Technology</option>
+              <option value="science">Science</option>
+              <option value="health">Health</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="sports">Sports</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="filter-vibe"><i data-lucide="smile"></i> Vibe</label>
+            <select id="filter-vibe" class="select-input">
+              <option value="all">All Vibes</option>
+              <option value="positive">Uplifting (&gt; 0.15)</option>
+              <option value="neutral">Neutral (-0.15 to 0.15)</option>
+              <option value="negative">Doom-laden (&lt; -0.15)</option>
+            </select>
+          </div>
+
+          <div class="control-group search-group">
+            <label for="search-input"><i data-lucide="search"></i> Search</label>
+            <div class="search-input-wrapper">
+              <input type="text" id="search-input" placeholder="Search headlines..." class="text-input">
+              <button id="clear-search-btn" class="clear-input-btn">&times;</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sort-controls">
+          <span class="sort-label">Sort By:</span>
+          <button id="sort-date" class="sort-btn active" data-sort="date">
+            Date <i data-lucide="arrow-down-narrow-wide"></i>
+          </button>
+          <button id="sort-vibe" class="sort-btn" data-sort="vibe">
+            Sentiment Vibe
+          </button>
+        </div>
+      </div>
+
+      <!-- Spotlight Banner for Filtered Source -->
+      <div id="spotlight-banner" class="card" style="display: none; margin-bottom: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); flex-direction: column; gap: 1rem; border-radius: 16px; box-shadow: var(--card-shadow);">
+        <!-- Content will be injected dynamically -->
+      </div>
+
+      <!-- Articles list container -->
+      <div id="headlines-container" class="headlines-list">
+        <!-- Articles will be injected here dynamically -->
+      </div>
+    </section>
   </main>
 
   <!-- TAB 2: TRENDS & DEEP DIVE -->
@@ -337,6 +430,25 @@
         </div>
       </div>
     </section>
+  </main>
+
+  <!-- TAB 3: OUTLET DEEP DIVES -->
+  <main id="tab-panel-deepdives" class="tab-panel hidden">
+    <!-- Deep Dive Intro Header -->
+    <div class="section-header-row" style="margin-bottom: 0.5rem;">
+      <div>
+        <h2 class="section-title flex-center">
+          <i data-lucide="compass"></i>
+          Outlet Deep Dives &amp; Comparisons
+        </h2>
+        <p class="section-desc">Inspect newsroom-specific sentiment distributions, compare coverage head-to-head, and browse filtered source reporting.</p>
+      </div>
+    </div>
+
+    <!-- Spotlight Banner for Filtered Source -->
+    <div id="deepdive-spotlight-banner" class="card" style="display: none; margin-bottom: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); flex-direction: column; gap: 1rem; border-radius: 16px; box-shadow: var(--card-shadow);">
+      <!-- Content will be injected dynamically -->
+    </div>
 
     <!-- NEWS SOURCES COMPARISON MATRIX -->
     <section class="comparison-section" id="comparison-section">
@@ -457,6 +569,22 @@
             </div>
           </div>
         </div>
+    </section>
+
+    <!-- OUTLET DEEP DIVE HEADLINE FEED -->
+    <section class="headlines-section" id="deepdive-feed-section" style="margin-top: 1.5rem;">
+      <div class="headlines-section-header">
+        <h2 class="section-title flex-center">
+          <i data-lucide="newspaper"></i>
+          Outlet Story Stream
+        </h2>
+        <div id="deepdive-filter-indicator" class="filter-indicator" style="display: none;">
+          Filtered to: <strong id="deepdive-filter-name">-</strong>
+          <button id="deepdive-clear-filter-btn" class="clear-btn">&times; Show All Outlets</button>
+        </div>
+      </div>
+      <div id="deepdive-headlines-container" class="headlines-list">
+        <!-- Filtered outlet articles injected dynamically -->
       </div>
     </section>
   </main>
@@ -583,104 +711,6 @@
           </div>
 
         </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- TAB 3: HEADLINE FEED -->
-  <main id="tab-panel-feed" class="tab-panel hidden">
-    <!-- HEADLINES EXPLORER -->
-    <section class="headlines-section" id="feed-section">
-      <div class="headlines-section-header">
-        <h2 class="section-title flex-center">
-          <i data-lucide="newspaper"></i>
-          Headline Stream
-        </h2>
-        <div id="active-filter-indicator" class="filter-indicator" style="display: none;">
-          Filtered to: <strong id="filter-name">-</strong>
-          <button id="clear-filter-btn" class="clear-btn">&times; Clear</button>
-        </div>
-      </div>
-      
-      <div class="headlines-filter-bar card">
-        <!-- Quick Trending Topic Pills -->
-        <div class="trending-pills-row">
-          <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
-            <i data-lucide="flame" style="width: 14px; height: 14px; color: #f97316;"></i> Quick Topics:
-          </span>
-          <button class="topic-pill-btn active" data-topic="all">All Stories</button>
-          <button class="topic-pill-btn" data-topic="world">🌍 World &amp; Global Affairs</button>
-          <button class="topic-pill-btn" data-topic="politics">🗳️ Politics</button>
-          <button class="topic-pill-btn" data-topic="business">📈 Business & Inflation</button>
-          <button class="topic-pill-btn" data-topic="technology">⚡ Tech & AI</button>
-          <button class="topic-pill-btn" data-topic="science">🚀 Science & Space</button>
-          <button class="topic-pill-btn" data-topic="health">🏥 Health</button>
-        </div>
-
-        <div class="filter-controls">
-          <div class="control-group">
-            <label for="filter-source"><i data-lucide="globe"></i> Source</label>
-            <select id="filter-source" class="select-input">
-              <option value="all">All Sources</option>
-            </select>
-          </div>
-          
-          <div class="control-group">
-            <label for="filter-category"><i data-lucide="tag"></i> Category</label>
-            <select id="filter-category" class="select-input">
-              <option value="all">All Categories</option>
-              <option value="politics">Politics</option>
-              <option value="world">World</option>
-              <option value="business">Business</option>
-              <option value="technology">Technology</option>
-              <option value="science">Science</option>
-              <option value="health">Health</option>
-              <option value="entertainment">Entertainment</option>
-              <option value="sports">Sports</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div class="control-group">
-            <label for="filter-vibe"><i data-lucide="smile"></i> Vibe</label>
-            <select id="filter-vibe" class="select-input">
-              <option value="all">All Vibes</option>
-              <option value="positive">Uplifting (> 0.15)</option>
-              <option value="neutral">Neutral (-0.15 to 0.15)</option>
-              <option value="negative">Doom-laden (< -0.15)</option>
-            </select>
-          </div>
-
-
-
-          <div class="control-group search-group">
-            <label for="search-input"><i data-lucide="search"></i> Search</label>
-            <div class="search-input-wrapper">
-              <input type="text" id="search-input" placeholder="Search headlines..." class="text-input">
-              <button id="clear-search-btn" class="clear-input-btn">&times;</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="sort-controls">
-          <span class="sort-label">Sort By:</span>
-          <button id="sort-date" class="sort-btn active" data-sort="date">
-            Date <i data-lucide="arrow-down-narrow-wide"></i>
-          </button>
-          <button id="sort-vibe" class="sort-btn" data-sort="vibe">
-            Sentiment Vibe
-          </button>
-        </div>
-      </div>
-
-      <!-- Spotlight Banner for Filtered Source -->
-      <div id="spotlight-banner" class="card" style="display: none; margin-bottom: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border: 1px solid var(--border-color); flex-direction: column; gap: 1rem; border-radius: 16px; box-shadow: var(--card-shadow);">
-        <!-- Content will be injected dynamically -->
-      </div>
-
-      <!-- Articles list container -->
-      <div id="headlines-container" class="headlines-list">
-        <!-- Articles will be injected here dynamically -->
       </div>
     </section>
   </main>

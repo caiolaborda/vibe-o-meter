@@ -659,7 +659,7 @@ async function main() {
   const todayDateStr = now.toISOString().slice(0, 10);
   let editorialSummary = currentCache.editorialSummary || '';
   try {
-    const briefing = await generateDailyBriefing({ force: false });
+    const briefing = await generateDailyBriefing({ force: process.argv.includes('--force') });
     if (briefing) {
       editorialSummary = briefing;
     }
