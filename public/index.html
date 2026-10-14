@@ -637,15 +637,15 @@
 
   <!-- TAB 4: METHODOLOGY -->
   <main id="tab-panel-methodology" class="tab-panel hidden">
-    <!-- HOW SENTIMENT WORKS / METHODOLOGY -->
+    <!-- HOW SENTIMENT WORKS / METHODOLOGY & PHILOSOPHY -->
     <section class="methodology-section" id="methodology-section">
       <div class="section-header-row">
         <div>
           <h2 class="section-title flex-center">
             <i data-lucide="help-circle"></i>
-            How News Sentiment Analysis Works
+            Methodology, Philosophy &amp; Scientific Calibration
           </h2>
-          <p class="section-desc">Why traditional dictionary keyword counting fails on journalism, and how Gemini AI decodes contextual valence.</p>
+          <p class="section-desc">The journey of No Good News: why commercial news operates as an existential threat monitor, why RSS feeds provide the purest lens, and how AI evaluates real-world human progress.</p>
         </div>
         <div class="section-header-actions flex-center">
           <button class="section-collapse-btn" data-target="methodology-wrapper" title="Toggle Section">
@@ -657,15 +657,48 @@
 
       <div class="collapsible-content" id="methodology-wrapper">
         <div class="methodology-container card">
-          <!-- Overview Cards -->
-          <div class="methodology-intro-grid">
+
+          <!-- 1. THE JOURNEY & THE BIG QUESTION -->
+          <div class="methodology-story-banner" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <span style="font-size: 1.4rem;">🧭</span>
+              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0; font-family: var(--font-serif);">
+                The Core Premise: Is the World Ending, or Is the Media Selling Panic?
+              </h3>
+            </div>
+            <p class="methodology-story-p">
+              <strong>No Good News</strong> was built to answer a very simple, visceral question: <em>"Why does opening any major news website immediately trigger feelings of existential exhaustion?"</em>
+            </p>
+            <p class="methodology-story-p">
+              We started with a hypothesis: commercial media operates primarily as a <strong>24-hour threat-surveillance machine</strong>. Bad news gets published because humans are biologically wired to click on danger signals. But to prove that mathematically without human editorial bias, we needed an autonomous audit engine capable of reading the entire world's front pages every day, scoring their emotional valence, and contrasting the doom against genuine scientific progress.
+            </p>
+          </div>
+
+          <!-- 2. WHY RSS FEEDS? (THE UNFILTERED BROADCAST WIRE) -->
+          <div style="background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--card-shadow);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem;">
+              <h4 class="methodology-subheading" style="margin: 0;">
+                <i data-lucide="rss" style="color: #f97316;"></i> The Unfiltered Source: Why RSS Feeds Instead of Social Algorithms?
+              </h4>
+              <span class="badge neu" style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;">Zero Personalization</span>
+            </div>
+            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
+              Modern social media platforms (X/Twitter, TikTok, Facebook, YouTube) and news aggregators use <strong>black-box recommendation algorithms</strong> that personalize content to maximize your individual outrage and time on screen. You aren't seeing what the newsroom published—you are seeing what an ad-tech algorithm calculated would provoke you most.
+            </p>
+            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin: 0;">
+              In contrast, <strong>RSS (Really Simple Syndication) is open, chronological, un-personalized, and tamper-evident</strong>. When the editors of <em>The New York Times</em>, <em>BBC News</em>, <em>Reuters</em>, <em>CNN</em>, or <em>The Guardian</em> publish an item to their primary RSS wire, they are declaring to the world: <em>"This is what our senior journalists consider the most significant developments on Earth right now."</em> By scraping raw RSS feeds directly, <strong>No Good News audits the unfiltered editorial intent of the global press</strong> with zero algorithmic distortion.
+            </p>
+          </div>
+
+          <!-- 3. DICTIONARY COUNTERS VS AI CONTEXTUAL VALENCE -->
+          <div class="methodology-intro-grid" style="margin-bottom: 2rem;">
             <div class="methodology-intro-card">
               <div class="intro-icon-box neg">
                 <i data-lucide="x-circle"></i>
               </div>
               <div class="intro-content">
                 <h3>The Flaw with Keyword Dictionaries</h3>
-                <p>Lexicon tools like VADER or AFINN count negative words in isolation. In journalism, words like <em>"strike"</em>, <em>"defense"</em>, <em>"crash"</em>, or <em>"investigation"</em> are routine factual reporting. A space rocket test "crashing" into the ocean is neutral science, but keyword counters score it as a disaster.</p>
+                <p>Traditional sentiment lexicons like VADER or AFINN count negative words in isolation. In journalism, words like <em>"strike"</em>, <em>"defense"</em>, <em>"crash"</em>, or <em>"investigation"</em> are routine factual reporting. A space rocket test "crashing" into the ocean is neutral science, but keyword counters score it as a disaster.</p>
               </div>
             </div>
 
@@ -680,7 +713,107 @@
             </div>
           </div>
 
-          <!-- 5 Valence Bands Strip -->
+          <!-- 4. THE COUNTERFACTUAL PRINCIPLE: HARM VS MITIGATION -->
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem;">
+              <span style="font-size: 1.3rem;">⚖️</span>
+              <h4 class="methodology-subheading" style="margin: 0;">
+                The Counterfactual First Principle: Solving the "Harm vs. Mitigation" Dilemma
+              </h4>
+            </div>
+            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
+              During calibration, we encountered a classic paradox: <em>When a regulator fines a company £6 million for deceptive sales, or injured workers receive a legal settlement for toxic exposure, is that good news or bad news?</em>
+            </p>
+            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
+              A naive model sees "payout" or "remedy" and marks it as positive justice. But we anchor the AI with the <strong>Counterfactual World State Test</strong>:
+            </p>
+            <blockquote style="border-left: 3px solid var(--accent-color); padding-left: 1rem; margin: 0.75rem 0; font-size: 0.88rem; line-height: 1.6; color: var(--text-primary); font-style: italic; background: rgba(99, 102, 241, 0.05); padding-top: 0.5rem; padding-bottom: 0.5rem; border-radius: 0 8px 8px 0;">
+              "Ask: If this whole situation never occurred, would the world be better or worse? An aspirin is a remedy for a headache, but a headache is still unpleasant. Regulatory fines, legal payouts, and emergency prison decanting are reactions to underlying harm, negligence, or systemic failure. They are scored as sober or mildly negative (-0.15 to -0.35) because they reflect the damage that necessitated them."
+            </blockquote>
+          </div>
+
+          <!-- 5. THE 6 ARCHETYPES OF GENUINE GOOD NEWS -->
+          <div style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.5rem;">
+              <h4 class="methodology-subheading" style="margin: 0;">
+                <i data-lucide="sun" style="color: #f59e0b;"></i> Where Hope Actually Lives: The 6 Archetypes of Genuine Good News
+              </h4>
+              <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;">Valence: +0.25 to +1.00</span>
+            </div>
+            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 1rem;">
+              Commercial news operates as a 24-hour threat-surveillance system. But genuine good news <strong>does</strong> exist across the wires, and it almost always falls into one of these 6 Archetypes of human flourishing, discovery, and reconciliation:
+            </p>
+
+            <div class="archetypes-grid">
+              <div class="archetype-card">
+                <div class="archetype-header">
+                  <div class="archetype-title-wrap">
+                    <span class="archetype-icon">🚀</span>
+                    <span class="archetype-name">Space &amp; Scientific Discovery</span>
+                  </div>
+                  <span class="archetype-score-badge">+0.70 to +0.95</span>
+                </div>
+                <p class="archetype-examples">James Webb deep-field imagery, Europa ice discoveries, fusion energy net-gain milestones, and planetary exploration.</p>
+              </div>
+
+              <div class="archetype-card">
+                <div class="archetype-header">
+                  <div class="archetype-title-wrap">
+                    <span class="archetype-icon">🏥</span>
+                    <span class="archetype-name">Medical &amp; Public Health Eradication</span>
+                  </div>
+                  <span class="archetype-score-badge">+0.65 to +0.90</span>
+                </div>
+                <p class="archetype-examples">Targeted leukemia immunotherapies, global malaria vaccine rollouts, infectious disease eradication, and life-saving organ breakthroughs.</p>
+              </div>
+
+              <div class="archetype-card">
+                <div class="archetype-header">
+                  <div class="archetype-title-wrap">
+                    <span class="archetype-icon">🕊️</span>
+                    <span class="archetype-name">Reconciliation &amp; Hostage Freedom</span>
+                  </div>
+                  <span class="archetype-score-badge">+0.50 to +0.75</span>
+                </div>
+                <p class="archetype-examples">Diplomatic hostage releases, family reunifications, peace accords, and border demilitarization treaties.</p>
+              </div>
+
+              <div class="archetype-card">
+                <div class="archetype-header">
+                  <div class="archetype-title-wrap">
+                    <span class="archetype-icon">🌿</span>
+                    <span class="archetype-name">Ecological &amp; Wildlife Milestones</span>
+                  </div>
+                  <span class="archetype-score-badge">+0.40 to +0.70</span>
+                </div>
+                <p class="archetype-examples">Endangered species population rebounds, renewable energy generation milestones exceeding coal, and river rewilding.</p>
+              </div>
+
+              <div class="archetype-card">
+                <div class="archetype-header">
+                  <div class="archetype-title-wrap">
+                    <span class="archetype-icon">📈</span>
+                    <span class="archetype-name">Direct Citizen Economic Relief</span>
+                  </div>
+                  <span class="archetype-score-badge">+0.25 to +0.45</span>
+                </div>
+                <p class="archetype-examples">Central bank interest rate cuts lowering mortgage payments, inflation falling to target, and real wage gains outpacing cost of living.</p>
+              </div>
+
+              <div class="archetype-card">
+                <div class="archetype-header">
+                  <div class="archetype-title-wrap">
+                    <span class="archetype-icon">🤝</span>
+                    <span class="archetype-name">Altruism &amp; Cultural Triumphs</span>
+                  </div>
+                  <span class="archetype-score-badge">+0.40 to +0.80</span>
+                </div>
+                <p class="archetype-examples">Grassroots mutual aid fundraising, heroic citizen rescues, sportsmanship, and record-shattering Paralympic triumphs.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. 5 VALENCE BANDS STRIP -->
           <div class="valence-bands-container">
             <h4 class="methodology-subheading"><i data-lucide="sliders"></i> The 5 Semantic Valence Bands</h4>
             <div class="valence-bands-grid">
@@ -712,8 +845,8 @@
             </div>
           </div>
 
-          <!-- Real-World Case Studies -->
-          <div class="case-studies-container">
+          <!-- 7. REAL-WORLD CASE STUDIES -->
+          <div class="case-studies-container" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.75rem;">
             <h4 class="methodology-subheading"><i data-lucide="file-check"></i> Real-World Evaluation Case Studies</h4>
             <div class="case-studies-grid">
               

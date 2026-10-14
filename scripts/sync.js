@@ -195,12 +195,18 @@ VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
 - [+0.35 to +0.64]: Genuine justice delivered (conviction of perpetrators, diplomatic hostage release, POW exchange), successful peace accords, significant environmental or economic recovery.
 - [+0.65 to +1.00]: Historic scientific discoveries, life-saving medical breakthroughs, end of armed conflicts, inspiring human triumphs.
 
-EDGE CASE RULES:
-1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "ceasefire" in a story about active strikes does NOT make it positive.
-2. Justice & Rescue vs Systemic Dysfunction: When a crisis resolves with perpetrators convicted, diplomatic hostages freed, or disaster victims rescued, evaluate the constructive relief of justice/rescue (+0.35 to +0.60). HOWEVER, do NOT confuse emergency crisis-mitigation of domestic failures with good news: releasing convicted prisoners early due to overcrowded state prisons is an alarming symptom of systemic state failure and public controversy (-0.25 to -0.40), NOT positive justice. Similarly, legal payouts or financial settlements for toxic chemical exposure or medical negligence reflect workplace injury and institutional harm (-0.15 to -0.35), not inspiring breakthroughs.
-3. Democratic Politics: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violent protests or institutional breakdown.
-4. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
-5. Controversial & Polarized Events: For contested domestic policies (e.g. early prisoner releases, strikes, protests), assess the overarching real-world gravity and public tension rather than surface quotes of beneficiaries rejoicing.
+FIRST PRINCIPLES & EVALUATION RULES:
+1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "aid delivery" in a story about active strikes does NOT make it positive.
+2. The Counterfactual World State Principle (Harm vs. Mitigation): Ask: "If this whole situation never occurred, would the world be better or worse?" Regulatory fines, legal payouts, compensation settlements, prison overflow decanting, and corporate bailouts are reactions to underlying harm, negligence, or misconduct. Do NOT score administrative remedies as positive victories; score them as sober or mildly negative (-0.15 to -0.35) reflecting the damage that necessitated them.
+3. The 6 Archetypes of Genuine Good News: Positive scores (+0.25 to +1.00) require proactive progress, human flourishing, or genuine resolution. Look for:
+   - Scientific Discovery & Space Exploration (+0.70 to +0.95)
+   - Medical Breakthroughs & Disease Eradication (+0.65 to +0.90)
+   - Genuine Reconciliation, Hostage Freedom & Peace Accords (+0.50 to +0.75)
+   - Ecological, Wildlife & Clean Energy Milestones (+0.40 to +0.70)
+   - Tangible Citizen Economic Relief (e.g. rate cuts easing debt, real wage growth) (+0.25 to +0.45)
+   - Inspiring Altruism, Heroic Rescue & Cultural Achievements (+0.40 to +0.80)
+4. Democratic Governance: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violence or constitutional crisis.
+5. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
 6. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
 
 Return a JSON array of objects with:
@@ -345,6 +351,97 @@ Return ONLY valid JSON array.`;
   });
 
   return { results, modelUsed: modelName };
+}
+
+// Cross-Outlet Story Clustering (Method A: Single End-of-Sync Aggregation Pass)
+async function clusterCrossOutletStories(finalSources, apiKey) {
+  if (!apiKey) return [];
+  
+  // Flatten recent headlines from all sources (up to top 10 from each outlet)
+  const candidates = [];
+  Object.entries(finalSources).forEach(([sourceId, src]) => {
+    (src.articles || []).slice(0, 10).forEach(art => {
+      if (art && art.title && art.title.trim().length > 10) {
+        candidates.push({
+          sourceId,
+          sourceName: src.name,
+          title: art.title.trim(),
+          sentiment: typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0),
+          link: art.link || ''
+        });
+      }
+    });
+  });
+
+  if (candidates.length < 6) return [];
+
+  // Pass compact indexed headline list
+  const promptData = candidates.map((c, idx) => ({ id: idx, source: c.sourceId, title: c.title }));
+  const prompt = `You are a wire news editor. Analyze these headlines from multiple newsrooms.
+Identify real-world events that are being covered by 2 or more DIFFERENT news outlets.
+Group them into story clusters.
+
+Rules:
+- A cluster MUST include headlines from at least 2 distinct outlets reporting on the SAME underlying event or topic.
+- Provide a concise neutral story title (3-6 words, e.g. "Wayfair Misleading Sales Fines", "UK Early Prisoner Release", "Boeing Machinist Strike", "Federal Reserve Rate Cut").
+- Provide the list of matching headline IDs.
+- Return ONLY a JSON array. If no shared stories exist, return [].
+
+Headlines:
+${JSON.stringify(promptData, null, 2)}
+
+Return JSON array in format:
+[
+  { "story": "Topic Title", "ids": [0, 4, 12] }
+]`;
+
+  try {
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+    });
+    const resp = await model.generateContent(prompt);
+    let text = resp.response.text().trim();
+    if (text.startsWith('```json')) text = text.substring(7);
+    else if (text.startsWith('```')) text = text.substring(3);
+    if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+    const clusters = JSON.parse(text.trim());
+
+    if (Array.isArray(clusters)) {
+      const formattedClusters = [];
+      clusters.forEach(cl => {
+        if (!cl.ids || cl.ids.length < 2) return;
+        const matchingArticles = cl.ids.map(id => candidates[id]).filter(Boolean);
+        const uniqueSources = new Set(matchingArticles.map(m => m.sourceId));
+        if (uniqueSources.size >= 2) {
+          const scores = matchingArticles.map(m => m.sentiment);
+          const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
+          const variance = Number((scores.reduce((acc, val) => acc + Math.pow(val - avgScore, 2), 0) / scores.length).toFixed(3));
+          
+          formattedClusters.push({
+            story: cl.story,
+            averageSentiment: avgScore,
+            sentimentSpread: variance,
+            outletCount: uniqueSources.size,
+            coverage: matchingArticles.map(m => ({
+              sourceId: m.sourceId,
+              sourceName: m.sourceName,
+              title: m.title,
+              sentiment: m.sentiment,
+              link: m.link
+            }))
+          });
+        }
+      });
+      formattedClusters.sort((a, b) => (b.outletCount * (b.sentimentSpread + 0.1)) - (a.outletCount * (a.sentimentSpread + 0.1)));
+      return formattedClusters;
+    }
+  } catch (err) {
+    console.warn('[Sync] Non-blocking story clustering notice:', err.message);
+  }
+  return [];
 }
 
 // Main execution routine
@@ -668,6 +765,18 @@ async function main() {
     console.warn('[Sync] Non-blocking briefing notice:', err.message);
   }
 
+  // 5.7 Cross-Outlet Story Clustering (Method A: Single Aggregation Pass)
+  let sharedStoryClusters = currentCache.sharedStoryClusters || [];
+  try {
+    const clusters = await clusterCrossOutletStories(finalSources, geminiKey);
+    if (clusters && clusters.length > 0) {
+      sharedStoryClusters = clusters;
+      console.log(`[Sync] Successfully identified ${sharedStoryClusters.length} cross-outlet story clusters.`);
+    }
+  } catch (clusterErr) {
+    console.warn('[Sync] Non-blocking story clustering notice:', clusterErr.message);
+  }
+
   const globalStats = {
     globalSentiment: globalAvg,
     totalArticles: allArticlesTotal,
@@ -675,7 +784,8 @@ async function main() {
     mostPositiveOutlet,
     categoryAverages,
     editorialSummary,
-    editorialSummaryDate: todayDateStr
+    editorialSummaryDate: todayDateStr,
+    sharedStoryClusters
   };
 
   // 6. Build Payloads
@@ -685,6 +795,7 @@ async function main() {
     editorialSummaryDate: todayDateStr,
     editorialSummary,
     globalStats,
+    sharedStoryClusters,
     sources: finalSources,
     timeSeries
   };
@@ -695,6 +806,7 @@ async function main() {
     editorialSummaryDate: todayDateStr,
     editorialSummary,
     globalStats,
+    sharedStoryClusters,
     sources: summarySources,
     timeSeries
   };

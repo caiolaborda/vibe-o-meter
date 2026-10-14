@@ -214,23 +214,42 @@ async function analyzeWithGemini(headlines, apiKey) {
       description: item.description || ''
     }));
 
-    const prompt = `You are an expert news editor and sentiment analyzer. Analyze the sentiment of the following news articles based on their headlines and short descriptions.
-Return a JSON array containing an analysis object for each article. Each object must have:
-- index: the index number matching the input article
-- score: a highly granular floating-point number between -1.0 (extremely negative, doom-laden, tragic) and 1.0 (extremely positive, uplifting, optimistic), resolving precisely to 2 decimal places (e.g. -0.58, -0.23, 0.05, 0.47, 0.81). DO NOT round to simple single-decimal increments like 0.1, -0.2, 0.5, or 0.0 unless the article is perfectly neutral. Focus on the subtle emotional intensity and tone to compute a continuous score.
-- category: classify into one of these exact strings: "politics", "world", "business", "technology", "science", "health", "entertainment", "sports", "other".
+    const prompt = `You are a world-class news sentiment analyst and senior media editor.
+Analyze the inherent emotional valence of the real-world events described in each article headline and short description.
 
-Few-Shot Examples for Score Granularity:
-- Headline: "Tragic structural building collapse kills 18 in downtown district" -> score: -0.87
-- Headline: "Local high school hosts annual community bake sale fundraiser" -> score: 0.16
-- Headline: "Global stocks drop 0.4% as inflation metrics creep upwards" -> score: -0.28
-- Headline: "Cancer research breakthrough shows promising results in early trials" -> score: 0.74
-- Headline: "Federal election schedule officially announced by Commission" -> score: 0.02
+VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
+- [-1.00 to -0.65]: Catastrophe, active warfare, deadly strikes/bombings, mass casualties, severe humanitarian trauma.
+- [-0.64 to -0.30]: Conflict, mass layoffs, corruption scandals, natural disaster damage, solemn obituaries, major regulatory penalties, broken truces.
+- [-0.29 to -0.10]: Mild tension, stock market dip, diplomatic friction, political disputes, minor price hikes.
+- [-0.09 to +0.09]: Strictly neutral procedural news, routine election results without violence, scheduled hearings, administrative statements.
+- [+0.10 to +0.34]: Constructive policy, interest rate cuts, sports wins, mild economic stabilization, cultural awards.
+- [+0.35 to +0.64]: Genuine justice delivered (conviction of perpetrators, diplomatic hostage release, POW exchange), successful peace accords, significant environmental or economic recovery.
+- [+0.65 to +1.00]: Historic scientific discoveries, life-saving medical breakthroughs, end of armed conflicts, inspiring human triumphs.
+
+FIRST PRINCIPLES & EVALUATION RULES:
+1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "aid delivery" in a story about active strikes does NOT make it positive.
+2. The Counterfactual World State Principle (Harm vs. Mitigation): Ask: "If this whole situation never occurred, would the world be better or worse?" Regulatory fines, legal payouts, compensation settlements, prison overflow decanting, and corporate bailouts are reactions to underlying harm, negligence, or misconduct. Do NOT score administrative remedies as positive victories; score them as sober or mildly negative (-0.15 to -0.35) reflecting the damage that necessitated them.
+3. The 6 Archetypes of Genuine Good News: Positive scores (+0.25 to +1.00) require proactive progress, human flourishing, or genuine resolution. Look for:
+   - Scientific Discovery & Space Exploration (+0.70 to +0.95)
+   - Medical Breakthroughs & Disease Eradication (+0.65 to +0.90)
+   - Genuine Reconciliation, Hostage Freedom & Peace Accords (+0.50 to +0.75)
+   - Ecological, Wildlife & Clean Energy Milestones (+0.40 to +0.70)
+   - Tangible Citizen Economic Relief (e.g. rate cuts easing debt, real wage growth) (+0.25 to +0.45)
+   - Inspiring Altruism, Heroic Rescue & Cultural Achievements (+0.40 to +0.80)
+4. Democratic Governance: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violence or constitutional crisis.
+5. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
+6. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
+
+Return a JSON array of objects with:
+- index: integer matching input index
+- score: float between -1.00 and 1.00 (2 decimal places)
+- category: one of 'politics', 'world', 'business', 'technology', 'science', 'health', 'entertainment', 'sports', 'other'
+- explanation: concise 1-sentence analytical rationale
 
 Input Articles:
 ${JSON.stringify(promptData, null, 2)}
 
-Return ONLY the JSON array matching the description. Do not wrap in markdown tags.`;
+Return ONLY valid JSON.`;
 
     console.log(`[Gemini Sync] Sending ALL ${headlines.length} articles to Gemini in a single well-structured request...`);
     const { text, modelUsed } = await generateWithFallback(genAI, prompt);
