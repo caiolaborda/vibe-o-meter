@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-14T16:09:54.338Z",
+  "lastUpdated": "2026-10-14T16:19:02.820Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-14",
   "editorialSummary": "Today across the global wire, human frailty is running the board. Between a [papal cancer scare](https://www.bbc.co.uk/news/articles/c678p0ld7z8lo?at_medium=RSS&at_campaign=rss) in Rome and [crippling satellite blackouts](https://www.france24.com/en/video/20261014-ukraine-accuses-spacex-of-crippling-military-missions-as-ties-with-us-worsen) across Ukraine, stability feels strictly provisional. Naturally, [stubborn inflation](https://news.google.com/rss/articles/CBMiugFBVV95cUxNX3hkV3J5em1xWWY4V0hQODFTamFtU3NvdkpPRUUzMGY0TnlKaVlneXZPc0J6bFpWdDZWb2hLRkZZaHhZVElDSXNFbGNYMVVBRGR6c1RlNDA4cEhkMEcwck5VMFRtZ1QxOFJqNTkyaGJzWWFLSXp2Z0l1Z19vMDh5bGd6N1FJSkJFR2tZUXd1UWUzeVlvZi1xNTVONk00ejJ5cE0xSGY4THFsaUo0RGxPV3dpaW4tbEZseUE?oc=5) and [fresh refinery strikes](https://www.nytimes.com/2026/10/14/world/middleeast/houthi-airport-attack-victims-saudi-arabia.html) arrived right on schedule to keep panic fully diversified.",
   "globalStats": {
-    "globalSentiment": -0.222,
-    "totalArticles": 3370,
+    "globalSentiment": -0.223,
+    "totalArticles": 3377,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
@@ -18,15 +18,15 @@
     },
     "categoryAverages": {
       "entertainment": -0.013,
-      "world": -0.547,
+      "technology": -0.076,
+      "world": -0.546,
       "business": -0.105,
+      "sports": 0.024,
       "other": -0.34,
-      "politics": -0.213,
+      "politics": -0.214,
       "health": -0.218,
       "climate": -0.391,
-      "science": 0.219,
-      "technology": -0.073,
-      "sports": 0.025,
+      "science": 0.217,
       "lifestyle": 0.05,
       "education": -0.22,
       "environment": 0.38
@@ -1535,11 +1535,11 @@
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.221,
+      "averageSentiment": -0.222,
       "distribution": {
         "positive": 51,
         "neutral": 67,
-        "negative": 163
+        "negative": 165
       },
       "articles": [
         {
@@ -1559,6 +1559,24 @@
           "sentiment": -0.32,
           "explanation": "The withdrawal of prominent books over political controversies represents a culturally significant censorship event and artistic friction.",
           "category": "entertainment"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Toilet paper and secret recorders: What we know about the arrest of the Saudi OpenAI engineer",
+          "description": "Abdulrahman Alfozan had worked for the AI giant for more than a year before he was arrested by the FBI.",
+          "link": "https://www.bbc.co.uk/news/articles/cm04054ykqqqo?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/9074/live/83100400-c7bc-11f1-9a39-31b474234113.jpg",
+          "pubDate": "Wed, 14 Oct 2026 15:54:04 GMT",
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.67,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.67) and AFINN-111 (-0.63).",
+          "categoryLocal": "technology",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "The arrest of an OpenAI engineer by the FBI involves a serious criminal investigation and breach of trust.",
+          "categoryGemini": "technology",
+          "sentiment": -0.45,
+          "explanation": "The arrest of an OpenAI engineer by the FBI involves a serious criminal investigation and breach of trust.",
+          "category": "technology"
         },
         {
           "sourceId": "bbc",
@@ -1631,6 +1649,24 @@
           "sentiment": -0.15,
           "explanation": "Diplomatic engagement amid a difficult political period for the Ukrainian leadership.",
           "category": "world"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Footballer Semenyo 'froze' after alleged racist abuse, court told",
+          "description": "A Liverpool fan denies racially aggravated behaviour during a match against Bournemouth in 2025.",
+          "link": "https://www.bbc.co.uk/news/articles/cvlyd3z1g8d8o?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/7cd7/live/e16f7470-c7d7-11f1-9671-5b70c6e774ea.jpg",
+          "pubDate": "Wed, 14 Oct 2026 14:16:04 GMT",
+          "sentimentAFINN": -0.875,
+          "sentimentVADER": -0.912,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.91) and AFINN-111 (-0.88).",
+          "categoryLocal": "sports",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "The legal proceedings stem from an incident of alleged racist abuse directed at a professional footballer during a match.",
+          "categoryGemini": "sports",
+          "sentiment": -0.42,
+          "explanation": "The legal proceedings stem from an incident of alleged racist abuse directed at a professional footballer during a match.",
+          "category": "sports"
         },
         {
           "sourceId": "bbc",
@@ -16077,13 +16113,31 @@
     },
     "cnn": {
       "name": "CNN",
-      "averageSentiment": -0.299,
+      "averageSentiment": -0.296,
       "distribution": {
         "positive": 11,
-        "neutral": 28,
-        "negative": 74
+        "neutral": 29,
+        "negative": 75
       },
       "articles": [
+        {
+          "sourceId": "cnn",
+          "title": "German police launch investigation after robot allegedly gropes teenage girl - CNN",
+          "description": "German police launch investigation after robot allegedly gropes teenage girl CNN",
+          "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxNR0JiX2NneVZncDZ3OE1pbHh0Uml2NWtSa0RTN3JBNVl2WFI1THFFa1N0WmVFUE9PTUVyb2R6UzA2OHBGclVGd1FHaDI2aDA5cWtDb3V6Zmk4NG9UQjVEYVpCMk03ZzdyZ2NEYU9ZT2xkS0o5SnhFMFdCbEtHZUlTTDU4ajc?oc=5",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 15:11:28 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "A police investigation into an alleged assault by a machine on a minor involves distressing behavioral misconduct.",
+          "categoryGemini": "technology",
+          "sentiment": -0.38,
+          "explanation": "A police investigation into an alleged assault by a machine on a minor involves distressing behavioral misconduct.",
+          "category": "technology"
+        },
         {
           "sourceId": "cnn",
           "title": "World’s oldest shipwreck found off coast of Turkey - CNN",
@@ -16137,6 +16191,24 @@
           "sentiment": 0.15,
           "explanation": "Routine fashion commentary highlighting a celebrity's red carpet style is a mild, constructive cultural note.",
           "category": "entertainment"
+        },
+        {
+          "sourceId": "cnn",
+          "title": "El Niño myths busted - CNN",
+          "description": "El Niño myths busted CNN",
+          "link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTFA4djdkQWxRWHRBQ0dqNlZrb1lmZGs2dTBuU2JDaDRYOXNlbF9WYVh6TGNackZJNWsxSTZiT29kNDZ3aU9fQ0FRZHBxVWtWQXdva1ZZdDJyOVdxWVljRk13Q1BR?oc=5",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 12:44:40 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "Educational science journalism debunking common meteorological myths provides minor constructive public awareness.",
+          "categoryGemini": "science",
+          "sentiment": 0.12,
+          "explanation": "Educational science journalism debunking common meteorological myths provides minor constructive public awareness.",
+          "category": "science"
         },
         {
           "sourceId": "cnn",
@@ -17944,10 +18016,46 @@
       "averageSentiment": -0.157,
       "distribution": {
         "positive": 75,
-        "neutral": 89,
+        "neutral": 90,
         "negative": 170
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "Sally Rooney says she can no longer sell books in UK due to Palestine Action support",
+          "description": "Irish writer of Normal People says she can no longer receive royalties from British sales and she cancelled UK trip due to fear of arrest Sally Rooney has said she is being forced to withdraw her books from sale in the UK because of her support for the banned organisation Palestine Action. The Irish novelist, whose books include Normal People and Conversations With Friends, said her public support for the direct action group meant she could no...",
+          "link": "https://www.theguardian.com/uk-news/2026/oct/14/sally-rooney-says-she-can-no-longer-sell-books-in-the-uk-because-of-palestine-action-support",
+          "imageUrl": "https://i.guim.co.uk/img/media/1b024240656da78be08f29add4bb52803ea9bd23/560_0_5600_4480/master/5600.jpg?width=700&quality=85&auto=format&fit=max&s=9ef5b5b912883fb89e539b6a84c44220",
+          "pubDate": "Wed, 14 Oct 2026 16:06:42 GMT",
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.7,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-0.63).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "A prominent author being forced to pull books from sale due to political associations represents cultural and professional friction.",
+          "categoryGemini": "entertainment",
+          "sentiment": -0.42,
+          "explanation": "A prominent author being forced to pull books from sale due to political associations represents cultural and professional friction.",
+          "category": "entertainment"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Palantir and Sadiq Khan drop legal battle over Met contract",
+          "description": "Dispute related to claims London mayor blocked US tech firm from £50m police deal because of concerns over its values Palantir and the London mayor, Sadiq Khan, have called off their legal fight over claims the Labour mayor was blocking the US tech company from signing a contract with the Metropolitan police because of its values and ethics. Palantir and the mayor’s office of policing and crime (Mopac) announced on Wednesday they had withdrawn...",
+          "link": "https://www.theguardian.com/technology/2026/oct/14/palantir-and-sadiq-khan-drop-legal-battle-over-met-contract",
+          "imageUrl": "https://i.guim.co.uk/img/media/3247b2c9df7e3cceb0352fec6e7d14252445f343/1630_0_4870_3898/master/4870.jpg?width=700&quality=85&auto=format&fit=max&s=a8cd42da9ee32d90f631cdc475638a6c",
+          "pubDate": "Wed, 14 Oct 2026 16:05:22 GMT",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.869,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.87) and AFINN-111 (-1.00).",
+          "categoryLocal": "technology",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "The resolution of a contentious legal dispute between a major tech firm and municipal authorities represents a clearing of administrative friction.",
+          "categoryGemini": "business",
+          "sentiment": -0.15,
+          "explanation": "The resolution of a contentious legal dispute between a major tech firm and municipal authorities represents a clearing of administrative friction.",
+          "category": "business"
+        },
         {
           "sourceId": "guardian",
           "title": "‘Try to eat really well, 80% of the time’: nutrition expert says healthy eating is easier than you think",
@@ -17983,24 +18091,6 @@
           "sentiment": -0.05,
           "explanation": "Routine political reporting on diplomatic visits and parliamentary procedure amid background friction.",
           "category": "politics"
-        },
-        {
-          "sourceId": "guardian",
-          "title": "Sally Rooney says she can no longer sell books in UK due to Palestine Action support",
-          "description": "Irish writer of Normal People says she can no longer receive royalties from British sales and she cancelled UK trip due to fear of arrest Sally Rooney has said she is being forced to withdraw her books from sale in the UK because of her support for the banned organisation Palestine Action. The Irish novelist, whose books include Normal People and Conversations With Friends, said her public support for the direct action group meant she could no...",
-          "link": "https://www.theguardian.com/uk-news/2026/oct/14/sally-rooney-says-she-can-no-longer-sell-books-in-the-uk-because-of-palestine-action-support",
-          "imageUrl": "https://i.guim.co.uk/img/media/1b024240656da78be08f29add4bb52803ea9bd23/560_0_5600_4480/master/5600.jpg?width=700&quality=85&auto=format&fit=max&s=9ef5b5b912883fb89e539b6a84c44220",
-          "pubDate": "Wed, 14 Oct 2026 15:50:17 GMT",
-          "sentimentAFINN": -0.625,
-          "sentimentVADER": -0.7,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-0.63).",
-          "categoryLocal": "other",
-          "sentimentGemini": -0.42,
-          "explanationGemini": "A prominent author being forced to pull books from sale due to political associations represents cultural and professional friction.",
-          "categoryGemini": "entertainment",
-          "sentiment": -0.42,
-          "explanation": "A prominent author being forced to pull books from sale due to political associations represents cultural and professional friction.",
-          "category": "entertainment"
         },
         {
           "sourceId": "guardian",
@@ -18040,24 +18130,6 @@
         },
         {
           "sourceId": "guardian",
-          "title": "Mont Blanc, the ‘roof of Europe’, loses more than a metre of height in a year",
-          "description": "Peak of French mountain now 4,807 metres high and fluctuates year by year due to changes in Alpine climate Europe’s highest peak shrank by more than a metre last year, data has shown. Mont Blanc in France now stands 4,807.47 metres above sea level, a team of surveyors from the Haute-Savoie regional department said on Wednesday, putting “the roof of Europe” 1.29 metres lower than in 2025. Continue reading...",
-          "link": "https://www.theguardian.com/environment/2026/oct/14/mont-blanc-loses-metre-height",
-          "imageUrl": "https://i.guim.co.uk/img/media/6052299a2ea98c73a944118da1d60fb665b7dd0e/617_35_4656_3725/master/4656.jpg?width=700&quality=85&auto=format&fit=max&s=b3a390562981aae89b88617ffc31722b",
-          "pubDate": "Wed, 14 Oct 2026 15:33:52 GMT",
-          "sentimentAFINN": 0,
-          "sentimentVADER": -0.542,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (0.00).",
-          "categoryLocal": "climate",
-          "sentimentGemini": -0.28,
-          "explanationGemini": "The ongoing shrinkage of Mont Blanc due to climate change highlights environmental degradation.",
-          "categoryGemini": "climate",
-          "sentiment": -0.28,
-          "explanation": "The ongoing shrinkage of Mont Blanc due to climate change highlights environmental degradation.",
-          "category": "climate"
-        },
-        {
-          "sourceId": "guardian",
           "title": "Was this Mark Zuckerberg’s first – and last – taste of Guinness?",
           "description": "The Meta boss looked traumatised when he sipped stout on the Cheeky Pint podcast. An hour later, his glass was still half full Name: Guinness. Age: Arthur Guinness began brewing porter in the 1770s. Guinness draft was first poured in 1959. Continue reading...",
           "link": "https://www.theguardian.com/food/2026/oct/14/mark-zuckerberg-guinness",
@@ -18073,6 +18145,24 @@
           "sentiment": 0,
           "explanation": "A lighthearted anecdote about a public figure tasting a drink is strictly neutral, trivial entertainment news.",
           "category": "entertainment"
+        },
+        {
+          "sourceId": "guardian",
+          "title": "Mont Blanc, the ‘roof of Europe’, loses more than a metre of height in a year",
+          "description": "Peak of French mountain now 4,807 metres high and fluctuates year by year due to changes in Alpine climate Europe’s highest peak shrank by more than a metre last year, data has shown. Mont Blanc in France now stands 4,807.47 metres above sea level, a team of surveyors from the Haute-Savoie regional department said on Wednesday, putting “the roof of Europe” 1.29 metres lower than in 2025. Continue reading...",
+          "link": "https://www.theguardian.com/environment/2026/oct/14/mont-blanc-loses-metre-height",
+          "imageUrl": "https://i.guim.co.uk/img/media/6052299a2ea98c73a944118da1d60fb665b7dd0e/617_35_4656_3725/master/4656.jpg?width=700&quality=85&auto=format&fit=max&s=b3a390562981aae89b88617ffc31722b",
+          "pubDate": "Wed, 14 Oct 2026 15:33:52 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.542,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (0.00).",
+          "categoryLocal": "climate",
+          "sentimentGemini": -0.28,
+          "explanationGemini": "The ongoing shrinkage of Mont Blanc due to climate change highlights environmental degradation.",
+          "categoryGemini": "climate",
+          "sentiment": -0.28,
+          "explanation": "The ongoing shrinkage of Mont Blanc due to climate change highlights environmental degradation.",
+          "category": "climate"
         },
         {
           "sourceId": "guardian",
@@ -23059,7 +23149,8 @@
           "openRouterModelUsed": "openrouter/free",
           "sentimentGemini": 0.45,
           "explanationGemini": "A highly positive review of a comedy show conveys amusement and cultural enjoyment.",
-          "categoryGemini": "entertainment"
+          "categoryGemini": "entertainment",
+          "imageUrl": "https://i.guim.co.uk/img/media/9f8a78ff6c329ea0c735a26b1d7daa4e630b989d/472_0_3752_3002/master/3752.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctcmV2aWV3LTUucG5n&enable=upscale&s=6092eabddd52970599b05ef13c6208f2"
         },
         {
           "sourceId": "guardian",
@@ -27723,7 +27814,8 @@
           "openRouterModelUsed": "openrouter/free",
           "sentimentGemini": 0.45,
           "explanationGemini": "Scientific research pointing toward the prevention of thousands of heart disease deaths represents a very positive public health breakthrough.",
-          "categoryGemini": "health"
+          "categoryGemini": "health",
+          "imageUrl": "https://i.guim.co.uk/img/media/1404eb0283504b058199124431ad0ad84376e956/500_0_5000_4000/master/5000.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=456d5c9264f66ede37e18f05da63b691"
         },
         {
           "sourceId": "guardian",
@@ -51004,6 +51096,60 @@
       "articles": [
         {
           "sourceId": "cnbc",
+          "title": "Iran says it’s ‘counting the moments’ until it can strike U.S. warships; Saudi Aramco facilities attacked",
+          "description": "Meanwhile, Saudi Arabia's Aramco reportedly came under fresh attack overnight.",
+          "link": "https://www.cnbc.com/2026/10/14/us-iran-war-trump-hormuz-saudi.html",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 16:17:14 GMT",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.7,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-0.25).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.85,
+          "explanationGemini": "Active military threats against warships and fresh attacks on critical energy infrastructure.",
+          "categoryGemini": "world",
+          "sentiment": -0.85,
+          "explanation": "Active military threats against warships and fresh attacks on critical energy infrastructure.",
+          "category": "world"
+        },
+        {
+          "sourceId": "cnbc",
+          "title": "Abilene Christian University is giving Ivy League endowments a run for their money in the market",
+          "description": "The religious school in Texas is among college endowment funds rivaling market performance of Ivy investing giants like Yale and just hit the $1 billion mark.",
+          "link": "https://www.cnbc.com/2026/10/14/abilene-christian-giving-ivy-endowment-billions-a-run-for-their-money.html",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 16:14:08 GMT",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.599,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.60) and AFINN-111 (0.25).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.35,
+          "explanationGemini": "A smaller university achieving elite endowment investment performance and reaching the one billion dollar milestone represents a notable financial success.",
+          "categoryGemini": "business",
+          "sentiment": 0.35,
+          "explanation": "A smaller university achieving elite endowment investment performance and reaching the one billion dollar milestone represents a notable financial success.",
+          "category": "business"
+        },
+        {
+          "sourceId": "cnbc",
+          "title": "Treasury says largest U.S. banks let politics influence who received banking services",
+          "description": "New Treasury Department findings may lend weight to President Donald Trump’s long-running grievance that major banks have discriminated against conservatives.",
+          "link": "https://www.cnbc.com/2026/10/14/treasury-banks-debanking-trump-reputation-risk.html",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 16:13:10 GMT",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.128,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.13) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Government findings that major banks allowed political bias in service provision points to systemic discrimination and corporate governance corruption.",
+          "categoryGemini": "business",
+          "sentiment": -0.32,
+          "explanation": "Government findings that major banks allowed political bias in service provision points to systemic discrimination and corporate governance corruption.",
+          "category": "business"
+        },
+        {
+          "sourceId": "cnbc",
           "title": "Jim Cramer says this healthcare stock is still a buy. Plus, what to do with BNY",
           "description": "The Investing Club holds its \"Morning Meeting\" every weekday at 10:20 a.m. ET.",
           "link": "https://www.cnbc.com/investingclub/2026/10/14/jim-cramer-says-this-healthcare-stock-is-still-a-buy-plus-what-to-do-with-bny.html",
@@ -51040,24 +51186,6 @@
         },
         {
           "sourceId": "cnbc",
-          "title": "Abilene Christian University is giving Ivy League endowments a run for their money in the market",
-          "description": "The religious school in Texas is among college endowment funds rivaling market performance of Ivy investing giants like Yale and just hit the $1 billion mark.",
-          "link": "https://www.cnbc.com/2026/10/14/abilene-christian-giving-ivy-endowment-billions-a-run-for-their-money.html",
-          "imageUrl": null,
-          "pubDate": "Wed, 14 Oct 2026 15:48:34 GMT",
-          "sentimentAFINN": 0.25,
-          "sentimentVADER": 0.599,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.60) and AFINN-111 (0.25).",
-          "categoryLocal": "business",
-          "sentimentGemini": 0.35,
-          "explanationGemini": "A smaller university achieving elite endowment investment performance and reaching the one billion dollar milestone represents a notable financial success.",
-          "categoryGemini": "business",
-          "sentiment": 0.35,
-          "explanation": "A smaller university achieving elite endowment investment performance and reaching the one billion dollar milestone represents a notable financial success.",
-          "category": "business"
-        },
-        {
-          "sourceId": "cnbc",
           "title": "Container ship sinks in Strait of Hormuz as Iran steps up attacks",
           "description": "Iran has escalated its strikes on commercial ships transiting Hormuz in recent weeks, as it tries to choke off a rebound in crude oil exports.",
           "link": "https://www.cnbc.com/2026/10/14/container-ship-sinks-strait-hormuz-as-iran-war-attacks.html",
@@ -51073,24 +51201,6 @@
           "sentiment": -0.85,
           "explanation": "Active military attacks sinking commercial vessels in a critical shipping lane represent severe hostile conflict and economic disruption.",
           "category": "world"
-        },
-        {
-          "sourceId": "cnbc",
-          "title": "Treasury says largest U.S. banks let politics influence who received banking services",
-          "description": "New Treasury Department findings may lend weight to President Donald Trump’s long-running grievance that major banks have discriminated against conservatives.",
-          "link": "https://www.cnbc.com/2026/10/14/treasury-banks-debanking-trump-reputation-risk.html",
-          "imageUrl": null,
-          "pubDate": "Wed, 14 Oct 2026 15:44:54 GMT",
-          "sentimentAFINN": -0.25,
-          "sentimentVADER": -0.128,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.13) and AFINN-111 (-0.25).",
-          "categoryLocal": "politics",
-          "sentimentGemini": -0.32,
-          "explanationGemini": "Government findings that major banks allowed political bias in service provision points to systemic discrimination and corporate governance corruption.",
-          "categoryGemini": "business",
-          "sentiment": -0.32,
-          "explanation": "Government findings that major banks allowed political bias in service provision points to systemic discrimination and corporate governance corruption.",
-          "category": "business"
         },
         {
           "sourceId": "cnbc",
@@ -51181,24 +51291,6 @@
           "sentiment": -0.58,
           "explanation": "Major corporate layoffs affecting a thousand employees and six percent of the workforce.",
           "category": "business"
-        },
-        {
-          "sourceId": "cnbc",
-          "title": "Iran says it’s ‘counting the moments’ until it can strike U.S. warships; Saudi Aramco facilities attacked",
-          "description": "Meanwhile, Saudi Arabia's Aramco reportedly came under fresh attack overnight.",
-          "link": "https://www.cnbc.com/2026/10/14/us-iran-war-trump-hormuz-saudi.html",
-          "imageUrl": null,
-          "pubDate": "Wed, 14 Oct 2026 15:03:35 GMT",
-          "sentimentAFINN": -0.25,
-          "sentimentVADER": -0.7,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-0.25).",
-          "categoryLocal": "world",
-          "sentimentGemini": -0.85,
-          "explanationGemini": "Active military threats against warships and fresh attacks on critical energy infrastructure.",
-          "categoryGemini": "world",
-          "sentiment": -0.85,
-          "explanation": "Active military threats against warships and fresh attacks on critical energy infrastructure.",
-          "category": "world"
         },
         {
           "sourceId": "cnbc",
@@ -57456,13 +57548,30 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.201,
+      "averageSentiment": -0.2,
       "distribution": {
-        "positive": 85,
+        "positive": 86,
         "neutral": 89,
         "negative": 236
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Google Deepmind's Hassabis calls AI hacks 'early warning shots' - Reuters",
+          "description": "Google Deepmind's Hassabis calls AI hacks 'early warning shots' Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNRUpQLTQySlpPSFREYzVycnZUeHhKeWh5TFZTSmw0elFKaVB0THNKYU44eHdhQnJBOS1aNFk2MzlRblBlbzZEa0J4ZFk0VFkxaTdubmpWNVUwaFNwV3pkbHpHYU1XWFlaTGp1MU1vRlNMdkU0Tm9ZU3BweUktbDgxbktvWXl2UzZsVW93LVFPbkZyVDFudHQ2Z3FzQjM1bnZRa3RfbWQ1ME44RFBhVXJiM19aWQ?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 15:48:25 GMT",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.586,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.59) and AFINN-111 (-0.75).",
+          "categoryLocal": "technology",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "A leading AI expert warns that recent artificial intelligence hacks serve as alarming early security warnings.",
+          "categoryGemini": "technology",
+          "sentiment": -0.38,
+          "explanation": "A leading AI expert warns that recent artificial intelligence hacks serve as alarming early security warnings.",
+          "category": "technology"
+        },
         {
           "sourceId": "reuters",
           "title": "Fire breaks out at Albania's Education Ministry during student protest - Reuters",
@@ -57587,6 +57696,24 @@
           "sentiment": -0.52,
           "explanation": "A substantial corporate layoff impacting 6% of the workforce creates significant negative livelihood disruption for employees.",
           "category": "business"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "US lifts sanctions on head of Venezuela legislature - Reuters",
+          "description": "US lifts sanctions on head of Venezuela legislature Reuters",
+          "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxQVXFnM3A0T3lJeVdPVnZrVlZHT3l6dlBUbjZkZGdmYTd4NTFkZEE1TkpOVkNxaXpoZVBiQUNSNWhrRGl4cXZxS2VWeHN5aVVfbEpSR2doM0xwR1JiZHA5VjdkLVhrVHhBMTlNQmQ1ZGNOSGd1bDhFOEFFQlpveFRpcG43MUZ1OEwwWGxqeXFrLUNwakUxOTU5R19rZEFTQQ?oc=5",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 14:39:45 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.22,
+          "explanationGemini": "The lifting of sanctions on a foreign legislative official is an incremental diplomatic easing between nations.",
+          "categoryGemini": "world",
+          "sentiment": 0.22,
+          "explanation": "The lifting of sanctions on a foreign legislative official is an incremental diplomatic easing between nations.",
+          "category": "world"
         },
         {
           "sourceId": "reuters",
@@ -58098,23 +58225,6 @@
           "sentiment": -0.48,
           "explanation": "Global concern and prayer following a severe lung cancer diagnosis for a religious leader.",
           "category": "health"
-        },
-        {
-          "sourceId": "reuters",
-          "title": "Google Deepmind's Hassabis calls AI hacks 'early warning shots' - Reuters",
-          "description": "Google Deepmind's Hassabis calls AI hacks 'early warning shots' Reuters",
-          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNRUpQLTQySlpPSFREYzVycnZUeHhKeWh5TFZTSmw0elFKaVB0THNKYU44eHdhQnJBOS1aNFk2MzlRblBlbzZEa0J4ZFk0VFkxaTdubmpWNVUwaFNwV3pkbHpHYU1XWFlaTGp1MU1vRlNMdkU0Tm9ZU3BweUktbDgxbktvWXl2UzZsVW93LVFPbkZyVDFudHQ2Z3FzQjM1bnZRa3RfbWQ1ME44RFBhVXJiM19aWQ?oc=5",
-          "pubDate": "Wed, 14 Oct 2026 10:29:17 GMT",
-          "sentimentAFINN": -0.75,
-          "sentimentVADER": -0.586,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.59) and AFINN-111 (-0.75).",
-          "categoryLocal": "technology",
-          "sentimentGemini": -0.38,
-          "explanationGemini": "A leading AI expert warns that recent artificial intelligence hacks serve as alarming early security warnings.",
-          "categoryGemini": "technology",
-          "sentiment": -0.38,
-          "explanation": "A leading AI expert warns that recent artificial intelligence hacks serve as alarming early security warnings.",
-          "category": "technology"
         },
         {
           "sourceId": "reuters",
@@ -64680,6 +64790,19 @@
         },
         {
           "sourceId": "ap",
+          "title": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' - AP News",
+          "description": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' AP News",
+          "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNQjdzXzdVOVh5OVVkeXRrSlNpQXBuMTBWQzhqRDUtbG9uY1ZET0trR0xXNmlIQUhBY1hRS1BsVm8yRENMUE1MZTRxaEtsUmFoaEFUSXFuTXpqeVpqMHd5a1ZYOEtnT3ZvV1NhNmZYMUg0WnlGenFVal82aFp3c2psT25Fc0dRSUNWbkNobw?oc=5",
+          "pubDate": "Tue, 13 Oct 2026 01:30:00 GMT",
+          "sentiment": -0.45,
+          "explanation": "High-stakes political criminal investigation involving a sitting lawmaker.",
+          "category": "politics",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "High-stakes political criminal investigation involving a sitting lawmaker.",
+          "categoryGemini": "politics"
+        },
+        {
+          "sourceId": "ap",
           "title": "3,156-pound pumpkin grown in Rhode Island is inspected for possible world record - AP News",
           "description": "3,156-pound pumpkin grown in Rhode Island is inspected for possible world record AP News",
           "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxOT2dubExqWXJqaks3MVFieTMwZEpHSTNUcC1mdzNYYjVXY25DbTQyWS1zZmhmQjgwUklGZFpYMGZCSGNZeF81SmRUWFFnbUhqc2MxNHdBa00tdkhKUWNqaFcxVGFWMHZuaVJlUm5oVWFrMkppTVpuN2c5OVluWkJKclZFQjc1TVFtMmFXLVptRlFnUGZud3ZnWHpZWDZJZUxJ?oc=5",
@@ -64771,19 +64894,6 @@
           "sentiment": -0.28,
           "explanation": "Geopolitical maneuvering involving foreign criticism and controversial deals creates diplomatic friction.",
           "category": "politics"
-        },
-        {
-          "sourceId": "ap",
-          "title": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' - AP News",
-          "description": "Agents search Rep. Omar's Washington home in criminal probe as she vows she won't 'be silenced' AP News",
-          "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxNQjdzXzdVOVh5OVVkeXRrSlNpQXBuMTBWQzhqRDUtbG9uY1ZET0trR0xXNmlIQUhBY1hRS1BsVm8yRENMUE1MZTRxaEtsUmFoaEFUSXFuTXpqeVpqMHd5a1ZYOEtnT3ZvV1NhNmZYMUg0WnlGenFVal82aFp3c2psT25Fc0dRSUNWbkNobw?oc=5",
-          "pubDate": "Mon, 12 Oct 2026 17:01:00 GMT",
-          "sentiment": -0.45,
-          "explanation": "High-stakes political criminal investigation involving a sitting lawmaker.",
-          "category": "politics",
-          "sentimentGemini": -0.45,
-          "explanationGemini": "High-stakes political criminal investigation involving a sitting lawmaker.",
-          "categoryGemini": "politics"
         },
         {
           "sourceId": "ap",
@@ -72509,13 +72619,31 @@
     },
     "dw": {
       "name": "DW News",
-      "averageSentiment": -0.26,
+      "averageSentiment": -0.267,
       "distribution": {
         "positive": 7,
         "neutral": 14,
-        "negative": 42
+        "negative": 43
       },
       "articles": [
+        {
+          "sourceId": "dw",
+          "title": "Turkey: Government raids, takes over top news channel",
+          "description": "Turkish authorities have raided the Istanbul offices of Halk TV, halting broadcasts, appointing a trustee and opening an investigation. It is the latest chapter of a decadeslong media capture by President Erdogan.",
+          "link": "https://www.dw.com/en/turkey-government-raids-takes-over-top-news-channel/a-79662749?maca=en-rss-en-all-1573-rdf",
+          "imageUrl": null,
+          "pubDate": "2026-10-14T16:07:00.000Z",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.421,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.42) and AFINN-111 (0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.68,
+          "explanationGemini": "State authorities raiding and seizing control of a major news channel represents a severe authoritarian blow to press freedom.",
+          "categoryGemini": "politics",
+          "sentiment": -0.68,
+          "explanation": "State authorities raiding and seizing control of a major news channel represents a severe authoritarian blow to press freedom.",
+          "category": "politics"
+        },
         {
           "sourceId": "dw",
           "title": "India urges Russia, Ukraine to protect Black Sea shipping",
