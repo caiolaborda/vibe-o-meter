@@ -223,8 +223,19 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
   });
 
   const moodLabel = getMoodLabel(art.sentiment);
-  const reasonText = art.reasoning || art.explanation || 'Constructive real-world progress and positive societal impact.';
-  const storyDetail = art.description && art.description.length > 25 ? art.description : '';
+  let cleanDesc = (art.description || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanDesc || cleanDesc.length < 15) {
+    cleanDesc = `Full reporting and editorial coverage from ${art.sourceName}. Follow the link below for the complete dispatch.`;
+  }
+
   const heroImgUrl = getStoryImage(art);
   const storyUrl = art.url || art.link || '#';
 
@@ -233,8 +244,8 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
     relatedHTML = `
       <div class="silver-related-box">
         <div class="silver-related-label">
-          <i data-lucide="layers" style="width:13px;height:13px;"></i>
-          <span>Related Coverage Across Wires:</span>
+          <i data-lucide="layers" style="width:12px;height:12px;"></i>
+          <span>Related Wire Coverage:</span>
         </div>
         <div class="silver-related-chips">
           ${related.map(r => `
@@ -277,19 +288,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
         <a href="${storyUrl}" target="_blank" rel="noopener noreferrer">${art.title}</a>
       </h2>
 
-      ${storyDetail ? `
-        <div class="silver-story-detail">
-          <p class="silver-detail-paragraph">${storyDetail}</p>
-        </div>
-      ` : ''}
-
-      <div class="silver-reason-box">
-        <div class="silver-reason-header">
-          <i data-lucide="sparkles" style="width:13px;height:13px;"></i>
-          <span>Constructive Impact Analysis</span>
-        </div>
-        <p class="silver-reason-text">${reasonText}</p>
-      </div>
+      <p class="silver-story-desc">${cleanDesc}</p>
 
       ${relatedHTML}
 
@@ -303,8 +302,8 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
             <span>Share</span>
           </button>
           <a href="${storyUrl}" target="_blank" rel="noopener noreferrer" class="silver-read-btn">
-            <span>Read Full Story</span>
-            <i data-lucide="external-link" style="width:13px;height:13px;"></i>
+            <span>Read Story</span>
+            <i data-lucide="external-link" style="width:12px;height:12px;"></i>
           </a>
         </div>
       </div>
@@ -1532,14 +1531,19 @@ function renderSilverEdition() {
       </div>
     `;
 
-    // Active Card
+    // Active Card (rendered first)
     const cardEl = document.createElement('div');
     cardEl.className = 'silver-story-card silver-card-spotlight';
     cardEl.id = 'silver-active-spotlight-card';
     cardEl.innerHTML = createSilverCardHTML(currentArt, curIdx, related, true);
-
-    deckWrapper.innerHTML = navBarHTML;
     deckWrapper.appendChild(cardEl);
+
+    // Deck Navigation Bar / Paginator (rendered below the card)
+    const navBarEl = document.createElement('div');
+    navBarEl.innerHTML = navBarHTML.trim();
+    if (navBarEl.firstElementChild) {
+      deckWrapper.appendChild(navBarEl.firstElementChild);
+    }
 
     // Touch swipe gesture listener
     attachSwipeListeners(deckWrapper);
@@ -1559,6 +1563,19 @@ function renderSilverEdition() {
     });
 
     container.appendChild(gridEl);
+
+    // Summary footer below the top 10 grid
+    const gridFooter = document.createElement('div');
+    gridFooter.className = 'silver-grid-footer';
+    gridFooter.innerHTML = `
+      <div class="silver-grid-footer-bar">
+        <span class="silver-grid-footer-count">Showing <strong>${top10.length}</strong> Most Uplifting Stories</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="setSilverViewMode('swipe')">
+          <i data-lucide="layers" style="width:13px;height:13px;"></i> <span>Open in Swipe Deck</span>
+        </button>
+      </div>
+    `;
+    container.appendChild(gridFooter);
   }
 
   if (top10.length < 10) {
