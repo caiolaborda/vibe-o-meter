@@ -21,11 +21,12 @@ let state = {
     time: '24h', // Default to Past 24 Hours
     search: ''
   },
-  sort: {
+    sort: {
     field: 'date', // 'date' or 'vibe'
     order: 'desc' // 'desc' or 'asc'
   },
-  edition: 'doom' // 'doom' (No Good News) or 'silver' (Some Good News)
+  edition: 'doom', // 'doom' (No Good News) or 'silver' (Some Good News)
+  headlinesLimit: 20
 };
 
 let resolvedSources = {};
@@ -86,6 +87,10 @@ const elements = {
   h2hSourceB: document.getElementById('h2h-source-b'),
   headlinesContainer: document.getElementById('headlines-container'),
   deepdiveHeadlinesContainer: document.getElementById('deepdive-headlines-container'),
+  headlinesCountBadge: document.getElementById('headlines-count-badge'),
+  headlinesPaginationWrap: document.getElementById('headlines-pagination-wrap'),
+  headlinesShowMoreBtn: document.getElementById('headlines-show-more-btn'),
+  headlinesShowMoreText: document.getElementById('headlines-show-more-text'),
   
   // Model View Toggle (optional)
   modeGeminiBtn: document.getElementById('mode-gemini-btn'),
@@ -206,6 +211,7 @@ function setupEventListeners() {
   if (elements.filterSource) {
     elements.filterSource.addEventListener('change', (e) => {
       state.filters.source = e.target.value;
+      state.headlinesLimit = 20;
       updateFilterIndicator();
       renderHeadlines();
     });
@@ -213,6 +219,7 @@ function setupEventListeners() {
   if (elements.filterCategory) {
     elements.filterCategory.addEventListener('change', (e) => {
       state.filters.category = e.target.value;
+      state.headlinesLimit = 20;
       updateTopicPillsActive(e.target.value);
       updateFilterIndicator();
       updateAppUI();
@@ -221,6 +228,7 @@ function setupEventListeners() {
   if (elements.filterVibe) {
     elements.filterVibe.addEventListener('change', (e) => {
       state.filters.vibe = e.target.value;
+      state.headlinesLimit = 20;
       renderHeadlines();
     });
   }
@@ -228,6 +236,7 @@ function setupEventListeners() {
   if (elements.filterTime) {
     elements.filterTime.addEventListener('change', (e) => {
       state.filters.time = e.target.value;
+      state.headlinesLimit = 20;
       if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
       state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
       updateTimelineButtonsUI();
@@ -238,6 +247,7 @@ function setupEventListeners() {
   if (elements.quickTimeframeSelect) {
     elements.quickTimeframeSelect.addEventListener('change', (e) => {
       state.filters.time = e.target.value;
+      state.headlinesLimit = 20;
       if (elements.filterTime) elements.filterTime.value = e.target.value;
       const silverTime = document.getElementById('silver-timeframe-select');
       if (silverTime) silverTime.value = e.target.value;
@@ -250,6 +260,7 @@ function setupEventListeners() {
   if (elements.quickSourceClearBtn) {
     elements.quickSourceClearBtn.addEventListener('click', () => {
       state.filters.source = 'all';
+      state.headlinesLimit = 20;
       if (elements.filterSource) elements.filterSource.value = 'all';
       document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
@@ -262,6 +273,7 @@ function setupEventListeners() {
   if (elements.quickCategoryClearBtn) {
     elements.quickCategoryClearBtn.addEventListener('click', () => {
       state.filters.category = 'all';
+      state.headlinesLimit = 20;
       if (elements.filterCategory) elements.filterCategory.value = 'all';
       updateTopicPillsActive('all');
       updateFilterIndicator();
@@ -272,6 +284,7 @@ function setupEventListeners() {
   if (elements.deepdiveClearFilterBtn) {
     elements.deepdiveClearFilterBtn.addEventListener('click', () => {
       state.filters.source = 'all';
+      state.headlinesLimit = 20;
       if (elements.filterSource) elements.filterSource.value = 'all';
       document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
@@ -299,6 +312,7 @@ function setupEventListeners() {
   if (silverTimeSelect) {
     silverTimeSelect.addEventListener('change', (e) => {
       state.filters.time = e.target.value;
+      state.headlinesLimit = 20;
       if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
       if (elements.filterTime) elements.filterTime.value = e.target.value;
       updateAppUI();
@@ -316,12 +330,19 @@ function setupEventListeners() {
     });
   }
   
-  // Search input
+  // Search input (debounced by 150ms to eliminate typing lag)
+  let searchDebounceTimer = null;
   if (elements.searchInput) {
     elements.searchInput.addEventListener('input', (e) => {
-      state.filters.search = e.target.value.trim();
-      elements.clearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
-      renderHeadlines();
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        state.filters.search = e.target.value.trim();
+        state.headlinesLimit = 20;
+        if (elements.clearSearchBtn) {
+          elements.clearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
+        }
+        renderHeadlines();
+      }, 150);
     });
   }
   
@@ -329,6 +350,7 @@ function setupEventListeners() {
     elements.clearSearchBtn.addEventListener('click', () => {
       elements.searchInput.value = '';
       state.filters.search = '';
+      state.headlinesLimit = 20;
       elements.clearSearchBtn.style.display = 'none';
       renderHeadlines();
     });
@@ -341,6 +363,7 @@ function setupEventListeners() {
       state.filters.vibe = 'all';
       state.filters.time = '24h';
       state.activeRegion = 'all';
+      state.headlinesLimit = 20;
       
       if (elements.filterSource) elements.filterSource.value = 'all';
       if (elements.filterCategory) elements.filterCategory.value = 'all';
@@ -358,6 +381,14 @@ function setupEventListeners() {
       updateTopicPillsActive('all');
       updateFilterIndicator();
       updateAppUI();
+    });
+  }
+
+  // Headlines Feed Pagination: Show More Button
+  if (elements.headlinesShowMoreBtn) {
+    elements.headlinesShowMoreBtn.addEventListener('click', () => {
+      state.headlinesLimit += 20;
+      renderHeadlines();
     });
   }
   
@@ -943,14 +974,19 @@ function updateAppUI() {
   // Setup selectors
   populateFilterOptions();
   
-  // Render views
-  renderDailyPulse();
-  renderHeatmapMatrix();
-  renderSpectrum();
-  renderComparisonMatrix();
-  renderHeadToHead();
-  renderHeadlines();
-  renderSentimentTimeline();
+  // Render views for currently active tab only to eliminate latency
+  if (state.activeTab === 'pulse') {
+    renderDailyPulse();
+    renderSpectrum();
+    renderHeadlines();
+  } else if (state.activeTab === 'trends') {
+    renderSentimentTimeline();
+    renderHeatmapMatrix();
+  } else if (state.activeTab === 'deepdives') {
+    renderComparisonMatrix();
+    renderHeadToHead();
+    renderHeadlines();
+  }
 }
 
 // Two-Sided App Edition Switcher (No Good News vs Some Good News)
@@ -1332,13 +1368,13 @@ function renderSpectrum() {
       // Stretched normed percentage: 6% to 94%
       const percentage = Math.max(6, Math.min(94, 6 + (((avg - domainMin) / domainSpan) * 88)));
       
-      // Collision avoidance across vertical tiers
+      // Dynamic collision avoidance: stack into additional tiers when markers are close horizontally
       let yLevel = 0;
       let collision = true;
-      while (collision && yLevel < 3) {
+      while (collision) {
         collision = false;
         for (const pos of markerPositions) {
-          if (Math.abs(pos.x - percentage) < 4.5 && pos.y === yLevel) {
+          if (Math.abs(pos.x - percentage) < 5.2 && pos.y === yLevel) {
             yLevel++;
             collision = true;
             break;
@@ -1346,22 +1382,17 @@ function renderSpectrum() {
         }
       }
 
-      let finalX = percentage;
-      if (yLevel >= 3) {
-        yLevel = (markerPositions.length % 2 === 0 ? 0 : 1);
-        finalX = percentage + (markerPositions.length % 2 === 0 ? 1.5 : -1.5);
-      }
-      markerPositions.push({ x: finalX, y: yLevel });
+      markerPositions.push({ x: percentage, y: yLevel });
       
       // Absolute valence color calibrated identically to the track gradient
       const markerColor = getValenceColor(avg);
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
-      const yOffset = yLevel * 36;
+      const yOffset = yLevel * 42;
       
       const marker = document.createElement('div');
       marker.className = `outlet-marker ${state.filters.source === id ? 'active' : ''}`;
-      marker.style.left = `${finalX}%`;
+      marker.style.left = `${percentage}%`;
       marker.style.bottom = `${yOffset}px`;
       marker.setAttribute('data-id', id);
       
@@ -1381,6 +1412,14 @@ function renderSpectrum() {
       elements.spectrumMarkers.appendChild(marker);
     });
     
+    // Dynamically adjust track container height so rows never collide or overflow the container
+    const maxY = markerPositions.length > 0 ? Math.max(...markerPositions.map(p => p.y), 0) : 0;
+    const trackContainerElem = document.querySelector('.spectrum-track-container');
+    if (trackContainerElem) {
+      const calculatedHeight = Math.max(195, 75 + ((maxY + 1) * 44));
+      trackContainerElem.style.height = `${calculatedHeight}px`;
+    }
+
     setupSpectrumMagnification();
   } else {
     // DISTRIBUTION VIEW: Beeswarm Plot Lanes
@@ -2451,7 +2490,36 @@ function createArticleCard(art, index, prefix = 'pulse') {
   // 3.5. Render Spotlight Banner if filtered to a specific news source
   renderSpotlightBanner(articles);
   
-  // 4. Render articles across active headline containers
+  // 4. Pagination / Slicing to top N stories (default 20)
+  const totalMatching = articles.length;
+  const displayedArticles = articles.slice(0, state.headlinesLimit);
+
+  // Update count badge in the unified feed box header
+  if (elements.headlinesCountBadge) {
+    if (totalMatching === 0) {
+      elements.headlinesCountBadge.innerText = '0 Stories';
+    } else {
+      elements.headlinesCountBadge.innerText = `Showing ${displayedArticles.length} of ${totalMatching} Stories`;
+    }
+  }
+
+  // Update show more button & remaining count
+  if (elements.headlinesPaginationWrap) {
+    if (totalMatching <= displayedArticles.length) {
+      elements.headlinesPaginationWrap.style.display = 'none';
+    } else {
+      elements.headlinesPaginationWrap.style.display = 'block';
+      if (elements.headlinesShowMoreText) {
+        const remaining = totalMatching - displayedArticles.length;
+        elements.headlinesShowMoreText.innerText = `Show More Stories (${remaining} remaining)`;
+      }
+    }
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons({ root: elements.headlinesPaginationWrap });
+    }
+  }
+
+  // 5. Render articles across active headline containers
   const containers = [
     { el: elements.headlinesContainer, prefix: 'pulse' },
     { el: elements.deepdiveHeadlinesContainer, prefix: 'dd' }
@@ -2467,16 +2535,17 @@ function createArticleCard(art, index, prefix = 'pulse') {
   containers.forEach(({ el, prefix }) => {
     if (!el) return;
     el.innerHTML = '';
-    if (articles.length === 0) {
+    if (displayedArticles.length === 0) {
       el.innerHTML = emptyHTML;
     } else {
-      articles.forEach((art, index) => {
+      displayedArticles.forEach((art, index) => {
         el.appendChild(createArticleCard(art, index, prefix));
       });
     }
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons({ root: el });
+    }
   });
-  
-  lucide.createIcons();
 }
 
 // Toggle analysis panel display
@@ -2810,15 +2879,129 @@ window.copyToClipboard = function(text, btn) {
     const icon = btn.querySelector('i');
     const originalHtml = btn.innerHTML;
     btn.innerHTML = `<i data-lucide="check" style="width: 13px; height: 13px; color: var(--pos-color);"></i>`;
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons({ root: btn });
+    }
     setTimeout(() => {
       btn.innerHTML = originalHtml;
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons({ root: btn });
+      }
     }, 1500);
   }).catch(err => {
     console.error('Failed to copy text:', err);
   });
 };
+
+// Embed and highlight interactive links to real-world news stories in executive summary
+function linkifyEditorialSummary(rawSummary, articles = []) {
+  if (!rawSummary) return '';
+
+  // 1. Convert any standard markdown links [label](url)
+  let html = rawSummary.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, (match, label, url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="summary-story-link" title="Open source article">${label} <i data-lucide="external-link"></i></a>`;
+  });
+
+  // 2. Curated & dynamic topical phrase mappings for news stories referenced in briefings
+  const phraseMappings = [
+    {
+      phrase: 'planets actually worth visiting',
+      keywords: ['planet', 'habitable zone', 'earth-like planet', 'inhabitable-planets'],
+      fallbackUrl: 'https://www.nytimes.com/2026/10/13/science/inhabitable-planets-solar-system.html',
+      tooltip: 'Read NYT & BBC reports on newly discovered habitable worlds'
+    },
+    {
+      phrase: 'alien worlds',
+      keywords: ['planet', 'habitable', 'earth-like', 'distant star'],
+      fallbackUrl: 'https://www.nytimes.com/2026/10/13/science/inhabitable-planets-solar-system.html',
+      tooltip: 'Read NYT coverage of exoplanet discoveries'
+    },
+    {
+      phrase: 'cracked cockpit glass',
+      keywords: ['cracked window', 'flight forced to turn back', 'cockpit', 'gatwick'],
+      fallbackUrl: 'https://www.bbc.co.uk/news/articles/cj1dwrxq1wndo',
+      tooltip: 'Read BBC report on the BA flight forced back over cracked window'
+    },
+    {
+      phrase: 'cracked window',
+      keywords: ['cracked window', 'flight forced to turn back'],
+      fallbackUrl: 'https://www.bbc.co.uk/news/articles/cj1dwrxq1wndo',
+      tooltip: 'Read BBC report on the BA flight'
+    },
+    {
+      phrase: 'domestic tragedies',
+      keywords: ['arson attack', 'tragedy at sea', 'killed in arson', 'blaze'],
+      fallbackUrl: 'https://www.bbc.co.uk/news/articles/cq073814llkjo',
+      tooltip: 'Read BBC reporting on tragic domestic arson investigation'
+    },
+    {
+      phrase: 'domestic arson',
+      keywords: ['arson attack', 'killed in arson'],
+      fallbackUrl: 'https://www.bbc.co.uk/news/articles/cq073814llkjo',
+      tooltip: 'Read BBC reporting on arson investigation'
+    },
+    {
+      phrase: 'sovereign real estate squabbles',
+      keywords: ['real estate', 'silicon valley south', '3d printed homes', 'icon'],
+      fallbackUrl: 'https://www.foxnews.com/politics/trumps-backyard-quietly-transforming-silicon-valley-south-wealthy-americans-flock',
+      tooltip: 'Read reporting on high-stakes real estate expansions'
+    },
+    {
+      phrase: 'deep-space science',
+      keywords: ['mars rover', 'habitable', 'planet', 'perseverance', 'nasa'],
+      fallbackUrl: 'https://www.nytimes.com/2026/10/12/science/mars-rover-sets-record.html',
+      tooltip: 'Read NASA Perseverance rover Mars driving record dispatch'
+    },
+    {
+      phrase: 'Martian gravel',
+      keywords: ['mars', 'perseverance', 'rover'],
+      fallbackUrl: 'https://www.nytimes.com/2026/10/12/science/mars-rover-sets-record.html',
+      tooltip: 'Read NASA Perseverance rover Mars driving record'
+    },
+    {
+      phrase: 'lonely rover',
+      keywords: ['mars', 'perseverance', 'rover'],
+      fallbackUrl: 'https://www.nytimes.com/2026/10/12/science/mars-rover-sets-record.html',
+      tooltip: 'Read NASA Perseverance rover Mars record'
+    },
+    {
+      phrase: 'early release',
+      keywords: ['prisoners', 'early release', 'overcrowding'],
+      fallbackUrl: 'https://news.sky.com/story/hundreds-more-prisoners-to-be-freed-as-stage-two-of-early-release-scheme-begins-13598700',
+      tooltip: 'Read Sky News coverage on early prisoner release scheme'
+    },
+    {
+      phrase: 'gas exposure',
+      keywords: ['nhs staff', 'gas exposure', 'landmark payout'],
+      fallbackUrl: 'https://www.bbc.co.uk/news/articles/c54g1071n0ygo',
+      tooltip: 'Read BBC coverage on NHS staff landmark payout'
+    }
+  ];
+
+  phraseMappings.forEach(({ phrase, keywords, fallbackUrl, tooltip }) => {
+    // Avoid re-matching inside existing <a> tags
+    const safeRegex = new RegExp(`(?<!<a[^>]*>)(${phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})(?![^<]*<\/a>)`, 'gi');
+    if (safeRegex.test(html)) {
+      let targetUrl = fallbackUrl;
+      let targetTitle = tooltip;
+
+      if (articles && articles.length > 0) {
+        const found = articles.find(art => {
+          const t = (art.title + ' ' + (art.desc || '')).toLowerCase();
+          return keywords.some(k => t.includes(k.toLowerCase()));
+        });
+        if (found && found.url) {
+          targetUrl = found.url;
+          targetTitle = `${found.title} (${found.sourceName || 'Wire'})`;
+        }
+      }
+
+      html = html.replace(safeRegex, `<a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="summary-story-link" title="${targetTitle}">$1 <i data-lucide="external-link"></i></a>`);
+    }
+  });
+
+  return html;
+}
 
 // --- DAILY VIBE PULSE HERO RENDERER ---
 function renderDailyPulse() {
@@ -2969,11 +3152,25 @@ function renderDailyPulse() {
   }
 
   if (summaryEl) {
-    const summaryText = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary);
-    if (summaryText) {
-      summaryEl.innerText = summaryText;
-    } else {
-      summaryEl.innerText = "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
+    const rawSummary = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary) || "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
+    
+    // Gather active articles for interactive story linking
+    const activeArticles = [];
+    Object.keys(sources).forEach(id => {
+      (sources[id].articles || []).forEach(art => {
+        activeArticles.push({
+          sourceId: id,
+          sourceName: sources[id].name,
+          title: art.title || '',
+          url: art.link || art.url || '',
+          desc: art.description || ''
+        });
+      });
+    });
+
+    summaryEl.innerHTML = linkifyEditorialSummary(rawSummary, activeArticles);
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons({ root: summaryEl });
     }
   }
 
@@ -3239,6 +3436,7 @@ function setupTopicPills() {
     pill.addEventListener('click', () => {
       const topic = pill.dataset.topic;
       state.filters.category = state.filters.category === topic ? 'all' : topic;
+      state.headlinesLimit = 20;
       if (elements.filterCategory) elements.filterCategory.value = state.filters.category;
       updateTopicPillsActive(state.filters.category);
       updateFilterIndicator();
