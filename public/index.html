@@ -64,12 +64,12 @@
         </div>
         
         <div class="silver-controls-right">
-          <!-- Topic / Beat Filter -->
-          <div class="silver-control-item">
-            <label for="silver-topic-select"><i data-lucide="filter"></i> Topic:</label>
-            <select id="silver-topic-select" class="silver-select">
+          <!-- Topic / Beat Filter Chip -->
+          <div class="quick-timeframe-wrap silver-timeframe-wrap" title="Filter good news by topic">
+            <i data-lucide="filter" class="quick-time-icon"></i>
+            <select id="silver-topic-select" class="quick-time-select silver-time-select" aria-label="Select topic for good news">
               <option value="all" selected>All Beats</option>
-              <option value="science">🔬 Science & Tech</option>
+              <option value="science">🔬 Science & Space</option>
               <option value="climate">🌱 Nature & Climate</option>
               <option value="health">🩺 Health & Medicine</option>
               <option value="business">📈 Business & Economy</option>
@@ -80,10 +80,10 @@
             </select>
           </div>
 
-          <!-- Timeframe Selector -->
-          <div class="silver-control-item">
-            <label for="silver-timeframe-select"><i data-lucide="clock"></i> Timeframe:</label>
-            <select id="silver-timeframe-select" class="silver-select" aria-label="Select timeframe for good news">
+          <!-- Timeframe Selector Chip (Identical chip style to No Good News) -->
+          <div class="quick-timeframe-wrap silver-timeframe-wrap" title="Filter good news data by timeframe">
+            <i data-lucide="clock" class="quick-time-icon"></i>
+            <select id="silver-timeframe-select" class="quick-time-select silver-time-select" aria-label="Select timeframe for good news">
               <option value="3h">Past 3 Hours</option>
               <option value="6h">Past 6 Hours</option>
               <option value="12h">Past 12 Hours</option>
@@ -167,7 +167,6 @@
             <h1 class="pulse-banner-title">
               <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
               <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
-              <span id="global-mood-badge" class="pulse-hero-mood-badge">Leaning Gloomy</span>
             </h1>
           </div>
           <div class="pulse-meta-info">
@@ -227,81 +226,70 @@
           </div>
         </div>
 
-        <!-- 4. Topic Vibes Bar (Interactive Global Topic Filter) -->
+        <!-- 4. Topic Vibes Bar (Interactive Global Topic Filter - Clean Centered Row) -->
         <div class="pulse-topics-bar">
-          <div class="pulse-topics-label-wrap">
-            <i data-lucide="layers"></i>
-            <span>Filter by Beat:</span>
-          </div>
           <div class="pulse-topic-chips" id="pulse-category-chips">
             <!-- Dynamically populated chips in app.js -->
           </div>
         </div>
 
+        <!-- 5. Sentiment Spectrum (Integrated directly inside Hero Pulse container) -->
+        <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.45rem; margin-bottom: 0.25rem; flex-wrap: wrap; gap: 0.75rem;">
+            <!-- Scale Labels -->
+            <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
+              <span class="label-neg"><i data-lucide="frown"></i> Alarmist (-1.0)</span>
+              <span class="label-neu">Neutral (0.0)</span>
+              <span class="label-pos">Optimistic (+1.0) <i data-lucide="smile"></i></span>
+            </div>
+
+            <!-- View Toggle Switcher -->
+            <div class="spectrum-view-toggle toggle-container" style="display: flex; background: var(--bg-secondary); padding: 2px; border-radius: 8px; border: 1px solid var(--border-color);">
+              <button id="view-toggle-averages" class="btn btn-sm toggle-tab active" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: var(--accent-color); color: #fff; box-shadow: 0 2px 6px rgba(99,102,241,0.25);">
+                <i data-lucide="line-chart" style="width:12px;height:12px;"></i> Averages Track
+              </button>
+              <button id="view-toggle-distribution" class="btn btn-sm toggle-tab" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: transparent; color: var(--text-secondary);">
+                <i data-lucide="layout-grid" style="width:12px;height:12px;"></i> Article Lanes (Beeswarm)
+              </button>
+            </div>
+          </div>
+          
+          <!-- View A: Old Averages View Container (Single Track) -->
+          <div id="averages-view-container" class="spectrum-track-container">
+            <div class="spectrum-track"></div>
+            <div class="spectrum-ticks">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <!-- Outlet Markers will be injected here dynamically -->
+            <div id="spectrum-markers-container" class="markers-container"></div>
+          </div>
+
+          <!-- View B: New Distribution View Container (Lanes) -->
+          <div id="distribution-view-container" style="display: none; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
+            <div id="spectrum-lanes-container" style="display: flex; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
+              <!-- Injected dynamically in JS -->
+            </div>
+          </div>
+
+          <!-- Shared Tooltip for lanes -->
+          <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
+          
+          <div class="spectrum-legend">
+            <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to filter headlines below.</p>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- TAB 1: DAILY PULSE (Spectrum & Headline Stream) -->
+    <!-- TAB 1: DAILY PULSE (Headline Stream) -->
     <main id="tab-panel-pulse" class="tab-panel">
-      <!-- HERO: SENTIMENT SPECTRUM -->
-      <section class="spectrum-section" id="spectrum-section">
-        <h2 class="section-title flex-center">
-          <i data-lucide="arrow-left-right"></i>
-          Sentiment Spectrum
-        </h2>
-        
-        <div class="spectrum-card card" id="spectrum-card-wrapper" style="position: relative; overflow: visible;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.45rem; margin-bottom: 0.25rem; flex-wrap: wrap; gap: 0.75rem;">
-          <!-- Scale Labels -->
-          <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
-            <span class="label-neg"><i data-lucide="frown"></i> Alarmist (-1.0)</span>
-            <span class="label-neu">Neutral (0.0)</span>
-            <span class="label-pos">Optimistic (+1.0) <i data-lucide="smile"></i></span>
-          </div>
-
-          <!-- View Toggle Switcher -->
-          <div class="spectrum-view-toggle toggle-container" style="display: flex; background: var(--bg-secondary); padding: 2px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <button id="view-toggle-averages" class="btn btn-sm toggle-tab active" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: var(--accent-color); color: #fff; box-shadow: 0 2px 6px rgba(99,102,241,0.25);">
-              <i data-lucide="line-chart" style="width:12px;height:12px;"></i> Averages Track
-            </button>
-            <button id="view-toggle-distribution" class="btn btn-sm toggle-tab" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: transparent; color: var(--text-secondary);">
-              <i data-lucide="layout-grid" style="width:12px;height:12px;"></i> Article Lanes (Beeswarm)
-            </button>
-          </div>
-        </div>
-        
-        <!-- View A: Old Averages View Container (Single Track) -->
-        <div id="averages-view-container" class="spectrum-track-container">
-          <div class="spectrum-track"></div>
-          <div class="spectrum-ticks">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <!-- Outlet Markers will be injected here dynamically -->
-          <div id="spectrum-markers-container" class="markers-container"></div>
-        </div>
-
-        <!-- View B: New Distribution View Container (Lanes) -->
-        <div id="distribution-view-container" style="display: none; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
-          <div id="spectrum-lanes-container" style="display: flex; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
-            <!-- Injected dynamically in JS -->
-          </div>
-        </div>
-
-        <!-- Shared Tooltip for lanes -->
-        <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
-        
-        <div class="spectrum-legend">
-          <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to filter headlines below.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- HEADLINES EXPLORER (MERGED INTO A SINGLE UNIFIED BOX) -->
-    <section class="headlines-section" id="feed-section">
+      <!-- HEADLINES EXPLORER (MERGED INTO A SINGLE UNIFIED BOX) -->
+      <section class="headlines-section" id="feed-section">
       <div class="headlines-unified-box card" id="headlines-unified-box">
         <!-- Header Row inside the box -->
         <div class="headlines-box-header">

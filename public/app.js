@@ -3818,6 +3818,44 @@ function linkifyEditorialSummary(rawSummary, articles = []) {
     }
   ];
 
+  // Dynamically add mappings from active story clusters (what multiple desks are covering today)
+  const clusters = state.sharedStoryClusters || [];
+  clusters.forEach(c => {
+    const mainArt = c.coverage?.[0] || {};
+    const clusterUrl = mainArt.link || '';
+    if (!clusterUrl) return;
+
+    const tLower = (c.story || '').toLowerCase();
+    const cTitle = (c.story || '').replace(/"/g, '&quot;');
+    const tooltip = `Read report: ${cTitle} (${c.coverage.length} news desks)`;
+
+    if (tLower.includes('pope') || tLower.includes('papal')) {
+      phraseMappings.push({ phrase: 'papal health scares', fallbackUrl: clusterUrl, tooltip });
+      phraseMappings.push({ phrase: 'papal health', fallbackUrl: clusterUrl, tooltip });
+    }
+    if (tLower.includes('oil') || tLower.includes('aramco') || tLower.includes('houthi')) {
+      phraseMappings.push({ phrase: 'smoking oil infrastructure', fallbackUrl: clusterUrl, tooltip });
+      phraseMappings.push({ phrase: 'oil infrastructure', fallbackUrl: clusterUrl, tooltip });
+    }
+    if (tLower.includes('satellite') || tLower.includes('starlink') || tLower.includes('musk')) {
+      phraseMappings.push({ phrase: 'frontline satellites', fallbackUrl: clusterUrl, tooltip });
+      phraseMappings.push({ phrase: 'rationing frontline satellites', fallbackUrl: clusterUrl, tooltip });
+    }
+    if (tLower.includes('ship') || tLower.includes('wreck') || tLower.includes('ancient')) {
+      phraseMappings.push({ phrase: 'sunken ancient ship', fallbackUrl: clusterUrl, tooltip });
+      phraseMappings.push({ phrase: 'ancient ship', fallbackUrl: clusterUrl, tooltip });
+    }
+    if (tLower.includes('greenland')) {
+      phraseMappings.push({ phrase: 'greenland', fallbackUrl: clusterUrl, tooltip });
+    }
+    if (tLower.includes('bank of america') || tLower.includes('bofa')) {
+      phraseMappings.push({ phrase: 'bank of america', fallbackUrl: clusterUrl, tooltip });
+    }
+    if (tLower.includes('six flags') || tLower.includes('roller coaster')) {
+      phraseMappings.push({ phrase: 'roller coasters', fallbackUrl: clusterUrl, tooltip });
+    }
+  });
+
   // 1. Identify pre-existing markdown links: [label](url)
   const matches = [];
   const mdRegex = /\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g;
@@ -3828,7 +3866,7 @@ function linkifyEditorialSummary(rawSummary, articles = []) {
       end: mdMatch.index + mdMatch[0].length,
       label: mdMatch[1],
       url: mdMatch[2],
-      title: 'Open source article'
+      title: 'Read original news dispatch'
     });
   }
 
@@ -4002,34 +4040,13 @@ function renderDailyPulse() {
     countEl.innerText = `${totalArticles.toLocaleString()} ${scopeLabel}Headlines Analyzed`;
   }
 
-  // Update Global Score & Badge
+  // Update Global Score
   const scoreEl = document.getElementById('global-mood-score');
-  const badgeEl = document.getElementById('global-mood-badge');
   const summaryEl = document.getElementById('daily-editorial-summary');
 
   if (scoreEl) {
     scoreEl.innerText = (globalAvg > 0 ? '+' : '') + globalAvg.toFixed(2);
     scoreEl.className = 'pulse-hero-score ' + (globalAvg < -0.1 ? 'neg' : (globalAvg > 0.1 ? 'pos' : 'neu'));
-  }
-
-  if (badgeEl) {
-    badgeEl.className = 'pulse-hero-mood-badge';
-    if (state.edition === 'silver') {
-      badgeEl.innerText = '☀️ Some Good News Focus';
-      badgeEl.classList.add('pos');
-    } else if (globalAvg < -0.3) {
-      badgeEl.innerText = 'Elevated Alarmism / Doom';
-      badgeEl.classList.add('neg');
-    } else if (globalAvg < -0.05) {
-      badgeEl.innerText = 'Leaning Gloomy';
-      badgeEl.classList.add('neg');
-    } else if (globalAvg > 0.15) {
-      badgeEl.innerText = 'Uplifting & Optimistic';
-      badgeEl.classList.add('pos');
-    } else {
-      badgeEl.innerText = 'Objective & Neutral';
-      badgeEl.classList.add('neu');
-    }
   }
 
   if (summaryEl) {

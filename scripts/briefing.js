@@ -49,6 +49,7 @@ async function generateDailyBriefing(options = {}) {
         articles24.push({
           outlet: s.name,
           title: art.title,
+          url: art.link || art.url || '',
           score,
           category: art.category || 'other'
         });
@@ -74,12 +75,14 @@ async function generateDailyBriefing(options = {}) {
     ...sortedArticles.slice(Math.max(0, Math.floor(sortedArticles.length / 2) - 2), Math.floor(sortedArticles.length / 2) + 2),
     ...sortedArticles.slice(-4).reverse()
   ].filter((a, i, arr) => a && arr.findIndex(x => x.title === a.title) === i)
-   .map(a => `- [${a.outlet}] "${a.title}"`).join('\n');
+   .map(a => `- [${a.outlet}] "${a.title}" | URL: ${a.url}`).join('\n');
 
   // Extract dominant cross-outlet wire clusters (events reported by 2+ independent desks)
   const sharedClusters = data.sharedStoryClusters || [];
-  const topClustersContext = sharedClusters.slice(0, 4).map(c => {
-    return `- "${c.story}" (${c.coverage?.length || 0} desks): ${c.summary || ''}`;
+  const topClustersContext = sharedClusters.slice(0, 5).map(c => {
+    const mainArt = c.coverage?.[0] || {};
+    const link = mainArt.link || '';
+    return `- Cluster "${c.story}" (${c.coverage?.length || 0} desks): ${c.summary || ''} | URL: ${link}`;
   }).join('\n');
 
   let briefingText = '';
@@ -111,10 +114,13 @@ YOUR GOAL:
 Scan today's headlines and write a crisp, cynical, 1-to-3 sentence observation capturing the day's collective news vibe.
 
 THE VIBE WE WANT:
-- Lean, punchy, and fast-paced (aim for ~25 to 50 words max).
+- Lean, punchy, and fast-paced (aim for ~35 to 55 words max).
 - Deadpan, wry, and observational—like a sharp newsroom veteran summing up the global wires with an effortless shrug and a smirk.
-- NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. Do not follow a robotic "Sentence 1 is this, Sentence 2 is that" structure. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
+- NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
 - Avoid purple prose, convoluted run-ons, or forced metaphors. Keep it natural, rhythmic, and memorable.
+
+HYPERLINKING REQUIREMENT:
+You MUST weave 2 to 4 interactive markdown links [topical phrase](url) directly into your observation using the exact URLs provided in the stories/clusters below (e.g. "...between [papal health scares](url) and [smoking oil infrastructure](url)..."). Only hyperlink concise, natural phrases (2-4 words).
 
 TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy its words):
 "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
@@ -122,10 +128,10 @@ TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy 
 STRICT RULES:
 - NO NUMBERS, DECIMALS, PERCENTAGES, OR STATS (no "-0.21", "24 hours", "197 articles", etc.).
 - NEVER refer to this as "local news" or "regional news".
-- KEEP IT TIGHT (strictly under 50 words total).
-- Output ONLY the raw paragraph text. No quotation marks, no markdown headers, no bullet points.
+- KEEP IT TIGHT (strictly under 60 words total).
+- Output ONLY the raw paragraph text with embedded markdown links. No quotation marks around the entire response, no markdown headers, no bullet points.
 
-TODAY'S GLOBAL HEADLINES CONTEXT:
+TODAY'S GLOBAL HEADLINES CONTEXT (Use these exact URLs for markdown links):
 - Outlets leading the panic: ${mostAlarmistToday.name}
 - Outlets holding composure: ${mostCalmToday.name}
 - Major cross-wire story clusters (what multiple desks are covering right now):
