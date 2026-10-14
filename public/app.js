@@ -283,7 +283,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
       <div class="silver-media-badges">
         ${rankBadgeHTML}
         <span class="silver-score-badge">
-          <i data-lucide="smile" style="width:12px;height:12px;"></i> +${art.sentiment.toFixed(2)} ${moodLabel}
+          <i data-lucide="smile" style="width:12px;height:12px;"></i> +${art.sentiment.toFixed(2)}
         </span>
       </div>
     </div>
