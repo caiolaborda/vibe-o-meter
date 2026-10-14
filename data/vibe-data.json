@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-14T16:06:18.544Z",
+  "lastUpdated": "2026-10-14T16:09:54.338Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-14",
   "editorialSummary": "The Vatican braced for [a papal cancer scare](https://www.bbc.co.uk/news/articles/c678p0ld7z8lo?at_medium=RSS&at_campaign=rss), fresh strikes sparked [volatility in Gulf shipping](https://www.nytimes.com/2026/10/14/business/saudi-houthi-hormuz-oil.html), and frontlines stumbled through [throttled battlefield satellites](https://www.bbc.co.uk/news/articles/cm2d6e62p49do?at_medium=RSS&at_campaign=rss). Just another routine shift across the global wires, proving once again that peace is strictly bad for circulation.",
   "globalStats": {
     "globalSentiment": -0.222,
-    "totalArticles": 3365,
+    "totalArticles": 3370,
     "mostNegativeOutlet": {
       "id": "skynews",
       "name": "Sky News",
@@ -17,16 +17,16 @@
       "score": -0.086
     },
     "categoryAverages": {
-      "business": -0.105,
+      "entertainment": -0.013,
       "world": -0.547,
+      "business": -0.105,
       "other": -0.34,
       "politics": -0.213,
       "health": -0.218,
-      "entertainment": -0.012,
       "climate": -0.391,
       "science": 0.219,
       "technology": -0.073,
-      "sports": 0.028,
+      "sports": 0.025,
       "lifestyle": 0.05,
       "education": -0.22,
       "environment": 0.38
@@ -1535,13 +1535,49 @@
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.219,
+      "averageSentiment": -0.221,
       "distribution": {
         "positive": 51,
         "neutral": 67,
-        "negative": 161
+        "negative": 163
       },
       "articles": [
+        {
+          "sourceId": "bbc",
+          "title": "Sally Rooney books withdrawn in UK over Palestine Action support",
+          "description": "The Irish writer is best known for novels such as Normal People, Intermezzo and Conversations With Friends.",
+          "link": "https://www.bbc.co.uk/news/articles/cmx23q4g307vo?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/5ade/live/73ec5110-c7d3-11f1-9e10-4dcbd31d4273.jpg",
+          "pubDate": "Wed, 14 Oct 2026 16:00:06 GMT",
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.875,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.88) and AFINN-111 (0.63).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "The withdrawal of prominent books over political controversies represents a culturally significant censorship event and artistic friction.",
+          "categoryGemini": "entertainment",
+          "sentiment": -0.32,
+          "explanation": "The withdrawal of prominent books over political controversies represents a culturally significant censorship event and artistic friction.",
+          "category": "entertainment"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Container ship hit by projectile sinks in Strait of Hormuz, Singapore says",
+          "description": "All 21 sailors on the Singapore-flagged GFS Pride were evacuated safely after it was hit by an projectile on Tuesday, maritime authorities say.",
+          "link": "https://www.bbc.co.uk/news/articles/crkg7q97z078o?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/638b/live/5f02caa0-c7e6-11f1-a64c-550be9e3c66b.jpg",
+          "pubDate": "Wed, 14 Oct 2026 15:34:19 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.681,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.68) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.72,
+          "explanationGemini": "An armed projectile attack resulting in the sinking of a commercial vessel in a vital shipping lane represents a severe security incident.",
+          "categoryGemini": "world",
+          "sentiment": -0.72,
+          "explanation": "An armed projectile attack resulting in the sinking of a commercial vessel in a vital shipping lane represents a severe security incident.",
+          "category": "world"
+        },
         {
           "sourceId": "bbc",
           "title": "US inflation rises more than expected - here's what is happening with prices",
@@ -19898,7 +19934,8 @@
           "category": "world",
           "sentimentGemini": 0.45,
           "explanationGemini": "An incredible multi-decade human endurance feat crossing the globe highlights a remarkable personal triumph.",
-          "categoryGemini": "world"
+          "categoryGemini": "world",
+          "imageUrl": "https://i.guim.co.uk/img/media/6cea228f40b92289f051ad853ffc3fb21abaead8/69_0_2430_1944/master/2430.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=7fbc4b54da059e8ab465108d333780e7"
         },
         {
           "sourceId": "guardian",
@@ -19976,7 +20013,8 @@
           "category": "sports",
           "sentimentGemini": 0.45,
           "explanationGemini": "A decisive sports victory allows a team to climb out of the relegation zone.",
-          "categoryGemini": "sports"
+          "categoryGemini": "sports",
+          "imageUrl": "https://i.guim.co.uk/img/media/098e031f7eca9ce9c93dc569bdcc6e74dc57ecfb/393_0_4819_3856/master/4819.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=a5a078a1c84a849c2d623566bf6e0a2a"
         },
         {
           "sourceId": "guardian",
@@ -42234,13 +42272,49 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.326,
+      "averageSentiment": -0.328,
       "distribution": {
         "positive": 50,
         "neutral": 70,
-        "negative": 260
+        "negative": 262
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Jerusalem Daily: UN demands Israel do more to stop settler violence",
+          "description": "Netanyahu warns again of Israel’s ‘enemies’ planning an attack before elections.",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/10/14/jerusalem-daily-un-demands-israel-do-more-to-stop-settler-violence?traffic_source=rss",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 15:49:54 +0000",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.877,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.88) and AFINN-111 (-1.00).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.68,
+          "explanationGemini": "Reporting on systemic settler violence, international reprimands, and imminent election-related security threats highlights active regional conflict.",
+          "categoryGemini": "world",
+          "sentiment": -0.68,
+          "explanation": "Reporting on systemic settler violence, international reprimands, and imminent election-related security threats highlights active regional conflict.",
+          "category": "world"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Ronaldo’s among three Saudi Arabia games postponed due to Houthi attacks",
+          "description": "Saudi Pro League postpones three matches after Houthi attacks, including one involving Cristiano Ronaldo's Al Nassr.",
+          "link": "https://www.aljazeera.com/sports/2026/10/14/ronaldos-among-three-saudi-arabia-games-postponed-due-to-houthi-attacks?traffic_source=rss",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 15:49:47 +0000",
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.827,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.83) and AFINN-111 (-0.50).",
+          "categoryLocal": "sports",
+          "sentimentGemini": -0.75,
+          "explanationGemini": "The postponement of major public events due to hostile military attacks underscores the direct disruption and danger of active regional warfare.",
+          "categoryGemini": "sports",
+          "sentiment": -0.75,
+          "explanation": "The postponement of major public events due to hostile military attacks underscores the direct disruption and danger of active regional warfare.",
+          "category": "sports"
+        },
         {
           "sourceId": "aljazeera",
           "title": "US inflation rises before midterm elections, fuelling rate hike fears",
@@ -50924,10 +50998,28 @@
       "averageSentiment": -0.086,
       "distribution": {
         "positive": 66,
-        "neutral": 71,
+        "neutral": 72,
         "negative": 98
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Jim Cramer says this healthcare stock is still a buy. Plus, what to do with BNY",
+          "description": "The Investing Club holds its \"Morning Meeting\" every weekday at 10:20 a.m. ET.",
+          "link": "https://www.cnbc.com/investingclub/2026/10/14/jim-cramer-says-this-healthcare-stock-is-still-a-buy-plus-what-to-do-with-bny.html",
+          "imageUrl": null,
+          "pubDate": "Wed, 14 Oct 2026 15:51:40 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "Routine financial commentary and stock market analysis constitute standard procedural business reporting with minimal broader impact.",
+          "categoryGemini": "business",
+          "sentiment": 0.05,
+          "explanation": "Routine financial commentary and stock market analysis constitute standard procedural business reporting with minimal broader impact.",
+          "category": "business"
+        },
         {
           "sourceId": "cnbc",
           "title": "Morgan Stanley tops estimates as equities trading revenue beats expectations by $909 million",
