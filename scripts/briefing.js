@@ -116,6 +116,7 @@ Scan today's headlines and write a crisp, cynical, 1-to-3 sentence observation c
 THE VIBE WE WANT:
 - Lean, punchy, and fast-paced (aim for ~35 to 55 words max).
 - Deadpan, wry, and observational—like a sharp newsroom veteran summing up the global wires with an effortless shrug and a smirk.
+- FIXED TIMEFRAME ANCHOR: Naturally anchor your observation in the fixed 24-hour global news cycle by opening with phrases like "Today across the global wire...", "Over the past 24 hours...", "Today on the wires...", "Across the last 24 hours...", or "Today's global cycle...". This clearly signals to the reader that this is an autonomous 24-hour audit of global news.
 - NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
 - Avoid purple prose, convoluted run-ons, or forced metaphors. Keep it natural, rhythmic, and memorable.
 
@@ -123,10 +124,10 @@ HYPERLINKING REQUIREMENT:
 You MUST weave 2 to 4 interactive markdown links [topical phrase](url) directly into your observation using the exact URLs provided in the stories/clusters below (e.g. "...between [papal health scares](url) and [smoking oil infrastructure](url)..."). Only hyperlink concise, natural phrases (2-4 words).
 
 TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy its words):
-"Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
+"Today across the global wire, another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
 
 STRICT RULES:
-- NO NUMBERS, DECIMALS, PERCENTAGES, OR STATS (no "-0.21", "24 hours", "197 articles", etc.).
+- NO ARBITRARY NUMBERS, DECIMALS, OR PERCENTAGES (no "-0.21", "197 articles", "+0.45", etc.). Natural time references like "today" or "the last 24 hours" are encouraged.
 - NEVER refer to this as "local news" or "regional news".
 - KEEP IT TIGHT (strictly under 60 words total).
 - Output ONLY the raw paragraph text with embedded markdown links. No quotation marks around the entire response, no markdown headers, no bullet points.
@@ -154,7 +155,7 @@ ${sampleHeadlines || '- War strikes, political clashes, economic jitters, and sc
 
   // Witty deterministic fallback (Option 3 Micro-Dispatch) if AI call fails or key is missing
   if (!briefingText) {
-    briefingText = "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
+    briefingText = "Today on the global wire: another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
     console.log('[Briefing] Generated via deterministic Micro-Dispatch fallback:', briefingText);
   }
 

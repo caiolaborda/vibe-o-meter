@@ -4337,8 +4337,31 @@ function renderDailyPulse() {
   }
 
   if (summaryEl) {
-    const rawSummary = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary) || "Another banner day for global dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
+    const rawSummary = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary) || "Today on the global wire, another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
     
+    // Dynamically update context kicker so user knows this is the fixed 24-hour wire synthesis
+    const kickerEl = document.getElementById('briefing-kicker-text');
+    if (kickerEl) {
+      if (state.filters.time === '24h' || !state.filters.time) {
+        if (state.filters.category && state.filters.category !== 'all') {
+          const catName = state.filters.category.charAt(0).toUpperCase() + state.filters.category.slice(1);
+          kickerEl.innerText = `Today's 24-Hour Wire Briefing • ${catName} Selected`;
+        } else {
+          kickerEl.innerText = "Today's 24-Hour Wire Briefing";
+        }
+      } else {
+        let timeLabel = state.filters.time;
+        if (timeLabel === '3h') timeLabel = 'Past 3 Hours';
+        else if (timeLabel === '6h') timeLabel = 'Past 6 Hours';
+        else if (timeLabel === '12h') timeLabel = 'Past 12 Hours';
+        else if (timeLabel === '3d') timeLabel = 'Past 3 Days';
+        else if (timeLabel === '7d') timeLabel = 'Past 7 Days';
+        else if (timeLabel === '30d') timeLabel = 'Past 30 Days';
+        else if (timeLabel === 'all') timeLabel = 'All-Time Wire';
+        kickerEl.innerText = `Daily 24-Hour Synthesis (${timeLabel} Timeline Active)`;
+      }
+    }
+
     // Gather active articles for interactive story linking
     const activeArticles = [];
     Object.keys(sources).forEach(id => {

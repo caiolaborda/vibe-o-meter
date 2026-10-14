@@ -2896,16 +2896,6 @@ body:not([data-edition="silver"]) .clear-btn {
   box-sizing: border-box;
 }
 
-.pulse-hero-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3.5px;
-  background: linear-gradient(90deg, #1d4ed8, #0ea5e9, #15803d);
-}
-
 .pulse-kicker-strip {
   display: inline-flex;
   align-items: center;
@@ -3001,8 +2991,21 @@ body:not([data-edition="silver"]) .clear-btn {
 
 /* 3. Hero Editorial Narrative Lead (Symmetrical, Clean Broadsheet Lead) */
 .hero-editorial-lead-wrap {
-  padding: 0.95rem 0 1rem 0;
+  padding: 0.85rem 0 0.5rem 0;
   width: 100%;
+}
+
+.hero-briefing-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.45rem;
+  font-family: var(--font-mono);
 }
 
 .hero-editorial-lead {
@@ -3018,6 +3021,14 @@ body:not([data-edition="silver"]) .clear-btn {
   padding: 0;
   border: none;
   background: transparent;
+}
+
+.pulse-hero-divider {
+  border: none;
+  height: 1px;
+  background: var(--border-color);
+  margin: 0.5rem 0 1.15rem 0;
+  width: 100%;
 }
 
 /* 3. 3 Key Signals Horizontal Strip */
