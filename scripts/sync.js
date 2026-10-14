@@ -192,18 +192,18 @@ VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
 - [-0.64 to -0.30]: Conflict, mass layoffs, corruption scandals, natural disaster damage, solemn obituaries, major regulatory penalties, broken truces.
 - [-0.29 to -0.10]: Mild tension, stock market dip, diplomatic friction, political disputes, minor price hikes.
 - [-0.09 to +0.09]: Strictly neutral procedural news, routine election results without violence, scheduled hearings, administrative statements.
-- [+0.10 to +0.34]: Constructive policy, interest rate cuts, sports wins, mild economic stabilization, cultural awards.
-- [+0.35 to +0.64]: Genuine justice delivered (conviction of perpetrators, diplomatic hostage release, POW exchange), successful peace accords, significant environmental or economic recovery.
-- [+0.65 to +1.00]: Historic scientific discoveries, life-saving medical breakthroughs, end of armed conflicts, inspiring human triumphs.
+- [+0.10 to +0.34]: Incremental or modest constructive developments across any domain—mild economic improvements, routine sports or cultural honors, localized civic initiatives, or minor research insights.
+- [+0.35 to +0.64]: Substantial real-world progress across any domain—meaningful citizen debt or cost-of-living relief, tangible diplomatic agreements, significant wildlife or ecological rebounds, major infrastructure completions.
+- [+0.65 to +1.00]: Epochal, transformative human milestones across ANY domain—historic peace accords ending warfare, disease eradication, systemic poverty reductions, breakthrough clean energy abundance, paradigm scientific discoveries, or extraordinary human triumphs.
 
 FIRST PRINCIPLES & EVALUATION RULES:
 1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "aid delivery" in a story about active strikes does NOT make it positive.
 2. The Counterfactual World State Principle (Harm vs. Mitigation): Ask: "If this whole situation never occurred, would the world be better or worse?" Regulatory fines, legal payouts, compensation settlements, prison overflow decanting, and corporate bailouts are reactions to underlying harm, negligence, or misconduct. Do NOT score administrative remedies as positive victories; score them as sober or mildly negative (-0.15 to -0.35) reflecting the damage that necessitated them.
-3. Scale & Impact Over Topic Label: Do NOT assume any single category is inherently more positive or negative than another. Positive and negative sentiment occur across ALL beats. Evaluate based strictly on the REAL-WORLD MAGNITUDE AND HUMAN CONSEQUENCE:
-   - High Transformative Impact (+0.60 to +1.00): Paradigm scientific discoveries, global peace accords, disease eradication, breakthrough clean energy abundance, landmark poverty reductions.
-   - Substantial Constructive Progress (+0.30 to +0.59): Meaningful diplomatic reconciliations, tangible citizen economic relief, endangered wildlife/ecosystem recoveries, notable community milestones.
-   - Incremental / Everyday Good (+0.10 to +0.29): Sports victories, localized civic initiatives, cultural awards, incremental research insights.
-   Note: A historic world peace accord or major economic poverty reduction can reach +0.85, while a trivial science discovery is only +0.15.
+3. Scale & Impact Over Topic Label: NEVER anchor scores, ceilings, or floors to topic/beat labels. All topics can span the full continuous range from -1.00 to +1.00 based strictly on the REAL-WORLD MAGNITUDE AND HUMAN CONSEQUENCE of the event:
+   - High Transformative Impact (+0.65 to +1.00): Monumental, paradigm-shifting events in ANY beat—a historic peace accord, curing a major disease, eliminating extreme poverty, clean energy abundance, or paradigm science breakthrough.
+   - Substantial Constructive Progress (+0.35 to +0.64): Tangible, meaningful relief or progress in ANY beat—substantial purchasing power gains, diplomatic treaties, ecosystem protection milestones, major institutional progress.
+   - Incremental / Everyday Good (+0.10 to +0.34): Routine or localized positive news in ANY beat—modest rate or market stabilization, local community wins, sports championships, incremental research notes.
+   Golden Rule: An epochal peace treaty, global poverty eradication milestone, or planet-scale climate recovery reaches +0.90 to +1.00, while a trivial or niche science observation scores only +0.10 to +0.20. No category has an artificial ceiling or floor.
 4. Democratic Governance: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violence or constitutional crisis.
 5. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
 6. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
