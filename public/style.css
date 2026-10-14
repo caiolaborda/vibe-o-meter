@@ -265,9 +265,10 @@ h1, h2, h3, h4 {
   justify-content: center;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
-  padding: 0.75rem 0 1.5rem 0;
-  gap: 1rem;
+  padding: 1.5rem 0 2rem 0;
+  gap: 1.15rem;
   width: 100%;
+  position: relative;
 }
 
 .masthead-main-col {
@@ -281,60 +282,178 @@ h1, h2, h3, h4 {
   margin: 0 auto;
 }
 
+/* Ambient Stage for Central Toggle */
+.edition-toggle-stage {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem;
+  margin: 0.15rem 0;
+}
+
+/* Ambient Semicircular / Radial Faded Aura */
+.edition-ambient-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140%;
+  height: 160%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Doom Mode Ambient Aura: Midnight Slate & Obsidian Deep Atmosphere */
+body[data-edition="doom"] .edition-ambient-glow,
+body:not([data-edition="silver"]) .edition-ambient-glow {
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.55) 45%, transparent 75%);
+  filter: blur(28px);
+  opacity: 0.85;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Silver Mode Ambient Aura: Warm Sunlit Golden Dawn */
+body[data-edition="silver"] .edition-ambient-glow {
+  background: radial-gradient(ellipse 75% 65% at 50% 50%, rgba(251, 191, 36, 0.5) 0%, rgba(245, 158, 11, 0.25) 50%, transparent 80%);
+  filter: blur(34px);
+  opacity: 0.95;
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+/* Large Central Toggle Pill Wrapper */
 .edition-toggle-wrap-large {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   background: var(--bg-tertiary);
   border: 1.5px solid var(--border-color);
-  border-radius: 36px;
-  padding: 4px;
-  gap: 4px;
+  border-radius: 44px;
+  padding: 6px;
+  gap: 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.edition-toggle-btn-large {
+body[data-edition="doom"] .edition-toggle-wrap-large,
+body:not([data-edition="silver"]) .edition-toggle-wrap-large {
+  background: rgba(18, 22, 32, 0.92);
+  border-color: rgba(59, 74, 105, 0.5);
+  box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(255, 255, 255, 0.06);
+}
+
+body[data-edition="silver"] .edition-toggle-wrap-large {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 10px 32px -4px rgba(217, 119, 6, 0.18), 0 0 1px 1px rgba(251, 191, 36, 0.15);
+}
+
+/* Central Edition Buttons */
+.edition-toggle-wrap-large .edition-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 1.6rem;
-  border-radius: 30px;
+  gap: 0.65rem;
+  padding: 0.72rem 1.85rem;
+  border-radius: 36px;
   border: 1.5px solid transparent;
   background: transparent;
   color: var(--text-secondary);
   font-family: var(--font-serif);
-  font-size: 1.15rem;
+  font-size: 1.12rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all var(--transition-fast);
   letter-spacing: -0.01em;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
 }
 
-.edition-toggle-btn-large i {
-  width: 18px;
-  height: 18px;
+.edition-toggle-wrap-large .edition-pill-btn i {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.28s ease;
+  flex-shrink: 0;
 }
 
-.edition-toggle-btn-large:hover {
+/* Interactive Hover States & Premise Micro-animations */
+/* Doom button hover: newspaper tilts like an ink-stamped broadsheet */
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover i {
+  transform: rotate(-10deg) scale(1.18);
+  color: #60a5fa;
+}
+
+/* Silver button hover: sun spins and radiates warm golden light */
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover i {
+  transform: rotate(45deg) scale(1.22);
+  color: #f59e0b;
+}
+
+.edition-toggle-wrap-large .edition-pill-btn:hover {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.edition-toggle-btn-large.active {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border-color: var(--border-color);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+/* Active State: No Good News (Doom) */
+body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active,
+body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active {
+  background: linear-gradient(145deg, #242c3c 0%, #1a202c 100%);
+  color: #ffffff;
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: scale(1.02);
+}
+
+body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active i,
+body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active i {
+  color: #93c5fd;
+}
+
+/* Active State: Some Good News (Silver) */
+body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"].active {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #78350f;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transform: scale(1.02);
+}
+
+body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"].active i {
+  color: #d97706;
+  animation: sunSpinSlow 20s linear infinite;
+}
+
+@keyframes sunSpinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Inactive button text color overrides */
+body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"],
+body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"] {
+  color: #94a3b8;
+}
+
+body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"] {
+  color: #64748b;
+}
+
+body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover {
+  color: #1e293b;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 /* Central descriptive subtitle */
 .edition-subtitle-central {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-family: var(--font-sans);
   font-weight: 500;
   line-height: 1.5;
   letter-spacing: -0.01em;
-  max-width: 660px;
-  margin: 0 auto;
+  max-width: 680px;
+  margin: 0.35rem auto 0 auto;
 }
 
 .masthead-status-row {
@@ -362,31 +481,6 @@ h1, h2, h3, h4 {
 body[data-edition="doom"] .app-masthead-central,
 body:not([data-edition="silver"]) .app-masthead-central {
   border-bottom-color: #262d3d;
-}
-
-body[data-edition="doom"] .edition-toggle-wrap-large,
-body:not([data-edition="silver"]) .edition-toggle-wrap-large {
-  background: #151922;
-  border-color: #2c3548;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
-}
-
-body[data-edition="doom"] .edition-toggle-btn-large,
-body:not([data-edition="silver"]) .edition-toggle-btn-large {
-  color: #94a3b8;
-}
-
-body[data-edition="doom"] .edition-toggle-btn-large:hover,
-body:not([data-edition="silver"]) .edition-toggle-btn-large:hover {
-  color: #ffffff;
-}
-
-body[data-edition="doom"] .edition-toggle-btn-large.active,
-body:not([data-edition="silver"]) .edition-toggle-btn-large.active {
-  background: #242c3c;
-  color: #ffffff;
-  border-color: #3e4c68;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 body[data-edition="doom"] .edition-subtitle-central,
@@ -2824,8 +2918,8 @@ body:not([data-edition="silver"]) .clear-btn {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  padding-bottom: 1.15rem;
-  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.25rem;
+  border-bottom: none;
 }
 
 .pulse-globe-badge {
@@ -2904,9 +2998,9 @@ body:not([data-edition="silver"]) .clear-btn {
   font-family: var(--font-mono);
 }
 
-/* 2. Hero Editorial Narrative Lead (Symmetrical, Clean Broadsheet Lead) */
+/* 3. Hero Editorial Narrative Lead (Symmetrical, Clean Broadsheet Lead) */
 .hero-editorial-lead-wrap {
-  padding: 1.35rem 0 1.35rem 0;
+  padding: 0.75rem 0 1.25rem 0;
   width: 100%;
 }
 
@@ -3027,16 +3121,16 @@ body:not([data-edition="silver"]) .clear-btn {
   text-overflow: ellipsis;
 }
 
-/* 4. Topic Vibes Bar (Clean Centered 1-Row Bar) */
+/* 2. Topic Vibes Bar (Clean Centered 1-Row Bar sitting directly beneath title) */
 .pulse-topics-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.6rem 0.85rem;
+  padding: 0.5rem 0.85rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  margin-top: 0.35rem;
+  margin: 0.75rem 0 0.5rem 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -4066,6 +4160,93 @@ select option {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+/* Global Sentiment Timeline Active Filters Bar */
+.timeline-active-filters-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.timeline-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  line-height: 1;
+  transition: all var(--transition-fast);
+}
+
+.timeline-filter-chip.outlet-chip {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--accent-color);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.timeline-filter-chip.topic-chip {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.timeline-filter-chip.time-chip {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.timeline-filter-chip.neutral-chip {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  font-size: 0.78rem;
+}
+
+.timeline-chip-clear {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.75;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.timeline-chip-clear:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.timeline-reset-all-btn {
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all var(--transition-fast);
+}
+
+.timeline-reset-all-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
 }
 
 .timeline-legend {

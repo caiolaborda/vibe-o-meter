@@ -24,16 +24,19 @@
     <!-- CENTRAL EDITION MASTHEAD & PROMINENT TOGGLE -->
     <header class="app-masthead-central">
       <div class="masthead-top-row">
-        <!-- Prominent Central Edition Switcher -->
-        <div class="edition-toggle-wrap-large" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and Some Good News">
-          <button id="edition-btn-doom" class="edition-pill-btn active" data-edition="doom">
-            <i data-lucide="newspaper"></i>
-            <span>No Good News</span>
-          </button>
-          <button id="edition-btn-silver" class="edition-pill-btn" data-edition="silver">
-            <i data-lucide="sun"></i>
-            <span>Some Good News</span>
-          </button>
+        <!-- Prominent Central Edition Switcher with Ambient Aura -->
+        <div class="edition-toggle-stage">
+          <div class="edition-ambient-glow" id="edition-ambient-glow"></div>
+          <div class="edition-toggle-wrap-large" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and Some Good News">
+            <button id="edition-btn-doom" class="edition-pill-btn active" data-edition="doom">
+              <i data-lucide="newspaper"></i>
+              <span>No Good News</span>
+            </button>
+            <button id="edition-btn-silver" class="edition-pill-btn" data-edition="silver">
+              <i data-lucide="sun"></i>
+              <span>Some Good News</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -113,7 +116,7 @@
           <i data-lucide="line-chart"></i><span>Macro Trends</span>
         </button>
         <button class="nav-pill-btn" data-tab="compare" id="tab-btn-compare">
-          <i data-lucide="split"></i><span>Wire Compare</span>
+          <i data-lucide="split"></i><span>Story Compare</span>
         </button>
         <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
           <i data-lucide="compass"></i><span>Outlet Deep Dives</span>
@@ -174,14 +177,21 @@
           </div>
         </div>
 
-        <!-- Daily Editorial Briefing (Editorial Serif Narrative Lead) -->
+        <!-- 2. Topic Vibes Bar (Interactive Global Topic Filter - Clean Centered Row) -->
+        <div class="pulse-topics-bar">
+          <div class="pulse-topic-chips" id="pulse-category-chips">
+            <!-- Dynamically populated chips in app.js -->
+          </div>
+        </div>
+
+        <!-- 3. Daily Editorial Briefing (Editorial Serif Narrative Lead) -->
         <div class="hero-editorial-lead-wrap">
           <p id="daily-editorial-summary" class="hero-editorial-lead">
             Loading today's briefing...
           </p>
         </div>
 
-        <!-- 3. The 3 Key Signals Horizontal Strip -->
+        <!-- 4. The 3 Key Signals Horizontal Strip -->
         <div class="pulse-signals-strip">
           <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
             <div class="signal-header">
@@ -223,13 +233,6 @@
               <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
               <span id="pulse-polarization-sub" class="signal-sub">Topic: Business</span>
             </div>
-          </div>
-        </div>
-
-        <!-- 4. Topic Vibes Bar (Interactive Global Topic Filter - Clean Centered Row) -->
-        <div class="pulse-topics-bar">
-          <div class="pulse-topic-chips" id="pulse-category-chips">
-            <!-- Dynamically populated chips in app.js -->
           </div>
         </div>
 
@@ -418,12 +421,9 @@
 
       <div class="timeline-card card">
         <div class="timeline-header-row">
-          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-            <div style="background:rgba(29,78,216,0.08); color:var(--accent-color); padding:0.4rem 0.75rem; border-radius:8px; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:0.35rem; font-family:var(--font-mono);">
-              <i data-lucide="history" style="width:14px;height:14px;"></i>
-              <span id="timeline-snapshot-count">21 Snapshots Recorded</span>
-            </div>
-            <div id="timeline-topic-indicator" style="display:none; align-items:center; gap:0.4rem;"></div>
+          <!-- Clear Active Filters Indicator Bar for Timeline (Outlet, Timeframe, Topic) -->
+          <div class="timeline-active-filters-wrap" id="timeline-active-filters-wrap">
+            <!-- Dynamically populated in app.js -->
           </div>
         </div>
 
@@ -467,10 +467,6 @@
             <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#94a3b8;"></span> Neutral</span>
             <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#22c55e;"></span> Positive (&gt; +0.15)</span>
           </div>
-          <button class="section-collapse-btn" data-target="heatmap-wrapper" title="Toggle Section">
-            <i data-lucide="chevron-up"></i>
-            <span>Collapse</span>
-          </button>
         </div>
       </div>
       <div class="collapsible-content" id="heatmap-wrapper">
@@ -483,7 +479,7 @@
     </section>
   </main>
 
-  <!-- TAB 3: WIRE COMPARE (STORY CLUSTERS & HEAD-TO-HEAD) -->
+  <!-- TAB 3: STORY COMPARE (STORY CLUSTERS & HEAD-TO-HEAD) -->
   <main id="tab-panel-compare" class="tab-panel hidden">
     <!-- 1. CROSS-OUTLET STORY CLUSTERS (CLASHING WIRES) -->
     <section class="clusters-section" id="clusters-section">
@@ -491,15 +487,9 @@
         <div>
           <h2 class="section-title flex-center">
             <i data-lucide="split"></i>
-            Clashing Wires: Story Clusters Across Outlets
+            Story Compare: Cross-Outlet Perspectives
           </h2>
           <p class="section-desc">Comparing how different newsrooms report the exact same news events in real time. Observe diverging sentiment, editorial angle, and headline framing.</p>
-        </div>
-        <div class="section-header-actions flex-center">
-          <button class="section-collapse-btn" data-target="clusters-wrapper" title="Toggle Section">
-            <i data-lucide="chevron-up"></i>
-            <span>Collapse</span>
-          </button>
         </div>
       </div>
 
@@ -555,12 +545,6 @@
             Head-to-Head Headline Compare
           </h2>
           <p class="section-desc">Select two outlets to compare how they cover stories side-by-side, filtered by beat and date range.</p>
-        </div>
-        <div class="section-header-actions flex-center">
-          <button class="section-collapse-btn" data-target="h2h-content-wrapper" title="Toggle Section">
-            <i data-lucide="chevron-up"></i>
-            <span>Collapse</span>
-          </button>
         </div>
       </div>
       
@@ -672,12 +656,6 @@
           </h2>
           <p class="section-desc">At-a-glance editorial tone, article distribution, and trend sparklines across outlets.</p>
         </div>
-        <div class="section-header-actions flex-center">
-          <button class="section-collapse-btn" data-target="sources-wrapper" title="Toggle Section">
-            <i data-lucide="chevron-up"></i>
-            <span>Collapse</span>
-          </button>
-        </div>
       </div>
       <div class="collapsible-content" id="sources-wrapper">
         <!-- Region Filter Pills -->
@@ -712,20 +690,82 @@
       <!-- Content will be injected dynamically -->
     </div>
 
-    <!-- OUTLET DEEP DIVE HEADLINE FEED -->
+    <!-- OUTLET DEEP DIVE HEADLINE FEED WITH CONTROLS -->
     <section class="headlines-section" id="deepdive-feed-section" style="margin-top: 1.5rem;">
-      <div class="headlines-section-header">
-        <h2 class="section-title flex-center">
-          <i data-lucide="newspaper"></i>
-          <span id="deepdive-feed-title-text">Headlines Feed</span>
-        </h2>
-        <div id="deepdive-filter-indicator" class="filter-indicator" style="display: none;">
-          Filtered to: <strong id="deepdive-filter-name">-</strong>
-          <button id="deepdive-clear-filter-btn" class="clear-btn">&times; Show All Outlets</button>
+      <div class="headlines-unified-box card" id="deepdive-headlines-box">
+        <!-- Header Row inside the box -->
+        <div class="headlines-box-header">
+          <div class="flex-center" style="gap: 0.6rem;">
+            <i data-lucide="newspaper" style="color: var(--accent-color); width: 22px; height: 22px;"></i>
+            <h2 class="section-title" style="margin: 0; font-size: 1.35rem;" id="deepdive-feed-title-text">Headlines Feed</h2>
+            <span id="deepdive-headlines-count-badge" class="badge neu" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700;">0 Stories</span>
+          </div>
+          <div id="deepdive-filter-indicator" class="filter-indicator" style="display: none;">
+            Filtered to: <strong id="deepdive-filter-name">-</strong>
+            <button id="deepdive-clear-filter-btn" class="clear-btn">&times; Show All Outlets</button>
+          </div>
         </div>
-      </div>
-      <div id="deepdive-headlines-container" class="headlines-list">
+
+        <!-- Filter Controls Area for Deep Dives -->
+        <div class="headlines-filter-area">
+          <div class="filter-controls">
+            <div class="control-group">
+              <label for="deepdive-filter-category"><i data-lucide="tag"></i> Category</label>
+              <select id="deepdive-filter-category" class="select-input">
+                <option value="all">All Categories</option>
+                <option value="politics">Politics</option>
+                <option value="world">World &amp; Global Affairs</option>
+                <option value="business">Business</option>
+                <option value="technology">Technology</option>
+                <option value="science">Science</option>
+                <option value="climate">Nature &amp; Climate</option>
+                <option value="health">Health</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="sports">Sports</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="deepdive-filter-vibe"><i data-lucide="smile"></i> Vibe</label>
+              <select id="deepdive-filter-vibe" class="select-input">
+                <option value="all">All Vibes</option>
+                <option value="positive">Uplifting (&gt; 0.15)</option>
+                <option value="neutral">Neutral (-0.15 to 0.15)</option>
+                <option value="negative">Doom-laden (&lt; -0.15)</option>
+              </select>
+            </div>
+
+            <div class="control-group search-group">
+              <label for="deepdive-search-input"><i data-lucide="search"></i> Search</label>
+              <div class="search-input-wrapper">
+                <input type="text" id="deepdive-search-input" placeholder="Search outlet headlines..." class="text-input">
+                <button id="deepdive-clear-search-btn" class="clear-input-btn">&times;</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sort-controls">
+            <span class="sort-label">Sort By:</span>
+            <button id="deepdive-sort-date" class="sort-btn active" data-sort="date">
+              Date <i data-lucide="arrow-down-narrow-wide"></i>
+            </button>
+            <button id="deepdive-sort-vibe" class="sort-btn" data-sort="vibe">
+              Sentiment Vibe
+            </button>
+          </div>
+        </div>
+
         <!-- Filtered outlet articles injected dynamically -->
+        <div id="deepdive-headlines-container" class="headlines-list-unified"></div>
+
+        <!-- Deepdive Pagination Wrap -->
+        <div id="deepdive-headlines-pagination-wrap" class="headlines-pagination-wrap" style="display: none; padding: 1.25rem 0 0.5rem 0; text-align: center;">
+          <button id="deepdive-headlines-show-more-btn" class="btn btn-secondary" style="font-weight: 600; padding: 0.6rem 1.4rem; border-radius: 20px;">
+            <span id="deepdive-headlines-show-more-text">Show More Stories</span>
+            <i data-lucide="chevron-down" style="width: 16px; height: 16px; margin-left: 0.35rem;"></i>
+          </button>
+        </div>
       </div>
     </section>
   </main>
@@ -741,12 +781,6 @@
             Methodology, Philosophy &amp; Scientific Calibration
           </h2>
           <p class="section-desc">The journey of No Good News: why commercial news operates as an existential threat monitor, why RSS feeds provide the purest lens, and how AI evaluates real-world human progress.</p>
-        </div>
-        <div class="section-header-actions flex-center">
-          <button class="section-collapse-btn" data-target="methodology-wrapper" title="Toggle Section">
-            <i data-lucide="chevron-up"></i>
-            <span>Collapse</span>
-          </button>
         </div>
       </div>
 

@@ -375,6 +375,16 @@ const elements = {
   deepdiveFilterIndicator: document.getElementById('deepdive-filter-indicator'),
   deepdiveFilterName: document.getElementById('deepdive-filter-name'),
   deepdiveClearFilterBtn: document.getElementById('deepdive-clear-filter-btn'),
+  deepdiveFilterCategory: document.getElementById('deepdive-filter-category'),
+  deepdiveFilterVibe: document.getElementById('deepdive-filter-vibe'),
+  deepdiveSearchInput: document.getElementById('deepdive-search-input'),
+  deepdiveClearSearchBtn: document.getElementById('deepdive-clear-search-btn'),
+  deepdiveSortDateBtn: document.getElementById('deepdive-sort-date'),
+  deepdiveSortVibeBtn: document.getElementById('deepdive-sort-vibe'),
+  deepdiveHeadlinesCountBadge: document.getElementById('deepdive-headlines-count-badge'),
+  deepdiveHeadlinesPaginationWrap: document.getElementById('deepdive-headlines-pagination-wrap'),
+  deepdiveHeadlinesShowMoreBtn: document.getElementById('deepdive-headlines-show-more-btn'),
+  deepdiveHeadlinesShowMoreText: document.getElementById('deepdive-headlines-show-more-text'),
   
   // Filters
   filterSource: document.getElementById('filter-source'),
@@ -400,7 +410,7 @@ const elements = {
   sortDateBtn: document.getElementById('sort-date'),
   sortVibeBtn: document.getElementById('sort-vibe'),
 
-  // Wire Compare Tab Elements
+  // Story Compare Tab Elements
   clustersContainer: document.getElementById('clusters-container'),
   clustersSearchInput: document.getElementById('clusters-search-input'),
   clustersTopicSelect: document.getElementById('clusters-topic-select'),
@@ -510,6 +520,17 @@ function setupEventListeners() {
     elements.filterCategory.addEventListener('change', (e) => {
       state.filters.category = e.target.value;
       state.headlinesLimit = 20;
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = e.target.value;
+      updateTopicPillsActive(e.target.value);
+      updateFilterIndicator();
+      updateAppUI();
+    });
+  }
+  if (elements.deepdiveFilterCategory) {
+    elements.deepdiveFilterCategory.addEventListener('change', (e) => {
+      state.filters.category = e.target.value;
+      state.headlinesLimit = 20;
+      if (elements.filterCategory) elements.filterCategory.value = e.target.value;
       updateTopicPillsActive(e.target.value);
       updateFilterIndicator();
       updateAppUI();
@@ -519,6 +540,15 @@ function setupEventListeners() {
     elements.filterVibe.addEventListener('change', (e) => {
       state.filters.vibe = e.target.value;
       state.headlinesLimit = 20;
+      if (elements.deepdiveFilterVibe) elements.deepdiveFilterVibe.value = e.target.value;
+      renderHeadlines();
+    });
+  }
+  if (elements.deepdiveFilterVibe) {
+    elements.deepdiveFilterVibe.addEventListener('change', (e) => {
+      state.filters.vibe = e.target.value;
+      state.headlinesLimit = 20;
+      if (elements.filterVibe) elements.filterVibe.value = e.target.value;
       renderHeadlines();
     });
   }
@@ -637,6 +667,29 @@ function setupEventListeners() {
       searchDebounceTimer = setTimeout(() => {
         state.filters.search = e.target.value.trim();
         state.headlinesLimit = 20;
+        if (elements.deepdiveSearchInput) elements.deepdiveSearchInput.value = e.target.value;
+        if (elements.clearSearchBtn) {
+          elements.clearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
+        }
+        if (elements.deepdiveClearSearchBtn) {
+          elements.deepdiveClearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
+        }
+        renderHeadlines();
+      }, 150);
+    });
+  }
+
+  let deepdiveSearchDebounceTimer = null;
+  if (elements.deepdiveSearchInput) {
+    elements.deepdiveSearchInput.addEventListener('input', (e) => {
+      clearTimeout(deepdiveSearchDebounceTimer);
+      deepdiveSearchDebounceTimer = setTimeout(() => {
+        state.filters.search = e.target.value.trim();
+        state.headlinesLimit = 20;
+        if (elements.searchInput) elements.searchInput.value = e.target.value;
+        if (elements.deepdiveClearSearchBtn) {
+          elements.deepdiveClearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
+        }
         if (elements.clearSearchBtn) {
           elements.clearSearchBtn.style.display = state.filters.search ? 'block' : 'none';
         }
@@ -647,10 +700,24 @@ function setupEventListeners() {
   
   if (elements.clearSearchBtn) {
     elements.clearSearchBtn.addEventListener('click', () => {
-      elements.searchInput.value = '';
+      if (elements.searchInput) elements.searchInput.value = '';
+      if (elements.deepdiveSearchInput) elements.deepdiveSearchInput.value = '';
       state.filters.search = '';
       state.headlinesLimit = 20;
       elements.clearSearchBtn.style.display = 'none';
+      if (elements.deepdiveClearSearchBtn) elements.deepdiveClearSearchBtn.style.display = 'none';
+      renderHeadlines();
+    });
+  }
+
+  if (elements.deepdiveClearSearchBtn) {
+    elements.deepdiveClearSearchBtn.addEventListener('click', () => {
+      if (elements.searchInput) elements.searchInput.value = '';
+      if (elements.deepdiveSearchInput) elements.deepdiveSearchInput.value = '';
+      state.filters.search = '';
+      state.headlinesLimit = 20;
+      elements.deepdiveClearSearchBtn.style.display = 'none';
+      if (elements.clearSearchBtn) elements.clearSearchBtn.style.display = 'none';
       renderHeadlines();
     });
   }
@@ -666,7 +733,11 @@ function setupEventListeners() {
       
       if (elements.filterSource) elements.filterSource.value = 'all';
       if (elements.filterCategory) elements.filterCategory.value = 'all';
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
       if (elements.filterVibe) elements.filterVibe.value = 'all';
+      if (elements.deepdiveFilterVibe) elements.deepdiveFilterVibe.value = 'all';
+      if (elements.searchInput) elements.searchInput.value = '';
+      if (elements.deepdiveSearchInput) elements.deepdiveSearchInput.value = '';
       if (elements.filterTime) elements.filterTime.value = '24h';
       if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = '24h';
       if (elements.regionFilterTabs) {
@@ -683,28 +754,52 @@ function setupEventListeners() {
     });
   }
 
-  // Headlines Feed Pagination: Show More Button
+  // Headlines Feed Pagination: Show More Buttons (Pulse & Deep Dive)
   if (elements.headlinesShowMoreBtn) {
     elements.headlinesShowMoreBtn.addEventListener('click', () => {
       state.headlinesLimit += 20;
       renderHeadlines();
     });
   }
+
+  if (elements.deepdiveHeadlinesShowMoreBtn) {
+    elements.deepdiveHeadlinesShowMoreBtn.addEventListener('click', () => {
+      state.headlinesLimit += 20;
+      renderHeadlines();
+    });
+  }
   
-  // Sort Buttons
-  elements.sortDateBtn.addEventListener('click', () => {
-    toggleSort('date');
-  });
+  // Sort Buttons (Pulse)
+  if (elements.sortDateBtn) {
+    elements.sortDateBtn.addEventListener('click', () => {
+      toggleSort('date');
+    });
+  }
   
-  elements.sortVibeBtn.addEventListener('click', () => {
-    toggleSort('vibe');
-  });
+  if (elements.sortVibeBtn) {
+    elements.sortVibeBtn.addEventListener('click', () => {
+      toggleSort('vibe');
+    });
+  }
+
+  // Sort Buttons (Deep Dive)
+  if (elements.deepdiveSortDateBtn) {
+    elements.deepdiveSortDateBtn.addEventListener('click', () => {
+      toggleSort('date');
+    });
+  }
+
+  if (elements.deepdiveSortVibeBtn) {
+    elements.deepdiveSortVibeBtn.addEventListener('click', () => {
+      toggleSort('vibe');
+    });
+  }
   
   // Head-to-Head selection change
   if (elements.h2hSourceA) elements.h2hSourceA.addEventListener('change', renderHeadToHead);
   if (elements.h2hSourceB) elements.h2hSourceB.addEventListener('change', renderHeadToHead);
 
-  // Wire Compare tab: Topic & Timeframe controls for Head-to-Head
+  // Story Compare tab: Topic & Timeframe controls for Head-to-Head
   if (elements.h2hTopicSelect) {
     elements.h2hTopicSelect.addEventListener('change', (e) => {
       state.h2hTopic = e.target.value;
@@ -721,7 +816,7 @@ function setupEventListeners() {
     });
   }
 
-  // Wire Compare tab: Story Clusters Search, Filter & Sort
+  // Story Compare tab: Story Clusters Search, Filter & Sort
   if (elements.clustersSearchInput) {
     let clusterSearchTimer = null;
     elements.clustersSearchInput.addEventListener('input', (e) => {
@@ -2152,7 +2247,7 @@ function renderComparisonMatrix() {
   lucide.createIcons();
 }
 
-// --- WIRE COMPARE TAB (STORY CLUSTERS & HEAD-TO-HEAD) ---
+// --- STORY COMPARE TAB (STORY CLUSTERS & HEAD-TO-HEAD) ---
 
 function clamp(val, min, max) {
   return Math.max(min, Math.min(max, val));
@@ -2189,7 +2284,7 @@ const CLUSTER_TOPIC_LABELS = {
   other: '📰 General Wire'
 };
 
-// Render whole Wire Compare tab
+// Render whole Story Compare tab
 function renderComparePage() {
   renderStoryClusters();
   renderHeadToHead();
@@ -2786,24 +2881,61 @@ function renderSentimentTimeline() {
     };
   }).filter(p => p.score !== null);
 
-  if (countEl) countEl.innerText = `${points.length} Snapshots`;
-
-  // Update Topic Filter Pill in timeline header
-  const topicIndicator = document.getElementById('timeline-topic-indicator');
-  if (topicIndicator) {
-    if (selectedTopic && topicMeta) {
-      topicIndicator.style.display = 'inline-flex';
-      topicIndicator.innerHTML = `
-        <span class="cluster-badge cluster-topic-badge" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; padding:0.25rem 0.65rem;">
-          <span>${topicMeta.icon} ${topicMeta.name}</span>
-          <button type="button" onclick="toggleTimelineTopicFilter('${selectedTopic}')" style="background:none; border:none; cursor:pointer; padding:0; color:inherit; display:flex; align-items:center;" title="Clear topic filter">
-            <i data-lucide="x" style="width:12px;height:12px;"></i>
-          </button>
+  // Render Active Filter Chips in Timeline Header (Outlet, Timeframe, Topic)
+  const activeFiltersWrap = document.getElementById('timeline-active-filters-wrap');
+  if (activeFiltersWrap) {
+    let chipsHtml = '';
+    
+    // 1. Outlet Filter Pill (if an outlet is specifically filtered)
+    if (selectedSource) {
+      chipsHtml += `
+        <span class="timeline-filter-chip outlet-chip" title="Timeline focused on ${sourceName}">
+          <i data-lucide="globe" style="width:13px;height:13px;"></i>
+          <span>Outlet: <strong>${sourceName}</strong></span>
+          <button type="button" class="timeline-chip-clear" onclick="clearTimelineSourceFilter()" title="Clear outlet filter" aria-label="Clear outlet filter">&times;</button>
         </span>
       `;
+    }
+
+    // 2. Topic Filter Pill (if a topic is specifically focused)
+    if (selectedTopic && topicMeta) {
+      chipsHtml += `
+        <span class="timeline-filter-chip topic-chip" title="Timeline focused on ${topicMeta.name}">
+          <span>${topicMeta.icon}</span>
+          <span>Topic: <strong>${topicMeta.name}</strong></span>
+          <button type="button" class="timeline-chip-clear" onclick="toggleTimelineTopicFilter('${selectedTopic}')" title="Clear topic filter" aria-label="Clear topic filter">&times;</button>
+        </span>
+      `;
+    }
+
+    // 3. Time Window Pill
+    chipsHtml += `
+      <span class="timeline-filter-chip time-chip" title="Active timeline time window">
+        <i data-lucide="clock" style="width:13px;height:13px;"></i>
+        <span>Window: <strong>${timeframeLabel}</strong></span>
+      </span>
+    `;
+
+    // 4. Quick Action or Scope Badge
+    if (selectedSource || selectedTopic) {
+      chipsHtml += `
+        <button type="button" class="timeline-reset-all-btn" onclick="resetTimelineScope()" title="Reset to all outlets and all topics">
+          <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i>
+          <span>Reset Timeline Scope</span>
+        </button>
+      `;
     } else {
-      topicIndicator.style.display = 'none';
-      topicIndicator.innerHTML = '';
+      chipsHtml += `
+        <span class="timeline-filter-chip neutral-chip" title="Trajectory synthesized across all outlets and topics">
+          <i data-lucide="sparkles" style="width:12px;height:12px;"></i>
+          <span>Global Unfiltered Synthesis</span>
+        </span>
+      `;
+    }
+
+    activeFiltersWrap.innerHTML = chipsHtml;
+    if (window.lucide && lucide.createIcons) {
+      lucide.createIcons({ root: activeFiltersWrap });
     }
   }
 
@@ -3045,6 +3177,25 @@ window.toggleTimelineTopicFilter = function(catKey) {
   }
 };
 
+window.clearTimelineSourceFilter = function() {
+  state.filters.source = 'all';
+  if (elements.filterSource) elements.filterSource.value = 'all';
+  updateFilterIndicator();
+  updateAppUI();
+};
+
+window.resetTimelineScope = function() {
+  state.filters.source = 'all';
+  state.macroTrendsTopic = 'all';
+  state.filters.category = 'all';
+  if (elements.filterSource) elements.filterSource.value = 'all';
+  if (elements.filterCategory) elements.filterCategory.value = 'all';
+  if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
+  updateFilterIndicator();
+  updateTopicPillsActive('all');
+  updateAppUI();
+};
+
 // Helpers
 function getMoodClass(score) {
   if (score === null || score === undefined) return 'none';
@@ -3185,22 +3336,27 @@ function toggleSort(field) {
     state.sort.order = 'desc';
   }
   
-  // Update button visual state
-  if (state.sort.field === 'date') {
-    elements.sortDateBtn.classList.add('active');
-    elements.sortVibeBtn.classList.remove('active');
-    const orderIcon = state.sort.order === 'desc' ? 'arrow-down-narrow-wide' : 'arrow-up-narrow-wide';
-    elements.sortDateBtn.innerHTML = `Date <i data-lucide="${orderIcon}"></i>`;
-    elements.sortVibeBtn.innerHTML = 'Sentiment Vibe';
-  } else {
-    elements.sortVibeBtn.classList.add('active');
-    elements.sortDateBtn.classList.remove('active');
-    const orderIcon = state.sort.order === 'desc' ? 'arrow-down-narrow-wide' : 'arrow-up-narrow-wide';
-    elements.sortVibeBtn.innerHTML = `Sentiment Vibe <i data-lucide="${orderIcon}"></i>`;
-    elements.sortDateBtn.innerHTML = 'Date';
+  // Update button visual state for both Pulse and Deep Dive
+  const isDate = state.sort.field === 'date';
+  const orderIcon = state.sort.order === 'desc' ? 'arrow-down-narrow-wide' : 'arrow-up-narrow-wide';
+
+  if (elements.sortDateBtn && elements.sortVibeBtn) {
+    elements.sortDateBtn.classList.toggle('active', isDate);
+    elements.sortVibeBtn.classList.toggle('active', !isDate);
+    elements.sortDateBtn.innerHTML = isDate ? `Date <i data-lucide="${orderIcon}"></i>` : 'Date';
+    elements.sortVibeBtn.innerHTML = !isDate ? `Sentiment Vibe <i data-lucide="${orderIcon}"></i>` : 'Sentiment Vibe';
+  }
+
+  if (elements.deepdiveSortDateBtn && elements.deepdiveSortVibeBtn) {
+    elements.deepdiveSortDateBtn.classList.toggle('active', isDate);
+    elements.deepdiveSortVibeBtn.classList.toggle('active', !isDate);
+    elements.deepdiveSortDateBtn.innerHTML = isDate ? `Date <i data-lucide="${orderIcon}"></i>` : 'Date';
+    elements.deepdiveSortVibeBtn.innerHTML = !isDate ? `Sentiment Vibe <i data-lucide="${orderIcon}"></i>` : 'Sentiment Vibe';
   }
   
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined' && lucide.createIcons) {
+    lucide.createIcons();
+  }
   renderHeadlines();
 }
 
@@ -3334,30 +3490,45 @@ function createArticleCard(art, index, prefix = 'pulse') {
   const totalMatching = articles.length;
   const displayedArticles = articles.slice(0, state.headlinesLimit);
 
-  // Update count badge in the unified feed box header
+  // Update count badge in the unified feed box headers
+  const countText = totalMatching === 0 ? '0 Stories' : `Showing ${displayedArticles.length} of ${totalMatching} Stories`;
   if (elements.headlinesCountBadge) {
-    if (totalMatching === 0) {
-      elements.headlinesCountBadge.innerText = '0 Stories';
-    } else {
-      elements.headlinesCountBadge.innerText = `Showing ${displayedArticles.length} of ${totalMatching} Stories`;
-    }
+    elements.headlinesCountBadge.innerText = countText;
+  }
+  if (elements.deepdiveHeadlinesCountBadge) {
+    elements.deepdiveHeadlinesCountBadge.innerText = countText;
   }
 
-  // Update show more button & remaining count
-  if (elements.headlinesPaginationWrap) {
+  // Sync filter control values if necessary
+  if (elements.deepdiveFilterCategory && elements.deepdiveFilterCategory.value !== state.filters.category) {
+    elements.deepdiveFilterCategory.value = state.filters.category;
+  }
+  if (elements.deepdiveFilterVibe && elements.deepdiveFilterVibe.value !== state.filters.vibe) {
+    elements.deepdiveFilterVibe.value = state.filters.vibe;
+  }
+  if (elements.deepdiveSearchInput && elements.deepdiveSearchInput.value !== (state.filters.search || '')) {
+    elements.deepdiveSearchInput.value = state.filters.search || '';
+  }
+
+  // Update show more button & remaining count for both feeds
+  [
+    { wrap: elements.headlinesPaginationWrap, text: elements.headlinesShowMoreText },
+    { wrap: elements.deepdiveHeadlinesPaginationWrap, text: elements.deepdiveHeadlinesShowMoreText }
+  ].forEach(({ wrap, text }) => {
+    if (!wrap) return;
     if (totalMatching <= displayedArticles.length) {
-      elements.headlinesPaginationWrap.style.display = 'none';
+      wrap.style.display = 'none';
     } else {
-      elements.headlinesPaginationWrap.style.display = 'block';
-      if (elements.headlinesShowMoreText) {
+      wrap.style.display = 'block';
+      if (text) {
         const remaining = totalMatching - displayedArticles.length;
-        elements.headlinesShowMoreText.innerText = `Show More Stories (${remaining} remaining)`;
+        text.innerText = `Show More Stories (${remaining} remaining)`;
       }
     }
     if (typeof lucide !== 'undefined' && lucide.createIcons) {
-      lucide.createIcons({ root: elements.headlinesPaginationWrap });
+      lucide.createIcons({ root: wrap });
     }
-  }
+  });
 
   // 5. Render articles across active headline containers
   const containers = [
