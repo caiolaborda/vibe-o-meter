@@ -15,6 +15,8 @@ const parser = new Parser({
   customFields: {
     item: [
       ['content:encoded', 'contentEncoded'],
+      ['media:content', 'mediaContent', { keepArray: true }],
+      ['media:thumbnail', 'mediaThumbnail', { keepArray: true }],
       ['media:description', 'mediaDescription'],
       ['itunes:summary', 'itunesSummary'],
       ['summary', 'atomSummary']
@@ -84,6 +86,50 @@ function extractBestDescription(item) {
     }
   }
   return '';
+}
+
+// Extract highest-quality editorial image URL from RSS media tags
+function extractImageUrl(item) {
+  if (!item) return null;
+  if (item.enclosure && item.enclosure.url && (!item.enclosure.type || item.enclosure.type.startsWith('image/'))) {
+    return item.enclosure.url;
+  }
+  if (item.mediaContent) {
+    const list = Array.isArray(item.mediaContent) ? item.mediaContent : [item.mediaContent];
+    const valid = list.filter(m => m && (m.$?.url || m.url));
+    if (valid.length > 0) {
+      const best = valid.sort((a, b) => {
+        const wa = parseInt(a.$?.width || a.width || 0);
+        const wb = parseInt(b.$?.width || b.width || 0);
+        return wb - wa;
+      })[0];
+      return best.$?.url || best.url;
+    }
+  }
+  if (item.mediaThumbnail) {
+    const list = Array.isArray(item.mediaThumbnail) ? item.mediaThumbnail : [item.mediaThumbnail];
+    const valid = list.filter(m => m && (m.$?.url || m.url));
+    if (valid.length > 0) {
+      const best = valid.sort((a, b) => {
+        const wa = parseInt(a.$?.width || a.width || 0);
+        const wb = parseInt(b.$?.width || b.width || 0);
+        return wb - wa;
+      })[0];
+      return best.$?.url || best.url;
+    }
+  }
+  for (const field of [item.contentEncoded, item.content, item.description]) {
+    if (typeof field === 'string' && field.includes('<img')) {
+      const match = field.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (match && match[1]) {
+        const url = match[1];
+        if (!url.includes('feedburner') && !url.includes('beacon') && !url.includes('1x1') && !url.includes('pixel')) {
+          return url;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 // Local sentiment analyzer fallback
@@ -666,6 +712,7 @@ app.post('/api/sync', async (req, res) => {
           title: sanitizeText(item.title),
           description: extractBestDescription(item),
           link: item.link || '',
+          imageUrl: extractImageUrl(item),
           pubDate: item.pubDate || item.isoDate || new Date().toISOString()
         }));
 
@@ -676,6 +723,9 @@ app.post('/api/sync', async (req, res) => {
           const cached = existingCacheMap.get(cacheKey);
 
           if (cached && !force) {
+            if (!cached.imageUrl && item.imageUrl) {
+              cached.imageUrl = item.imageUrl;
+            }
             // Check what data needs fetching
             let needsGemini = useGemini && (cached.sentimentGemini === undefined || cached.sentimentGemini === null);
             let needsOpenRouter = useOpenRouter && (cached.sentimentOpenRouter === undefined || cached.sentimentOpenRouter === null || cached.openRouterModelUsed !== openRouterModel);
@@ -1129,6 +1179,9 @@ async function runBackgroundSync() {
           const cached = existingCacheMap.get(cacheKey);
 
           if (cached) {
+            if (!cached.imageUrl && item.imageUrl) {
+              cached.imageUrl = item.imageUrl;
+            }
             let needsGemini = useGemini && (cached.sentimentGemini === undefined || cached.sentimentGemini === null);
             let needsOpenRouter = useOpenRouter && (cached.sentimentOpenRouter === undefined || cached.sentimentOpenRouter === null || cached.openRouterModelUsed !== openRouterModel);
             let needsGroq = useGroq && (cached.sentimentGroq === undefined || cached.sentimentGroq === null || cached.groqModelUsed !== groqModel);
@@ -1150,6 +1203,7 @@ async function runBackgroundSync() {
               title: sanitizeText(item.title),
               description: extractBestDescription(item),
               link: item.link || '',
+              imageUrl: extractImageUrl(item),
               pubDate: item.pubDate || item.isoDate || new Date().toISOString()
             };
             articlesToAnalyzeLocally.push(newArticle);

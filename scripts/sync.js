@@ -30,6 +30,8 @@ const parser = new Parser({
   customFields: {
     item: [
       ['content:encoded', 'contentEncoded'],
+      ['media:content', 'mediaContent', { keepArray: true }],
+      ['media:thumbnail', 'mediaThumbnail', { keepArray: true }],
       ['media:description', 'mediaDescription'],
       ['itunes:summary', 'itunesSummary'],
       ['summary', 'atomSummary']
@@ -88,6 +90,54 @@ function extractBestDescription(item) {
     }
   }
   return '';
+}
+
+// Extract highest-quality editorial image URL from RSS media tags
+function extractImageUrl(item) {
+  if (!item) return null;
+  // 1. Enclosure
+  if (item.enclosure && item.enclosure.url && (!item.enclosure.type || item.enclosure.type.startsWith('image/'))) {
+    return item.enclosure.url;
+  }
+  // 2. Media Content (handle single object or array, pick largest/highest resolution)
+  if (item.mediaContent) {
+    const list = Array.isArray(item.mediaContent) ? item.mediaContent : [item.mediaContent];
+    const valid = list.filter(m => m && (m.$?.url || m.url));
+    if (valid.length > 0) {
+      const best = valid.sort((a, b) => {
+        const wa = parseInt(a.$?.width || a.width || 0);
+        const wb = parseInt(b.$?.width || b.width || 0);
+        return wb - wa;
+      })[0];
+      return best.$?.url || best.url;
+    }
+  }
+  // 3. Media Thumbnail
+  if (item.mediaThumbnail) {
+    const list = Array.isArray(item.mediaThumbnail) ? item.mediaThumbnail : [item.mediaThumbnail];
+    const valid = list.filter(m => m && (m.$?.url || m.url));
+    if (valid.length > 0) {
+      const best = valid.sort((a, b) => {
+        const wa = parseInt(a.$?.width || a.width || 0);
+        const wb = parseInt(b.$?.width || b.width || 0);
+        return wb - wa;
+      })[0];
+      return best.$?.url || best.url;
+    }
+  }
+  // 4. Embedded <img> tag inside contentEncoded, content, or description
+  for (const field of [item.contentEncoded, item.content, item.description]) {
+    if (typeof field === 'string' && field.includes('<img')) {
+      const match = field.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (match && match[1]) {
+        const url = match[1];
+        if (!url.includes('feedburner') && !url.includes('beacon') && !url.includes('1x1') && !url.includes('pixel')) {
+          return url;
+        }
+      }
+    }
+  }
+  return null;
 }
 
 function readCache() {
@@ -443,6 +493,43 @@ Return JSON array in format:
   return [];
 }
 
+// Enrich top constructive/positive articles with Open Graph images if missing in RSS
+async function enrichTopPositiveArticleImages(finalSources) {
+  const allPositive = [];
+  Object.values(finalSources).forEach(src => {
+    (src.articles || []).forEach(art => {
+      const score = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0);
+      if (score >= 0.15 && !art.imageUrl && art.link && art.link.startsWith('http')) {
+        allPositive.push({ art, score });
+      }
+    });
+  });
+
+  allPositive.sort((a, b) => b.score - a.score);
+  const candidates = allPositive.slice(0, 15);
+  if (candidates.length === 0) return;
+
+  console.log(`[Image Enrichment] Checking OG images for ${candidates.length} top constructive articles...`);
+  await Promise.all(candidates.map(async ({ art }) => {
+    try {
+      const res = await fetch(art.link, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        signal: AbortSignal.timeout(3500)
+      });
+      if (!res.ok) return;
+      const html = await res.text();
+      const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+      if (match && match[1] && match[1].startsWith('http')) {
+        art.imageUrl = match[1];
+        console.log(`  -> Attached OG image for: "${art.title.slice(0, 45)}..."`);
+      }
+    } catch (e) {
+      // Non-blocking timeout / fetch error
+    }
+  }));
+}
+
 // Main execution routine
 async function main() {
   console.log('==============================================');
@@ -488,6 +575,7 @@ async function main() {
         title: sanitizeText(item.title),
         description: extractBestDescription(item),
         link: item.link || '',
+        imageUrl: extractImageUrl(item),
         pubDate: item.pubDate || item.isoDate || new Date().toISOString()
       }));
 
@@ -496,6 +584,9 @@ async function main() {
         const cacheKey = `${source.id}_${item.title.trim().toLowerCase()}`;
         const cached = existingMap.get(cacheKey);
         if (cached) {
+          if (!cached.imageUrl && item.imageUrl) {
+            cached.imageUrl = item.imageUrl;
+          }
           if (preferredAnalyzer === 'gemini' && (cached.sentimentGemini === undefined || cached.sentimentGemini === null)) {
             unanalyzedArticles.push(cached);
           }
@@ -762,6 +853,13 @@ async function main() {
     }
   } catch (err) {
     console.warn('[Sync] Non-blocking briefing notice:', err.message);
+  }
+
+  // 5.65 Enrich Top Constructive Articles with OG Images if missing in RSS
+  try {
+    await enrichTopPositiveArticleImages(finalSources);
+  } catch (imgErr) {
+    console.warn('[Sync] Non-blocking image enrichment notice:', imgErr.message);
   }
 
   // 5.7 Cross-Outlet Story Clustering (Method A: Single Aggregation Pass)

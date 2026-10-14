@@ -26,6 +26,8 @@ let state = {
     order: 'desc' // 'desc' or 'asc'
   },
   edition: 'doom', // 'doom' (No Good News) or 'silver' (Some Good News)
+  silverViewMode: 'swipe', // 'swipe' (Deck Spotlight) or 'grid' (All Stories Magazine)
+  silverIndex: 0,
   headlinesLimit: 20
 };
 
@@ -51,6 +53,264 @@ const SOURCE_META = {
   france24: { initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', flag: '🇫🇷' },
   politico: { initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', flag: '🇺🇸' }
 };
+
+// High-Res Editorial Photography Fallbacks for constructive news cards
+const EDITORIAL_TOPIC_PHOTOS = {
+  science: [
+    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=1200&auto=format&fit=crop&q=80'
+  ],
+  climate: [
+    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1200&auto=format&fit=crop&q=80'
+  ],
+  health: [
+    'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=1200&auto=format&fit=crop&q=80'
+  ],
+  technology: [
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&auto=format&fit=crop&q=80'
+  ],
+  business: [
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&auto=format&fit=crop&q=80'
+  ],
+  world: [
+    'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200&auto=format&fit=crop&q=80'
+  ],
+  politics: [
+    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=1200&auto=format&fit=crop&q=80'
+  ],
+  sports: [
+    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&auto=format&fit=crop&q=80'
+  ],
+  entertainment: [
+    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80'
+  ],
+  other: [
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'
+  ]
+};
+
+function getStoryImage(art) {
+  if (art.imageUrl && typeof art.imageUrl === 'string' && art.imageUrl.startsWith('http')) {
+    return art.imageUrl;
+  }
+  const cat = (art.category || 'other').toLowerCase();
+  const pool = EDITORIAL_TOPIC_PHOTOS[cat] || EDITORIAL_TOPIC_PHOTOS.other;
+  let hash = 0;
+  const str = art.title || '';
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash + str.charCodeAt(i)) % pool.length;
+  }
+  return pool[hash];
+}
+
+function findRelatedCoverage(art, allArticles) {
+  const related = [];
+  const currentTitle = (art.title || '').toLowerCase().trim();
+
+  // 1. From sharedStoryClusters
+  const clusters = (state.vibeData && state.vibeData.sharedStoryClusters) || [];
+  for (const c of clusters) {
+    const isMatch = (c.coverage || []).some(m => 
+      (m.title || '').toLowerCase().includes(currentTitle.slice(0, 30)) ||
+      currentTitle.includes((m.title || '').toLowerCase().slice(0, 30))
+    );
+    if (isMatch) {
+      (c.coverage || []).forEach(m => {
+        if (m.sourceId !== art.sourceId && !related.some(r => r.sourceId === m.sourceId)) {
+          related.push({
+            sourceId: m.sourceId,
+            sourceName: m.sourceName,
+            title: m.title,
+            sentiment: m.sentiment,
+            link: m.link
+          });
+        }
+      });
+      if (related.length > 0) return related.slice(0, 3);
+    }
+  }
+
+  // 2. Keyword/Topic Cross-Outlet Matching
+  if (allArticles && allArticles.length > 0) {
+    const stopWords = new Set(['about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second', 'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over']);
+    const words = currentTitle
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length >= 5 && !stopWords.has(w));
+      
+    if (words.length > 0) {
+      for (const other of allArticles) {
+        if (other.sourceId !== art.sourceId && !related.some(r => r.sourceId === other.sourceId)) {
+          const otherTitle = (other.title || '').toLowerCase();
+          const matchCount = words.filter(w => otherTitle.includes(w)).length;
+          if (matchCount >= 2 || (words.length === 1 && matchCount === 1 && other.category === art.category)) {
+            related.push({
+              sourceId: other.sourceId,
+              sourceName: other.sourceName,
+              title: other.title,
+              sentiment: other.sentiment,
+              link: other.url || other.link
+            });
+            if (related.length >= 3) break;
+          }
+        }
+      }
+    }
+  }
+
+  return related.slice(0, 3);
+}
+
+function attachSwipeListeners(el) {
+  if (!el) return;
+  let startX = 0;
+  let startY = 0;
+  let startTime = 0;
+
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches[0]) {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTime = Date.now();
+    }
+  }, { passive: true });
+
+  el.addEventListener('touchend', (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      const diffX = e.changedTouches[0].clientX - startX;
+      const diffY = e.changedTouches[0].clientY - startY;
+      const duration = Date.now() - startTime;
+      
+      if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.5 && duration < 600) {
+        if (diffX < 0) {
+          navigateSilverDeck(1);
+        } else {
+          navigateSilverDeck(-1);
+        }
+      }
+    }
+  }, { passive: true });
+}
+
+function createSilverCardHTML(art, idx, related, isSpotlight) {
+  let rankBadgeHTML = '';
+  if (idx === 0) {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-gold"><i data-lucide="crown" style="width:12px;height:12px;"></i> #1 TOP BREAKTHROUGH</span>`;
+  } else if (idx === 1) {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-silver"><i data-lucide="award" style="width:12px;height:12px;"></i> #2 RUNNER UP</span>`;
+  } else if (idx === 2) {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-bronze"><i data-lucide="medal" style="width:12px;height:12px;"></i> #3 SPOTLIGHT</span>`;
+  } else {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-standard">#${idx + 1}</span>`;
+  }
+
+  const brandMeta = SOURCE_META[art.sourceId] || { initials: art.sourceId, color: '#3b82f6', flag: '🌐' };
+  const dateObj = new Date(art.pubDate);
+  const dateFormatted = dateObj.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const moodLabel = getMoodLabel(art.sentiment);
+  const reasonText = art.reasoning || art.explanation || 'Constructive real-world progress and positive societal impact.';
+  const storyDetail = art.description && art.description.length > 25 ? art.description : '';
+  const heroImgUrl = getStoryImage(art);
+  const storyUrl = art.url || art.link || '#';
+
+  let relatedHTML = '';
+  if (related && related.length > 0) {
+    relatedHTML = `
+      <div class="silver-related-box">
+        <div class="silver-related-label">
+          <i data-lucide="layers" style="width:13px;height:13px;"></i>
+          <span>Related Coverage Across Wires:</span>
+        </div>
+        <div class="silver-related-chips">
+          ${related.map(r => `
+            <a href="${r.link}" target="_blank" rel="noopener noreferrer" class="silver-related-chip" title="${r.title.replace(/"/g, '&quot;')}">
+              <span class="related-chip-outlet">${r.sourceName}</span>
+              <span class="related-chip-score ${r.sentiment > 0.15 ? 'pos' : ''}">${r.sentiment > 0 ? '+' : ''}${r.sentiment.toFixed(2)}</span>
+              <i data-lucide="external-link" style="width:10px;height:10px;"></i>
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="silver-media-hero">
+      <img src="${heroImgUrl}" alt="${art.title.replace(/"/g, '&quot;')}" class="silver-hero-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'" />
+      <div class="silver-media-overlay"></div>
+      <div class="silver-media-badges">
+        ${rankBadgeHTML}
+        <span class="silver-score-badge">
+          <i data-lucide="smile" style="width:12px;height:12px;"></i> +${art.sentiment.toFixed(2)} ${moodLabel}
+        </span>
+      </div>
+    </div>
+
+    <div class="silver-card-body">
+      <div class="silver-story-meta-bar">
+        <div class="silver-story-meta-left">
+          <span class="source-badge" style="background-color: ${brandMeta.color}">${brandMeta.flag || '🌐'} ${art.sourceName}</span>
+          <span class="cat-badge ${art.category || 'other'}">${art.category === 'climate' ? '🌱 Nature & Climate' : (art.category || 'other')}</span>
+        </div>
+        <div class="silver-story-meta-right">
+          <i data-lucide="clock" style="width:12px;height:12px;"></i>
+          <span>${dateFormatted}</span>
+        </div>
+      </div>
+
+      <h2 class="silver-story-title">
+        <a href="${storyUrl}" target="_blank" rel="noopener noreferrer">${art.title}</a>
+      </h2>
+
+      ${storyDetail ? `
+        <div class="silver-story-detail">
+          <p class="silver-detail-paragraph">${storyDetail}</p>
+        </div>
+      ` : ''}
+
+      <div class="silver-reason-box">
+        <div class="silver-reason-header">
+          <i data-lucide="sparkles" style="width:13px;height:13px;"></i>
+          <span>Constructive Impact Analysis</span>
+        </div>
+        <p class="silver-reason-text">${reasonText}</p>
+      </div>
+
+      ${relatedHTML}
+
+      <div class="silver-story-footer">
+        <div class="silver-footer-left">
+          <span class="silver-origin-label">Published by ${art.sourceName}</span>
+        </div>
+        <div class="silver-footer-actions">
+          <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${storyUrl}', this)" title="Copy link to clipboard">
+            <i data-lucide="link" style="width:13px;height:13px;"></i>
+            <span>Share</span>
+          </button>
+          <a href="${storyUrl}" target="_blank" rel="noopener noreferrer" class="silver-read-btn">
+            <span>Read Full Story</span>
+            <i data-lucide="external-link" style="width:13px;height:13px;"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+}
 
 // RSS Feed URLs for copying
 const SOURCE_FEEDS = {
@@ -318,6 +578,31 @@ function setupEventListeners() {
       updateAppUI();
     });
   }
+
+  // Silver Edition View Mode Buttons (Swipe Deck vs Grid)
+  const btnSilverSwipe = document.getElementById('btn-silver-view-swipe');
+  const btnSilverGrid = document.getElementById('btn-silver-view-grid');
+  if (btnSilverSwipe) {
+    btnSilverSwipe.addEventListener('click', () => {
+      setSilverViewMode('swipe');
+    });
+  }
+  if (btnSilverGrid) {
+    btnSilverGrid.addEventListener('click', () => {
+      setSilverViewMode('grid');
+    });
+  }
+
+  // Keyboard navigation for Swipe Deck (Left / Right Arrow)
+  window.addEventListener('keydown', (e) => {
+    if (state.edition === 'silver' && state.silverViewMode === 'swipe') {
+      if (e.key === 'ArrowLeft') {
+        navigateSilverDeck(-1);
+      } else if (e.key === 'ArrowRight') {
+        navigateSilverDeck(1);
+      }
+    }
+  });
 
   if (elements.regionFilterTabs) {
     elements.regionFilterTabs.addEventListener('click', (e) => {
@@ -1059,7 +1344,57 @@ function switchEdition(edition) {
   }
 }
 
-// Render Dedicated "Some Good News" View (Top 10 Best Stories)
+// Global navigation helpers for Silver Edition
+window._silverTop10Count = 0;
+
+window.setSilverTimeframe = function(val) {
+  state.filters.time = val;
+  const silverSelect = document.getElementById('silver-timeframe-select');
+  if (silverSelect) silverSelect.value = val;
+  if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
+  if (elements.filterTime) elements.filterTime.value = val;
+  state.silverIndex = 0;
+  updateAppUI();
+};
+
+window.setSilverViewMode = function(mode) {
+  state.silverViewMode = mode;
+  const btnSwipe = document.getElementById('btn-silver-view-swipe');
+  const btnGrid = document.getElementById('btn-silver-view-grid');
+  if (btnSwipe) btnSwipe.classList.toggle('active', mode === 'swipe');
+  if (btnGrid) btnGrid.classList.toggle('active', mode === 'grid');
+  renderSilverEdition();
+};
+
+window.navigateSilverDeck = function(dir) {
+  const count = window._silverTop10Count || 10;
+  let next = (state.silverIndex || 0) + dir;
+  if (next < 0) next = 0;
+  if (next >= count) next = count - 1;
+  state.silverIndex = next;
+  renderSilverEdition();
+};
+
+window.jumpSilverDeck = function(idx) {
+  state.silverIndex = idx;
+  renderSilverEdition();
+};
+
+window.copyStoryLink = function(url, btn) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="check" style="width:13px;height:13px;color:#16a34a;"></i> <span>Copied!</span>`;
+      if (window.lucide) lucide.createIcons();
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        if (window.lucide) lucide.createIcons();
+      }, 2000);
+    }).catch(() => {});
+  }
+};
+
+// Render Dedicated "Some Good News" View (Top 10 Best Stories with Swipe Deck & Magazine Grid)
 function renderSilverEdition() {
   const silverSection = document.getElementById('silver-edition-section');
   if (!silverSection) return;
@@ -1068,6 +1403,12 @@ function renderSilverEdition() {
   if (silverTimeSelect && state.filters.time) {
     silverTimeSelect.value = state.filters.time;
   }
+
+  // Update view mode toggle active class
+  const btnSwipe = document.getElementById('btn-silver-view-swipe');
+  const btnGrid = document.getElementById('btn-silver-view-grid');
+  if (btnSwipe) btnSwipe.classList.toggle('active', state.silverViewMode === 'swipe');
+  if (btnGrid) btnGrid.classList.toggle('active', state.silverViewMode === 'grid');
 
   const container = document.getElementById('silver-stories-container');
   const statCount = document.getElementById('silver-stat-count');
@@ -1119,7 +1460,7 @@ function renderSilverEdition() {
   for (const [cat, count] of Object.entries(categoryCounts)) {
     if (count > topCategoryCount) {
       topCategoryCount = count;
-      topCategoryName = cat.charAt(0).toUpperCase() + cat.slice(1);
+      topCategoryName = cat === 'climate' ? 'Nature & Climate' : (cat.charAt(0).toUpperCase() + cat.slice(1));
     }
   }
 
@@ -1129,6 +1470,7 @@ function renderSilverEdition() {
 
   // 5. Take the Top 10 Best Stories
   const top10 = uniqueArticles.slice(0, 10);
+  window._silverTop10Count = top10.length;
 
   // Timeframe label for contextual messaging
   let timeframeLabel = 'Past 24 Hours';
@@ -1142,11 +1484,11 @@ function renderSilverEdition() {
 
   if (top10.length === 0) {
     container.innerHTML = `
-      <div class="card" style="text-align: center; padding: 3rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;">
-        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⛅</div>
-        <h3 style="font-size: 1.35rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism on the Wire</h3>
+      <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px;">
+        <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">⛅</div>
+        <h3 style="font-size: 1.45rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism on the Wire</h3>
         <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem; line-height: 1.6;">
-          During ${timeframeLabel}, global wire rooms published near-zero qualifying positive stories. Mainstream news rooms focus overwhelmingly on crisis and conflict.
+          During ${timeframeLabel}, global wire rooms published near-zero qualifying positive stories. Commercial news desks operate overwhelmingly on threats and alarm. Expand the window below to uncover constructive breakthroughs.
         </p>
         <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
           <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('3d')">Expand to Past 3 Days</button>
@@ -1158,72 +1500,66 @@ function renderSilverEdition() {
     return;
   }
 
-  // Render Top 10 Story Cards
-  top10.forEach((art, idx) => {
-    const card = document.createElement('div');
-    card.className = 'silver-story-card';
+  // 6. Render according to chosen View Mode: 'swipe' (Deck) or 'grid' (All Stories)
+  if (state.silverViewMode === 'swipe') {
+    const curIdx = Math.max(0, Math.min(state.silverIndex || 0, top10.length - 1));
+    state.silverIndex = curIdx;
+    const currentArt = top10[curIdx];
+    const related = findRelatedCoverage(currentArt, uniqueArticles);
 
-    // Rank badge styling
-    let rankBadgeHTML = '';
-    if (idx === 0) {
-      rankBadgeHTML = `<span class="silver-rank-pill rank-gold"><i data-lucide="crown" style="width:12px;height:12px;"></i> #1 TOP BREAKTHROUGH</span>`;
-    } else if (idx === 1) {
-      rankBadgeHTML = `<span class="silver-rank-pill rank-silver"><i data-lucide="award" style="width:12px;height:12px;"></i> #2 RUNNER UP</span>`;
-    } else if (idx === 2) {
-      rankBadgeHTML = `<span class="silver-rank-pill rank-bronze"><i data-lucide="medal" style="width:12px;height:12px;"></i> #3 SPOTLIGHT</span>`;
-    } else {
-      rankBadgeHTML = `<span class="silver-rank-pill rank-standard">#${idx + 1}</span>`;
-    }
+    const deckWrapper = document.createElement('div');
+    deckWrapper.className = 'silver-swipe-deck-wrapper';
 
-    const brandMeta = SOURCE_META[art.sourceId] || { initials: art.sourceId, color: '#3b82f6', flag: '🌐' };
-    const dateObj = new Date(art.pubDate);
-    const dateFormatted = dateObj.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const moodLabel = getMoodLabel(art.sentiment);
-    const reasonText = art.reasoning || art.explanation || 'Constructive real-world progress and positive societal impact.';
-
-    card.innerHTML = `
-      <div class="silver-story-top">
-        <div class="silver-story-badges">
-          ${rankBadgeHTML}
-          <span class="source-badge" style="background-color: ${brandMeta.color}">${brandMeta.flag || '🌐'} ${art.sourceName}</span>
-          <span class="cat-badge ${art.category || 'other'}">${art.category || 'other'}</span>
-          <span class="silver-score-badge">
-            <i data-lucide="smile" style="width:12px;height:12px;"></i> +${art.sentiment.toFixed(2)} ${moodLabel}
-          </span>
+    // Deck Navigation Bar
+    const navBarHTML = `
+      <div class="silver-deck-nav">
+        <button type="button" class="silver-nav-arrow-btn prev-btn" ${curIdx === 0 ? 'disabled' : ''} onclick="navigateSilverDeck(-1)">
+          <i data-lucide="chevron-left" style="width:16px;height:16px;"></i> <span>Previous</span>
+        </button>
+        <div class="silver-deck-counter">
+          <span class="counter-label">Story <strong>#${curIdx + 1}</strong> of <strong>${top10.length}</strong></span>
+          <div class="silver-deck-dots">
+            ${top10.map((_, i) => `
+              <button type="button" class="silver-deck-dot ${i === curIdx ? 'active' : ''} ${i === 0 ? 'gold' : ''}" onclick="jumpSilverDeck(${i})" title="Jump to Story #${i + 1}">
+                ${i + 1}
+              </button>
+            `).join('')}
+          </div>
         </div>
-        <div class="silver-story-meta-right">
-          <i data-lucide="clock" style="width:12px;height:12px;"></i>
-          <span>${dateFormatted}</span>
-        </div>
-      </div>
-
-      <h3 class="silver-story-title">
-        <a href="${art.url}" target="_blank" rel="noopener noreferrer">${art.title}</a>
-      </h3>
-
-      <div class="silver-reason-box">
-        <div class="silver-reason-header">
-          <i data-lucide="sparkles" style="width:12px;height:12px;"></i> Why it's good news
-        </div>
-        <p>${reasonText}</p>
-      </div>
-
-      <div class="silver-story-footer">
-        <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="silver-read-btn">
-          <span>Read on ${art.sourceName}</span>
-          <i data-lucide="external-link" style="width:13px;height:13px;"></i>
-        </a>
+        <button type="button" class="silver-nav-arrow-btn next-btn" ${curIdx === top10.length - 1 ? 'disabled' : ''} onclick="navigateSilverDeck(1)">
+          <span>Next</span> <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
+        </button>
       </div>
     `;
 
-    container.appendChild(card);
-  });
+    // Active Card
+    const cardEl = document.createElement('div');
+    cardEl.className = 'silver-story-card silver-card-spotlight';
+    cardEl.id = 'silver-active-spotlight-card';
+    cardEl.innerHTML = createSilverCardHTML(currentArt, curIdx, related, true);
+
+    deckWrapper.innerHTML = navBarHTML;
+    deckWrapper.appendChild(cardEl);
+
+    // Touch swipe gesture listener
+    attachSwipeListeners(deckWrapper);
+
+    container.appendChild(deckWrapper);
+  } else {
+    // Grid Mode: render all 10 cards in a multi-column broadsheet grid
+    const gridEl = document.createElement('div');
+    gridEl.className = 'silver-grid-container';
+
+    top10.forEach((art, idx) => {
+      const card = document.createElement('div');
+      card.className = 'silver-story-card silver-card-grid-item';
+      const related = findRelatedCoverage(art, uniqueArticles);
+      card.innerHTML = createSilverCardHTML(art, idx, related, false);
+      gridEl.appendChild(card);
+    });
+
+    container.appendChild(gridEl);
+  }
 
   if (top10.length < 10) {
     const notice = document.createElement('div');
@@ -1236,16 +1572,6 @@ function renderSilverEdition() {
     lucide.createIcons();
   }
 }
-
-// Global helper for timeframe switching from silver empty states
-window.setSilverTimeframe = function(val) {
-  state.filters.time = val;
-  const silverSelect = document.getElementById('silver-timeframe-select');
-  if (silverSelect) silverSelect.value = val;
-  if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
-  if (elements.filterTime) elements.filterTime.value = val;
-  updateAppUI();
-};
 
 // Populate source options dynamically in drop-down filters
 function populateFilterOptions() {
