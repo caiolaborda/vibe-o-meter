@@ -28,7 +28,12 @@ let state = {
   edition: 'doom', // 'doom' (No Good News) or 'silver' (Some Good News)
   silverViewMode: 'swipe', // 'swipe' (Deck Spotlight) or 'grid' (All Stories Magazine)
   silverIndex: 0,
-  headlinesLimit: 20
+  headlinesLimit: 20,
+  sharedStoryClusters: [],
+  clusterSearch: '',
+  clusterTopic: 'all',
+  clusterSort: 'spread',
+  h2hTopic: 'all'
 };
 
 let resolvedSources = {};
@@ -384,6 +389,16 @@ const elements = {
   // Sort Buttons
   sortDateBtn: document.getElementById('sort-date'),
   sortVibeBtn: document.getElementById('sort-vibe'),
+
+  // Wire Compare Tab Elements
+  clustersContainer: document.getElementById('clusters-container'),
+  clustersSearchInput: document.getElementById('clusters-search-input'),
+  clustersTopicSelect: document.getElementById('clusters-topic-select'),
+  clustersSortSelect: document.getElementById('clusters-sort-select'),
+  clustersCountBadge: document.getElementById('clusters-count-badge'),
+  h2hTopicSelect: document.getElementById('h2h-topic-select'),
+  h2hTimeframeSelect: document.getElementById('h2h-timeframe-select'),
+  h2hSpreadValue: document.getElementById('h2h-spread-value')
 };
 
 // Initialize Application
@@ -417,14 +432,14 @@ function setupEventListeners() {
 
   // Handle initial tab from URL hash if provided
   const initialHash = window.location.hash.replace('#', '');
-  if (['pulse', 'trends', 'deepdives', 'feed', 'methodology'].includes(initialHash)) {
+  if (['pulse', 'trends', 'compare', 'deepdives', 'feed', 'methodology'].includes(initialHash)) {
     switchTab(initialHash === 'feed' ? 'pulse' : initialHash);
   }
 
   // Handle browser back / forward navigation
   window.addEventListener('hashchange', () => {
     const currentHash = window.location.hash.replace('#', '');
-    if (['pulse', 'trends', 'deepdives', 'feed', 'methodology'].includes(currentHash) && state.activeTab !== currentHash) {
+    if (['pulse', 'trends', 'compare', 'deepdives', 'feed', 'methodology'].includes(currentHash) && state.activeTab !== currentHash) {
       switchTab(currentHash === 'feed' ? 'pulse' : currentHash);
     }
   });
@@ -686,8 +701,51 @@ function setupEventListeners() {
   });
   
   // Head-to-Head selection change
-  elements.h2hSourceA.addEventListener('change', renderHeadToHead);
-  elements.h2hSourceB.addEventListener('change', renderHeadToHead);
+  if (elements.h2hSourceA) elements.h2hSourceA.addEventListener('change', renderHeadToHead);
+  if (elements.h2hSourceB) elements.h2hSourceB.addEventListener('change', renderHeadToHead);
+
+  // Wire Compare tab: Topic & Timeframe controls for Head-to-Head
+  if (elements.h2hTopicSelect) {
+    elements.h2hTopicSelect.addEventListener('change', (e) => {
+      state.h2hTopic = e.target.value;
+      renderHeadToHead();
+    });
+  }
+
+  if (elements.h2hTimeframeSelect) {
+    elements.h2hTimeframeSelect.addEventListener('change', (e) => {
+      state.filters.time = e.target.value;
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
+      if (elements.filterTime) elements.filterTime.value = e.target.value;
+      updateAppUI();
+    });
+  }
+
+  // Wire Compare tab: Story Clusters Search, Filter & Sort
+  if (elements.clustersSearchInput) {
+    let clusterSearchTimer = null;
+    elements.clustersSearchInput.addEventListener('input', (e) => {
+      clearTimeout(clusterSearchTimer);
+      clusterSearchTimer = setTimeout(() => {
+        state.clusterSearch = e.target.value.toLowerCase().trim();
+        renderStoryClusters();
+      }, 150);
+    });
+  }
+
+  if (elements.clustersTopicSelect) {
+    elements.clustersTopicSelect.addEventListener('change', (e) => {
+      state.clusterTopic = e.target.value;
+      renderStoryClusters();
+    });
+  }
+
+  if (elements.clustersSortSelect) {
+    elements.clustersSortSelect.addEventListener('change', (e) => {
+      state.clusterSort = e.target.value;
+      renderStoryClusters();
+    });
+  }
 
   // Spectrum view toggle
   elements.viewToggleAverages.addEventListener('click', () => {
@@ -778,6 +836,7 @@ async function fetchData() {
       state.editorialSummaryDate = data.editorialSummaryDate || (data.globalStats && data.globalStats.editorialSummaryDate) || '';
       state.globalStats = data.globalStats || {};
       state.timeSeries = data.timeSeries || [];
+      state.sharedStoryClusters = data.sharedStoryClusters || [];
 
       updateAppUI();
     } else {
@@ -826,6 +885,7 @@ async function syncData() {
     state.sources = data.sources;
     state.lastUpdated = data.lastUpdated;
     state.analyzerUsed = data.analyzerUsed;
+    state.sharedStoryClusters = data.sharedStoryClusters || [];
     
     setSyncingState(false);
     updateAppUI();
@@ -939,7 +999,7 @@ function switchSentimentMode(mode) {
 // Switch Dashboard Tab (Pulse, Trends, Deep Dives, Methodology)
 function switchTab(tabId) {
   if (tabId === 'feed') tabId = 'pulse';
-  if (!['pulse', 'trends', 'deepdives', 'methodology'].includes(tabId)) {
+  if (!['pulse', 'trends', 'compare', 'deepdives', 'methodology'].includes(tabId)) {
     tabId = 'pulse';
   }
   state.activeTab = tabId;
@@ -978,6 +1038,7 @@ function switchTab(tabId) {
   const panels = {
     pulse: document.getElementById('tab-panel-pulse'),
     trends: document.getElementById('tab-panel-trends'),
+    compare: document.getElementById('tab-panel-compare'),
     deepdives: document.getElementById('tab-panel-deepdives'),
     methodology: document.getElementById('tab-panel-methodology')
   };
@@ -1015,9 +1076,10 @@ function switchTab(tabId) {
   if (tabId === 'trends') {
     renderSentimentTimeline();
     renderHeatmapMatrix();
+  } else if (tabId === 'compare') {
+    renderComparePage();
   } else if (tabId === 'deepdives') {
     renderComparisonMatrix();
-    renderHeadToHead();
     renderHeadlines();
   } else if (tabId === 'pulse') {
     renderDailyPulse();
@@ -1268,9 +1330,10 @@ function updateAppUI() {
   } else if (state.activeTab === 'trends') {
     renderSentimentTimeline();
     renderHeatmapMatrix();
+  } else if (state.activeTab === 'compare') {
+    renderComparePage();
   } else if (state.activeTab === 'deepdives') {
     renderComparisonMatrix();
-    renderHeadToHead();
     renderHeadlines();
   }
 }
@@ -2181,8 +2244,276 @@ function renderComparisonMatrix() {
   lucide.createIcons();
 }
 
+// --- WIRE COMPARE TAB (STORY CLUSTERS & HEAD-TO-HEAD) ---
+
+function clamp(val, min, max) {
+  return Math.max(min, Math.min(max, val));
+}
+
+// Infer news topic for a cluster
+function getClusterTopic(cluster) {
+  if (cluster.topic) return cluster.topic;
+  for (const item of (cluster.coverage || [])) {
+    const src = state.sources && state.sources[item.sourceId];
+    if (src && src.articles) {
+      const match = src.articles.find(a => (a.link && a.link === item.link) || (a.title && a.title === item.title));
+      if (match && match.category) return match.category;
+    }
+  }
+  const s = (cluster.story || '').toLowerCase();
+  if (s.includes('election') || s.includes('gop') || s.includes('trump') || s.includes('senate') || s.includes('house')) return 'politics';
+  if (s.includes('ukraine') || s.includes('houthi') || s.includes('saudi') || s.includes('greece') || s.includes('russia') || s.includes('war')) return 'world';
+  if (s.includes('earnings') || s.includes('bank') || s.includes('regulatory') || s.includes('deal') || s.includes('market') || s.includes('sales')) return 'business';
+  if (s.includes('starlink') || s.includes('tech') || s.includes('cyber') || s.includes('ai')) return 'technology';
+  if (s.includes('cancer') || s.includes('health') || s.includes('hospital') || s.includes('disease')) return 'health';
+  if (s.includes('climate') || s.includes('nature') || s.includes('planet') || s.includes('oil')) return 'climate';
+  return 'world';
+}
+
+const CLUSTER_TOPIC_LABELS = {
+  world: '🌐 World Affairs',
+  politics: '🏛️ Politics',
+  business: '📈 Business & Markets',
+  technology: '⚡ Technology',
+  science: '🔬 Science & Space',
+  health: '🩺 Health & Medicine',
+  climate: '🌱 Nature & Climate',
+  other: '📰 General Wire'
+};
+
+// Render whole Wire Compare tab
+function renderComparePage() {
+  renderStoryClusters();
+  renderHeadToHead();
+  if (window.lucide && lucide.createIcons) {
+    lucide.createIcons();
+  }
+}
+window.renderComparePage = renderComparePage;
+
+// Render Cross-Outlet Story Clusters (Clashing Wires)
+function renderStoryClusters() {
+  const container = elements.clustersContainer || document.getElementById('clusters-container');
+  if (!container) return;
+
+  const rawClusters = state.sharedStoryClusters || [];
+  if (!rawClusters || rawClusters.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;">
+        <i data-lucide="layers" style="width: 38px; height: 38px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.5rem;">No Wire Clusters Detected</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 500px; margin: 0 auto 1.25rem;">
+          Cross-outlet story clusters are computed during news ingestion when two or more major wire desks report on identical breaking events. Trigger a wire sync to rebuild clusters.
+        </p>
+        <button class="btn btn-primary" onclick="syncData()" style="gap: 0.5rem; display: inline-flex; align-items: center; margin: 0 auto;">
+          <i data-lucide="refresh-cw"></i> Sync Feeds Now
+        </button>
+      </div>
+    `;
+    if (elements.clustersCountBadge) elements.clustersCountBadge.innerText = '0 Clusters Identified';
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  // Topic filter & Search filter
+  const activeTopic = state.clusterTopic || 'all';
+  const searchTerm = (state.clusterSearch || '').toLowerCase().trim();
+
+  // Annotate and filter clusters
+  const processed = rawClusters.map(c => {
+    const topic = getClusterTopic(c);
+    const coverage = c.coverage || [];
+    const sentiments = coverage.map(cov => cov.sentiment).filter(s => typeof s === 'number');
+    const maxS = sentiments.length > 0 ? Math.max(...sentiments) : 0;
+    const minS = sentiments.length > 0 ? Math.min(...sentiments) : 0;
+    const computedSpread = sentiments.length > 1 ? Number((maxS - minS).toFixed(2)) : (c.sentimentSpread || 0);
+    const avgSentiment = sentiments.length > 0 ? Number((sentiments.reduce((a, b) => a + b, 0) / sentiments.length).toFixed(2)) : (c.averageSentiment || 0);
+
+    return {
+      ...c,
+      topic,
+      coverage,
+      computedSpread,
+      averageSentiment: avgSentiment
+    };
+  }).filter(c => {
+    // Topic filter
+    if (activeTopic !== 'all' && c.topic !== activeTopic) {
+      return false;
+    }
+    // Search filter
+    if (searchTerm) {
+      const matchTitle = (c.story || '').toLowerCase().includes(searchTerm);
+      const matchCoverage = c.coverage.some(cov => 
+        (cov.title || '').toLowerCase().includes(searchTerm) || 
+        (cov.sourceName || '').toLowerCase().includes(searchTerm)
+      );
+      if (!matchTitle && !matchCoverage) return false;
+    }
+    return true;
+  });
+
+  // Sort clusters
+  const sortMode = state.clusterSort || 'spread';
+  processed.sort((a, b) => {
+    if (sortMode === 'spread') return b.computedSpread - a.computedSpread;
+    if (sortMode === 'outlets') return (b.coverage?.length || 0) - (a.coverage?.length || 0);
+    if (sortMode === 'pessimistic') return a.averageSentiment - b.averageSentiment;
+    if (sortMode === 'optimistic') return b.averageSentiment - a.averageSentiment;
+    return 0;
+  });
+
+  // Update badge counter
+  if (elements.clustersCountBadge) {
+    elements.clustersCountBadge.innerText = `${processed.length} Cluster${processed.length === 1 ? '' : 's'} Identified`;
+  }
+
+  // Empty state if filtered out
+  if (processed.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;">
+        <i data-lucide="search-x" style="width: 36px; height: 36px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem;">No Matching Story Clusters</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 440px; margin: 0 auto;">
+          No clusters found for topic "${activeTopic}"${searchTerm ? ` matching "${searchTerm}"` : ''}. Try selecting "All Topics" or clearing the search box.
+        </p>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  // Render cluster cards
+  container.innerHTML = processed.map(cluster => {
+    const topicLabel = CLUSTER_TOPIC_LABELS[cluster.topic] || cluster.topic;
+    const moodClass = getMoodClass(cluster.averageSentiment);
+    const avgScoreFormatted = `${cluster.averageSentiment > 0 ? '+' : ''}${cluster.averageSentiment.toFixed(2)}`;
+    const isHighSpread = cluster.computedSpread >= 0.35;
+
+    // Build mini-spectrum bubbles (deduplicate by sourceId for plot clarity)
+    const uniqueCoverage = [];
+    const seenSources = new Set();
+    cluster.coverage.forEach(cov => {
+      if (!seenSources.has(cov.sourceId)) {
+        seenSources.add(cov.sourceId);
+        uniqueCoverage.push(cov);
+      }
+    });
+
+    const bubblesHTML = uniqueCoverage.map(cov => {
+      const meta = SOURCE_META[cov.sourceId] || { initials: cov.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
+      const score = typeof cov.sentiment === 'number' ? cov.sentiment : 0;
+      const leftPct = clamp(((score + 1) / 2) * 100, 4, 96);
+      const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
+      const cleanTitle = (cov.title || '').replace(/"/g, '&quot;');
+
+      return `
+        <div class="cluster-outlet-bubble" 
+             style="left: ${leftPct}%; background-color: ${meta.color};"
+             title="${meta.flag || ''} ${cov.sourceName}: ${scoreStr} (${cleanTitle})"
+             onclick="window.open('${cov.link}', '_blank', 'noopener,noreferrer')">
+          ${meta.initials}
+        </div>
+      `;
+    }).join('');
+
+    // Build article cards in coverage grid
+    const coverageCardsHTML = cluster.coverage.map(art => {
+      const meta = SOURCE_META[art.sourceId] || { initials: art.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
+      const score = typeof art.sentiment === 'number' ? art.sentiment : 0;
+      const scoreClass = getMoodClass(score);
+      const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
+
+      // Determine editorial framing relative to cluster average
+      let framingTag = '';
+      let cardFramingClass = '';
+      if (score <= cluster.averageSentiment - 0.15) {
+        cardFramingClass = 'framing-alarmist';
+        framingTag = `<span class="cluster-framing-tag neg"><i data-lucide="alert-triangle" style="width:10px;height:10px;"></i> Alarmist Angle</span>`;
+      } else if (score >= cluster.averageSentiment + 0.15) {
+        cardFramingClass = 'framing-constructive';
+        framingTag = `<span class="cluster-framing-tag pos"><i data-lucide="trending-up" style="width:10px;height:10px;"></i> Constructive Angle</span>`;
+      }
+
+      return `
+        <div class="cluster-article-card ${cardFramingClass}">
+          <div class="cluster-article-top">
+            <span class="cluster-article-outlet">
+              <span class="source-badge" style="background-color: ${meta.color};">${meta.flag || ''} ${art.sourceName}</span>
+            </span>
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              ${framingTag}
+              <span class="score-badge ${scoreClass}" style="font-size:0.75rem; padding:0.15rem 0.45rem;">${scoreStr}</span>
+            </div>
+          </div>
+          <h4 class="cluster-article-title">
+            <a href="${art.link}" target="_blank" rel="noopener noreferrer">${art.title}</a>
+          </h4>
+          <div class="cluster-article-footer">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyStoryLink('${art.link}', this)" title="Share headline link" style="padding:0.25rem 0.55rem; font-size:0.72rem; gap:0.3rem;">
+              <i data-lucide="link" style="width:11px;height:11px;"></i>
+              <span>Share</span>
+            </button>
+            <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="cluster-read-link">
+              <span>Read Dispatch</span>
+              <i data-lucide="external-link" style="width:11px;height:11px;"></i>
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <article class="cluster-card card" id="cluster-${encodeURIComponent(cluster.story.slice(0, 20))}">
+        <div class="cluster-header">
+          <div class="cluster-header-left">
+            <div class="cluster-badges-strip">
+              <span class="cluster-badge cluster-topic-badge">${topicLabel}</span>
+              <span class="cluster-badge cluster-outlets-badge">
+                <i data-lucide="radio" style="width:11px;height:11px;"></i>
+                ${cluster.coverage.length} Outlets Reporting
+              </span>
+              <span class="cluster-badge cluster-score-badge ${moodClass}">
+                ${avgScoreFormatted} Avg Tone
+              </span>
+              <span class="cluster-badge cluster-spread-badge ${isHighSpread ? 'high-spread' : ''}">
+                <i data-lucide="split" style="width:11px;height:11px;"></i>
+                ${cluster.computedSpread.toFixed(2)} Tone Spread
+              </span>
+            </div>
+            <h3 class="cluster-title">${cluster.story}</h3>
+          </div>
+        </div>
+
+        <!-- Mini-Spectrum Distribution Track across all covering desks -->
+        <div class="cluster-spectrum-wrap">
+          <div class="cluster-spectrum-scale-labels">
+            <span>Crisis / Gloomy (-1.0)</span>
+            <span>Neutral (0.0)</span>
+            <span>Constructive / Optimistic (+1.0)</span>
+          </div>
+          <div class="cluster-spectrum-track">
+            ${bubblesHTML}
+          </div>
+        </div>
+
+        <!-- Coverage Grid of Desks -->
+        <div class="cluster-coverage-grid">
+          ${coverageCardsHTML}
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+}
+window.renderStoryClusters = renderStoryClusters;
+
 // Render Head-to-Head Comparison column
 function renderHeadToHead() {
+  if (!elements.h2hSourceA || !elements.h2hSourceB) return;
   const idA = elements.h2hSourceA.value;
   const idB = elements.h2hSourceB.value;
   
@@ -2190,39 +2521,105 @@ function renderHeadToHead() {
   
   const sourceA = resolvedSources[idA];
   const sourceB = resolvedSources[idB];
+
+  // Sync timeframe selector with active global filter
+  if (elements.h2hTimeframeSelect && elements.h2hTimeframeSelect.value !== state.filters.time) {
+    elements.h2hTimeframeSelect.value = state.filters.time;
+  }
+
+  // Read topic filter
+  const topic = (elements.h2hTopicSelect && elements.h2hTopicSelect.value) || state.h2hTopic || 'all';
+  state.h2hTopic = topic;
+
+  // Filter articles by beat
+  const artsA = topic === 'all' 
+    ? (sourceA.articles || []) 
+    : (sourceA.articles || []).filter(a => a.category === topic);
+  const artsB = topic === 'all' 
+    ? (sourceB.articles || []) 
+    : (sourceB.articles || []).filter(a => a.category === topic);
+
+  // Compute beat-specific sentiment averages
+  const scoredA = artsA.filter(a => a.sentiment !== null && a.sentiment !== undefined);
+  const scoredB = artsB.filter(a => a.sentiment !== null && a.sentiment !== undefined);
+
+  const avgA = scoredA.length > 0 ? (scoredA.reduce((s, a) => s + a.sentiment, 0) / scoredA.length) : null;
+  const avgB = scoredB.length > 0 ? (scoredB.reduce((s, a) => s + a.sentiment, 0) / scoredB.length) : null;
   
   // Set summaries A
-  document.querySelector('.source-title-a').innerText = sourceA.name;
+  const titleA = document.querySelector('.source-title-a');
+  if (titleA) titleA.innerText = `${sourceA.name} (${scoredA.length})`;
   const badgeA = document.querySelector('.score-a');
-  badgeA.innerText = `${sourceA.averageSentiment > 0 ? '+' : ''}${sourceA.averageSentiment.toFixed(2)}`;
-  badgeA.className = `h2h-score-badge score-a score-badge ${getMoodClass(sourceA.averageSentiment)}`;
+  if (badgeA) {
+    if (avgA !== null) {
+      badgeA.innerText = `${avgA > 0 ? '+' : ''}${avgA.toFixed(2)}`;
+      badgeA.className = `h2h-score-badge score-a score-badge ${getMoodClass(avgA)}`;
+    } else {
+      badgeA.innerText = 'N/A';
+      badgeA.className = 'h2h-score-badge score-a score-badge neu';
+    }
+  }
   
   // Set summaries B
-  document.querySelector('.source-title-b').innerText = sourceB.name;
+  const titleB = document.querySelector('.source-title-b');
+  if (titleB) titleB.innerText = `${sourceB.name} (${scoredB.length})`;
   const badgeB = document.querySelector('.score-b');
-  badgeB.innerText = `${sourceB.averageSentiment > 0 ? '+' : ''}${sourceB.averageSentiment.toFixed(2)}`;
-  badgeB.className = `h2h-score-badge score-b score-badge ${getMoodClass(sourceB.averageSentiment)}`;
+  if (badgeB) {
+    if (avgB !== null) {
+      badgeB.innerText = `${avgB > 0 ? '+' : ''}${avgB.toFixed(2)}`;
+      badgeB.className = `h2h-score-badge score-b score-badge ${getMoodClass(avgB)}`;
+    } else {
+      badgeB.innerText = 'N/A';
+      badgeB.className = 'h2h-score-badge score-b score-badge neu';
+    }
+  }
+
+  // Calculate Tone Divergence Spread
+  if (elements.h2hSpreadValue) {
+    if (avgA !== null && avgB !== null) {
+      const spread = Math.abs(avgA - avgB);
+      elements.h2hSpreadValue.innerText = `${spread.toFixed(2)} Spread`;
+      if (spread >= 0.4) {
+        elements.h2hSpreadValue.style.color = 'var(--neg-color)';
+      } else if (spread >= 0.2) {
+        elements.h2hSpreadValue.style.color = '#d97706';
+      } else {
+        elements.h2hSpreadValue.style.color = 'var(--accent-color)';
+      }
+    } else {
+      elements.h2hSpreadValue.innerText = 'N/A';
+      elements.h2hSpreadValue.style.color = 'var(--text-muted)';
+    }
+  }
   
   // Find extremes for A
-  setExtremesForColumn(sourceA.articles, 'a');
+  setExtremesForColumn(artsA, 'a', topic);
   // Find extremes for B
-  setExtremesForColumn(sourceB.articles, 'b');
+  setExtremesForColumn(artsB, 'b', topic);
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
+window.renderHeadToHead = renderHeadToHead;
 
 // Find and inject most positive/negative articles for a source column
-function setExtremesForColumn(articles, colSuffix) {
+function setExtremesForColumn(articles, colSuffix, topic = 'all') {
   const negElem = document.getElementById(`h2h-neg-${colSuffix}`);
   const negMetaElem = document.getElementById(`h2h-neg-meta-${colSuffix}`);
   const posElem = document.getElementById(`h2h-pos-${colSuffix}`);
   const posMetaElem = document.getElementById(`h2h-pos-meta-${colSuffix}`);
+
+  if (!negElem || !posElem) return;
   
   const scored = (articles || []).filter(a => a.sentiment !== null && a.sentiment !== undefined);
   
   if (scored.length === 0) {
-    negElem.innerText = 'No articles analyzed';
-    negMetaElem.innerText = '-';
-    posElem.innerText = 'No articles analyzed';
-    posMetaElem.innerText = '-';
+    const topicLabel = topic !== 'all' ? ` for "${topic}"` : '';
+    negElem.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem; font-style:italic;">No articles analyzed${topicLabel} in this timeframe</span>`;
+    if (negMetaElem) negMetaElem.innerText = '-';
+    posElem.innerHTML = `<span style="color:var(--text-muted); font-size:0.85rem; font-style:italic;">No articles analyzed${topicLabel} in this timeframe</span>`;
+    if (posMetaElem) posMetaElem.innerText = '-';
     return;
   }
   
@@ -2235,11 +2632,11 @@ function setExtremesForColumn(articles, colSuffix) {
   
   // Render worst negative
   negElem.innerHTML = `<a href="${worst.link}" target="_blank" rel="noopener noreferrer">${worst.title}</a>`;
-  negMetaElem.innerText = `Sentiment: ${worst.sentiment.toFixed(2)} | Date: ${new Date(worst.pubDate).toLocaleDateString()}`;
+  if (negMetaElem) negMetaElem.innerText = `Sentiment: ${worst.sentiment.toFixed(2)} | Date: ${new Date(worst.pubDate).toLocaleDateString()}`;
   
   // Render best positive
   posElem.innerHTML = `<a href="${best.link}" target="_blank" rel="noopener noreferrer">${best.title}</a>`;
-  posMetaElem.innerText = `Sentiment: ${best.sentiment.toFixed(2)} | Date: ${new Date(best.pubDate).toLocaleDateString()}`;
+  if (posMetaElem) posMetaElem.innerText = `Sentiment: ${best.sentiment > 0 ? '+' : ''}${best.sentiment.toFixed(2)} | Date: ${new Date(best.pubDate).toLocaleDateString()}`;
 }
 
 // Update Timeline range buttons styling in sync with global filters
@@ -3124,6 +3521,8 @@ function renderSpotlightBanner(filteredArticles) {
     }).join('');
 
     el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+    el.style.gap = '1rem';
     el.innerHTML = `
       <div class="spotlight-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -3616,12 +4015,18 @@ function renderDailyPulse() {
   if (polCard) {
     polCard.onclick = () => {
       if (maxClash.outletA && maxClash.outletB) {
-        elements.h2hSourceA.value = maxClash.outletA.id;
-        elements.h2hSourceB.value = maxClash.outletB.id;
-        switchTab('deepdives');
+        if (elements.h2hSourceA) elements.h2hSourceA.value = maxClash.outletA.id;
+        if (elements.h2hSourceB) elements.h2hSourceB.value = maxClash.outletB.id;
+        if (maxClash.topic) {
+          state.h2hTopic = maxClash.topic;
+          if (elements.h2hTopicSelect) elements.h2hTopicSelect.value = maxClash.topic;
+        }
+        switchTab('compare');
         renderHeadToHead();
         const h2h = document.getElementById('h2h-section');
         if (h2h) h2h.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        switchTab('compare');
       }
     };
   }
