@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-14T12:26:28.246Z",
+  "lastUpdated": "2026-10-14T12:33:55.816Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-14",
   "editorialSummary": "The global wires arrived with their usual cheerful dispatch, featuring domestic tragedies, cracked cockpit glass, and sovereign real estate squabbles. Somewhere out in the cosmos, scientists discovered planets actually worth visiting, which feels like an entirely reasonable reaction to the neighborhood.",
   "globalStats": {
-    "globalSentiment": -0.231,
-    "totalArticles": 3111,
+    "globalSentiment": -0.232,
+    "totalArticles": 3162,
     "mostNegativeOutlet": {
       "id": "spiegel",
       "name": "Spiegel International",
@@ -17,18 +17,19 @@
       "score": -0.111
     },
     "categoryAverages": {
+      "health": -0.224,
       "business": -0.107,
-      "world": -0.558,
-      "other": -0.359,
-      "health": -0.22,
-      "politics": -0.216,
+      "world": -0.56,
+      "other": -0.356,
+      "politics": -0.217,
       "science": 0.223,
-      "entertainment": -0.015,
+      "entertainment": -0.02,
       "technology": -0.108,
-      "sports": 0.028,
+      "sports": 0.029,
       "lifestyle": 0.05,
       "education": -0.22,
-      "environment": 0.38
+      "environment": 0.38,
+      "climate": -0.35
     },
     "editorialSummary": "The global wires arrived with their usual cheerful dispatch, featuring domestic tragedies, cracked cockpit glass, and sovereign real estate squabbles. Somewhere out in the cosmos, scientists discovered planets actually worth visiting, which feels like an entirely reasonable reaction to the neighborhood.",
     "editorialSummaryDate": "2026-10-14",
@@ -38,13 +39,30 @@
   "sources": {
     "bbc": {
       "name": "BBC News",
-      "averageSentiment": -0.24,
+      "averageSentiment": -0.242,
       "distribution": {
         "positive": 53,
         "neutral": 75,
-        "negative": 184
+        "negative": 187
       },
       "articles": [
+        {
+          "sourceId": "bbc",
+          "title": "Pope's cancer diagnosis leaves Catholics questioning what comes next",
+          "description": "With few details so far, it is unclear what might need to change for a Pope who has been focused on stability.",
+          "link": "https://www.bbc.co.uk/news/articles/c678p0ld7z8lo?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Wed, 14 Oct 2026 12:22:17 GMT",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.637,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.64) and AFINN-111 (-0.13).",
+          "categoryLocal": "health",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "A serious cancer diagnosis for a global religious leader is a solemn and concerning medical event.",
+          "categoryGemini": "health",
+          "sentiment": -0.45,
+          "explanation": "A serious cancer diagnosis for a global religious leader is a solemn and concerning medical event.",
+          "category": "health"
+        },
         {
           "sourceId": "bbc",
           "title": "Civil servant faked illness with make-up to juggle five jobs, court hears",
@@ -61,6 +79,23 @@
           "sentiment": -0.32,
           "explanation": "A civil servant accused of systemic employment fraud reflects corruption and betrayal of public trust.",
           "category": "business"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Starlink network restrictions in Ukraine related to political situation, Zelensky aide says",
+          "description": "Elon Musk's system allows Kyiv to protect Ukrainian skies and effectively guide drones to Russian targets.",
+          "link": "https://www.bbc.co.uk/news/articles/cm2d6e62p49do?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Wed, 14 Oct 2026 11:32:07 GMT",
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0.67,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.67) and AFINN-111 (0.38).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Restrictions on communication networks during wartime create operational friction and political tension.",
+          "categoryGemini": "world",
+          "sentiment": -0.22,
+          "explanation": "Restrictions on communication networks during wartime create operational friction and political tension.",
+          "category": "world"
         },
         {
           "sourceId": "bbc",
@@ -129,6 +164,23 @@
           "sentiment": 0.22,
           "explanation": "Positive international economic praise regarding borrowing plans offers mild constructive stabilization for the UK economy.",
           "category": "business"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Mechanic who falsified MOT before crash that killed three given community order",
+          "description": "Eve Smith, Darcy Ross and Rafel Jeanne died when the car crashed into woodland in Cardiff in 2023.",
+          "link": "https://www.bbc.co.uk/news/articles/cvlydwygdkz4o?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Wed, 14 Oct 2026 10:57:28 GMT",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.925,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.92) and AFINN-111 (-1.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.72,
+          "explanationGemini": "A fatal car crash resulting from falsified vehicle testing leading to multiple deaths represents severe tragic harm.",
+          "categoryGemini": "world",
+          "sentiment": -0.72,
+          "explanation": "A fatal car crash resulting from falsified vehicle testing leading to multiple deaths represents severe tragic harm.",
+          "category": "world"
         },
         {
           "sourceId": "bbc",
@@ -40497,9 +40549,9 @@
       "name": "Al Jazeera",
       "averageSentiment": -0.331,
       "distribution": {
-        "positive": 48,
-        "neutral": 61,
-        "negative": 242
+        "positive": 49,
+        "neutral": 66,
+        "negative": 253
       },
       "articles": [
         {
@@ -46625,11 +46677,20 @@
           "description": "Moroccan activists warn of an intensifying crackdown on regime critics after the arrest of a journalist and a rapper.",
           "link": "https://www.aljazeera.com/news/2026/7/15/prominent-moroccan-journalist-ali-lmrabet-released-from-custody?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 18:23:29 +0000",
-          "category": "other",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.40) and AFINN-111 (score: -0.50) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.40) and AFINN-111 (-0.50).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.4,
+          "explanationGemini": "The arrest and subsequent release of journalists amid a broader regime crackdown highlights systemic political repression.",
+          "categoryGemini": "world",
+          "sentiment": -0.4,
+          "explanation": "The arrest and subsequent release of journalists amid a broader regime crackdown highlights systemic political repression."
         },
         {
           "sourceId": "aljazeera",
@@ -46637,11 +46698,20 @@
           "description": "A gas tanker exploded after soaring temperatures sparked a fire near the Lebanese Army barracks in Hermel.",
           "link": "https://www.aljazeera.com/video/newsfeed/2026/7/15/gas-tanker-explodes-in-fire-near-army-barracks-in-lebanon?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 17:56:03 +0000",
-          "category": "other",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.59) and AFINN-111 (score: -0.50) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.586,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.59) and AFINN-111 (-0.50).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.65,
+          "explanationGemini": "A major industrial explosion near a military facility poses immediate physical danger and community trauma.",
+          "categoryGemini": "world",
+          "sentiment": -0.65,
+          "explanation": "A major industrial explosion near a military facility poses immediate physical danger and community trauma."
         },
         {
           "sourceId": "aljazeera",
@@ -46649,11 +46719,20 @@
           "description": "US attacks kill dozens in Iran as Iranian forces target regional bases, pushing a fragile ceasefire closer to collapse.",
           "link": "https://www.aljazeera.com/news/2026/7/15/mapping-the-latest-us-strikes-across-iran?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 17:38:54 +0000",
-          "category": "other",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.92) and AFINN-111 (score: -0.88) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.875,
+          "sentimentVADER": -0.923,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.92) and AFINN-111 (-0.88).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.92,
+          "explanationGemini": "Active military strikes causing dozens of deaths and pushing a fragile ceasefire toward collapse represent severe warfare.",
+          "categoryGemini": "world",
+          "sentiment": -0.92,
+          "explanation": "Active military strikes causing dozens of deaths and pushing a fragile ceasefire toward collapse represent severe warfare."
         },
         {
           "sourceId": "aljazeera",
@@ -46661,11 +46740,20 @@
           "description": "Blanche's actions have raised questions about the independence of the Department of Justice, which he currently leads.",
           "link": "https://www.aljazeera.com/news/2026/7/15/todd-blanches-loyalty-to-trump-questioned-in-senate-confirmation-hearing?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 17:14:07 +0000",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.76) and AFINN-111 (score: 0.50) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.758,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.76) and AFINN-111 (0.50).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.28,
+          "explanationGemini": "Congressional scrutiny over political loyalty and institutional independence indicates ongoing governance friction.",
+          "categoryGemini": "politics",
+          "sentiment": -0.28,
+          "explanation": "Congressional scrutiny over political loyalty and institutional independence indicates ongoing governance friction."
         },
         {
           "sourceId": "aljazeera",
@@ -46673,11 +46761,20 @@
           "description": "Several recent elections have strengthened conservative forces across parts of Latin America.",
           "link": "https://www.aljazeera.com/video/newsfeed/2026/7/15/why-are-right-wing-parties-gaining-ground-in-latin-america?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 17:00:00 +0000",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.81) and AFINN-111 (score: 0.50) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.807,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.81) and AFINN-111 (0.50).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.08,
+          "explanationGemini": "Electoral shifts toward conservative parties in a democratic context represent standard political change.",
+          "categoryGemini": "politics",
+          "sentiment": -0.08,
+          "explanation": "Electoral shifts toward conservative parties in a democratic context represent standard political change."
         },
         {
           "sourceId": "aljazeera",
@@ -46685,11 +46782,20 @@
           "description": "Argentina vice president's remarks made ahead of the World Cup semifinal against England and amid sovereignty dispute.",
           "link": "https://www.aljazeera.com/sports/2026/7/15/argentine-vp-calls-england-pirates-ahead-of-world-cup-semifinal-clash?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:57:23 +0000",
-          "category": "other",
+          "category": "sports",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.40) and AFINN-111 (score: -0.50) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.40) and AFINN-111 (-0.50).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "Diplomatic friction and national rivalries expressed ahead of an international sports match create mild tension.",
+          "categoryGemini": "sports",
+          "sentiment": -0.18,
+          "explanation": "Diplomatic friction and national rivalries expressed ahead of an international sports match create mild tension."
         },
         {
           "sourceId": "aljazeera",
@@ -46697,11 +46803,20 @@
           "description": "A cruise ship-turned-luxury floating hotel that has been idle for about 14 years rolled onto its side while docked.",
           "link": "https://www.aljazeera.com/video/newsfeed/2026/7/15/cruise-ship-hotel-left-listing-in-china-port-after-high-tides?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:55:01 +0000",
-          "category": "other",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "A floating hotel listing due to high tides represents a notable infrastructural accident and property damage.",
+          "categoryGemini": "world",
+          "sentiment": -0.35,
+          "explanation": "A floating hotel listing due to high tides represents a notable infrastructural accident and property damage."
         },
         {
           "sourceId": "aljazeera",
@@ -46709,11 +46824,20 @@
           "description": "Ukraine's parliament is expected to vote for the next prime minister on Thursday.",
           "link": "https://www.aljazeera.com/news/2026/7/15/zelenskyy-backs-state-energy-company-chief-koretskyi-for-new-pm?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:48:14 +0000",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.23) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.226,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.23) and AFINN-111 (0.13).",
+          "categoryLocal": "politics",
+          "sentimentGemini": 0.02,
+          "explanationGemini": "Standard executive nomination and upcoming parliamentary votes for leadership represent routine political processes.",
+          "categoryGemini": "politics",
+          "sentiment": 0.02,
+          "explanation": "Standard executive nomination and upcoming parliamentary votes for leadership represent routine political processes."
         },
         {
           "sourceId": "aljazeera",
@@ -46721,11 +46845,20 @@
           "description": "At an average speed of 50.91kph, Soren Waerenskjold's sprint was the fastest road stage in the 113 editions of the Tour.",
           "link": "https://www.aljazeera.com/sports/2026/7/15/norways-waerenskjold-wins-fastest-tour-de-france-stage-in-history?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:46:51 +0000",
-          "category": "other",
+          "category": "sports",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.57) and AFINN-111 (score: 0.50) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.572,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.57) and AFINN-111 (0.50).",
+          "categoryLocal": "sports",
+          "sentimentGemini": 0.28,
+          "explanationGemini": "Setting a historic speed record in a major cycling stage is a notable athletic achievement.",
+          "categoryGemini": "sports",
+          "sentiment": 0.28,
+          "explanation": "Setting a historic speed record in a major cycling stage is a notable athletic achievement."
         },
         {
           "sourceId": "aljazeera",
@@ -46733,11 +46866,20 @@
           "description": "Andy Burnham, who is set to formally replace Starmer on Monday, will become the UK’s seventh prime minister in a decade.",
           "link": "https://www.aljazeera.com/news/2026/7/15/starmer-bids-mps-goodbye-as-british-pm-and-pledges-to-support-his-successor?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:30:20 +0000",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.56) and AFINN-111 (score: 0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.557,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.56) and AFINN-111 (0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "This describes a routine political transition of a prime minister in a parliamentary democracy.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05,
+          "explanation": "This describes a routine political transition of a prime minister in a parliamentary democracy."
         },
         {
           "sourceId": "aljazeera",
@@ -46745,11 +46887,20 @@
           "description": "Palestinians held a funeral for a father, a mother and their six-year-old daughter killed in an Israeli air attack.",
           "link": "https://www.aljazeera.com/video/newsfeed/2026/7/15/father-mother-daughter-killed-in-israeli-attack-on-gaza-home?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:24:39 +0000",
-          "category": "other",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.96) and AFINN-111 (score: -1.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.957,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.96) and AFINN-111 (-1.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.88,
+          "explanationGemini": "An active military strike resulting in the deaths of multiple family members including a young child represents severe humanitarian trauma.",
+          "categoryGemini": "world",
+          "sentiment": -0.88,
+          "explanation": "An active military strike resulting in the deaths of multiple family members including a young child represents severe humanitarian trauma."
         },
         {
           "sourceId": "aljazeera",
@@ -46757,11 +46908,20 @@
           "description": "Lamine Yamal's targeted home was formerly owned by Barca great Gerard Pique and Colombian music star Shakira.",
           "link": "https://www.aljazeera.com/sports/2026/7/15/world-cup-spain-and-barcelona-star-yamals-home-hit-by-attempted-burglary?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:22:28 +0000",
-          "category": "other",
+          "category": "entertainment",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.46) and AFINN-111 (score: -0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": 0.459,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.46) and AFINN-111 (-0.13).",
+          "categoryLocal": "entertainment",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "An attempted burglary at a high-profile athlete's home involves criminal intrusion and personal violation.",
+          "categoryGemini": "entertainment",
+          "sentiment": -0.32,
+          "explanation": "An attempted burglary at a high-profile athlete's home involves criminal intrusion and personal violation."
         },
         {
           "sourceId": "aljazeera",
@@ -46769,7 +46929,16 @@
           "description": "The 14-team 2027 ODI tournament in Africa will have a Super Seven stage but no quarterfinals.",
           "link": "https://www.aljazeera.com/sports/2026/7/15/revamped-cricket-world-cup-format-could-see-an-additional-india-pakistan-match?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:14:05 +0000",
-          "category": "sports"
+          "category": "sports",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": -0.09,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.09) and AFINN-111 (0.25).",
+          "categoryLocal": "sports",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "This is a procedural sports tournament scheduling update that creates excitement for fans.",
+          "categoryGemini": "sports",
+          "sentiment": 0.12,
+          "explanation": "This is a procedural sports tournament scheduling update that creates excitement for fans."
         },
         {
           "sourceId": "aljazeera",
@@ -46777,7 +46946,16 @@
           "description": "The host city will have advanced security in place as a proactive measure against any potential crowd trouble between fans.",
           "link": "https://www.aljazeera.com/sports/2026/7/15/atlanta-police-gear-up-for-trouble-at-england-vs-argentina-world-cup-match?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:12:32 +0000",
-          "category": "technology"
+          "category": "sports",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": 0.202,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.20) and AFINN-111 (-0.13).",
+          "categoryLocal": "sports",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Security preparations for potential crowd trouble indicate localized security tensions around a major sporting event.",
+          "categoryGemini": "sports",
+          "sentiment": -0.15,
+          "explanation": "Security preparations for potential crowd trouble indicate localized security tensions around a major sporting event."
         },
         {
           "sourceId": "aljazeera",
@@ -46785,7 +46963,16 @@
           "description": "A pro-government militia said it intercepted a boat carrying ‘weapon-making equipment for the Houthis’ in Yemen.",
           "link": "https://www.aljazeera.com/video/newsfeed/2026/7/15/pro-government-militia-seizes-boat-with-houthi-weapons-materials-in-yemen?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 16:02:21 +0000",
-          "category": "politics"
+          "category": "world",
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.44,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.44) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "The interception of illegal weapon-making materials reflects ongoing armed conflict and instability.",
+          "categoryGemini": "world",
+          "sentiment": -0.55,
+          "explanation": "The interception of illegal weapon-making materials reflects ongoing armed conflict and instability."
         },
         {
           "sourceId": "aljazeera",
@@ -46793,7 +46980,16 @@
           "description": "US president backs tactic despite agency announcing temporary pause after fatal shootings in Texas and Maine.",
           "link": "https://www.aljazeera.com/news/2026/7/15/trump-urges-ice-to-keep-using-traffic-stops-after-deadly-incidents?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 15:41:43 +0000",
-          "category": "politics"
+          "category": "politics",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.649,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.65) and AFINN-111 (-0.75).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "Political support for enforcement tactics following fatal shootings highlights ongoing lethal conflict and policy friction.",
+          "categoryGemini": "politics",
+          "sentiment": -0.45,
+          "explanation": "Political support for enforcement tactics following fatal shootings highlights ongoing lethal conflict and policy friction."
         },
         {
           "sourceId": "aljazeera",
@@ -46801,17 +46997,26 @@
           "description": "The IRGC has taken the lead in Iran, particularly over Hormuz - and the government says it's on the same page.",
           "link": "https://www.aljazeera.com/features/2026/7/15/who-is-calling-the-shots-in-iran-amid-the-deadly-war-with-the-us?traffic_source=rss",
           "pubDate": "Wed, 15 Jul 2026 15:35:57 +0000",
-          "category": "politics"
+          "category": "world",
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.599,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.60) and AFINN-111 (-0.63).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.82,
+          "explanationGemini": "This article discusses leadership and military control amidst an active, deadly war with the United States.",
+          "categoryGemini": "world",
+          "sentiment": -0.82,
+          "explanation": "This article discusses leadership and military control amidst an active, deadly war with the United States."
         }
       ]
     },
     "npr": {
       "name": "NPR News",
-      "averageSentiment": -0.243,
+      "averageSentiment": -0.253,
       "distribution": {
-        "positive": 15,
-        "neutral": 19,
-        "negative": 50
+        "positive": 17,
+        "neutral": 25,
+        "negative": 65
       },
       "articles": [
         {
@@ -46867,23 +47072,6 @@
         },
         {
           "sourceId": "npr",
-          "title": "Civil rights advocates plan to send thousands of observers to midterm polling places",
-          "description": "For many election cycles, civil rights groups and political parties have fanned out to monitor polling places, but the charged midterm environment has many organizations stepping up efforts this year.(Image credit: Olivier Touron)",
-          "link": "https://www.npr.org/2026/10/14/nx-s1-5991802/election-polling-place-observers",
-          "pubDate": "Wed, 14 Oct 2026 05:00:00 -0400",
-          "sentimentAFINN": -0.375,
-          "sentimentVADER": 0.468,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.47) and AFINN-111 (-0.38).",
-          "categoryLocal": "politics",
-          "sentimentGemini": -0.05,
-          "explanationGemini": "Civil rights groups deploying election observers is a standard, procedurally tense democratic safeguarding measure.",
-          "categoryGemini": "politics",
-          "sentiment": -0.05,
-          "explanation": "Civil rights groups deploying election observers is a standard, procedurally tense democratic safeguarding measure.",
-          "category": "politics"
-        },
-        {
-          "sourceId": "npr",
           "title": "'They're stealing from the poor': A major source of SNAP fraud robs recipients of millions",
           "description": "Organized criminal rings target SNAP recipients because of the government program's outdated security features. But upgrading the tech costs money and states' SNAP budgets are getting squeezed.(Image credit: Octavio Jones for NPR)",
           "link": "https://www.npr.org/2026/10/14/nx-s1-5985198/snap-fraud-ebt-card-skimming-chip-cards",
@@ -46898,6 +47086,23 @@
           "sentiment": -0.45,
           "explanation": "Organized criminal rings stealing relief funds from low-income populations through outdated security represents a damaging socio-economic crime.",
           "category": "business"
+        },
+        {
+          "sourceId": "npr",
+          "title": "Civil rights advocates plan to send thousands of observers to midterm polling places",
+          "description": "For many election cycles, civil rights groups and political parties have fanned out to monitor polling places, but the charged midterm environment has many organizations stepping up efforts this year.(Image credit: Olivier Touron)",
+          "link": "https://www.npr.org/2026/10/14/nx-s1-5991802/election-polling-place-observers",
+          "pubDate": "Wed, 14 Oct 2026 05:00:00 -0400",
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": 0.468,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.47) and AFINN-111 (-0.38).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "Civil rights groups deploying election observers is a standard, procedurally tense democratic safeguarding measure.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05,
+          "explanation": "Civil rights groups deploying election observers is a standard, procedurally tense democratic safeguarding measure.",
+          "category": "politics"
         },
         {
           "sourceId": "npr",
@@ -48357,7 +48562,16 @@
           "description": "Higher oil prices since the Iran war began mean many oil companies have brought in excess profits. Some U.S. lawmakers want to tax those windfall profits and give the money to lower-income Americans.",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5845818/oil-prices-windfall-tax-iran-war",
           "pubDate": "Thu, 16 Jul 2026 05:01:00 -0400",
-          "category": "business"
+          "category": "business",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.44,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.44) and AFINN-111 (0.50).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Economic strains from wartime oil price surges and subsequent political debates over windfall taxation reflect financial hardship.",
+          "categoryGemini": "business",
+          "sentiment": -0.22,
+          "explanation": "Economic strains from wartime oil price surges and subsequent political debates over windfall taxation reflect financial hardship."
         },
         {
           "sourceId": "npr",
@@ -48365,7 +48579,16 @@
           "description": "In recent days, federal immigration agents fatally shot two immigrant fathers. None of the federal officers involved were wearing body cameras, the agency said.",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5894825/body-cams-ice-shootings",
           "pubDate": "Thu, 16 Jul 2026 05:00:00 -0400",
-          "category": "business"
+          "category": "politics",
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.637,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.64) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.75,
+          "explanationGemini": "The failure to implement promised body cameras followed by fatal law enforcement shootings represents severe systemic accountability failure.",
+          "categoryGemini": "politics",
+          "sentiment": -0.75,
+          "explanation": "The failure to implement promised body cameras followed by fatal law enforcement shootings represents severe systemic accountability failure."
         },
         {
           "sourceId": "npr",
@@ -48373,7 +48596,16 @@
           "description": "We've all engaged in a little 'gossip.' But did you know its origins were tied to family and friendship?",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5884780/gossip-word-origins-etymology",
           "pubDate": "Thu, 16 Jul 2026 05:00:00 -0400",
-          "category": "technology"
+          "category": "other",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.557,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.56) and AFINN-111 (0.13).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "This is a neutral historical and linguistic exploration of the origins of gossip.",
+          "categoryGemini": "other",
+          "sentiment": 0.05,
+          "explanation": "This is a neutral historical and linguistic exploration of the origins of gossip."
         },
         {
           "sourceId": "npr",
@@ -48381,7 +48613,16 @@
           "description": "The Federal Highway Administration quietly stripped bike lanes and other safety recommendations from a key list of best practices. Critics say those measures are proven to cut crashes and save lives.",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5893672/dot-bike-lanes-speed-cameras-safety-measures",
           "pubDate": "Thu, 16 Jul 2026 05:00:00 -0400",
-          "category": "business"
+          "category": "climate",
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0.832,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.83) and AFINN-111 (0.38).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "The removal of proven safety measures like bike lanes from federal recommendations risks public safety and pedestrian lives.",
+          "categoryGemini": "climate",
+          "sentiment": -0.35,
+          "explanation": "The removal of proven safety measures like bike lanes from federal recommendations risks public safety and pedestrian lives."
         },
         {
           "sourceId": "npr",
@@ -48389,7 +48630,16 @@
           "description": "President Trump said TrumpRx is the biggest thing to happen in healthcare in decades. But an NPR analysis finds drugmakers are only offering deals on a few of their medicines.",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5894947/trump-rx-medicine-drugs-health-care-pfizer-low-prices-gilead",
           "pubDate": "Thu, 16 Jul 2026 05:00:00 -0400",
-          "category": "politics"
+          "category": "business",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.19,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.19) and AFINN-111 (0.13).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "A high-profile healthcare initiative failing to deliver widespread promised price cuts represents consumer disappointment.",
+          "categoryGemini": "business",
+          "sentiment": -0.25,
+          "explanation": "A high-profile healthcare initiative failing to deliver widespread promised price cuts represents consumer disappointment."
         },
         {
           "sourceId": "npr",
@@ -48397,7 +48647,16 @@
           "description": "Key voters in Pennsylvania are split on whether President Trump earning a big windfall last year is a big deal or not. Their reaction reveals a level of cynicism about many in the political class.",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5893599/pennsylvania-focus-groups-trump-corruption",
           "pubDate": "Thu, 16 Jul 2026 05:00:00 -0400",
-          "category": "politics"
+          "category": "politics",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.652,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.65) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.12,
+          "explanationGemini": "Voter cynicism regarding political wealth reflects general political disillusionment rather than an immediate catastrophe.",
+          "categoryGemini": "politics",
+          "sentiment": -0.12,
+          "explanation": "Voter cynicism regarding political wealth reflects general political disillusionment rather than an immediate catastrophe."
         },
         {
           "sourceId": "npr",
@@ -48405,7 +48664,16 @@
           "description": "An ACLU report looks at the widespread use of force in immigration enforcement in the first year of President Trump's return to office. Recent fatal shootings in Texas and Maine have brought renewed scrutiny to the agency's tactics.",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5891834/ice-use-of-force-aclu-report",
           "pubDate": "Thu, 16 Jul 2026 05:00:00 -0400",
-          "category": "politics"
+          "category": "politics",
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.542,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.54) and AFINN-111 (-0.38).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.68,
+          "explanationGemini": "Reports detailing the widespread use of force and recent fatal law enforcement shootings denote serious human rights and safety concerns.",
+          "categoryGemini": "politics",
+          "sentiment": -0.68,
+          "explanation": "Reports detailing the widespread use of force and recent fatal law enforcement shootings denote serious human rights and safety concerns."
         },
         {
           "sourceId": "npr",
@@ -48413,7 +48681,16 @@
           "description": "For the sixth World Cup in a row, no team from the Asian Football Confederation made it past the first knockout round, winning only three games out of 29. Asian teams are competitive — up to a point.",
           "link": "https://www.npr.org/2026/07/16/nx-s1-5884732/world-cup-asian-football-confederation-korea-japan",
           "pubDate": "Thu, 16 Jul 2026 05:00:00 -0400",
-          "category": "business"
+          "category": "sports",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.178,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.18) and AFINN-111 (0.50).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.1,
+          "explanationGemini": "Athletic underperformance by regional teams in a tournament is a minor disappointment.",
+          "categoryGemini": "sports",
+          "sentiment": -0.1,
+          "explanation": "Athletic underperformance by regional teams in a tournament is a minor disappointment."
         },
         {
           "sourceId": "npr",
@@ -48421,7 +48698,16 @@
           "description": "Victims of this week's flash fire at a Bangkok music bar that took more than 30 lives included four of the six core members of the band playing when the blaze broke out.",
           "link": "https://www.npr.org/2026/07/16/g-s1-133907/death-toll-bangkok-fire",
           "pubDate": "Thu, 16 Jul 2026 02:03:21 -0400",
-          "category": "entertainment"
+          "category": "world",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.932,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.93) and AFINN-111 (-1.00).",
+          "categoryLocal": "entertainment",
+          "sentimentGemini": -0.92,
+          "explanationGemini": "A devastating flash fire at a music venue resulting in dozens of deaths and band member fatalities is a major catastrophe.",
+          "categoryGemini": "world",
+          "sentiment": -0.92,
+          "explanation": "A devastating flash fire at a music venue resulting in dozens of deaths and band member fatalities is a major catastrophe."
         },
         {
           "sourceId": "npr",
@@ -48437,11 +48723,20 @@
           "guid": "https://www.npr.org/2026/07/15/nx-s1-5892509/fear-and-hope-in-utah-in-the-shadow-of-americas-largest-wildfire",
           "isoDate": "2026-07-15T21:55:00.000Z",
           "itunes": {},
-          "category": "other",
+          "category": "climate",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.08) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.077,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.08) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.6,
+          "explanationGemini": "Living in the shadow of a massive destructive wildfire induces severe environmental threat, fear, and disruption.",
+          "categoryGemini": "climate",
+          "sentiment": -0.6,
+          "explanation": "Living in the shadow of a massive destructive wildfire induces severe environmental threat, fear, and disruption."
         },
         {
           "sourceId": "npr",
@@ -48449,11 +48744,20 @@
           "description": "Argentina survived another heart-stopping match when it scored two late goals to topple England and extend the Three Lions' six-decade-long wait for another World Cup trophy.",
           "link": "https://www.npr.org/2026/07/15/nx-s1-5893895/2026-world-cup-fifa-argentina-england-semifinal",
           "pubDate": "Wed, 15 Jul 2026 17:10:43 -0400",
-          "category": "other",
+          "category": "sports",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.90) and AFINN-111 (score: 0.88) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.875,
+          "sentimentVADER": 0.898,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.90) and AFINN-111 (0.88).",
+          "categoryLocal": "sports",
+          "sentimentGemini": 0.35,
+          "explanationGemini": "A thrilling semifinal sports victory represents a major positive achievement and emotional high for the winning team.",
+          "categoryGemini": "sports",
+          "sentiment": 0.35,
+          "explanation": "A thrilling semifinal sports victory represents a major positive achievement and emotional high for the winning team."
         },
         {
           "sourceId": "npr",
@@ -48461,11 +48765,20 @@
           "description": "Todd Blanche remained composed throughout the hours-long hearing, but faced several testy moments during questioning as he seeks to win the support of all Republican senators on the committee.",
           "link": "https://www.npr.org/2026/07/15/nx-s1-5895105/todd-blanche-senate-confirmation-attorney-general-takeaways",
           "pubDate": "Wed, 15 Jul 2026 17:09:09 -0400",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.85) and AFINN-111 (score: 0.63) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.846,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.85) and AFINN-111 (0.63).",
+          "categoryLocal": "sports",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "A contentious political confirmation hearing represents standard democratic institutional friction.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05,
+          "explanation": "A contentious political confirmation hearing represents standard democratic institutional friction."
         },
         {
           "sourceId": "npr",
@@ -48473,11 +48786,20 @@
           "description": "The change is driven by improved perceptions of China and declining views of the United States.",
           "link": "https://www.npr.org/2026/07/15/g-s1-133827/china-and-xi-favored-over-us-and-trump-in-many-nations-survey",
           "pubDate": "Wed, 15 Jul 2026 16:34:30 -0400",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.83) and AFINN-111 (score: 0.63) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.827,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.83) and AFINN-111 (0.63).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "A survey showing declining international perceptions of the U.S. and favorability toward China represents diplomatic friction and soft power shifts.",
+          "categoryGemini": "politics",
+          "sentiment": -0.15,
+          "explanation": "A survey showing declining international perceptions of the U.S. and favorability toward China represents diplomatic friction and soft power shifts."
         },
         {
           "sourceId": "npr",
@@ -48498,11 +48820,20 @@
           "description": "The New York Times journalist Jonathan Swan says the president is fixated on becoming a \"great man of history\" during his second term. Swan's new book, written with Maggie Haberman, is Regime Change.",
           "link": "https://www.npr.org/2026/07/15/nx-s1-5893633/trump-regime-change-jonathan-swan-maggie-haberman",
           "pubDate": "Wed, 15 Jul 2026 14:56:56 -0400",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.77) and AFINN-111 (score: 0.63) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.625,
+          "sentimentVADER": 0.765,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.77) and AFINN-111 (0.63).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Reports and characterizations regarding a prominent political leader's fixation on authoritarian figures create negative political tension.",
+          "categoryGemini": "politics",
+          "sentiment": -0.22,
+          "explanation": "Reports and characterizations regarding a prominent political leader's fixation on authoritarian figures create negative political tension."
         },
         {
           "sourceId": "npr",
@@ -48510,11 +48841,20 @@
           "description": "Hong Kong was once known for its freedom of publication, but political changes have created a challenging environment for independent bookstores.",
           "link": "https://www.npr.org/2026/07/15/g-s1-133697/hong-kong-booksellers-arrested-for-allegedly-selling-seditious-books",
           "pubDate": "Wed, 15 Jul 2026 11:37:22 -0400",
-          "category": "other",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.48) and AFINN-111 (score: -0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": 0.477,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.48) and AFINN-111 (-0.38).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.55,
+          "explanationGemini": "The arrest of booksellers for selling seditious books highlights severe suppression of free speech and political repression in Hong Kong.",
+          "categoryGemini": "world",
+          "sentiment": -0.55,
+          "explanation": "The arrest of booksellers for selling seditious books highlights severe suppression of free speech and political repression in Hong Kong."
         },
         {
           "sourceId": "npr",
@@ -48522,11 +48862,20 @@
           "description": "In a survey, 93% of cancer researchers who study disparities said federal policy changes have affected them. Funding is harder to come by and they worry it's slowing progress in their field.",
           "link": "https://www.npr.org/2026/07/15/nx-s1-5893653/cancer-disparities-gaps-research-funding-grant-disruptions",
           "pubDate": "Wed, 15 Jul 2026 11:16:35 -0400",
-          "category": "other",
+          "category": "health",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.89) and AFINN-111 (score: -0.75) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.888,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.89) and AFINN-111 (-0.75).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "Disruptions to cancer research funding and negative impacts on health disparities studies pose a significant setback to medical progress.",
+          "categoryGemini": "health",
+          "sentiment": -0.42,
+          "explanation": "Disruptions to cancer research funding and negative impacts on health disparities studies pose a significant setback to medical progress."
         },
         {
           "sourceId": "npr",
@@ -48534,11 +48883,20 @@
           "description": "Lagging consumer spending and business investment offset the boost from strong exports thanks partly to the boom in artificial intelligence.",
           "link": "https://www.npr.org/2026/07/15/g-s1-133672/chinas-economy-grows-4-3-in-q2-slowest-since-late-2022",
           "pubDate": "Wed, 15 Jul 2026 10:11:41 -0400",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.87) and AFINN-111 (score: 0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0.872,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.87) and AFINN-111 (0.38).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "Slower economic growth driven by lagging consumer spending and business investment indicates cooling economic momentum.",
+          "categoryGemini": "business",
+          "sentiment": -0.25,
+          "explanation": "Slower economic growth driven by lagging consumer spending and business investment indicates cooling economic momentum."
         },
         {
           "sourceId": "npr",
@@ -48546,11 +48904,20 @@
           "description": "Old rivals. New stakes. A World Cup final spot on the line. Argentina vs. England.",
           "link": "https://www.npr.org/2026/07/15/nx-s1-5893686/old-rivals-new-battle-argentina-and-england-clash-in-world-cup-semifinal",
           "pubDate": "Wed, 15 Jul 2026 10:05:39 -0400",
-          "category": "other",
+          "category": "sports",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.38) and AFINN-111 (score: -0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.382,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.38) and AFINN-111 (-0.38).",
+          "categoryLocal": "sports",
+          "sentimentGemini": 0.18,
+          "explanationGemini": "A high-stakes World Cup semifinal match between historic rivals represents standard competitive sports excitement.",
+          "categoryGemini": "sports",
+          "sentiment": 0.18,
+          "explanation": "A high-stakes World Cup semifinal match between historic rivals represents standard competitive sports excitement."
         },
         {
           "sourceId": "npr",
@@ -48558,11 +48925,20 @@
           "description": "The oldest bridge in Paris was draped in fabric last month to appear like a mountain cave, in an installation by the artist JR. Unlike a real cave, though, it didn't provide respite from a brutal heat wave.",
           "link": "https://www.npr.org/2026/07/15/g-s1-132781/paris-heat-pont-neuf-jr-cave-caverne",
           "pubDate": "Wed, 15 Jul 2026 08:40:50 -0400",
-          "category": "other",
+          "category": "entertainment",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.05) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.052,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.05) and AFINN-111 (0.13).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "A major public art installation in Paris is a constructive cultural event, though slightly tempered by contextual mentions of a heat wave.",
+          "categoryGemini": "entertainment",
+          "sentiment": 0.12,
+          "explanation": "A major public art installation in Paris is a constructive cultural event, though slightly tempered by contextual mentions of a heat wave."
         },
         {
           "sourceId": "npr",
@@ -48570,11 +48946,20 @@
           "description": "Acting Attorney General Todd Blanche is set to appear before the Senate for his confirmation hearing. And, Immigration and Customs Enforcement has paused most traffic stops after recent deadly shootings.",
           "link": "https://www.npr.org/2026/07/15/g-s1-133652/up-first-newsletter-todd-blanche-iran-strait-of-hormuz-ice-traffic-stops",
           "pubDate": "Wed, 15 Jul 2026 08:04:13 -0400",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.41) and AFINN-111 (score: -0.63) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.413,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.41) and AFINN-111 (-0.63).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "A high-stakes confirmation hearing combined with immigration enforcement pauses following deadly shootings reflects severe systemic tension.",
+          "categoryGemini": "politics",
+          "sentiment": -0.38,
+          "explanation": "A high-stakes confirmation hearing combined with immigration enforcement pauses following deadly shootings reflects severe systemic tension."
         },
         {
           "sourceId": "npr",
@@ -48582,11 +48967,20 @@
           "description": "\"Extreme heat\" is in the forecast this summer. How do people cope if they don't have air conditioning? Here are suggestions from a heat researcher who grew up in a very hot, AC-less place.",
           "link": "https://www.npr.org/2026/07/15/g-s1-133383/extreme-summer-heat-air-conditioning",
           "pubDate": "Wed, 15 Jul 2026 07:19:28 -0400",
-          "category": "other",
+          "category": "climate",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.32) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.318,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.32) and AFINN-111 (0.13).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.2,
+          "explanationGemini": "Practical advice for coping with extreme summer heat highlights ongoing climate-related environmental stress and public health hazards.",
+          "categoryGemini": "climate",
+          "sentiment": -0.2,
+          "explanation": "Practical advice for coping with extreme summer heat highlights ongoing climate-related environmental stress and public health hazards."
         },
         {
           "sourceId": "npr",
@@ -48611,7 +49005,16 @@
           "description": "Iran threatened to block all oil exporting routes in the region on Wednesday in response to the U.S. maritime blockade of Iranian ports in the Strait of Hormuz.",
           "link": "https://www.npr.org/2026/07/15/nx-s1-5894582/us-iran-updates",
           "pubDate": "Wed, 15 Jul 2026 05:56:31 -0400",
-          "category": "technology"
+          "category": "world",
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.71,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.71) and AFINN-111 (-0.63).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.68,
+          "explanationGemini": "An intensifying geopolitical standoff between the U.S. and Iran involving threats to block oil exports and maritime blockades creates high conflict risk.",
+          "categoryGemini": "world",
+          "sentiment": -0.68,
+          "explanation": "An intensifying geopolitical standoff between the U.S. and Iran involving threats to block oil exports and maritime blockades creates high conflict risk."
         },
         {
           "sourceId": "npr",
@@ -48636,7 +49039,16 @@
           "description": "Dani Bensky and a group of women who were abused by Jeffrey Epstein have formed a bond they call a \"survivor sisterhood.\" They live in two worlds, of advocacy and everyday life and motherhood.",
           "link": "https://www.npr.org/2026/07/15/nx-s1-5850397/jeffrey-epstein-todd-blanche-dani-bensky-survivor-victims-sexual-abuse-trafficking",
           "pubDate": "Wed, 15 Jul 2026 05:00:00 -0400",
-          "category": "world"
+          "category": "politics",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.178,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.18) and AFINN-111 (0.13).",
+          "categoryLocal": "world",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "Opposition testimony by abuse survivors involving a high-profile criminal case brings heavy emotional weight and solemnity.",
+          "categoryGemini": "politics",
+          "sentiment": -0.45,
+          "explanation": "Opposition testimony by abuse survivors involving a high-profile criminal case brings heavy emotional weight and solemnity."
         }
       ]
     },
@@ -48645,10 +49057,27 @@
       "averageSentiment": -0.111,
       "distribution": {
         "positive": 51,
-        "neutral": 61,
+        "neutral": 62,
         "negative": 88
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Consumer prices rose 0.6% in September, putting annual inflation rate at 3.7%",
+          "description": "The consumer price index was expected to increase 0.6% in September on a monthly basis and 3.6% from a year ago, according to the Dow Jones consensus forecast.",
+          "link": "https://www.cnbc.com/2026/10/14/cpi-inflation-report-september-2026.html",
+          "pubDate": "Wed, 14 Oct 2026 12:31:19 GMT",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.318,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.32) and AFINN-111 (0.25).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Rising consumer prices and persistent inflation indicate mild economic pressure for households.",
+          "categoryGemini": "business",
+          "sentiment": -0.15,
+          "explanation": "Rising consumer prices and persistent inflation indicate mild economic pressure for households.",
+          "category": "business"
+        },
         {
           "sourceId": "cnbc",
           "title": "'Office' is actually having a scarcity problem",
@@ -52408,13 +52837,30 @@
     },
     "skynews": {
       "name": "Sky News",
-      "averageSentiment": -0.418,
+      "averageSentiment": -0.422,
       "distribution": {
         "positive": 9,
         "neutral": 12,
-        "negative": 65
+        "negative": 66
       },
       "articles": [
+        {
+          "sourceId": "skynews",
+          "title": "More explosions heard in Saudi Arabia as pressure mounts on US to respond",
+          "description": "More explosions have been heard in the Saudi capital, with suspicions once again falling on the Houthi rebels from Yemen.",
+          "link": "https://news.sky.com/story/more-explosions-heard-in-saudi-arabia-as-pressure-mounts-on-us-to-respond-13599168",
+          "pubDate": "Wed, 14 Oct 2026 10:25:00 +0100",
+          "sentimentAFINN": -0.5,
+          "sentimentVADER": -0.727,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.73) and AFINN-111 (-0.50).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.78,
+          "explanationGemini": "Explosions in a major capital city amid escalating regional military tensions constitute a serious security crisis.",
+          "categoryGemini": "world",
+          "sentiment": -0.78,
+          "explanation": "Explosions in a major capital city amid escalating regional military tensions constitute a serious security crisis.",
+          "category": "world"
+        },
         {
           "sourceId": "skynews",
           "title": "Is the 'clock running' already for Trump's new press secretary? Here's how his others fared",
@@ -54698,11 +55144,28 @@
       "name": "Reuters",
       "averageSentiment": -0.214,
       "distribution": {
-        "positive": 68,
-        "neutral": 74,
-        "negative": 208
+        "positive": 69,
+        "neutral": 76,
+        "negative": 210
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Comedian Russell Brand was a ruthless sexual predator, UK prosecutors say - Reuters",
+          "description": "Comedian Russell Brand was a ruthless sexual predator, UK prosecutors say Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxOZ194VkRSLUI1ZGNJcnFBQjVTc0ZsR2poX19rODV5QU5BR21rWjZlS1U4RjBEV1lZUTRjTjlvdTh6QzFfb1laRVd1ZDM5Q3JJdDhLSFJwWkdFX1hJUXRNbnZCdHh2dVkzMWFVRDdBeDU1N0N2MV9QeHpCM19TVDh3RHdwNG5JV2ZBTktJam9SdHNrcF9iTll2dGJzbms5YWF1YkZhVjVPQUhtUQ?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 12:12:54 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.637,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.64) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.82,
+          "explanationGemini": "Severe legal and criminal accusations of sexual predation against a prominent public figure reflect grave harm.",
+          "categoryGemini": "entertainment",
+          "sentiment": -0.82,
+          "explanation": "Severe legal and criminal accusations of sexual predation against a prominent public figure reflect grave harm.",
+          "category": "entertainment"
+        },
         {
           "sourceId": "reuters",
           "title": "Saudi Aramco headquarters suffered extensive damage in Houthi attack, sources say - Reuters",
@@ -54739,6 +55202,40 @@
         },
         {
           "sourceId": "reuters",
+          "title": "Sterling rises to fresh 16-month high against euro - Reuters",
+          "description": "Sterling rises to fresh 16-month high against euro Reuters",
+          "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxNa2xRYmk2RDZMQWxvTkRyLWZhVm01M0FmcnZfZTdGb1E3OVBjdnk4MEVac000dFpiWl9Vc1JveW9WaU42SDRmYVZKck0yRFBzNGRyNmRqeVhqMktySWtrYVI3U1RuWmotVXBCYjdKZDJEWEM1UjJxYjdxdkh2Zm9sZ1hUOHVEeU5TcGp1dXVoeC1sdVlldnkzUA?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 11:31:01 GMT",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.557,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.56) and AFINN-111 (0.50).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.18,
+          "explanationGemini": "Currency appreciation against a major trading partner reflects positive short-term economic momentum.",
+          "categoryGemini": "business",
+          "sentiment": 0.18,
+          "explanation": "Currency appreciation against a major trading partner reflects positive short-term economic momentum.",
+          "category": "business"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "EU delays methane rules on oil and gas imports for a year - Reuters",
+          "description": "EU delays methane rules on oil and gas imports for a year Reuters",
+          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOc1FoRVViUjFFU1FZN0hKaDR4Q3M4S2VheF9USmZYVzNFYk9hd2t1WlJRbmNiSnRwNkF4ZjhxUThPaWdNd0MtS0FHdkFCUDQwWUI3RHAydzl2QkduWXBob09SWDNyREttM1M1Y2hBbDZMLW1HREVSVUtoRVFVOFR6OHNSc0xpUTM5Tmw2RGhSVUprbFNndlRiUU5ZdjA?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 11:01:47 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "Delaying environmental regulations on methane emissions postpones necessary climate mitigation efforts.",
+          "categoryGemini": "climate",
+          "sentiment": -0.25,
+          "explanation": "Delaying environmental regulations on methane emissions postpones necessary climate mitigation efforts.",
+          "category": "climate"
+        },
+        {
+          "sourceId": "reuters",
           "title": "Singapore pollution spikes, East Timor shuts schools as Indonesia wildfire haze intensifies - Reuters",
           "description": "Singapore pollution spikes, East Timor shuts schools as Indonesia wildfire haze intensifies Reuters",
           "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxPbWNJbU8xUXFUUnBwakxUbEtfTURTWFlZd2xIdVJoU3RkUW1aTTBYN0ZIVmozQ2lfUVBVd2IzYlJPQnJpWDZEcGo0REpSbms1LV9pS2doZzBwdlR2cm0wOEpMZkp0NUlTS1hpN2k2akFhek1FWW8xYkYzZzNZZmloOGFjcVFmbG9yd25VVHJiZThPcThEaTJsNjBxSXE5SV9mUFBkZ3E0NHlmSEU0RHZnU3hhRWN0NXZFTEliUVRxYXlNSjJFZzlDQkROSlM?oc=5",
@@ -54753,6 +55250,23 @@
           "sentiment": -0.62,
           "explanation": "Severe environmental disaster with intense wildfire smoke causing school closures and health hazards.",
           "category": "world"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "COMMENTARY: Morning Bid: Trillion dollar trade - Reuters",
+          "description": "COMMENTARY: Morning Bid: Trillion dollar trade Reuters",
+          "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxPdFlqNjNrTG5OZE9CcDdqQlhfMXV6UUF0MXRmbUM3QVJhLUtlN1ZVUVAwT2RfTllVZ1M1MktmMkV4ZldVc1NZYVdlWUR0cXZpVEJLY1VCQTNtYU9oaUJRVGN6b2hoTnJxWGR4SWV2d2pkWkJSdkY4Ym9JTmVueXp5QThtVnYxNW8wTVg5T0tEUU1TYnJIX1lz?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 10:46:07 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "Routine financial market commentary and morning trading updates are neutral economic reports.",
+          "categoryGemini": "business",
+          "sentiment": 0.05,
+          "explanation": "Routine financial market commentary and morning trading updates are neutral economic reports.",
+          "category": "business"
         },
         {
           "sourceId": "reuters",
@@ -54838,6 +55352,23 @@
           "sentiment": -0.38,
           "explanation": "A leading AI expert warns that recent artificial intelligence hacks serve as alarming early security warnings.",
           "category": "technology"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Putin convenes top Russian officials to discuss cybersecurity - Reuters",
+          "description": "Putin convenes top Russian officials to discuss cybersecurity Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxQdk50S3J1dnBCeVMxMXd4T1kxTWtEZUIzcTlHYm5YaTFUY0hvYlFpUHQ0QnBmeWo0VGFaXzN6VWNvWU9odUU4SVRQSjVOT1hNWHQzNUpfRW5seWFxTFE5VmdLd2EtbXRPZVp5Ry1KWkNKSkV6c1JWWUNTaGNCdEhPX29QOUtBbTMtOFlGVnJIMFVzZWFSaktBM205d1JHbXhZT1QteFRUd2NaSUE?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 10:27:44 GMT",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.382,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.38) and AFINN-111 (0.50).",
+          "categoryLocal": "technology",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "A routine high-level administrative meeting on cybersecurity represents standard governmental procedure.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05,
+          "explanation": "A routine high-level administrative meeting on cybersecurity represents standard governmental procedure.",
+          "category": "politics"
         },
         {
           "sourceId": "reuters",
@@ -62984,7 +63515,7 @@
       "averageSentiment": -0.125,
       "distribution": {
         "positive": 76,
-        "neutral": 74,
+        "neutral": 75,
         "negative": 149
       },
       "articles": [
@@ -63106,6 +63637,23 @@
           "sentiment": -0.22,
           "explanation": "Trade friction between Germany and China over import caps points to rising economic protectionism.",
           "category": "business"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Why Trump’s Second Midterms Could Be Worse Than His First - Bloomberg.com",
+          "description": "Why Trump’s Second Midterms Could Be Worse Than His First Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxORE5ueDFFWFpoSnYwSjJiNVZwbEhtVFhBTnRFRlFxeFZkR05BUGotdEQ2Vk1ZS1BydEtSSVJkcUFzVkFvdzZNTy00ZE93T3FWZkw2YTBoZmRxVk5jU1N4ay1XWFV2WEN4ZzVraHh4MUc4SmNfVWhMWlpsRzAtcmVzN0dLbUd5U3AtWDZPeWF6WEp6d0NyZXY4QkV5VXVCWG9JUTRLZS1VNlBpbUJJcUloZE9GVmtsRE5mUGc?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 09:30:23 GMT",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.735,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.74) and AFINN-111 (-0.75).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.12,
+          "explanationGemini": "Speculative political analysis regarding potential future electoral challenges involves mild partisan friction.",
+          "categoryGemini": "politics",
+          "sentiment": -0.12,
+          "explanation": "Speculative political analysis regarding potential future electoral challenges involves mild partisan friction.",
+          "category": "politics"
         },
         {
           "sourceId": "bloomberg",
