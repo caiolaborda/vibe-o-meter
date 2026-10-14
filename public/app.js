@@ -395,6 +395,7 @@ const elements = {
   clustersSearchInput: document.getElementById('clusters-search-input'),
   clustersTopicSelect: document.getElementById('clusters-topic-select'),
   clustersSortSelect: document.getElementById('clusters-sort-select'),
+  clustersJumpSelect: document.getElementById('clusters-jump-select'),
   clustersCountBadge: document.getElementById('clusters-count-badge'),
   h2hTopicSelect: document.getElementById('h2h-topic-select'),
   h2hTimeframeSelect: document.getElementById('h2h-timeframe-select'),
@@ -744,6 +745,32 @@ function setupEventListeners() {
     elements.clustersSortSelect.addEventListener('change', (e) => {
       state.clusterSort = e.target.value;
       renderStoryClusters();
+    });
+  }
+
+  if (elements.clustersJumpSelect) {
+    elements.clustersJumpSelect.addEventListener('change', (e) => {
+      const clusterId = e.target.value;
+      if (!clusterId) return;
+      const card = document.getElementById(clusterId);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('highlight-flash');
+        setTimeout(() => card.classList.remove('highlight-flash'), 2500);
+        // Expand details if collapsed
+        const grid = card.querySelector('.cluster-coverage-grid');
+        const btn = card.querySelector('.cluster-toggle-btn');
+        if (grid && grid.style.display === 'none') {
+          grid.style.display = 'grid';
+          if (btn) {
+            const span = btn.querySelector('span');
+            const icon = btn.querySelector('i');
+            if (span) span.innerText = 'Collapse Coverage';
+            if (icon) icon.setAttribute('data-lucide', 'chevron-up');
+            if (window.lucide) lucide.createIcons();
+          }
+        }
+      }
     });
   }
 
@@ -2315,6 +2342,20 @@ function renderStoryClusters() {
     return;
   }
 
+  // Populate Jump to Story Selector
+  if (elements.clustersJumpSelect) {
+    const currentVal = elements.clustersJumpSelect.value;
+    const sortedForJump = [...rawClusters].sort((a, b) => (b.coverage?.length || 0) - (a.coverage?.length || 0));
+    elements.clustersJumpSelect.innerHTML = `
+      <option value="">Jump to Major Story (${sortedForJump.length})...</option>
+      ${sortedForJump.map(c => {
+        const id = 'cluster-' + encodeURIComponent(c.story.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
+        return `<option value="${id}">[${c.coverage?.length || 0} Outlets] ${c.story}</option>`;
+      }).join('')}
+    `;
+    if (currentVal) elements.clustersJumpSelect.value = currentVal;
+  }
+
   // Topic filter & Search filter
   const activeTopic = state.clusterTopic || 'all';
   const searchTerm = (state.clusterSearch || '').toLowerCase().trim();
@@ -2329,12 +2370,39 @@ function renderStoryClusters() {
     const computedSpread = sentiments.length > 1 ? Number((maxS - minS).toFixed(2)) : (c.sentimentSpread || 0);
     const avgSentiment = sentiments.length > 0 ? Number((sentiments.reduce((a, b) => a + b, 0) / sentiments.length).toFixed(2)) : (c.averageSentiment || 0);
 
+    // Compute cluster date range from coverage article pubDates
+    let minTime = Infinity;
+    let maxTime = -Infinity;
+    coverage.forEach(cov => {
+      const src = state.sources && state.sources[cov.sourceId];
+      if (src && src.articles) {
+        const match = src.articles.find(a => (a.link && a.link === cov.link) || (a.title && a.title === cov.title));
+        if (match && match.pubDate) {
+          const t = new Date(match.pubDate).getTime();
+          if (!isNaN(t)) {
+            if (t < minTime) minTime = t;
+            if (t > maxTime) maxTime = t;
+          }
+        }
+      }
+    });
+
+    let dateRangeStr = 'Current Wire Cycle';
+    if (minTime !== Infinity && maxTime !== -Infinity) {
+      const dMin = new Date(minTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const dMax = new Date(maxTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      dateRangeStr = dMin === dMax ? dMin : `${dMin} – ${dMax}`;
+    }
+
     return {
       ...c,
       topic,
       coverage,
       computedSpread,
-      averageSentiment: avgSentiment
+      averageSentiment: avgSentiment,
+      dateRangeStr,
+      minTime,
+      maxTime
     };
   }).filter(c => {
     // Topic filter
@@ -2384,7 +2452,8 @@ function renderStoryClusters() {
   }
 
   // Render cluster cards
-  container.innerHTML = processed.map(cluster => {
+  container.innerHTML = processed.map((cluster, clusterIndex) => {
+    const clusterId = 'cluster-' + encodeURIComponent(cluster.story.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
     const topicLabel = CLUSTER_TOPIC_LABELS[cluster.topic] || cluster.topic;
     const moodClass = getMoodClass(cluster.averageSentiment);
     const avgScoreFormatted = `${cluster.averageSentiment > 0 ? '+' : ''}${cluster.averageSentiment.toFixed(2)}`;
@@ -2417,32 +2486,27 @@ function renderStoryClusters() {
       `;
     }).join('');
 
-    // Build article cards in coverage grid
-    const coverageCardsHTML = cluster.coverage.map(art => {
+    // Sort reporting inside each story topic strictly by valence (from most negative to most positive)
+    const sortedCoverage = [...cluster.coverage].sort((a, b) => {
+      const sa = typeof a.sentiment === 'number' ? a.sentiment : 0;
+      const sb = typeof b.sentiment === 'number' ? b.sentiment : 0;
+      return sa - sb;
+    });
+
+    // Build article cards in coverage grid (WITHOUT the "Alarmist Angle" / "Constructive Angle" tags)
+    const coverageCardsHTML = sortedCoverage.map(art => {
       const meta = SOURCE_META[art.sourceId] || { initials: art.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
       const score = typeof art.sentiment === 'number' ? art.sentiment : 0;
       const scoreClass = getMoodClass(score);
       const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
 
-      // Determine editorial framing relative to cluster average
-      let framingTag = '';
-      let cardFramingClass = '';
-      if (score <= cluster.averageSentiment - 0.15) {
-        cardFramingClass = 'framing-alarmist';
-        framingTag = `<span class="cluster-framing-tag neg"><i data-lucide="alert-triangle" style="width:10px;height:10px;"></i> Alarmist Angle</span>`;
-      } else if (score >= cluster.averageSentiment + 0.15) {
-        cardFramingClass = 'framing-constructive';
-        framingTag = `<span class="cluster-framing-tag pos"><i data-lucide="trending-up" style="width:10px;height:10px;"></i> Constructive Angle</span>`;
-      }
-
       return `
-        <div class="cluster-article-card ${cardFramingClass}">
+        <div class="cluster-article-card">
           <div class="cluster-article-top">
             <span class="cluster-article-outlet">
               <span class="source-badge" style="background-color: ${meta.color};">${meta.flag || ''} ${art.sourceName}</span>
             </span>
             <div style="display:flex; align-items:center; gap:0.4rem;">
-              ${framingTag}
               <span class="score-badge ${scoreClass}" style="font-size:0.75rem; padding:0.15rem 0.45rem;">${scoreStr}</span>
             </div>
           </div>
@@ -2463,15 +2527,22 @@ function renderStoryClusters() {
       `;
     }).join('');
 
+    // Collapse coverage by default if not among the first 3 or if > 4 articles
+    const isInitiallyCollapsed = clusterIndex >= 3 && sortedCoverage.length > 3;
+
     return `
-      <article class="cluster-card card" id="cluster-${encodeURIComponent(cluster.story.slice(0, 20))}">
+      <article class="cluster-card card" id="${clusterId}">
         <div class="cluster-header">
           <div class="cluster-header-left">
             <div class="cluster-badges-strip">
               <span class="cluster-badge cluster-topic-badge">${topicLabel}</span>
+              <span class="cluster-badge cluster-date-badge">
+                <i data-lucide="calendar" style="width:11px;height:11px;"></i>
+                ${cluster.dateRangeStr}
+              </span>
               <span class="cluster-badge cluster-outlets-badge">
                 <i data-lucide="radio" style="width:11px;height:11px;"></i>
-                ${cluster.coverage.length} Outlets Reporting
+                ${cluster.coverage.length} Outlets
               </span>
               <span class="cluster-badge cluster-score-badge ${moodClass}">
                 ${avgScoreFormatted} Avg Tone
@@ -2497,8 +2568,20 @@ function renderStoryClusters() {
           </div>
         </div>
 
+        <!-- Interactive Coverage Toggle Bar -->
+        <div class="cluster-coverage-meta-bar">
+          <div class="cluster-coverage-info">
+            <i data-lucide="layers" style="width:13px;height:13px;"></i>
+            <span>Reporting Desks (${sortedCoverage.length} articles, sorted by valence: Critical &rarr; Constructive)</span>
+          </div>
+          <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCoverage('${clusterId}')" title="Toggle coverage visibility">
+            <span>${isInitiallyCollapsed ? 'Show All Coverage (' + sortedCoverage.length + ')' : 'Collapse Coverage'}</span>
+            <i data-lucide="${isInitiallyCollapsed ? 'chevron-down' : 'chevron-up'}" style="width:12px;height:12px;"></i>
+          </button>
+        </div>
+
         <!-- Coverage Grid of Desks -->
-        <div class="cluster-coverage-grid">
+        <div class="cluster-coverage-grid" style="${isInitiallyCollapsed ? 'display: none;' : ''}">
           ${coverageCardsHTML}
         </div>
       </article>
@@ -2510,6 +2593,25 @@ function renderStoryClusters() {
   }
 }
 window.renderStoryClusters = renderStoryClusters;
+
+// Toggle cluster coverage accordion
+window.toggleClusterCoverage = function(clusterId) {
+  const card = document.getElementById(clusterId);
+  if (!card) return;
+  const grid = card.querySelector('.cluster-coverage-grid');
+  const btn = card.querySelector('.cluster-toggle-btn');
+  if (!grid) return;
+  const isHidden = grid.style.display === 'none';
+  grid.style.display = isHidden ? 'grid' : 'none';
+  if (btn) {
+    const span = btn.querySelector('span');
+    const icon = btn.querySelector('i');
+    const count = card.querySelectorAll('.cluster-article-card').length;
+    if (span) span.innerText = isHidden ? 'Collapse Coverage' : `Show All Coverage (${count})`;
+    if (icon) icon.setAttribute('data-lucide', isHidden ? 'chevron-up' : 'chevron-down');
+    if (window.lucide) lucide.createIcons();
+  }
+};
 
 // Render Head-to-Head Comparison column
 function renderHeadToHead() {
@@ -3549,7 +3651,7 @@ function renderSpotlightBanner(filteredArticles) {
       </div>
       
       <!-- Sentiment Beeswarm Plot -->
-      <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%; margin-top: 0.5rem; position: relative;">
+      <div class="spotlight-beeswarm-wrap">
         <div style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display:flex; justify-content:space-between;">
           <span>Article Sentiment Distribution</span>
           <span style="font-family:var(--font-mono); font-size:0.68rem; opacity:0.8;">Max Stack: ${maxStackLevel + 1} articles</span>
@@ -3568,17 +3670,17 @@ function renderSpotlightBanner(filteredArticles) {
           <div style="position: absolute; left: 50%; bottom: 16px; top: 10px; width: 1px; border-left: 1px dashed var(--text-muted); opacity: 0.35; z-index: 1; pointer-events: none;"></div>
 
           <!-- Track labels -->
-          <span style="position: absolute; left: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--neg-color); font-weight: 600; pointer-events: none; z-index: 2;">Alarmist (-1.0)</span>
-          <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); font-weight: 600; pointer-events: none; z-index: 2;">Neutral (0.0)</span>
-          <span style="position: absolute; right: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--pos-color); font-weight: 600; pointer-events: none; z-index: 2;">Positive (+1.0)</span>
+          <span style="position: absolute; left: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--neg-color); font-weight: 700; pointer-events: none; z-index: 2;">Alarmist (-1.0)</span>
+          <span style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); font-weight: 700; pointer-events: none; z-index: 2;">Neutral (0.0)</span>
+          <span style="position: absolute; right: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--pos-color); font-weight: 700; pointer-events: none; z-index: 2;">Positive (+1.0)</span>
           
           <!-- Plot Circles -->
           ${dotsHTML}
         </div>
-        <div style="font-size: 0.68rem; color: var(--text-secondary); text-align: center; font-style: italic; opacity: 0.85; margin-top: 0.15rem;">Hover over dots to inspect article score; click to jump directly to article card. Density scales dynamically to prevent overflow.</div>
+        <div style="font-size: 0.68rem; color: var(--text-muted); text-align: center; font-style: italic; opacity: 0.9; margin-top: 0.15rem;">Hover over dots to inspect article score; click to jump directly to article card. Density scales dynamically to prevent overflow.</div>
         
         <!-- Custom Tooltip Element -->
-        <div class="spotlight-tooltip card" style="position: absolute; display: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 280px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, bottom 0.08s ease-out;"></div>
+        <div class="spotlight-tooltip"></div>
       </div>
     `;
   });
@@ -3586,36 +3688,38 @@ function renderSpotlightBanner(filteredArticles) {
 
 // Custom Tooltip Show/Hide handlers
 window.showSpotlightTooltip = function(e, title, score) {
-  const banner = e.target.closest('.card') || elements.spotlightBanner;
-  if (!banner) return;
-  const tooltip = banner.querySelector('.spotlight-tooltip');
+  const dot = e.target;
+  const wrap = dot.closest('.spotlight-beeswarm-wrap');
+  if (!wrap) return;
+  const tooltip = wrap.querySelector('.spotlight-tooltip');
   if (!tooltip) return;
   
   let mood = 'Neutral';
-  let moodClass = 'neutral';
-  if (score > 0.15) { mood = 'Positive'; moodClass = 'positive'; }
-  else if (score < -0.15) { mood = 'Negative'; moodClass = 'negative'; }
+  let moodColor = '#94a3b8';
+  if (score > 0.15) { mood = 'Positive'; moodColor = '#22c55e'; }
+  else if (score < -0.15) { mood = 'Negative'; moodColor = '#ef4444'; }
   
   tooltip.innerHTML = `
-    <div style="font-weight: 600; margin-bottom: 0.25rem; line-height: 1.3; color: var(--text-primary);">${title}</div>
-    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.35rem;">
-      <span>Score: <strong style="color: var(--text-primary);">${score > 0 ? '+' : ''}${score.toFixed(2)}</strong></span>
-      <span class="dial-vibe-profile ${moodClass}" style="font-weight:700;">${mood}</span>
+    <div style="font-weight: 600; margin-bottom: 0.3rem; line-height: 1.35; color: #f8fafc; font-size: 0.78rem;">${title}</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: #94a3b8; border-top: 1px solid #334155; padding-top: 0.3rem; margin-top: 0.3rem;">
+      <span>Tone: <strong style="color: #38bdf8; font-family: var(--font-mono); font-weight: 700;">${score > 0 ? '+' : ''}${score.toFixed(2)}</strong></span>
+      <span style="font-weight: 700; color: ${moodColor};">${mood}</span>
     </div>
   `;
   
   tooltip.style.display = 'block';
   
-  // Position relative to banner card (the wrapper containing spotlight-tooltip)
-  const bannerRect = banner.getBoundingClientRect();
-  const dotRect = e.target.getBoundingClientRect();
+  // Position relative to the wrap
+  const wrapRect = wrap.getBoundingClientRect();
+  const dotRect = dot.getBoundingClientRect();
   
-  const left = dotRect.left - bannerRect.left + (dotRect.width / 2);
-  const bottom = bannerRect.bottom - dotRect.top + 6; // offset 6px above dot
+  const rawLeft = dotRect.left - wrapRect.left + (dotRect.width / 2);
+  const left = clamp(rawLeft, 130, Math.max(130, wrapRect.width - 130));
+  const top = dotRect.top - wrapRect.top - 8;
   
   tooltip.style.left = `${left}px`;
-  tooltip.style.bottom = `${bottom}px`;
-  tooltip.style.transform = 'translateX(-50%)';
+  tooltip.style.top = `${top}px`;
+  tooltip.style.transform = 'translate(-50%, -100%)';
 };
 
 window.hideSpotlightTooltip = function() {
