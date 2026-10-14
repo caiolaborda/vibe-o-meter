@@ -2953,41 +2953,55 @@ function setupSpectrumMagnification() {
   if (!container) return;
   
   container.addEventListener('mousemove', (e) => {
-    const rect = container.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left; // Mouse X relative to container
-    const containerWidth = rect.width;
-    
     const markers = container.querySelectorAll('.outlet-marker');
+    let closestMarker = null;
+    let min2DDist = Infinity;
+
     markers.forEach(marker => {
-      // Get marker's left percentage
-      const leftPct = parseFloat(marker.style.left);
-      const markerX = (leftPct / 100) * containerWidth;
-      
-      const dist = Math.abs(mouseX - markerX);
-      const threshold = 120; // range of magnification effect in pixels
-      
+      const mRect = marker.getBoundingClientRect();
+      const markerCenterX = mRect.left + mRect.width / 2;
+      const markerCenterY = mRect.top + mRect.height / 2;
+
+      const dx = e.clientX - markerCenterX;
+      const dy = e.clientY - markerCenterY;
+
+      // 2D Euclidean distance accounting for BOTH horizontal and height distance
+      const dist2D = Math.hypot(dx, dy);
+
+      // Height distance is weighted strictly (1.35x) so markers on stacked vertical tiers don't bleed into each other
+      const proximityDist = Math.hypot(dx * 0.85, dy * 1.35);
+      const threshold = 75; // range of magnification effect in pixels
+
       let scale = 1.0;
-      
-      if (dist < threshold) {
-        const factor = 1 - (dist / threshold); // 0 to 1
-        scale = 1.0 + 0.6 * factor; // max scale 1.6
+      if (proximityDist < threshold) {
+        const factor = 1 - (proximityDist / threshold);
+        scale = 1.0 + 0.5 * factor;
       }
-      
+
       const bubble = marker.querySelector('.marker-bubble');
       if (bubble) {
         bubble.style.transform = `scale(${scale})`;
         marker.style.zIndex = Math.round(scale * 100);
       }
-      
+
+      if (dist2D < min2DDist) {
+        min2DDist = dist2D;
+        closestMarker = marker;
+      }
+    });
+
+    // Tooltip Labels: strictly display only for the single closest marker in 2D space,
+    // and only when the cursor is genuine hover distance (< 30px) in both height and horizontal
+    markers.forEach(marker => {
       const label = marker.querySelector('.marker-label');
-      if (label) {
-        if (dist < 35) {
-          label.style.opacity = '1';
-          label.style.top = '-32px';
-        } else {
-          label.style.opacity = '0';
-          label.style.top = '-24px';
-        }
+      if (!label) return;
+      if (marker === closestMarker && min2DDist < 30) {
+        label.style.opacity = '1';
+        label.style.top = '-32px';
+        marker.style.zIndex = '250';
+      } else {
+        label.style.opacity = '0';
+        label.style.top = '-24px';
       }
     });
   });
@@ -3249,16 +3263,10 @@ window.copyToClipboard = function(text, btn) {
 function linkifyEditorialSummary(rawSummary, articles = []) {
   if (!rawSummary) return '';
 
-  // 1. Convert any standard markdown links [label](url)
-  let html = rawSummary.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, (match, label, url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="summary-story-link" title="Open source article">${label} <i data-lucide="external-link"></i></a>`;
-  });
-
-  // 2. Curated & dynamic topical phrase mappings for news stories referenced in briefings
   const phraseMappings = [
     {
       phrase: 'planets actually worth visiting',
-      keywords: ['planet', 'habitable zone', 'earth-like planet', 'inhabitable-planets'],
+      keywords: ['planet', 'habitable', 'earth-like', 'inhabitable'],
       fallbackUrl: 'https://www.nytimes.com/2026/10/13/science/inhabitable-planets-solar-system.html',
       tooltip: 'Read NYT & BBC reports on newly discovered habitable worlds'
     },
@@ -3275,22 +3283,10 @@ function linkifyEditorialSummary(rawSummary, articles = []) {
       tooltip: 'Read BBC report on the BA flight forced back over cracked window'
     },
     {
-      phrase: 'cracked window',
-      keywords: ['cracked window', 'flight forced to turn back'],
-      fallbackUrl: 'https://www.bbc.co.uk/news/articles/cj1dwrxq1wndo',
-      tooltip: 'Read BBC report on the BA flight'
-    },
-    {
       phrase: 'domestic tragedies',
       keywords: ['arson attack', 'tragedy at sea', 'killed in arson', 'blaze'],
       fallbackUrl: 'https://www.bbc.co.uk/news/articles/cq073814llkjo',
-      tooltip: 'Read BBC reporting on tragic domestic arson investigation'
-    },
-    {
-      phrase: 'domestic arson',
-      keywords: ['arson attack', 'killed in arson'],
-      fallbackUrl: 'https://www.bbc.co.uk/news/articles/cq073814llkjo',
-      tooltip: 'Read BBC reporting on arson investigation'
+      tooltip: 'Read BBC reporting on tragic domestic investigations'
     },
     {
       phrase: 'sovereign real estate squabbles',
@@ -3330,29 +3326,70 @@ function linkifyEditorialSummary(rawSummary, articles = []) {
     }
   ];
 
-  phraseMappings.forEach(({ phrase, keywords, fallbackUrl, tooltip }) => {
-    // Avoid re-matching inside existing <a> tags
-    const safeRegex = new RegExp(`(?<!<a[^>]*>)(${phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})(?![^<]*<\/a>)`, 'gi');
-    if (safeRegex.test(html)) {
-      let targetUrl = fallbackUrl;
-      let targetTitle = tooltip;
+  // 1. Identify pre-existing markdown links: [label](url)
+  const matches = [];
+  const mdRegex = /\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g;
+  let mdMatch;
+  while ((mdMatch = mdRegex.exec(rawSummary)) !== null) {
+    matches.push({
+      start: mdMatch.index,
+      end: mdMatch.index + mdMatch[0].length,
+      label: mdMatch[1],
+      url: mdMatch[2],
+      title: 'Open source article'
+    });
+  }
 
-      if (articles && articles.length > 0) {
-        const found = articles.find(art => {
-          const t = (art.title + ' ' + (art.desc || '')).toLowerCase();
-          return keywords.some(k => t.includes(k.toLowerCase()));
-        });
-        if (found && found.url) {
-          targetUrl = found.url;
-          targetTitle = `${found.title} (${found.sourceName || 'Wire'})`;
+  // 2. Identify phrase matches in plain text, ensuring no collision with existing matches
+  phraseMappings.sort((a, b) => b.phrase.length - a.phrase.length);
+  for (const item of phraseMappings) {
+    const pRegex = new RegExp(item.phrase.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi');
+    let m;
+    while ((m = pRegex.exec(rawSummary)) !== null) {
+      const start = m.index;
+      const end = start + m[0].length;
+      const collides = matches.some(x => (start < x.end && end > x.start));
+      if (!collides) {
+        let targetUrl = item.fallbackUrl;
+        let targetTitle = item.tooltip;
+        if (articles && articles.length > 0) {
+          const found = articles.find(art => {
+            const t = ((art.title || '') + ' ' + (art.desc || '')).toLowerCase();
+            return item.keywords.some(k => t.includes(k.toLowerCase()));
+          });
+          if (found && found.url) {
+            targetUrl = found.url;
+            targetTitle = (found.title || item.tooltip) + (found.sourceName ? ` (${found.sourceName})` : '');
+          }
         }
+        matches.push({
+          start,
+          end,
+          label: m[0],
+          url: targetUrl,
+          title: targetTitle
+        });
       }
-
-      html = html.replace(safeRegex, `<a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="summary-story-link" title="${targetTitle}">$1 <i data-lucide="external-link"></i></a>`);
     }
-  });
+  }
 
-  return html;
+  // 3. Assemble final HTML in a single slice pass to guarantee zero attribute contamination
+  matches.sort((a, b) => a.start - b.start);
+  let result = '';
+  let cursor = 0;
+  for (const m of matches) {
+    if (m.start > cursor) {
+      result += rawSummary.slice(cursor, m.start);
+    }
+    const safeTitle = (m.title || '').replace(/"/g, '&quot;').replace(/<[^>]+>/g, '');
+    result += `<a href="${m.url}" target="_blank" rel="noopener noreferrer" class="summary-story-link" title="${safeTitle}">${m.label} <i data-lucide="external-link"></i></a>`;
+    cursor = m.end;
+  }
+  if (cursor < rawSummary.length) {
+    result += rawSummary.slice(cursor);
+  }
+
+  return result;
 }
 
 // --- DAILY VIBE PULSE HERO RENDERER ---

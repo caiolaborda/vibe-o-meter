@@ -1381,7 +1381,13 @@ body[data-edition="silver"] .edition-pill-btn[data-edition="silver"].active {
 .outlet-marker[data-id="aljazeera"] .marker-bubble { background-color: #ff9900; border-color: #cc7a00; color: #fff; }
 
 .outlet-marker:hover {
-  z-index: 20;
+  z-index: 250;
+}
+
+.outlet-marker:hover .marker-label {
+  opacity: 1;
+  top: -32px;
+  pointer-events: none;
 }
 
 .marker-label {
