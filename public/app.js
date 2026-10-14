@@ -49,8 +49,8 @@ const SOURCE_META = {
   cnbc: { initials: 'CNB', color: '#0077b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
   skynews: { initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   spiegel: { initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
-  reuters: { initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global Wire', countryCode: 'un', flag: '🌐' },
-  ap: { initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global Wire', countryCode: 'un', flag: '🌐' },
+  reuters: { initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
+  ap: { initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
   bloomberg: { initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
   dw: { initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
   wsj: { initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
@@ -261,7 +261,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
       <div class="silver-related-box">
         <div class="silver-related-label">
           <i data-lucide="layers" style="width:12px;height:12px;"></i>
-          <span>Related Wire Coverage:</span>
+          <span>Related Outlet Coverage:</span>
         </div>
         <div class="silver-related-chips">
           ${related.map(r => `
@@ -1630,9 +1630,9 @@ function renderSilverEdition() {
     container.innerHTML = `
       <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; width: 100%;">
         <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">⛅</div>
-        <h3 style="font-size: 1.45rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism on the Wire</h3>
+        <h3 style="font-size: 1.45rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism Across Global News</h3>
         <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem; line-height: 1.6;">
-          During ${timeframeLabel}${activeTopic !== 'all' ? ` for "${activeTopic}"` : ''}, global wire rooms published near-zero qualifying positive stories. Commercial news desks operate overwhelmingly on threats and alarm. Expand the window below to uncover constructive breakthroughs.
+          During ${timeframeLabel}${activeTopic !== 'all' ? ` for "${activeTopic}"` : ''}, major global newsrooms published near-zero qualifying positive stories. Commercial news desks operate overwhelmingly on threats and alarm. Expand the window below to uncover constructive breakthroughs.
         </p>
         <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
           ${activeTopic !== 'all' ? '<button class="btn btn-secondary btn-sm" onclick="setSilverTopic(\'all\')">Clear Topic Filter</button>' : ''}
@@ -2312,7 +2312,7 @@ const CLUSTER_TOPIC_LABELS = {
   science: '🔬 Science & Space',
   health: '🩺 Health & Medicine',
   climate: '🌱 Nature & Climate',
-  other: '📰 General Wire'
+  other: '📰 General News'
 };
 
 // Render whole Story Compare tab
@@ -2325,7 +2325,7 @@ function renderComparePage() {
 }
 window.renderComparePage = renderComparePage;
 
-// Render Cross-Outlet Story Clusters (Clashing Wires)
+// Render Cross-Outlet Story Clusters (Clashing Newsrooms)
 function renderStoryClusters() {
   const container = elements.clustersContainer || document.getElementById('clusters-container');
   if (!container) return;
@@ -2335,9 +2335,9 @@ function renderStoryClusters() {
     container.innerHTML = `
       <div class="card" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;">
         <i data-lucide="layers" style="width: 38px; height: 38px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.5rem;">No Wire Clusters Detected</h3>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.5rem;">No Story Clusters Detected</h3>
         <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 500px; margin: 0 auto 1.25rem;">
-          Cross-outlet story clusters are computed during news ingestion when two or more major wire desks report on identical breaking events. Trigger a wire sync to rebuild clusters.
+          Cross-outlet story clusters are computed during news ingestion when two or more major newsrooms report on identical breaking events. Trigger a sync to rebuild clusters.
         </p>
         <button class="btn btn-primary" onclick="syncData()" style="gap: 0.5rem; display: inline-flex; align-items: center; margin: 0 auto;">
           <i data-lucide="refresh-cw"></i> Sync Feeds Now
@@ -2376,7 +2376,7 @@ function renderStoryClusters() {
       }
     });
 
-    let dateRangeStr = 'Current Wire Cycle';
+    let dateRangeStr = 'Current News Cycle';
     let minTime = Infinity;
     let maxTime = -Infinity;
     if (validTimestamps.length > 0) {
@@ -2402,11 +2402,11 @@ function renderStoryClusters() {
       if (computedSpread >= 0.35) {
         summaryText = `Editorial divergence across ${coverage.length} desks (${outletsList}): framing swings by ${computedSpread.toFixed(2)} pts between urgent alarm and measured policy context.`;
       } else if (avgSentiment < -0.3) {
-        summaryText = `High-gravity wire reports across ${coverage.length} desks (${outletsList}) focusing on disruption, systemic risks, and ongoing investigations.`;
+        summaryText = `High-gravity reporting across ${coverage.length} newsrooms (${outletsList}) focusing on disruption, systemic risks, and ongoing investigations.`;
       } else if (avgSentiment > 0.1) {
-        summaryText = `Constructive cross-wire reporting across ${coverage.length} desks (${outletsList}) spotlighting positive momentum, resolution, and progress.`;
+        summaryText = `Constructive cross-outlet reporting across ${coverage.length} newsrooms (${outletsList}) spotlighting positive momentum, resolution, and progress.`;
       } else {
-        summaryText = `Synchronized reporting across ${coverage.length} newsrooms (${outletsList}) providing balanced, factual developments on the evolving wire.`;
+        summaryText = `Synchronized reporting across ${coverage.length} newsrooms (${outletsList}) providing balanced, factual developments on the evolving story.`;
       }
     }
 
@@ -2605,8 +2605,8 @@ function renderStoryClusters() {
               ${uniqueSources.size} Outlets
             </span>
           </div>
-          <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full cross-wire coverage">
-            <span>Inspect Full Wire Coverage (${sortedCoverage.length})</span>
+          <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full multi-outlet coverage">
+            <span>Inspect Full Coverage (${sortedCoverage.length})</span>
             <i data-lucide="chevron-down" style="width:12px;height:12px;"></i>
           </button>
         </div>
@@ -2643,7 +2643,7 @@ window.toggleClusterCard = function(clusterId) {
     const span = btn.querySelector('span');
     const icon = btn.querySelector('i');
     const count = card.querySelectorAll('.cluster-article-card').length;
-    if (span) span.innerText = isExpanded ? 'Collapse Coverage' : `Inspect Full Wire Coverage (${count})`;
+    if (span) span.innerText = isExpanded ? 'Collapse Coverage' : `Inspect Full Coverage (${count})`;
     if (icon) icon.setAttribute('data-lucide', isExpanded ? 'chevron-up' : 'chevron-down');
     if (window.lucide) lucide.createIcons();
   }
@@ -4337,30 +4337,7 @@ function renderDailyPulse() {
   }
 
   if (summaryEl) {
-    const rawSummary = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary) || "Today on the global wire, another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
-    
-    // Dynamically update context kicker so user knows this is the fixed 24-hour wire synthesis
-    const kickerEl = document.getElementById('briefing-kicker-text');
-    if (kickerEl) {
-      if (state.filters.time === '24h' || !state.filters.time) {
-        if (state.filters.category && state.filters.category !== 'all') {
-          const catName = state.filters.category.charAt(0).toUpperCase() + state.filters.category.slice(1);
-          kickerEl.innerText = `Today's 24-Hour Wire Briefing • ${catName} Selected`;
-        } else {
-          kickerEl.innerText = "Today's 24-Hour Wire Briefing";
-        }
-      } else {
-        let timeLabel = state.filters.time;
-        if (timeLabel === '3h') timeLabel = 'Past 3 Hours';
-        else if (timeLabel === '6h') timeLabel = 'Past 6 Hours';
-        else if (timeLabel === '12h') timeLabel = 'Past 12 Hours';
-        else if (timeLabel === '3d') timeLabel = 'Past 3 Days';
-        else if (timeLabel === '7d') timeLabel = 'Past 7 Days';
-        else if (timeLabel === '30d') timeLabel = 'Past 30 Days';
-        else if (timeLabel === 'all') timeLabel = 'All-Time Wire';
-        kickerEl.innerText = `Daily 24-Hour Synthesis (${timeLabel} Timeline Active)`;
-      }
-    }
+    const rawSummary = state.editorialSummary || (state.globalStats && state.globalStats.editorialSummary) || "Across the last 24 hours of global news, another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
 
     // Gather active articles for interactive story linking
     const activeArticles = [];

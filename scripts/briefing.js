@@ -66,7 +66,7 @@ async function generateDailyBriefing(options = {}) {
     }))
     .sort((a, b) => a.avg - b.avg);
 
-  const mostAlarmistToday = rankedOutlets24[0] || { name: 'Breaking News Wires', avg: -0.4 };
+  const mostAlarmistToday = rankedOutlets24[0] || { name: 'Breaking News Outlets', avg: -0.4 };
   const mostCalmToday = rankedOutlets24[rankedOutlets24.length - 1] || { name: 'Public Broadcasters', avg: 0 };
 
   const sortedArticles = [...articles24].sort((a, b) => a.score - b.score);
@@ -77,7 +77,7 @@ async function generateDailyBriefing(options = {}) {
   ].filter((a, i, arr) => a && arr.findIndex(x => x.title === a.title) === i)
    .map(a => `- [${a.outlet}] "${a.title}" | URL: ${a.url}`).join('\n');
 
-  // Extract dominant cross-outlet wire clusters (events reported by 2+ independent desks)
+  // Extract dominant cross-outlet story clusters (events reported by 2+ independent desks)
   const sharedClusters = data.sharedStoryClusters || [];
   const topClustersContext = sharedClusters.slice(0, 5).map(c => {
     const mainArt = c.coverage?.[0] || {};
@@ -108,15 +108,15 @@ async function generateDailyBriefing(options = {}) {
         const prompt = `You are a razor-sharp, deadpan news satirist writing the daily front-page mood kicker for "There's No Such Thing As Good News" (an autonomous daily audit of media pessimism).
 
 IMPORTANT MEDIA SCOPE:
-These are the world's premier international news wires, global broadsheets, and major broadcast networks (BBC, Reuters, Associated Press, Bloomberg, The New York Times, CNN, etc.). NEVER refer to this reporting as "local news" — treat this as the collective output of the global media apparatus.
+These are the world's premier international news outlets, broadsheets, and major broadcast networks (BBC, Reuters, Associated Press, Bloomberg, The New York Times, CNN, etc.). NEVER refer to this reporting as "local news" — treat this as the collective output of the global media apparatus.
 
 YOUR GOAL:
 Scan today's headlines and write a crisp, cynical, 1-to-3 sentence observation capturing the day's collective news vibe.
 
 THE VIBE WE WANT:
 - Lean, punchy, and fast-paced (aim for ~35 to 55 words max).
-- Deadpan, wry, and observational—like a sharp newsroom veteran summing up the global wires with an effortless shrug and a smirk.
-- FIXED TIMEFRAME ANCHOR: Naturally anchor your observation in the fixed 24-hour global news cycle by opening with phrases like "Today across the global wire...", "Over the past 24 hours...", "Today on the wires...", "Across the last 24 hours...", or "Today's global cycle...". This clearly signals to the reader that this is an autonomous 24-hour audit of global news.
+- Deadpan, wry, and observational—like a sharp newsroom veteran summing up the global news cycle with an effortless shrug and a smirk.
+- FIXED TIMEFRAME ANCHOR: Naturally anchor your observation in the fixed 24-hour global news cycle by opening with phrases like "Over the past 24 hours...", "Today across global headlines...", "Across the last 24 hours...", or "In today's global news cycle...". This clearly signals to the reader that this is an autonomous 24-hour audit of global news.
 - NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
 - Avoid purple prose, convoluted run-ons, or forced metaphors. Keep it natural, rhythmic, and memorable.
 
@@ -124,9 +124,10 @@ HYPERLINKING REQUIREMENT:
 You MUST weave 2 to 4 interactive markdown links [topical phrase](url) directly into your observation using the exact URLs provided in the stories/clusters below (e.g. "...between [papal health scares](url) and [smoking oil infrastructure](url)..."). Only hyperlink concise, natural phrases (2-4 words).
 
 TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy its words):
-"Today across the global wire, another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
+"Across the last 24 hours, another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
 
 STRICT RULES:
+- FORBIDDEN WORDS: Strictly NEVER use the words "wire", "wires", or "beat". Use natural terms like "news", "headlines", "outlets", "newsrooms", or "stories".
 - NO ARBITRARY NUMBERS, DECIMALS, OR PERCENTAGES (no "-0.21", "197 articles", "+0.45", etc.). Natural time references like "today" or "the last 24 hours" are encouraged.
 - NEVER refer to this as "local news" or "regional news".
 - KEEP IT TIGHT (strictly under 60 words total).
@@ -135,9 +136,9 @@ STRICT RULES:
 TODAY'S GLOBAL HEADLINES CONTEXT (Use these exact URLs for markdown links):
 - Outlets leading the panic: ${mostAlarmistToday.name}
 - Outlets holding composure: ${mostCalmToday.name}
-- Major cross-wire story clusters (what multiple desks are covering right now):
+- Major cross-outlet story clusters (what multiple newsrooms are covering right now):
 ${topClustersContext || '- Major diplomatic friction, volatile market shifts, and ongoing conflicts'}
-- Representative stories across the global wire:
+- Representative stories across global headlines:
 ${sampleHeadlines || '- War strikes, political clashes, economic jitters, and scientific breakthroughs'}`;
 
         const res = await model.generateContent(prompt);
@@ -155,7 +156,7 @@ ${sampleHeadlines || '- War strikes, political clashes, economic jitters, and sc
 
   // Witty deterministic fallback (Option 3 Micro-Dispatch) if AI call fails or key is missing
   if (!briefingText) {
-    briefingText = "Today on the global wire: another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
+    briefingText = "Across the last 24 hours of global news: another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
     console.log('[Briefing] Generated via deterministic Micro-Dispatch fallback:', briefingText);
   }
 

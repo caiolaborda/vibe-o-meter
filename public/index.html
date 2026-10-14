@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=3.1">
+  <link rel="stylesheet" href="style.css?v=3.2">
 </head>
 <body data-edition="doom">
 
@@ -171,10 +171,6 @@
 
         <!-- 2. Daily Editorial Briefing (Editorial Serif Narrative Lead) -->
         <div class="hero-editorial-lead-wrap">
-          <div class="hero-briefing-kicker">
-            <i data-lucide="sparkles" style="width: 12px; height: 12px; color: var(--accent-color);"></i>
-            <span id="briefing-kicker-text">Today's 24-Hour Wire Briefing</span>
-          </div>
           <p id="daily-editorial-summary" class="hero-editorial-lead">
             Loading today's briefing...
           </p>
@@ -814,10 +810,10 @@
               <strong>1. Universal Openness &amp; Free Accessibility:</strong> RSS (Really Simple Syndication) is a decentralized, open web standard. Because RSS feeds are freely available without proprietary developer barriers, rate-limit paywalls, or closed API gates, our data collection pipeline is transparent, reproducible, and verifiable by any independent observer.
             </p>
             <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
-              <strong>2. True Editorial Priority:</strong> An RSS feed is not a random data dump; it represents an active curation choice. When the news desks of <em>The New York Times</em>, <em>BBC News</em>, <em>Reuters</em>, <em>CNN</em>, or <em>The Guardian</em> syndicate an article to their primary wire, their editors are declaring: <em>"This is what our senior journalists deem the most urgent, consequential, and important developments on Earth right now."</em>
+              <strong>2. True Editorial Priority:</strong> An RSS feed is not a random data dump; it represents an active curation choice. When the news desks of <em>The New York Times</em>, <em>BBC News</em>, <em>Reuters</em>, <em>CNN</em>, or <em>The Guardian</em> syndicate an article to their primary edition, their editors are declaring: <em>"This is what our senior journalists deem the most urgent, consequential, and important developments on Earth right now."</em>
             </p>
             <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin: 0;">
-              <strong>3. Zero Algorithmic Distortion:</strong> Unlike social networks (X, TikTok, Facebook) whose black-box recommendation algorithms deliberately maximize individual outrage to inflate time on screen, raw RSS wires broadcast the exact same chronological baseline to every reader without personalization or engagement manipulation.
+              <strong>3. Zero Algorithmic Distortion:</strong> Unlike social networks (X, TikTok, Facebook) whose black-box recommendation algorithms deliberately maximize individual outrage to inflate time on screen, raw RSS feeds broadcast the exact same chronological baseline to every reader without personalization or engagement manipulation.
             </p>
           </div>
 
@@ -872,7 +868,7 @@
               <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;">Impact-Calibrated: +0.10 to +1.00</span>
             </div>
             <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 1rem;">
-              Commercial news operates as a 24-hour threat-surveillance system. But genuine good news <strong>does</strong> exist across the wires, and it almost always falls into one of these 6 Archetypes of human flourishing. <strong>Crucially, there are no topic ceilings or beat-based caps</strong>: any story across <em>any</em> archetype—whether an epochal peace treaty, systemic poverty eradication, a landmark clean energy transition, or a disease cure—can reach the highest tiers (up to <code>+1.00</code>). Valence reflects the <em>magnitude and scale of real-world human consequence</em>, with small incremental steps scoring <code>+0.10 to +0.25</code> and transformative milestones reaching <code>+0.70 to +1.00</code> across every beat:
+              Commercial news operates as a 24-hour threat-surveillance system. But genuine good news <strong>does</strong> exist across global headlines, and it almost always falls into one of these 6 Archetypes of human flourishing. <strong>Crucially, there are no topic ceilings or category caps</strong>: any story across <em>any</em> archetype—whether an epochal peace treaty, systemic poverty eradication, a landmark clean energy transition, or a disease cure—can reach the highest tiers (up to <code>+1.00</code>). Valence reflects the <em>magnitude and scale of real-world human consequence</em>, with small incremental steps scoring <code>+0.10 to +0.25</code> and transformative milestones reaching <code>+0.70 to +1.00</code> across every topic:
             </p>
 
             <div class="archetypes-grid">
@@ -971,7 +967,7 @@
               <div class="valence-band-card band-inspiring">
                 <div class="band-tag">+0.45 to +1.00</div>
                 <div class="band-title">Transformative / Breakthrough</div>
-                <p class="band-desc">High-consequence breakthroughs across any beat: peace treaties, disease cures, poverty reductions, clean energy abundance, heroic rescues.</p>
+                <p class="band-desc">High-consequence breakthroughs across any topic: peace treaties, disease cures, poverty reductions, clean energy abundance, heroic rescues.</p>
               </div>
             </div>
           </div>
@@ -1051,7 +1047,7 @@
                   </div>
                   <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0.85rem; background: rgba(239, 68, 68, 0.06); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
                     <div>
-                      <div style="font-size: 0.85rem; font-weight: 700; color: #dc2626;">Mainstream News Wire (17 Outlets)</div>
+                      <div style="font-size: 0.85rem; font-weight: 700; color: #dc2626;">Mainstream News (17 Global Outlets)</div>
                       <div style="font-size: 0.7rem; color: var(--text-muted);">Threat-monitoring, geopolitics, crime, inflation</div>
                     </div>
                     <strong style="font-size: 1.15rem; font-family: var(--font-mono); color: #dc2626; font-weight: 800;">-0.21</strong>
@@ -1074,7 +1070,7 @@
             <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
               <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
                 <i data-lucide="check-circle-2" style="width: 15px; height: 15px; color: #10b981;"></i>
-                Sample Empirical Evaluations from The Good News Network Control Wire
+                Sample Empirical Evaluations from The Good News Network Control Sample
               </div>
               <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
@@ -1126,6 +1122,6 @@
 
   </div>
 
-  <script src="app.js?v=2.8"></script>
+  <script src="app.js?v=2.9"></script>
 </body>
 </html>
