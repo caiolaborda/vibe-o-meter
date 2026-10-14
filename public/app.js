@@ -37,26 +37,37 @@ let state = {
 
 let resolvedSources = {};
 
-// News Source Metadata with Origin Region and Visual Colors
+// News Source Metadata with Origin Region, Country Codes and Visual Colors
 const SOURCE_META = {
-  bbc: { initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', flag: '🇬🇧' },
-  nyt: { initials: 'NYT', color: '#1e293b', region: 'US', regionName: 'United States', flag: '🇺🇸' },
-  cnn: { initials: 'CNN', color: '#cc0000', region: 'US', regionName: 'United States', flag: '🇺🇸' },
-  guardian: { initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', flag: '🇬🇧' },
-  fox: { initials: 'FOX', color: '#003366', region: 'US', regionName: 'United States', flag: '🇺🇸' },
-  aljazeera: { initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', flag: '🇶🇦' },
-  npr: { initials: 'NPR', color: '#3c78d8', region: 'US', regionName: 'United States', flag: '🇺🇸' },
-  cnbc: { initials: 'CNB', color: '#0077b6', region: 'US', regionName: 'United States', flag: '🇺🇸' },
-  skynews: { initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', flag: '🇬🇧' },
-  spiegel: { initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', flag: '🇩🇪' },
-  reuters: { initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' },
-  ap: { initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' },
-  bloomberg: { initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', flag: '🇺🇸' },
-  dw: { initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', flag: '🇩🇪' },
-  wsj: { initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', flag: '🇺🇸' },
-  france24: { initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', flag: '🇫🇷' },
-  politico: { initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', flag: '🇺🇸' }
+  bbc: { initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  nyt: { initials: 'NYT', color: '#1e293b', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  cnn: { initials: 'CNN', color: '#cc0000', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  guardian: { initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  fox: { initials: 'FOX', color: '#003366', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  aljazeera: { initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
+  npr: { initials: 'NPR', color: '#3c78d8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  cnbc: { initials: 'CNB', color: '#0077b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  skynews: { initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  spiegel: { initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
+  reuters: { initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global Wire', countryCode: 'un', flag: '🌐' },
+  ap: { initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global Wire', countryCode: 'un', flag: '🌐' },
+  bloomberg: { initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  dw: { initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
+  wsj: { initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  france24: { initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
+  politico: { initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' }
 };
+
+// Cross-platform flag renderer (renders crisp FlagCDN images on Windows & mobile)
+function getSourceFlagHTML(sourceId, extraClass = '') {
+  const meta = SOURCE_META[sourceId];
+  if (!meta) return `<span class="flag-icon-globe ${extraClass}">🌐</span>`;
+  if (meta.countryCode && meta.countryCode !== 'un' && meta.region !== 'GLOBAL') {
+    return `<img src="https://flagcdn.com/20x15/${meta.countryCode}.png" alt="${meta.regionName}" class="flag-icon-img ${extraClass}" width="16" height="12" loading="lazy">`;
+  }
+  return `<span class="flag-icon-globe ${extraClass}" title="${meta.regionName}">🌐</span>`;
+}
+window.getSourceFlagHTML = getSourceFlagHTML;
 
 // High-Res Editorial Photography Fallbacks for constructive news cards
 const EDITORIAL_TOPIC_PHOTOS = {
@@ -279,7 +290,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
     <div class="silver-card-body">
       <div class="silver-story-meta-bar">
         <div class="silver-story-meta-left">
-          <span class="source-badge" style="background-color: ${brandMeta.color}">${brandMeta.flag || '🌐'} ${art.sourceName}</span>
+          <span class="source-badge" style="background-color: ${brandMeta.color}">${getSourceFlagHTML(art.sourceId)} ${art.sourceName}</span>
           <span class="cat-badge ${art.category || 'other'}">${art.category === 'climate' ? '🌱 Nature & Climate' : (art.category || 'other')}</span>
         </div>
         <div class="silver-story-meta-right">
@@ -2086,7 +2097,7 @@ function renderComparisonMatrix() {
           <div class="source-icon ${id}" style="background-color: ${meta.color}; color: #fff;">${meta.initials}</div>
           <div style="display:flex; flex-direction:column; overflow:hidden;">
             <h3 class="source-name">${source.name}</h3>
-            <span class="source-region-tag">${meta.flag} ${meta.regionName}</span>
+            <span class="source-region-tag">${getSourceFlagHTML(id)} ${meta.regionName}</span>
           </div>
         </div>
         <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.25rem;">
@@ -2359,7 +2370,7 @@ function renderStoryClusters() {
       return `
         <div class="cluster-outlet-bubble" 
              style="left: ${leftPct}%; background-color: ${meta.color};"
-             title="${meta.flag || ''} ${cov.sourceName}: ${scoreStr} (${cleanTitle})"
+             title="${meta.regionName || ''} (${cov.sourceName}): ${scoreStr} - ${cleanTitle}"
              onclick="window.open('${cov.link}', '_blank', 'noopener,noreferrer')">
           ${meta.initials}
         </div>
@@ -2384,7 +2395,7 @@ function renderStoryClusters() {
         <div class="cluster-article-card">
           <div class="cluster-article-top">
             <span class="cluster-article-outlet">
-              <span class="source-badge" style="background-color: ${meta.color};">${meta.flag || ''} ${art.sourceName}</span>
+              <span class="source-badge" style="background-color: ${meta.color};">${getSourceFlagHTML(art.sourceId)} ${art.sourceName}</span>
             </span>
             <div style="display:flex; align-items:center; gap:0.4rem;">
               <span class="score-badge ${scoreClass}" style="font-size:0.75rem; padding:0.15rem 0.45rem;">${scoreStr}</span>
@@ -2408,7 +2419,7 @@ function renderStoryClusters() {
     }).join('');
 
     return `
-      <article class="cluster-card card" id="${clusterId}">
+      <article class="cluster-card card" id="${clusterId}" onclick="handleClusterCardClick(event, '${clusterId}')">
         <div class="cluster-header">
           <div class="cluster-header-left">
             <div class="cluster-badges-strip">
@@ -2416,10 +2427,6 @@ function renderStoryClusters() {
               <span class="cluster-badge cluster-date-badge">
                 <i data-lucide="calendar" style="width:11px;height:11px;"></i>
                 ${cluster.dateRangeStr}
-              </span>
-              <span class="cluster-badge cluster-outlets-badge">
-                <i data-lucide="radio" style="width:11px;height:11px;"></i>
-                ${cluster.coverage.length} Outlets
               </span>
               <span class="cluster-badge cluster-score-badge ${moodClass}">
                 ${avgScoreFormatted} Avg Tone
@@ -2451,8 +2458,10 @@ function renderStoryClusters() {
         <!-- Interactive Coverage Toggle Bar -->
         <div class="cluster-coverage-meta-bar">
           <div class="cluster-coverage-info">
-            <i data-lucide="layers" style="width:13px;height:13px;"></i>
-            <span>${sortedCoverage.length} Reporting Desks (Critical &rarr; Constructive)</span>
+            <span class="cluster-badge cluster-outlets-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
+              <i data-lucide="radio" style="width:12px;height:12px;"></i>
+              ${sortedCoverage.length} Outlets
+            </span>
           </div>
           <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full cross-wire coverage">
             <span>Inspect Full Wire Coverage (${sortedCoverage.length})</span>
@@ -2460,8 +2469,8 @@ function renderStoryClusters() {
           </button>
         </div>
 
-        <!-- Coverage Grid of Desks (Collapsed by default) -->
-        <div class="cluster-coverage-grid" style="display: none;">
+        <!-- Coverage Grid of Desks (Smooth CSS Accordion) -->
+        <div class="cluster-coverage-grid">
           ${coverageCardsHTML}
         </div>
       </article>
@@ -2474,16 +2483,20 @@ function renderStoryClusters() {
 }
 window.renderStoryClusters = renderStoryClusters;
 
+// Click handler for cluster card (allows expanding anywhere on card without intercepting link/button clicks)
+window.handleClusterCardClick = function(event, clusterId) {
+  if (event.target.closest('a, button, .cluster-outlet-bubble, input, select, textarea')) {
+    return;
+  }
+  toggleClusterCard(clusterId);
+};
+
 // Toggle cluster coverage accordion & expand card to full width
 window.toggleClusterCard = function(clusterId) {
   const card = document.getElementById(clusterId);
   if (!card) return;
   const isExpanded = card.classList.toggle('is-expanded');
-  const grid = card.querySelector('.cluster-coverage-grid');
   const btn = card.querySelector('.cluster-toggle-btn');
-  if (grid) {
-    grid.style.display = isExpanded ? 'grid' : 'none';
-  }
   if (btn) {
     const span = btn.querySelector('span');
     const icon = btn.querySelector('i');
@@ -2701,14 +2714,60 @@ function renderSentimentTimeline() {
     isWindowFallback = true;
   }
 
-  // Active source filtering
+  // Active source & topic filtering
   const selectedSource = state.filters.source && state.filters.source !== 'all' ? state.filters.source : null;
   const sourceName = selectedSource ? (SOURCE_META[selectedSource]?.name || (state.sources[selectedSource] ? state.sources[selectedSource].name : selectedSource)) : 'Global';
 
-  // Compute sentiment score per snapshot (outlet-specific if filtered, otherwise global cross-outlet average)
+  const categoryNames = {
+    science: { name: 'Science & Space', icon: '🚀' },
+    climate: { name: 'Nature & Climate', icon: '🌱' },
+    technology: { name: 'Tech & AI', icon: '⚡' },
+    business: { name: 'Business & Economy', icon: '📈' },
+    health: { name: 'Health & Medicine', icon: '🏥' },
+    politics: { name: 'Politics & Governance', icon: '🗳️' },
+    world: { name: 'World & Global Affairs', icon: '🌍' }
+  };
+
+  const selectedTopic = state.macroTrendsTopic && state.macroTrendsTopic !== 'all' ? state.macroTrendsTopic : null;
+  const topicMeta = selectedTopic ? categoryNames[selectedTopic] : null;
+
+  // If a topic is selected, collect articles in this topic across active desks
+  let topicArticles = [];
+  if (selectedTopic) {
+    const candidateSources = selectedSource ? [state.sources[selectedSource]].filter(Boolean) : Object.values(state.sources || {});
+    candidateSources.forEach(s => {
+      (s.articles || []).forEach(a => {
+        if (a.category === selectedTopic) {
+          const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
+          if (typeof sc === 'number') {
+            const t = new Date(a.pubDate).getTime();
+            if (!isNaN(t)) {
+              topicArticles.push({ time: t, score: sc });
+            }
+          }
+        }
+      });
+    });
+    topicArticles.sort((a, b) => a.time - b.time);
+  }
+
+  // Compute sentiment score per snapshot (topic-specific, outlet-specific, or global cross-outlet average)
   const points = series.map((s, idx) => {
     let score = null;
-    if (selectedSource) {
+    const sTime = new Date(s.timestamp).getTime();
+
+    if (selectedTopic) {
+      const windowMs = 48 * 3600 * 1000;
+      const windowArts = topicArticles.filter(a => a.time <= sTime && a.time >= (sTime - windowMs));
+      if (windowArts.length > 0) {
+        score = windowArts.reduce((acc, a) => acc + a.score, 0) / windowArts.length;
+      } else {
+        const priorArts = topicArticles.filter(a => a.time <= sTime);
+        if (priorArts.length > 0) {
+          score = priorArts.slice(-15).reduce((acc, a) => acc + a.score, 0) / Math.min(priorArts.length, 15);
+        }
+      }
+    } else if (selectedSource) {
       if (typeof s.averages?.[selectedSource] === 'number') {
         score = s.averages[selectedSource];
       }
@@ -2716,21 +2775,44 @@ function renderSentimentTimeline() {
       const avgs = Object.values(s.averages || {});
       score = avgs.length > 0 ? (avgs.reduce((a, b) => a + b, 0) / avgs.length) : null;
     }
+
     return {
       index: idx,
       timestamp: s.timestamp,
       analyzer: s.analyzer,
       averages: s.averages || {},
-      score: score
+      score: score !== null ? Number(score.toFixed(3)) : null,
+      topic: selectedTopic
     };
   }).filter(p => p.score !== null);
 
   if (countEl) countEl.innerText = `${points.length} Snapshots`;
+
+  // Update Topic Filter Pill in timeline header
+  const topicIndicator = document.getElementById('timeline-topic-indicator');
+  if (topicIndicator) {
+    if (selectedTopic && topicMeta) {
+      topicIndicator.style.display = 'inline-flex';
+      topicIndicator.innerHTML = `
+        <span class="cluster-badge cluster-topic-badge" style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.75rem; padding:0.25rem 0.65rem;">
+          <span>${topicMeta.icon} ${topicMeta.name}</span>
+          <button type="button" onclick="toggleTimelineTopicFilter('${selectedTopic}')" style="background:none; border:none; cursor:pointer; padding:0; color:inherit; display:flex; align-items:center;" title="Clear topic filter">
+            <i data-lucide="x" style="width:12px;height:12px;"></i>
+          </button>
+        </span>
+      `;
+    } else {
+      topicIndicator.style.display = 'none';
+      topicIndicator.innerHTML = '';
+    }
+  }
+
   if (timeRangeEl) {
     const filterPrefix = selectedSource ? `${sourceName}: ` : '';
+    const topicPrefix = topicMeta ? `${topicMeta.icon} ${topicMeta.name} — ` : '';
     timeRangeEl.innerText = isWindowFallback && cutoff > 0
-      ? `${filterPrefix}${timeframeLabel} (Showing ${points.length} recent snapshots)`
-      : `${filterPrefix}${timeframeLabel} Trajectory`;
+      ? `${filterPrefix}${topicPrefix}${timeframeLabel} (Showing ${points.length} recent snapshots)`
+      : `${filterPrefix}${topicPrefix}${timeframeLabel} Trajectory`;
   }
 
   // SVG dimensions: upgraded to 960 x 320 with generous label paddings
@@ -2854,7 +2936,16 @@ function renderSentimentTimeline() {
       const scoreColor = pt.score > 0 ? 'var(--pos-color)' : 'var(--neg-color)';
       
       let tooltipContent = '';
-      if (selectedSource) {
+      if (selectedTopic && topicMeta) {
+        tooltipContent = `
+          <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
+          <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-bottom:0.25rem;">
+            <span style="color:var(--text-secondary);">${topicMeta.icon} ${topicMeta.name}:</span>
+            <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
+          </div>
+          ${selectedSource ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Desk: ${sourceName}</div>` : ''}
+        `;
+      } else if (selectedSource) {
         tooltipContent = `
           <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
           <div style="font-size:0.75rem; color:${scoreColor}; font-weight:700;">${sourceName}: ${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</div>
@@ -2910,16 +3001,6 @@ function renderSentimentTimeline() {
       });
     });
 
-    const categoryNames = {
-      science: { name: 'Science & Space', icon: '🚀' },
-      climate: { name: 'Nature & Climate', icon: '🌱' },
-      technology: { name: 'Tech & AI', icon: '⚡' },
-      business: { name: 'Business & Economy', icon: '📈' },
-      health: { name: 'Health & Medicine', icon: '🏥' },
-      politics: { name: 'Politics & Governance', icon: '🗳️' },
-      world: { name: 'World & Global Affairs', icon: '🌍' }
-    };
-
     topicsGrid.innerHTML = Object.keys(categoryNames).map(catKey => {
       const count = topicCounts[catKey] || 0;
       const avg = count > 0 ? (topicAvgs[catKey] / count) : 0;
@@ -2927,10 +3008,13 @@ function renderSentimentTimeline() {
       const pct = Math.max(0, Math.min(100, ((avg + 1) / 2) * 100));
       const scoreClass = avg > 0.1 ? 'pos' : (avg < -0.1 ? 'neg' : 'neu');
       const fillColor = avg > 0.1 ? 'var(--pos-color)' : (avg < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
-      const isSelected = state.filters.category === catKey;
+      const isSelected = (state.macroTrendsTopic === catKey);
 
       return `
-        <div class="topic-trajectory-card ${isSelected ? 'topic-traj-card-active' : ''}" onclick="selectCategoryFilter('${catKey}')" style="cursor:pointer; ${isSelected ? 'border: 2px solid var(--accent-color);' : ''}" title="Click to view ${meta.name} headlines">
+        <div class="topic-trajectory-card ${isSelected ? 'topic-traj-card-active' : ''}" 
+             onclick="toggleTimelineTopicFilter('${catKey}')" 
+             style="cursor:pointer; ${isSelected ? 'border: 2px solid var(--accent-color);' : ''}" 
+             title="${isSelected ? 'Click to clear filter' : `Click to filter timeline to ${meta.name}`}">
           <div class="topic-traj-header">
             <span>${meta.icon} ${meta.name}</span>
             <span class="topic-traj-score ${scoreClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>
@@ -2940,13 +3024,26 @@ function renderSentimentTimeline() {
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-muted); font-weight:600;">
             <span>${count} Articles</span>
-            <span>${avg > 0.15 ? 'Optimistic' : (avg < -0.15 ? 'Alarmist' : 'Balanced')}</span>
+            <span>${isSelected ? 'Active Filter ✕' : (avg > 0.15 ? 'Optimistic' : (avg < -0.15 ? 'Alarmist' : 'Balanced'))}</span>
           </div>
         </div>
       `;
     }).join('');
   }
 }
+
+// Toggle Macro Trends Timeline Topic Filter (filters timeline on current page without redirecting)
+window.toggleTimelineTopicFilter = function(catKey) {
+  if (state.macroTrendsTopic === catKey) {
+    state.macroTrendsTopic = 'all';
+  } else {
+    state.macroTrendsTopic = catKey;
+  }
+  renderSentimentTimeline();
+  if (window.lucide && lucide.createIcons) {
+    lucide.createIcons();
+  }
+};
 
 // Helpers
 function getMoodClass(score) {
@@ -3049,10 +3146,20 @@ function updateFilterIndicator() {
       elements.quickSourceName.innerText = srcName;
       elements.quickSourceIndicator.style.display = 'inline-flex';
     }
+
+    const deepdiveFeedTitle = document.getElementById('deepdive-feed-title-text');
+    if (deepdiveFeedTitle) {
+      deepdiveFeedTitle.innerText = `${srcName}'s Headline Feed`;
+    }
   } else {
     if (elements.activeFilterIndicator) elements.activeFilterIndicator.style.display = 'none';
     if (elements.deepdiveFilterIndicator) elements.deepdiveFilterIndicator.style.display = 'none';
     if (elements.quickSourceIndicator) elements.quickSourceIndicator.style.display = 'none';
+
+    const deepdiveFeedTitle = document.getElementById('deepdive-feed-title-text');
+    if (deepdiveFeedTitle) {
+      deepdiveFeedTitle.innerText = 'Headlines Feed';
+    }
   }
 
   // Active Topic Filter Indicator in Sticky Header Bar
@@ -3187,7 +3294,7 @@ function createArticleCard(art, index, prefix = 'pulse') {
   card.innerHTML = `
     <div class="article-top-bar">
       <div class="article-badges">
-        <span class="source-badge" style="background-color: ${brandMeta.color}">${art.sourceName}</span>
+        <span class="source-badge" style="background-color: ${brandMeta.color}">${getSourceFlagHTML(art.sourceId)} ${art.sourceName}</span>
         <span class="cat-badge ${art.category || 'other'}">${art.category || 'other'}</span>
         ${scoreBadgeHTML}
       </div>
@@ -3214,7 +3321,7 @@ function createArticleCard(art, index, prefix = 'pulse') {
     </button>
     
     <div id="${elementId}" class="article-reasoning-panel">
-      <strong>Vibe Profile Details:</strong> ${hasValidScore && art.explanation && !art.explanation.includes('locally') ? art.explanation : 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).'}
+      ${hasValidScore && art.explanation && !art.explanation.includes('locally') ? art.explanation : 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).'}
     </div>
   `;
   return card;

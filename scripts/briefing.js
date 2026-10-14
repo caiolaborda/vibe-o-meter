@@ -76,6 +76,12 @@ async function generateDailyBriefing(options = {}) {
   ].filter((a, i, arr) => a && arr.findIndex(x => x.title === a.title) === i)
    .map(a => `- [${a.outlet}] "${a.title}"`).join('\n');
 
+  // Extract dominant cross-outlet wire clusters (events reported by 2+ independent desks)
+  const sharedClusters = data.sharedStoryClusters || [];
+  const topClustersContext = sharedClusters.slice(0, 4).map(c => {
+    return `- "${c.story}" (${c.coverage?.length || 0} desks): ${c.summary || ''}`;
+  }).join('\n');
+
   let briefingText = '';
   const apiKey = process.env.GEMINI_API_KEY;
   const modelsToTry = [
@@ -122,6 +128,8 @@ STRICT RULES:
 TODAY'S GLOBAL HEADLINES CONTEXT:
 - Outlets leading the panic: ${mostAlarmistToday.name}
 - Outlets holding composure: ${mostCalmToday.name}
+- Major cross-wire story clusters (what multiple desks are covering right now):
+${topClustersContext || '- Major diplomatic friction, volatile market shifts, and ongoing conflicts'}
 - Representative stories across the global wire:
 ${sampleHeadlines || '- War strikes, political clashes, economic jitters, and scientific breakthroughs'}`;
 

@@ -57,7 +57,7 @@
         <div class="silver-controls-left">
           <span class="silver-sun-pill">
             <i data-lucide="sun"></i>
-            <span>Constructive Wire Feed</span>
+            <span>Good News Feed</span>
           </span>
           <span class="silver-stat-pill" id="silver-stat-count-pill">0 Stories</span>
           <span class="silver-stat-pill silver-score-pill" id="silver-stat-score-pill" title="Top valence score in window">+0.00 Max</span>
@@ -430,11 +430,12 @@
 
       <div class="timeline-card card">
         <div class="timeline-header-row">
-          <div style="display:flex; align-items:center; gap:0.75rem;">
+          <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
             <div style="background:rgba(29,78,216,0.08); color:var(--accent-color); padding:0.4rem 0.75rem; border-radius:8px; font-weight:700; font-size:0.8rem; display:flex; align-items:center; gap:0.35rem; font-family:var(--font-mono);">
               <i data-lucide="history" style="width:14px;height:14px;"></i>
               <span id="timeline-snapshot-count">21 Snapshots Recorded</span>
             </div>
+            <div id="timeline-topic-indicator" style="display:none; align-items:center; gap:0.4rem;"></div>
           </div>
         </div>
 
@@ -453,7 +454,7 @@
             Topic Sentiment Dynamics in Current Window
           </h4>
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">
-            Relative sentiment score across key news beats. Science and tech consistently offer refuge from political and international despair.
+            Relative sentiment score across key news beats. Click any topic to focus the timeline trajectory above.
           </p>
           <div class="topic-trajectories-grid" id="topic-trajectories-grid">
             <!-- Dynamically rendered in app.js -->
@@ -673,11 +674,6 @@
 
   <!-- TAB 4: OUTLET DEEP DIVES -->
   <main id="tab-panel-deepdives" class="tab-panel hidden">
-    <!-- Spotlight Banner for Filtered Source -->
-    <div id="deepdive-spotlight-banner" class="card spotlight-banner-card" style="display: none;">
-      <!-- Content will be injected dynamically -->
-    </div>
-
     <!-- NEWS SOURCES COMPARISON MATRIX -->
     <section class="comparison-section" id="comparison-section">
       <div class="section-header-row">
@@ -700,11 +696,11 @@
         <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center;">
           <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.35rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
           <button class="region-pill active" data-region="all">All Outlets (13)</button>
-          <button class="region-pill" data-region="US">🇺🇸 United States (7)</button>
-          <button class="region-pill" data-region="UK">🇬🇧 United Kingdom (3)</button>
-          <button class="region-pill" data-region="EU">🇩🇪 Europe (1)</button>
-          <button class="region-pill" data-region="ME">🇶🇦 Middle East (1)</button>
-          <button class="region-pill" data-region="GLOBAL">🌐 Global Wire (2)</button>
+          <button class="region-pill" data-region="US"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="US"> United States (7)</button>
+          <button class="region-pill" data-region="UK"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (3)</button>
+          <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/de.png" class="flag-icon-img" width="16" height="12" alt="DE"> Europe (1)</button>
+          <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (1)</button>
+          <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.25rem;">🌐</span> Global Wire (2)</button>
         </div>
 
         <div id="sources-grid" class="sources-grid">
@@ -723,12 +719,17 @@
       </div>
     </section>
 
+    <!-- Spotlight Banner for Filtered Source (Positioned below comparison matrix, above headlines feed) -->
+    <div id="deepdive-spotlight-banner" class="card spotlight-banner-card" style="display: none; margin-top: 1.5rem;">
+      <!-- Content will be injected dynamically -->
+    </div>
+
     <!-- OUTLET DEEP DIVE HEADLINE FEED -->
     <section class="headlines-section" id="deepdive-feed-section" style="margin-top: 1.5rem;">
       <div class="headlines-section-header">
         <h2 class="section-title flex-center">
           <i data-lucide="newspaper"></i>
-          Outlet Story Stream
+          <span id="deepdive-feed-title-text">Headlines Feed</span>
         </h2>
         <div id="deepdive-filter-indicator" class="filter-indicator" style="display: none;">
           Filtered to: <strong id="deepdive-filter-name">-</strong>
