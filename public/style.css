@@ -303,14 +303,15 @@ h1, h2, h3, h4 {
   border-radius: 9999px;
   pointer-events: none;
   z-index: 0;
-  transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: blur(36px);
+  will-change: opacity, transform;
+  transition: opacity 0.4s ease, transform 0.4s ease, background 0.4s ease;
 }
 
 /* Doom Mode Ambient Aura: Midnight Slate & Obsidian Deep Atmosphere */
 body[data-edition="doom"] .edition-ambient-glow,
 body:not([data-edition="silver"]) .edition-ambient-glow {
   background: radial-gradient(ellipse 75% 65% at 50% 50%, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.65) 45%, transparent 75%);
-  filter: blur(34px);
   opacity: 0.9;
   transform: translate(-50%, -50%) scale(1);
 }
@@ -318,9 +319,8 @@ body:not([data-edition="silver"]) .edition-ambient-glow {
 /* Silver Mode Ambient Aura: Warm Sunlit Golden Dawn */
 body[data-edition="silver"] .edition-ambient-glow {
   background: radial-gradient(ellipse 78% 68% at 50% 50%, rgba(251, 191, 36, 0.55) 0%, rgba(245, 158, 11, 0.28) 48%, transparent 80%);
-  filter: blur(38px);
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1.15);
+  transform: translate(-50%, -50%) scale(1.1);
 }
 
 /* Large Central Toggle Pill Wrapper */
@@ -335,7 +335,7 @@ body[data-edition="silver"] .edition-ambient-glow {
   padding: 8px;
   gap: 10px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 body[data-edition="doom"] .edition-toggle-wrap-large,
@@ -366,8 +366,9 @@ body[data-edition="silver"] .edition-toggle-wrap-large {
   font-weight: 700;
   cursor: pointer;
   letter-spacing: -0.015em;
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   user-select: none;
+  transform: none;
 }
 
 /* SVG and Icon Support for Lucide Icons */
@@ -377,39 +378,38 @@ body[data-edition="silver"] .edition-toggle-wrap-large {
   height: 22px;
   display: inline-block;
   vertical-align: middle;
-  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease, filter 0.25s ease;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, filter 0.2s ease;
   flex-shrink: 0;
 }
 
-/* Interactive Hover Peak States & Premise Micro-animations */
+/* Interactive Hover Peak States - ZERO upward translation on unselected buttons */
 .edition-toggle-wrap-large .edition-pill-btn:hover {
   color: var(--text-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  transform: none;
 }
 
-/* Doom button hover: button peaks, newspaper tilts like a broadsheet */
+/* Doom button hover: newspaper broadsheet micro-tilt */
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover {
   background: rgba(36, 44, 60, 0.45);
 }
 
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover svg,
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover i {
-  transform: rotate(-14deg) scale(1.22);
+  transform: rotate(-12deg) scale(1.18);
   color: #60a5fa;
-  filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.6));
+  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5));
 }
 
-/* Silver button hover: button peaks, sun rotates with warm solar glow */
+/* Silver button hover: solar rotation micro-tilt */
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover {
   background: rgba(254, 243, 199, 0.35);
 }
 
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover svg,
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover i {
-  transform: rotate(55deg) scale(1.28);
+  transform: rotate(45deg) scale(1.22);
   color: #f59e0b;
-  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
 }
 
 /* Active State: No Good News (Doom) */
@@ -418,8 +418,8 @@ body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[d
   background: linear-gradient(145deg, #242c3c 0%, #171d29 100%);
   color: #ffffff;
   border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: none;
 }
 
 body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active svg,
@@ -435,8 +435,8 @@ body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-ed
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   color: #78350f;
   border-color: #f59e0b;
-  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transform: none;
 }
 
 body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"].active svg,
@@ -560,98 +560,50 @@ body:not([data-edition="silver"]) .section-collapse-btn {
   color: #cbd5e1;
 }
 
-/* Silver edition specific masthead overrides */
-body[data-edition="silver"] .edition-toggle-wrap-large {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-}
-
-body[data-edition="silver"] .edition-toggle-btn-large[data-edition="silver"].active {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #fcd34d;
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
-}
-
 /* Embedded / Highlighted Story Links inside the Hero Editorial Summary */
 .summary-story-link {
-  color: #1d4ed8;
-  font-weight: 600;
+  color: #93c5fd;
+  font-weight: 500;
   text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 4px;
-  text-decoration-color: rgba(29, 78, 216, 0.45);
-  background: rgba(29, 78, 216, 0.07);
-  padding: 0.12rem 0.45rem;
-  border-radius: 5px;
-  transition: all var(--transition-fast);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
+  text-decoration-style: solid;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(147, 197, 253, 0.4);
+  background: transparent;
+  padding: 0 2px;
+  border-radius: 2px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  display: inline;
   cursor: pointer;
 }
 
 .summary-story-link:hover {
-  color: #1e40af;
-  background: rgba(29, 78, 216, 0.14);
-  text-decoration-style: solid;
-  text-decoration-color: #1d4ed8;
+  color: #bfdbfe;
+  text-decoration-color: #93c5fd;
 }
 
+.summary-story-link svg,
 .summary-story-link i {
-  width: 13px;
-  height: 13px;
-  opacity: 0.75;
+  display: inline-block;
+  vertical-align: -1px;
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  opacity: 0.6;
 }
 
-/* Two-Sided App Edition Switcher */
-.edition-toggle-wrap {
-  display: inline-flex;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 24px;
-  padding: 3px;
-  gap: 3px;
+.summary-story-link:hover svg,
+.summary-story-link:hover i {
+  opacity: 0.95;
 }
 
-.edition-pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 1.05rem;
-  border-radius: 20px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+body[data-edition="silver"] .summary-story-link {
+  color: #b45309;
+  text-decoration-color: rgba(180, 83, 9, 0.35);
 }
 
-.edition-pill-btn i {
-  width: 15px;
-  height: 15px;
-}
-
-.edition-pill-btn:hover {
-  color: var(--text-primary);
-}
-
-.edition-pill-btn.active {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border-color: var(--border-color);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-}
-
-body[data-edition="silver"] .edition-pill-btn[data-edition="silver"].active {
-  background: #fef3c7;
-  color: #92400e;
-  border-color: #fcd34d;
-  box-shadow: 0 1px 4px rgba(217, 119, 6, 0.15);
+body[data-edition="silver"] .summary-story-link:hover {
+  color: #78350f;
+  text-decoration-color: #b45309;
 }
 
 /* --- SOME GOOD NEWS DEDICATED VIEW (SILVER LINING EDITION) --- */
@@ -3022,7 +2974,7 @@ body:not([data-edition="silver"]) .clear-btn {
 
 /* 3. Hero Editorial Narrative Lead (Symmetrical, Clean Broadsheet Lead) */
 .hero-editorial-lead-wrap {
-  padding: 0.75rem 0 1.25rem 0;
+  padding: 1.35rem 0 1.35rem 0;
   width: 100%;
 }
 

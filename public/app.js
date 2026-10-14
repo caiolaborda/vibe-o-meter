@@ -154,7 +154,7 @@ function findRelatedCoverage(art, allArticles) {
     }
   }
 
-  // 2. Keyword/Topic Cross-Outlet Matching
+  // 2. Keyword/Topic Cross-Outlet Matching (Target top 40 candidate pool for performance)
   if (allArticles && allArticles.length > 0) {
     const stopWords = new Set(['about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second', 'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over']);
     const words = currentTitle
@@ -163,7 +163,8 @@ function findRelatedCoverage(art, allArticles) {
       .filter(w => w.length >= 5 && !stopWords.has(w));
       
     if (words.length > 0) {
-      for (const other of allArticles) {
+      const candidates = allArticles.slice(0, 40);
+      for (const other of candidates) {
         if (other.sourceId !== art.sourceId && !related.some(r => r.sourceId === other.sourceId)) {
           const otherTitle = (other.title || '').toLowerCase();
           const matchCount = words.filter(w => otherTitle.includes(w)).length;
@@ -632,6 +633,7 @@ function setupEventListeners() {
   if (silverTopicSelect) {
     silverTopicSelect.addEventListener('change', (e) => {
       state.silverTopic = e.target.value;
+      state.silverLimit = 24;
       renderSilverEdition();
     });
   }
@@ -642,6 +644,7 @@ function setupEventListeners() {
     silverTimeSelect.addEventListener('change', (e) => {
       state.filters.time = e.target.value;
       state.headlinesLimit = 20;
+      state.silverLimit = 24;
       if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
       if (elements.filterTime) elements.filterTime.value = e.target.value;
       updateAppUI();
@@ -1493,7 +1496,6 @@ function switchEdition(edition) {
 
     resolvedSources = getResolvedSources();
     switchTab(state.activeTab || 'pulse');
-    updateAppUI();
   }
 
   if (window.lucide && lucide.createIcons) {
@@ -1504,6 +1506,7 @@ function switchEdition(edition) {
 // Global navigation helpers for Silver Edition
 window.setSilverTimeframe = function(val) {
   state.filters.time = val;
+  state.silverLimit = 24;
   const silverSelect = document.getElementById('silver-timeframe-select');
   if (silverSelect) silverSelect.value = val;
   if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
@@ -1513,6 +1516,7 @@ window.setSilverTimeframe = function(val) {
 
 window.setSilverTopic = function(val) {
   state.silverTopic = val;
+  state.silverLimit = 24;
   const topicSelect = document.getElementById('silver-topic-select');
   if (topicSelect) topicSelect.value = val;
   renderSilverEdition();
@@ -1637,19 +1641,42 @@ function renderSilverEdition() {
     return;
   }
 
-  // 5. Render directly in BroadSheet Grid
+  // 5. Render directly in BroadSheet Grid (sliced to initial batch for instant 60fps switching)
+  state.silverLimit = state.silverLimit || 24;
+  const displayedArticles = uniqueArticles.slice(0, state.silverLimit);
+
   const gridEl = document.createElement('div');
   gridEl.className = 'silver-grid-container';
 
-  uniqueArticles.forEach((art, idx) => {
+  displayedArticles.forEach((art, idx) => {
     const card = document.createElement('div');
     card.className = 'silver-story-card silver-card-grid-item';
-    const related = findRelatedCoverage(art, uniqueArticles);
+    const related = findRelatedCoverage(art, displayedArticles);
     card.innerHTML = createSilverCardHTML(art, idx, related, false);
     gridEl.appendChild(card);
   });
 
   container.appendChild(gridEl);
+
+  // Load More Constructive Stories
+  if (uniqueArticles.length > displayedArticles.length) {
+    const moreWrap = document.createElement('div');
+    moreWrap.className = 'silver-load-more-wrap';
+    moreWrap.style.cssText = 'text-align: center; margin: 2rem 0 3.5rem 0; width: 100%;';
+    moreWrap.innerHTML = `
+      <button class="btn btn-secondary" style="padding: 0.75rem 2.2rem; border-radius: 28px; font-weight: 600; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-primary); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" id="silver-load-more-btn">
+        <i data-lucide="chevron-down"></i> Load More Constructive Stories (${displayedArticles.length} of ${uniqueArticles.length})
+      </button>
+    `;
+    container.appendChild(moreWrap);
+    const loadBtn = moreWrap.querySelector('#silver-load-more-btn');
+    if (loadBtn) {
+      loadBtn.addEventListener('click', () => {
+        state.silverLimit += 24;
+        renderSilverEdition();
+      });
+    }
+  }
 
   if (window.lucide && lucide.createIcons) {
     lucide.createIcons();
