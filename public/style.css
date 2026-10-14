@@ -759,14 +759,23 @@ body[data-edition="doom"] .silver-controls-bar {
 
 .silver-grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.35rem;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
   .silver-grid-container {
     grid-template-columns: 1fr;
   }
+}
+
+.silver-load-more-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2.5rem 0 3.5rem 0;
 }
 
 .silver-card-grid-item {
