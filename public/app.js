@@ -39,23 +39,23 @@ let resolvedSources = {};
 
 // News Source Metadata with Origin Region, Country Codes and Visual Colors
 const SOURCE_META = {
-  bbc: { initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  nyt: { initials: 'NYT', color: '#1e293b', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  cnn: { initials: 'CNN', color: '#cc0000', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  guardian: { initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  fox: { initials: 'FOX', color: '#003366', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  aljazeera: { initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
-  npr: { initials: 'NPR', color: '#3c78d8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  cnbc: { initials: 'CNB', color: '#0077b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  skynews: { initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  spiegel: { initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
-  reuters: { initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
-  ap: { initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
-  bloomberg: { initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  dw: { initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
-  wsj: { initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  france24: { initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
-  politico: { initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' }
+  bbc: { name: 'BBC News', initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  nyt: { name: 'The New York Times', initials: 'NYT', color: '#1e293b', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  cnn: { name: 'CNN', initials: 'CNN', color: '#cc0000', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  guardian: { name: 'The Guardian', initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  fox: { name: 'Fox News', initials: 'FOX', color: '#003366', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
+  npr: { name: 'NPR', initials: 'NPR', color: '#3c78d8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  cnbc: { name: 'CNBC', initials: 'CNB', color: '#0077b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  skynews: { name: 'Sky News', initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  spiegel: { name: 'Der Spiegel', initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
+  reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
+  ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
+  bloomberg: { name: 'Bloomberg', initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  dw: { name: 'DW News', initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
+  wsj: { name: 'The Wall Street Journal', initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  france24: { name: 'France 24', initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
+  politico: { name: 'Politico', initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' }
 };
 
 // Cross-platform flag renderer (renders crisp FlagCDN images on Windows & mobile)
@@ -2161,7 +2161,7 @@ function createSvgGauge(score) {
   if (score === null || score === undefined) {
     return `
       <svg viewBox="0 0 100 55" class="gauge-svg" style="width: 100px; height: 55px;">
-        <path d="M 15 45 A 35 35 0 0 1 85 45" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" stroke-linecap="round" />
+        <path d="M 15 45 A 35 35 0 0 1 85 45" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-linecap="round" opacity="0.4" />
         <circle cx="50" cy="45" r="5" fill="var(--text-muted)" />
       </svg>
     `;
@@ -2176,15 +2176,16 @@ function createSvgGauge(score) {
   return `
     <svg viewBox="0 0 100 55" class="gauge-svg" style="width: 100px; height: 55px;">
       <!-- Track Arc -->
-      <path d="M 15 45 A 35 35 0 0 1 85 45" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" stroke-linecap="round" />
+      <path d="M 15 45 A 35 35 0 0 1 85 45" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-linecap="round" opacity="0.4" />
       <!-- Red (negative) sector visual helper -->
-      <path d="M 15 45 A 35 35 0 0 1 40 18" fill="none" stroke="rgba(239, 68, 68, 0.15)" stroke-width="8" />
+      <path d="M 15 45 A 35 35 0 0 1 40 18" fill="none" stroke="var(--neg-color)" stroke-width="8" stroke-opacity="0.25" />
       <!-- Green (positive) sector visual helper -->
-      <path d="M 60 18 A 35 35 0 0 1 85 45" fill="none" stroke="rgba(16, 185, 129, 0.15)" stroke-width="8" />
+      <path d="M 60 18 A 35 35 0 0 1 85 45" fill="none" stroke="var(--pos-color)" stroke-width="8" stroke-opacity="0.25" />
       
       <!-- Needle pointer -->
       <line x1="50" y1="45" x2="50" y2="18" stroke="${themeColor}" stroke-width="3" stroke-linecap="round" transform="rotate(${angle}, 50, 45)" style="transition: transform 0.5s ease;" />
-      <circle cx="50" cy="45" r="5" fill="${themeColor}" />
+      <circle cx="50" cy="45" r="4.5" fill="${themeColor}" />
+      <circle cx="50" cy="45" r="2.2" fill="var(--bg-card)" />
     </svg>
   `;
 }
@@ -2386,25 +2387,24 @@ function renderComparisonMatrix() {
     const card = document.createElement('div');
     card.className = `source-card card ${isSelected ? 'active' : ''}`;
     card.setAttribute('data-id', id);
-    
-    const selectedBadgeHTML = isSelected 
-      ? `<span class="source-selected-badge"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> Selected</span>`
-      : '';
 
     card.innerHTML = `
       <div class="source-card-header">
         <div class="source-meta">
-          <div class="source-icon ${id}" style="background-color: ${meta.color}; color: #fff;">${meta.initials}</div>
-          <div style="display:flex; flex-direction:column; overflow:hidden;">
-            <h3 class="source-name">${source.name}</h3>
+          <div class="source-icon ${id}" style="background-color: ${meta.color}; color: #fff;">
+            ${meta.initials}
+            ${isSelected ? '<span class="source-icon-check">✓</span>' : ''}
+          </div>
+          <div style="display:flex; flex-direction:column; overflow:hidden; min-width:0;">
+            <div style="display:flex; align-items:center; gap:0.45rem;">
+              <h3 class="source-name" title="${source.name}">${source.name}</h3>
+              ${isSelected ? '<span class="source-active-indicator">FOCUS</span>' : ''}
+            </div>
             <span class="source-region-tag">${getSourceFlagHTML(id)} ${meta.regionName}</span>
           </div>
         </div>
         <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.35rem;">
-          <div style="display:flex; align-items:center; gap:0.4rem;">
-            ${selectedBadgeHTML}
-            <span class="score-badge ${moodClass}">${badgeText}</span>
-          </div>
+          <span class="score-badge ${moodClass}">${badgeText}</span>
           ${trendBadgeHTML}
         </div>
       </div>
@@ -2418,8 +2418,8 @@ function renderComparisonMatrix() {
       <!-- Stacked Distribution Bar -->
       <div class="distribution-container">
         <div class="dist-bar-label">
-          <span>Headline Distribution</span>
-          <span>${negPct}% / ${neuPct}% / ${posPct}%</span>
+          <span style="font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em;">Sentiment Mix</span>
+          <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${negPct}% neg / ${neuPct}% neu / ${posPct}% pos</span>
         </div>
         <div class="dist-bar-track">
           <div class="dist-slice neg" style="width: ${negPct}%" title="Negative: ${negPct}%"></div>
@@ -2431,16 +2431,16 @@ function renderComparisonMatrix() {
       <!-- Sparkline Graph -->
       <div class="sparkline-container">
         <div class="sparkline-label" style="display:flex; justify-content:space-between; align-items:center;">
-          <span>Vibe Trend</span>
-          <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--text-muted);">${source.articles?.length || 0} stories</span>
+          <span style="font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em;">Vibe Trajectory</span>
+          <span style="font-size:0.72rem; font-family:var(--font-mono); color:var(--text-muted);">${source.articles?.length || 0} stories</span>
         </div>
         ${createSvgSparkline(source.articles, id)}
       </div>
       
       <div class="card-footer">
-        <span class="text-muted small-text">Sample size: ${source.scoredCount || 0} scored</span>
-        <button class="inspect-btn" style="${isSelected ? 'color: var(--accent-color); font-weight:700;' : ''}">
-          <span>${isSelected ? 'Selected (Click to deselect)' : 'Inspect Headlines'}</span>
+        <span class="text-muted small-text" style="font-size:0.72rem; font-family:var(--font-mono);">Sample: ${source.scoredCount || 0} articles</span>
+        <button class="inspect-btn ${isSelected ? 'active-inspect-btn' : ''}">
+          <span>${isSelected ? 'Selected (Deselect)' : 'Filter Headlines'}</span>
           <i data-lucide="${isSelected ? 'check' : 'arrow-right'}" style="width:12px;height:12px;"></i>
         </button>
       </div>
@@ -3439,8 +3439,9 @@ function renderSentimentTimeline() {
     `;
   }
 
-  // --- MULTI-OUTLET TRAJECTORY LINES ---
+  // --- MULTI-OUTLET TRAJECTORY LINES & HIT AREAS ---
   let outletLinesHTML = '';
+  let outletHitAreasHTML = '';
   sourceIds.forEach(srcId => {
     const meta = SOURCE_META[srcId] || { color: '#94a3b8', name: srcId };
     const srcPts = [];
@@ -3479,7 +3480,13 @@ function renderSentimentTimeline() {
     outletLinesHTML += `
       <path class="timeline-outlet-line" data-source="${srcId}" d="${pathD}" fill="none" 
             stroke="${meta.color}" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" 
-            stroke-linecap="round" stroke-linejoin="round" ${extraFilter}/>
+            stroke-linecap="round" stroke-linejoin="round" ${extraFilter} style="transition: stroke-width 0.15s ease, stroke-opacity 0.15s ease;"/>
+    `;
+
+    outletHitAreasHTML += `
+      <path class="timeline-hit-area" data-source="${srcId}" d="${pathD}" fill="none" 
+            stroke="transparent" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"
+            pointer-events="stroke" style="cursor: pointer;"/>
     `;
   });
 
@@ -3539,6 +3546,7 @@ function renderSentimentTimeline() {
     ${xLabelsHTML}
     ${outletLinesHTML}
     ${mainLineHTML}
+    ${outletHitAreasHTML}
     ${dotsHTML}
   `;
 
@@ -3578,6 +3586,8 @@ function renderSentimentTimeline() {
         const outletEntries = Object.entries(pt.averages).filter(e => typeof e[1] === 'number').sort((a,b) => a[1] - b[1]);
         const lowest = outletEntries[0];
         const highest = outletEntries[outletEntries.length - 1];
+        const lowestName = lowest ? (resolvedSources[lowest[0]]?.name || SOURCE_META[lowest[0]]?.name || lowest[0]) : '';
+        const highestName = highest ? (resolvedSources[highest[0]]?.name || SOURCE_META[highest[0]]?.name || highest[0]) : '';
         tooltipContent = `
           <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
           <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-bottom:0.25rem;">
@@ -3585,8 +3595,8 @@ function renderSentimentTimeline() {
             <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
           </div>
           <div style="font-size:0.7rem; color:var(--accent-color); font-family:var(--font-mono); margin-bottom:0.25rem;">vs Historical: ${ptDeltaStr}</div>
-          ${lowest ? `<div style="font-size:0.7rem; color:var(--neg-color);">📉 Darkest: ${(SOURCE_META[lowest[0]]?.name || lowest[0])} (${lowest[1].toFixed(2)})</div>` : ''}
-          ${highest ? `<div style="font-size:0.7rem; color:var(--pos-color);">📈 Brightest: ${(SOURCE_META[highest[0]]?.name || highest[0])} (${highest[1].toFixed(2)})</div>` : ''}
+          ${lowest ? `<div style="font-size:0.7rem; color:var(--neg-color);">📉 Darkest: ${lowestName} (${lowest[1].toFixed(2)})</div>` : ''}
+          ${highest ? `<div style="font-size:0.7rem; color:var(--pos-color);">📈 Brightest: ${highestName} (${highest[1].toFixed(2)})</div>` : ''}
         `;
       }
 
@@ -3606,55 +3616,93 @@ function renderSentimentTimeline() {
     });
   });
 
-  // Attach hover & click listeners to outlet lines for interactive ghosting
-  chartSvg.querySelectorAll('.timeline-outlet-line').forEach(line => {
-    const sId = line.getAttribute('data-source');
-    const meta = SOURCE_META[sId];
-    if (!meta) return;
+  // Helper functions for outlet hover interaction
+  const activateOutletHover = (sId, e) => {
+    const meta = SOURCE_META[sId] || { color: '#94a3b8', name: sId };
+    const outletName = resolvedSources[sId]?.name || state.sources[sId]?.name || meta.name || sId;
 
-    line.addEventListener('mouseenter', (e) => {
-      if (!selectedSource) {
-        chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
-          if (l.getAttribute('data-source') === sId) {
-            l.style.strokeOpacity = '1';
-            l.style.strokeWidth = '3.5';
-            l.style.filter = `drop-shadow(0 0 8px ${meta.color}99)`;
-          } else {
-            l.style.strokeOpacity = '0.1';
-          }
-        });
+    if (!selectedSource) {
+      chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
+        if (l.getAttribute('data-source') === sId) {
+          l.style.strokeOpacity = '1';
+          l.style.strokeWidth = '3.5';
+          l.style.filter = `drop-shadow(0 0 8px ${meta.color}99)`;
+        } else {
+          l.style.strokeOpacity = '0.08';
+        }
+      });
+    }
+
+    if (tooltip) {
+      const histScored = (state.sources[sId]?.articles || []).filter(a => typeof a.sentiment === 'number');
+      const sHistAvg = histScored.length > 0 ? (histScored.reduce((sum,a)=>sum+a.sentiment,0)/histScored.length) : (resolvedSources[sId]?.averageSentiment || 0);
+      
+      let currentValHTML = '';
+      for (let i = points.length - 1; i >= 0; i--) {
+        const val = points[i].averages?.[sId];
+        if (typeof val === 'number') {
+          const delta = val - sHistAvg;
+          const deltaStr = (delta >= 0 ? '+' : '') + delta.toFixed(2);
+          const scoreColor = val > 0.1 ? 'var(--pos-color)' : (val < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
+          currentValHTML = `
+            <div style="display:flex; justify-content:space-between; gap:0.6rem; margin-top:0.25rem; font-size:0.75rem;">
+              <span style="color:var(--text-secondary);">Timeline Vibe:</span>
+              <strong style="color:${scoreColor};">${val > 0 ? '+' : ''}${val.toFixed(2)}</strong>
+            </div>
+            <div style="font-size:0.7rem; color:var(--accent-color); font-family:var(--font-mono); margin-top:0.15rem;">vs Historical: ${deltaStr}</div>
+          `;
+          break;
+        }
       }
 
-      if (tooltip) {
-        const histScored = (state.sources[sId]?.articles || []).filter(a => typeof a.sentiment === 'number');
-        const sHistAvg = histScored.length > 0 ? (histScored.reduce((sum,a)=>sum+a.sentiment,0)/histScored.length) : (resolvedSources[sId]?.averageSentiment || 0);
-        tooltip.innerHTML = `
-          <div style="font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${meta.color};"></span>
-            ${meta.name}
-          </div>
-          <div style="font-size:0.72rem; color:var(--text-secondary); margin-top:0.2rem;">All-Time Baseline: <strong>${sHistAvg > 0 ? '+' : ''}${sHistAvg.toFixed(2)}</strong></div>
-          <div style="font-size:0.68rem; color:var(--accent-color); margin-top:0.15rem;">Click line to focus this outlet</div>
-        `;
-        tooltip.style.display = 'block';
+      tooltip.innerHTML = `
+        <div style="font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+          <span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${meta.color};"></span>
+          ${outletName}
+        </div>
+        ${currentValHTML}
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem;">All-Time Baseline: <strong>${sHistAvg > 0 ? '+' : ''}${sHistAvg.toFixed(2)}</strong></div>
+        <div style="font-size:0.68rem; color:var(--accent-color); margin-top:0.3rem; border-top:1px solid var(--border-color); padding-top:0.25rem; font-weight:600;">
+          ${selectedSource === sId ? '✓ Click to clear outlet focus' : 'Click line to focus this outlet'}
+        </div>
+      `;
+      tooltip.style.display = 'block';
+      const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
+      const leftPos = Math.min(wrapRect.width - 190, Math.max(10, e.clientX - wrapRect.left + 12));
+      const topPos = Math.max(10, e.clientY - wrapRect.top - 24);
+      tooltip.style.left = `${leftPos}px`;
+      tooltip.style.top = `${topPos}px`;
+    }
+  };
+
+  const deactivateOutletHover = () => {
+    if (!selectedSource) {
+      chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
+        l.style.strokeOpacity = '0.35';
+        l.style.strokeWidth = '1.6';
+        l.style.filter = 'none';
+      });
+    }
+    if (tooltip) tooltip.style.display = 'none';
+  };
+
+  // Attach hover & click listeners to both hit areas and visible lines
+  chartSvg.querySelectorAll('.timeline-hit-area, .timeline-outlet-line').forEach(el => {
+    const sId = el.getAttribute('data-source');
+    if (!sId) return;
+
+    el.addEventListener('mouseenter', (e) => activateOutletHover(sId, e));
+    el.addEventListener('mousemove', (e) => {
+      if (tooltip && tooltip.style.display === 'block') {
         const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
-        tooltip.style.left = `${e.clientX - wrapRect.left}px`;
-        tooltip.style.top = `${e.clientY - wrapRect.top - 12}px`;
+        const leftPos = Math.min(wrapRect.width - 190, Math.max(10, e.clientX - wrapRect.left + 12));
+        const topPos = Math.max(10, e.clientY - wrapRect.top - 24);
+        tooltip.style.left = `${leftPos}px`;
+        tooltip.style.top = `${topPos}px`;
       }
     });
-
-    line.addEventListener('mouseleave', () => {
-      if (!selectedSource) {
-        chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
-          l.style.strokeOpacity = '0.35';
-          l.style.strokeWidth = '1.6';
-          l.style.filter = 'none';
-        });
-      }
-      if (tooltip) tooltip.style.display = 'none';
-    });
-
-    line.addEventListener('click', () => {
+    el.addEventListener('mouseleave', deactivateOutletHover);
+    el.addEventListener('click', () => {
       toggleSourceFilter(sId);
     });
   });
