@@ -1593,15 +1593,19 @@ function renderSilverEdition() {
     }
   });
 
-  // 2. Deduplicate articles by normalized title
-  const seenTitles = new Set();
+  // 2. Deduplicate articles by canonical URL and clean title
+  positiveArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+  const seenSilverUrls = new Set();
+  const seenSilverTitles = new Set();
   const uniqueArticles = [];
   for (const art of positiveArticles) {
-    const norm = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 45);
-    if (!seenTitles.has(norm)) {
-      seenTitles.add(norm);
-      uniqueArticles.push(art);
-    }
+    const cUrl = canonicalUrl(art.link);
+    const cTitle = cleanHeadlineTitle(art.title);
+    if (cUrl && seenSilverUrls.has(cUrl)) continue;
+    if (cTitle && seenSilverTitles.has(cTitle)) continue;
+    if (cUrl) seenSilverUrls.add(cUrl);
+    if (cTitle) seenSilverTitles.add(cTitle);
+    uniqueArticles.push(art);
   }
 
   // 3. Sort descending by highest positive sentiment score
@@ -2472,10 +2476,26 @@ function renderStoryClusters() {
     const avgScoreFormatted = `${cluster.averageSentiment > 0 ? '+' : ''}${cluster.averageSentiment.toFixed(2)}`;
     const isHighSpread = cluster.computedSpread >= 0.35;
 
+    // Deduplicate coverage articles (keep freshest per outlet canonical link / clean title)
+    const seenCovUrls = new Set();
+    const seenCovTitles = new Set();
+    const dedupedCoverage = [];
+    const sortedRawCoverage = [...(cluster.coverage || [])].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+    for (const cov of sortedRawCoverage) {
+      const cUrl = `${cov.sourceId || ''}_${canonicalUrl(cov.link)}`;
+      const cTitle = `${cov.sourceId || ''}_${cleanHeadlineTitle(cov.title)}`;
+      if (seenCovUrls.has(cUrl) || seenCovTitles.has(cTitle)) continue;
+      seenCovUrls.add(cUrl);
+      seenCovTitles.add(cTitle);
+      dedupedCoverage.push(cov);
+    }
+
+    const uniqueSources = new Set(dedupedCoverage.map(x => x.sourceId));
+
     // Build mini-spectrum bubbles (deduplicate by sourceId for plot clarity)
     const uniqueCoverage = [];
     const seenSources = new Set();
-    cluster.coverage.forEach(cov => {
+    dedupedCoverage.forEach(cov => {
       if (!seenSources.has(cov.sourceId)) {
         seenSources.add(cov.sourceId);
         uniqueCoverage.push(cov);
@@ -2500,7 +2520,7 @@ function renderStoryClusters() {
     }).join('');
 
     // Sort reporting inside each story topic strictly by valence (from most negative to most positive)
-    const sortedCoverage = [...cluster.coverage].sort((a, b) => {
+    const sortedCoverage = [...dedupedCoverage].sort((a, b) => {
       const sa = typeof a.sentiment === 'number' ? a.sentiment : 0;
       const sb = typeof b.sentiment === 'number' ? b.sentiment : 0;
       return sa - sb;
@@ -2582,7 +2602,7 @@ function renderStoryClusters() {
           <div class="cluster-coverage-info">
             <span class="cluster-badge cluster-outlets-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
               <i data-lucide="radio" style="width:12px;height:12px;"></i>
-              ${sortedCoverage.length} Outlets
+              ${uniqueSources.size} Outlets
             </span>
           </div>
           <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full cross-wire coverage">
@@ -3239,6 +3259,39 @@ window.resetTimelineScope = function() {
 };
 
 // Helpers
+function canonicalUrl(url) {
+  if (!url) return '';
+  try {
+    const u = new URL(url);
+    const removeParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'at_medium', 'at_campaign', 'at_custom1', 'at_custom2', 'at_custom3', 'at_custom4', 'oc', 'ved', 'usg'];
+    removeParams.forEach(p => u.searchParams.delete(p));
+    let clean = u.origin + u.pathname;
+    const s = u.searchParams.toString();
+    if (s) clean += '?' + s;
+    return clean.replace(/\/+$/, '').toLowerCase();
+  } catch (e) {
+    return url.split('?')[0].replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+function cleanHeadlineTitle(title) {
+  if (!title) return '';
+  return title
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj).*$/i, '')
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
+    .replace(/[\u2013\u2014-]/g, ' ')
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 function getMoodClass(score) {
   if (score === null || score === undefined) return 'none';
   if (score > 0.15) return 'positive';
@@ -3407,7 +3460,7 @@ function renderHeadlines() {
   elements.headlinesContainer.innerHTML = '';
   
   // 1. Gather all articles into flat array
-  let articles = [];
+  const rawArticles = [];
   Object.keys(resolvedSources).forEach(sourceId => {
     // Skip if we filtered to a specific source and this is not it
     if (state.filters.source !== 'all' && state.filters.source !== sourceId) {
@@ -3417,7 +3470,7 @@ function renderHeadlines() {
     const source = resolvedSources[sourceId];
     if (source.articles) {
       source.articles.forEach(art => {
-        articles.push({
+        rawArticles.push({
           sourceId,
           sourceName: source.name,
           ...art
@@ -3425,6 +3478,27 @@ function renderHeadlines() {
       });
     }
   });
+
+  // Sort newest first before deduplication so we retain the freshest revision
+  rawArticles.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+  // Deduplicate: filter out identical URLs and identical headlines
+  const seenUrls = new Set();
+  const seenTitles = new Set();
+  let articles = [];
+
+  for (const art of rawArticles) {
+    const cUrl = canonicalUrl(art.link);
+    const cTitle = cleanHeadlineTitle(art.title);
+
+    // If already seen by canonical URL or clean title, skip this duplicate copy
+    if (cUrl && seenUrls.has(cUrl)) continue;
+    if (cTitle && seenTitles.has(cTitle)) continue;
+
+    if (cUrl) seenUrls.add(cUrl);
+    if (cTitle) seenTitles.add(cTitle);
+    articles.push(art);
+  }
   
   // 2. Apply Filters
   // Category Filter

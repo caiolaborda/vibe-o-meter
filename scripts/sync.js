@@ -67,6 +67,39 @@ function sanitizeText(text) {
   return text.replace(/<[^>]*>?/gm, '').replace(/[\n\r]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+function canonicalUrl(url) {
+  if (!url) return '';
+  try {
+    const u = new URL(url);
+    const removeParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'at_medium', 'at_campaign', 'at_custom1', 'at_custom2', 'at_custom3', 'at_custom4', 'oc', 'ved', 'usg'];
+    removeParams.forEach(p => u.searchParams.delete(p));
+    let clean = u.origin + u.pathname;
+    const s = u.searchParams.toString();
+    if (s) clean += '?' + s;
+    return clean.replace(/\/+$/, '').toLowerCase();
+  } catch (e) {
+    return url.split('?')[0].replace(/\/+$/, '').toLowerCase();
+  }
+}
+
+function cleanHeadlineTitle(title) {
+  if (!title) return '';
+  return title
+    .replace(/<[^>]*>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj).*$/i, '')
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+    .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
+    .replace(/[\u2013\u2014-]/g, ' ')
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
 // Extract richest lead paragraph from multiple RSS/Atom summary tags
 function extractBestDescription(item) {
   const candidates = [
@@ -469,7 +502,20 @@ Return JSON array in format:
       const formattedClusters = [];
       clusters.forEach(cl => {
         if (!cl.ids || cl.ids.length < 2) return;
-        const matchingArticles = cl.ids.map(id => candidates[id]).filter(Boolean);
+        const rawMatching = cl.ids.map(id => candidates[id]).filter(Boolean);
+        rawMatching.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+        const seenCovUrls = new Set();
+        const seenCovTitles = new Set();
+        const matchingArticles = [];
+        for (const m of rawMatching) {
+          const cUrl = `${m.sourceId}_${canonicalUrl(m.link)}`;
+          const cTitle = `${m.sourceId}_${cleanHeadlineTitle(m.title)}`;
+          if (seenCovUrls.has(cUrl) || seenCovTitles.has(cTitle)) continue;
+          seenCovUrls.add(cUrl);
+          seenCovTitles.add(cTitle);
+          matchingArticles.push(m);
+        }
+
         const uniqueSources = new Set(matchingArticles.map(m => m.sourceId));
         if (uniqueSources.size >= 2) {
           const scores = matchingArticles.map(m => m.sentiment);
@@ -564,8 +610,12 @@ async function main() {
       const src = currentCache.sources[sourceId];
       if (src && src.articles) {
         src.articles.forEach(art => {
-          const key = `${sourceId}_${art.title.trim().toLowerCase()}`;
-          existingMap.set(key, art);
+          const tKey = `${sourceId}_title_${cleanHeadlineTitle(art.title)}`;
+          existingMap.set(tKey, art);
+          if (art.link) {
+            const uKey = `${sourceId}_url_${canonicalUrl(art.link)}`;
+            existingMap.set(uKey, art);
+          }
         });
       }
     });
@@ -589,12 +639,27 @@ async function main() {
       }));
 
       const sourceArticles = [];
+      const seenBatchUrls = new Set();
+      const seenBatchTitles = new Set();
       for (const item of items) {
-        const cacheKey = `${source.id}_${item.title.trim().toLowerCase()}`;
-        const cached = existingMap.get(cacheKey);
+        const uKey = `${source.id}_url_${canonicalUrl(item.link)}`;
+        const tKey = `${source.id}_title_${cleanHeadlineTitle(item.title)}`;
+        const cUrl = canonicalUrl(item.link);
+        const cTitle = cleanHeadlineTitle(item.title);
+
+        if (cUrl && seenBatchUrls.has(cUrl)) continue;
+        if (cTitle && seenBatchTitles.has(cTitle)) continue;
+        if (cUrl) seenBatchUrls.add(cUrl);
+        if (cTitle) seenBatchTitles.add(cTitle);
+
+        const cached = (item.link ? existingMap.get(uKey) : null) || existingMap.get(tKey);
         if (cached) {
           if (!cached.imageUrl && item.imageUrl) {
             cached.imageUrl = item.imageUrl;
+          }
+          if (new Date(item.pubDate) > new Date(cached.pubDate)) {
+            cached.pubDate = item.pubDate;
+            cached.title = item.title;
           }
           if (preferredAnalyzer === 'gemini' && (cached.sentimentGemini === undefined || cached.sentimentGemini === null)) {
             unanalyzedArticles.push(cached);
@@ -729,17 +794,24 @@ async function main() {
     const existing = (currentCache.sources && currentCache.sources[source.id] && currentCache.sources[source.id].articles) || [];
     let combined = [...fetched.articles, ...existing];
 
-    // Deduplicate by title
-    const seen = new Set();
+    // Sort newest first so freshest revisions take precedence
+    combined.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+    // Deduplicate by canonical URL and clean title
+    const seenUrls = new Set();
+    const seenTitles = new Set();
     combined = combined.filter(art => {
-      const key = art.title.trim().toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
+      if (art.title && /<[^>]*>/.test(art.title)) {
+        art.title = art.title.replace(/<[^>]*>/g, '').trim();
+      }
+      const cUrl = canonicalUrl(art.link);
+      const cTitle = cleanHeadlineTitle(art.title);
+      if (cUrl && seenUrls.has(cUrl)) return false;
+      if (cTitle && seenTitles.has(cTitle)) return false;
+      if (cUrl) seenUrls.add(cUrl);
+      if (cTitle) seenTitles.add(cTitle);
       return true;
     });
-
-    // Sort newest first
-    combined.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
     if (combined.length > MAX_ARTICLES_PER_SOURCE) {
       combined = combined.slice(0, MAX_ARTICLES_PER_SOURCE);
     }
