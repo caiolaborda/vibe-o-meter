@@ -1172,8 +1172,8 @@ function switchTab(tabId) {
 
   // Trigger specialized view renders if needed
   if (tabId === 'trends') {
-    renderSentimentTimeline();
     renderHeatmapMatrix();
+    renderSentimentTimeline();
   } else if (tabId === 'compare') {
     renderComparePage();
   } else if (tabId === 'deepdives') {
@@ -1426,8 +1426,8 @@ function updateAppUI() {
     renderSpectrum();
     renderHeadlines();
   } else if (state.activeTab === 'trends') {
-    renderSentimentTimeline();
     renderHeatmapMatrix();
+    renderSentimentTimeline();
   } else if (state.activeTab === 'compare') {
     renderComparePage();
   } else if (state.activeTab === 'deepdives') {
@@ -2935,12 +2935,24 @@ function renderSentimentTimeline() {
       `;
     }
 
-    // 3. Time Window Pill
+    // 3. Time Window Pill (Interactive: directly edit the overall timeframe filter)
+    const curTime = state.filters.time || '24h';
     chipsHtml += `
-      <span class="timeline-filter-chip time-chip" title="Active timeline time window">
+      <label class="timeline-filter-chip time-chip interactive-time-chip" title="Click to edit overall timeframe window">
         <i data-lucide="clock" style="width:13px;height:13px;"></i>
-        <span>Window: <strong>${timeframeLabel}</strong></span>
-      </span>
+        <span>Window:</span>
+        <select class="timeline-timeframe-inline-select" onchange="changeTimelineWindow(this.value)" aria-label="Edit overall timeframe">
+          <option value="3h" ${curTime === '3h' ? 'selected' : ''}>Past 3 Hours</option>
+          <option value="6h" ${curTime === '6h' ? 'selected' : ''}>Past 6 Hours</option>
+          <option value="12h" ${curTime === '12h' ? 'selected' : ''}>Past 12 Hours</option>
+          <option value="24h" ${curTime === '24h' ? 'selected' : ''}>Past 24 Hours</option>
+          <option value="3d" ${curTime === '3d' ? 'selected' : ''}>Past 3 Days</option>
+          <option value="7d" ${curTime === '7d' ? 'selected' : ''}>Past 7 Days</option>
+          <option value="30d" ${curTime === '30d' ? 'selected' : ''}>Past 30 Days</option>
+          <option value="all" ${curTime === 'all' ? 'selected' : ''}>All Time</option>
+        </select>
+        <i data-lucide="chevron-down" style="width:12px;height:12px;opacity:0.7;margin-left:1px;"></i>
+      </label>
     `;
 
     // 4. Reset Filters Action (only displayed when outlet or topic filters are actively applied)
@@ -3201,6 +3213,16 @@ window.clearTimelineSourceFilter = function() {
   state.filters.source = 'all';
   if (elements.filterSource) elements.filterSource.value = 'all';
   updateFilterIndicator();
+  updateAppUI();
+};
+
+window.changeTimelineWindow = function(val) {
+  state.filters.time = val;
+  state.headlinesLimit = 20;
+  if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
+  if (elements.filterTime) elements.filterTime.value = val;
+  const silverTime = document.getElementById('silver-timeframe-select');
+  if (silverTime) silverTime.value = val;
   updateAppUI();
 };
 

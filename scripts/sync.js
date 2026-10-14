@@ -487,7 +487,8 @@ Return JSON array in format:
               sourceName: m.sourceName,
               title: m.title,
               sentiment: m.sentiment,
-              link: m.link
+              link: m.link,
+              pubDate: m.pubDate
             }))
           });
         }

@@ -395,7 +395,34 @@
   <!-- TAB 2: TRENDS & DEEP DIVE -->
   <main id="tab-panel-trends" class="tab-panel hidden">
     
-    <!-- GLOBAL NEWS VIBE TIMELINE & TOPIC DYNAMICS -->
+    <!-- 1. INTERACTIVE TOPIC SENTIMENT HEATMAP -->
+    <section class="heatmap-section" id="heatmap-section">
+      <div class="section-header-row">
+        <div>
+          <h2 class="section-title flex-center">
+            <i data-lucide="layout-grid"></i>
+            Topic Sentiment Heatmap
+          </h2>
+          <p class="section-desc">Average sentiment by news topic. Click any cell to jump directly into filtered headlines.</p>
+        </div>
+        <div class="section-header-actions flex-center">
+          <div class="heatmap-legend-strip flex-center" style="gap: 0.75rem; font-size: 0.75rem; font-weight: 600;">
+            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#ef4444;"></span> Negative (&lt; -0.15)</span>
+            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#94a3b8;"></span> Neutral</span>
+            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#22c55e;"></span> Positive (&gt; +0.15)</span>
+          </div>
+        </div>
+      </div>
+      <div class="collapsible-content" id="heatmap-wrapper">
+        <div class="card heatmap-container">
+          <div id="heatmap-grid" class="heatmap-table">
+            <!-- Dynamically populated in app.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. GLOBAL NEWS VIBE TIMELINE & TOPIC DYNAMICS -->
     <section class="timeline-section" id="timeline-section">
       <div class="section-header-row">
         <div>
@@ -438,33 +465,6 @@
           </p>
           <div class="topic-trajectories-grid" id="topic-trajectories-grid">
             <!-- Dynamically rendered in app.js -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- INTERACTIVE TOPIC SENTIMENT HEATMAP -->
-    <section class="heatmap-section" id="heatmap-section">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-title flex-center">
-            <i data-lucide="layout-grid"></i>
-            Topic Sentiment Heatmap
-          </h2>
-          <p class="section-desc">Average sentiment by news topic. Click any cell to jump directly into filtered headlines.</p>
-        </div>
-        <div class="section-header-actions flex-center">
-          <div class="heatmap-legend-strip flex-center" style="gap: 0.75rem; font-size: 0.75rem; font-weight: 600;">
-            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#ef4444;"></span> Negative (&lt; -0.15)</span>
-            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#94a3b8;"></span> Neutral</span>
-            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#22c55e;"></span> Positive (&gt; +0.15)</span>
-          </div>
-        </div>
-      </div>
-      <div class="collapsible-content" id="heatmap-wrapper">
-        <div class="card heatmap-container">
-          <div id="heatmap-grid" class="heatmap-table">
-            <!-- Dynamically populated in app.js -->
           </div>
         </div>
       </div>
