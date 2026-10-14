@@ -1344,11 +1344,33 @@ body[data-edition="doom"] .silver-controls-bar {
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
 }
 
-/* --- OUTLETS COMPARISON GRID --- */
+/* --- OUTLETS COMPARISON CAROUSEL (SIDESCROLLING) --- */
 .sources-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0.5rem 0.25rem 1.25rem;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sources-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.sources-grid::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.sources-grid::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.35);
+  border-radius: 4px;
+}
+
+.sources-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
 }
 
 .source-card {
@@ -1358,11 +1380,71 @@ body[data-edition="doom"] .silver-controls-bar {
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  flex: 0 0 calc((100% - 2.5rem) / 3);
+  max-width: calc((100% - 2.5rem) / 3);
+  min-width: 320px;
+  scroll-snap-align: start;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+@media (max-width: 1100px) {
+  .source-card {
+    flex: 0 0 calc((100% - 1.25rem) / 2);
+    max-width: calc((100% - 1.25rem) / 2);
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 680px) {
+  .source-card {
+    flex: 0 0 88%;
+    max-width: 88%;
+    min-width: 270px;
+  }
 }
 
 .source-card.active {
+  border-color: var(--accent-color) !important;
+  border-width: 2px !important;
+  background: linear-gradient(155deg, rgba(99, 102, 241, 0.14) 0%, var(--bg-card) 65%) !important;
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.28), 0 0 0 1px var(--accent-color) !important;
+  transform: translateY(-2px);
+}
+
+.source-selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-color);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.carousel-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.carousel-nav-btn:hover {
+  background: var(--accent-color);
+  color: #fff;
   border-color: var(--accent-color);
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  transform: scale(1.05);
 }
 
 .source-card-header {
@@ -1512,7 +1594,7 @@ body[data-edition="doom"] .silver-controls-bar {
 
 .sparkline-svg {
   width: 100%;
-  height: 40px;
+  height: 56px;
   background: var(--bg-tertiary);
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -4324,16 +4406,65 @@ select option {
 .timeline-chart-wrap {
   width: 100%;
   position: relative;
-  min-height: 290px;
+  min-height: 320px;
 }
 
 .timeline-chart-svg {
   width: 100%;
   height: auto;
-  min-height: 280px;
-  max-height: 380px;
+  min-height: 300px;
+  max-height: 440px;
   overflow: visible;
   display: block;
+}
+
+.timeline-historical-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.timeline-historical-badge.up {
+  color: var(--pos-color);
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.timeline-historical-badge.down {
+  color: var(--neg-color);
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.timeline-historical-badge.stable {
+  color: var(--accent-color);
+  border-color: rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.timeline-historical-badge .timeline-hist-base {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 0.7rem;
+}
+
+.timeline-outlet-line {
+  transition: stroke-opacity 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+}
+
+.timeline-outlet-line:hover {
+  stroke-opacity: 1 !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35)) !important;
 }
 
 .timeline-tooltip-box {

@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=3.4">
+  <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body data-edition="doom">
 
@@ -111,7 +111,7 @@
           <i data-lucide="line-chart"></i><span>Macro Trends</span>
         </button>
         <button class="nav-pill-btn" data-tab="compare" id="tab-btn-compare">
-          <i data-lucide="split"></i><span>Story Compare</span>
+          <i data-lucide="layers"></i><span>Top Stories</span>
         </button>
         <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
           <i data-lucide="compass"></i><span>Outlet Deep Dives</span>
@@ -385,9 +385,10 @@
           </h2>
           <p class="section-desc">Historical trajectory of media optimism vs. pessimism over time, synthesized across all outlets.</p>
         </div>
-        <div class="timeline-legend">
-          <span class="flex-center" style="gap:0.35rem;"><span style="width:10px; height:10px; border-radius:50%; background:var(--accent-color);"></span> Global Mood Trajectory</span>
-          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:1.5px; background:var(--border-color); border-top:1.5px dashed var(--text-muted);"></span> Neutral Baseline (0.00)</span>
+        <div class="timeline-legend" id="timeline-legend">
+          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:3.5px; border-radius:2px; background:var(--accent-color);"></span> Global Average</span>
+          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:2px; border-radius:2px; background:#ec4899;"></span> All Outlets</span>
+          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:1.5px; border-top:1.5px dashed var(--accent-color);"></span> vs Historical Baseline</span>
         </div>
       </div>
 
@@ -401,7 +402,7 @@
 
         <!-- SVG Timeline Chart Container -->
         <div class="timeline-chart-wrap" id="timeline-chart-wrap">
-          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 960 320">
+          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 1060 360">
             <!-- Dynamically rendered in app.js -->
           </svg>
           <div id="timeline-tooltip-box" class="timeline-tooltip-box"></div>
@@ -424,15 +425,15 @@
     </section>
   </main>
 
-  <!-- TAB 3: STORY COMPARE (STORY CLUSTERS & HEAD-TO-HEAD) -->
+  <!-- TAB 3: TOP STORIES (STORY CLUSTERS & HEAD-TO-HEAD) -->
   <main id="tab-panel-compare" class="tab-panel hidden">
-    <!-- 1. CROSS-OUTLET STORY CLUSTERS (CLASHING WIRES) -->
+    <!-- 1. CROSS-OUTLET STORY CLUSTERS -->
     <section class="clusters-section" id="clusters-section">
       <div class="section-header-row">
         <div>
           <h2 class="section-title flex-center">
-            <i data-lucide="split"></i>
-            Story Compare: Cross-Outlet Perspectives
+            <i data-lucide="layers"></i>
+            Top Stories: Cross-Outlet Perspectives
           </h2>
           <p class="section-desc">Comparing how different newsrooms report the exact same news events in real time. Observe diverging sentiment, editorial angle, and headline framing.</p>
         </div>
@@ -591,19 +592,19 @@
 
   <!-- TAB 4: OUTLET DEEP DIVES -->
   <main id="tab-panel-deepdives" class="tab-panel hidden">
-    <!-- NEWS SOURCES COMPARISON MATRIX -->
+    <!-- NEWS SOURCES COMPARISON CARDS -->
     <section class="comparison-section" id="comparison-section">
       <div class="section-header-row">
         <div>
           <h2 class="section-title flex-center">
             <i data-lucide="columns-3"></i>
-            Outlet Comparison Matrix
+            Outlet Comparison Cards
           </h2>
           <p class="section-desc">At-a-glance editorial tone, article distribution, and trend sparklines across outlets.</p>
         </div>
       </div>
       <div class="collapsible-content" id="sources-wrapper">
-        <!-- Region Filter Pills -->
+        <!-- Region Filter Pills & Carousel Controls -->
         <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center;">
           <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.35rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
           <button class="region-pill active" data-region="all">All Outlets (13)</button>
@@ -612,16 +613,25 @@
           <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/de.png" class="flag-icon-img" width="16" height="12" alt="DE"> Europe (1)</button>
           <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (1)</button>
           <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.25rem;">🌐</span> Global Agencies (2)</button>
+          
+          <div class="sources-carousel-controls" style="margin-left: auto; display: flex; gap: 0.4rem; align-items: center;">
+            <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
+              <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
+            </button>
+            <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
+              <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
+            </button>
+          </div>
         </div>
 
-        <div id="sources-grid" class="sources-grid">
+        <div id="sources-grid" class="sources-grid sources-sidescroll">
           <!-- News source cards will be injected here dynamically -->
           <div class="loading-state">
             <i data-lucide="loader-2" class="spin"></i>
             <span>Loading comparison data...</span>
           </div>
         </div>
-        <div class="sources-show-more-row" id="sources-show-more-row" style="text-align: center; margin-top: 1.25rem;">
+        <div class="sources-show-more-row" id="sources-show-more-row" style="display: none; text-align: center; margin-top: 1.25rem;">
           <button id="toggle-all-outlets-btn" class="btn btn-secondary flex-center" style="margin: 0 auto; gap: 0.4rem; padding: 0.5rem 1.2rem; font-weight: 600;">
             <i data-lucide="chevrons-down" id="toggle-outlets-icon"></i>
             <span id="toggle-outlets-text">Show All 13 Outlets</span>
@@ -1090,6 +1100,6 @@
 
   </div>
 
-  <script src="app.js?v=3.1"></script>
+  <script src="app.js?v=3.2"></script>
 </body>
 </html>

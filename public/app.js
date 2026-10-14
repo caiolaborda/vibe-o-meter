@@ -733,6 +733,7 @@ function setupEventListeners() {
       elements.regionFilterTabs.querySelectorAll('.region-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.activeRegion = btn.dataset.region || 'all';
+      if (elements.sourcesGrid) elements.sourcesGrid.scrollLeft = 0;
       renderComparisonMatrix();
     });
   }
@@ -2189,70 +2190,115 @@ function createSvgGauge(score) {
 }
 
 // Generate inline SVG Sparkline showing historic sentiment trends
-function createSvgSparkline(articles) {
+function createSvgSparkline(articles, sourceId = '') {
   if (!articles || articles.length < 2) {
-    return `<svg class="sparkline-svg" viewBox="0 0 100 40"><line x1="0" y1="20" x2="100" y2="20" stroke="var(--border-color)" stroke-width="1"/></svg>`;
+    return `<svg class="sparkline-svg" viewBox="0 0 300 56" preserveAspectRatio="none"><line x1="0" y1="28" x2="300" y2="28" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/></svg>`;
   }
   
-  // Take last 15 articles and reverse them to show chronological order (oldest to newest, left-to-right)
-  const count = Math.min(15, articles.length);
-  const sample = articles.slice(0, count).reverse();
+  // Scored articles with valid sentiments
+  const scored = articles.filter(a => typeof (a.sentiment ?? a.sentimentGemini ?? a.sentimentLocal) === 'number');
+  if (scored.length < 2) {
+    return `<svg class="sparkline-svg" viewBox="0 0 300 56" preserveAspectRatio="none"><line x1="0" y1="28" x2="300" y2="28" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/></svg>`;
+  }
+
+  // Filter by active timeframe if applicable
+  const timeframe = state.filters.time || 'all';
+  let filtered = scored;
+  if (timeframe !== 'all') {
+    const now = Date.now();
+    let cutoff = 0;
+    if (timeframe === '3h') cutoff = now - 3 * 3600 * 1000;
+    else if (timeframe === '6h') cutoff = now - 6 * 3600 * 1000;
+    else if (timeframe === '12h') cutoff = now - 12 * 3600 * 1000;
+    else if (timeframe === '24h') cutoff = now - 24 * 3600 * 1000;
+    else if (timeframe === '3d') cutoff = now - 3 * 86400 * 1000;
+    else if (timeframe === '7d') cutoff = now - 7 * 86400 * 1000;
+    else if (timeframe === '30d') cutoff = now - 30 * 86400 * 1000;
+    
+    if (cutoff > 0) {
+      const windowArts = scored.filter(a => new Date(a.pubDate).getTime() >= cutoff);
+      if (windowArts.length >= 6) {
+        filtered = windowArts;
+      }
+    }
+  }
+
+  // Sample up to 35 points to show rich trajectory without overcrowding
+  const maxPts = 35;
+  let sample = [];
+  if (filtered.length <= maxPts) {
+    sample = [...filtered].reverse(); // Oldest to newest
+  } else {
+    const step = (filtered.length - 1) / (maxPts - 1);
+    for (let i = maxPts - 1; i >= 0; i--) {
+      const idx = Math.round(i * step);
+      sample.push(filtered[idx]);
+    }
+  }
+
+  const count = sample.length;
+  const width = 300;
+  const height = 56;
+  const zeroY = 28;
   
-  const width = 120;
-  const height = 40;
-  
-  // Map index and score to svg coordinates
+  // Map index and score to svg coordinates (-1.0 to +1.0)
   const points = sample.map((art, idx) => {
-    const x = (idx * (width / (count - 1))).toFixed(1);
-    // score ranges -1.0 (Y=35) to +1.0 (Y=5). Neutral 0.0 is Y=20.
-    const y = (20 - (art.sentiment * 15)).toFixed(1);
-    return { x, y };
+    const sc = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentGemini ?? art.sentimentLocal ?? 0);
+    const x = Number((idx * (width / Math.max(1, count - 1))).toFixed(1));
+    const clampedScore = Math.max(-1, Math.min(1, sc));
+    const y = Number((zeroY - (clampedScore * 22)).toFixed(1));
+    return { x, y, score: clampedScore };
   });
   
-  const linePath = 'M ' + points.map(p => `${p.x} ${p.y}`).join(' L ');
+  let linePath = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const p0 = points[i - 1];
+    const p1 = points[i];
+    const mx = (p0.x + p1.x) / 2;
+    linePath += ` C ${mx} ${p0.y}, ${mx} ${p1.y}, ${p1.x} ${p1.y}`;
+  }
+  
   const areaPath = linePath + ` L ${width} ${height} L 0 ${height} Z`;
   
   // Select color gradient
-  const avgSentiment = sample.reduce((sum, a) => sum + a.sentiment, 0) / count;
+  const avgSentiment = sample.reduce((sum, a) => sum + (a.sentiment ?? 0), 0) / count;
   let strokeColor = 'var(--neu-color)';
-  let gradientId = 'grad-neu';
+  let gradId = `spark-grad-neu-${sourceId || Math.random().toString(36).substr(2, 5)}`;
   if (avgSentiment > 0.1) {
     strokeColor = 'var(--pos-color)';
-    gradientId = 'grad-pos';
+    gradId = `spark-grad-pos-${sourceId || Math.random().toString(36).substr(2, 5)}`;
   } else if (avgSentiment < -0.1) {
     strokeColor = 'var(--neg-color)';
-    gradientId = 'grad-neg';
+    gradId = `spark-grad-neg-${sourceId || Math.random().toString(36).substr(2, 5)}`;
   }
+
+  const lastPt = points[points.length - 1];
   
   return `
-    <svg class="sparkline-svg" viewBox="0 0 ${width} ${height}" style="width: 100%; height: 40px;">
+    <svg class="sparkline-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
       <defs>
-        <linearGradient id="grad-pos" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--pos-color)" stop-opacity="0.2"/>
-          <stop offset="100%" stop-color="var(--pos-color)" stop-opacity="0"/>
-        </linearGradient>
-        <linearGradient id="grad-neg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--neg-color)" stop-opacity="0.2"/>
-          <stop offset="100%" stop-color="var(--neg-color)" stop-opacity="0"/>
-        </linearGradient>
-        <linearGradient id="grad-neu" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--neu-color)" stop-opacity="0.2"/>
-          <stop offset="100%" stop-color="var(--neu-color)" stop-opacity="0"/>
+        <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0.02"/>
         </linearGradient>
       </defs>
       <!-- Base middle line -->
-      <line x1="0" y1="20" x2="${width}" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="2,2"/>
+      <line x1="0" y1="${zeroY}" x2="${width}" y2="${zeroY}" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
+      <text x="${width - 6}" y="${zeroY - 4}" text-anchor="end" font-family="var(--font-mono)" font-size="8" fill="var(--text-muted)" opacity="0.6">0.00</text>
       
       <!-- Area fill -->
-      <path d="${areaPath}" fill="url(#${gradientId})" />
+      <path d="${areaPath}" fill="url(#${gradId})" />
       <!-- Line stroke -->
-      <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      <!-- Latest point dot -->
+      <circle cx="${lastPt.x}" cy="${lastPt.y}" r="3.5" fill="${strokeColor}" stroke="var(--bg-card)" stroke-width="1.5" />
     </svg>
   `;
 }
 
-// Render News Source Comparison Matrix Cards
+// Render News Source Comparison Cards (Sidescroller)
 function renderComparisonMatrix() {
+  if (!elements.sourcesGrid) return;
   elements.sourcesGrid.innerHTML = '';
   
   // Sort sources by average sentiment (highest to lowest)
@@ -2270,14 +2316,20 @@ function renderComparisonMatrix() {
     });
   }
 
+  // Update carousel count badge if present
+  const carouselCount = document.getElementById('sources-carousel-count');
+  if (carouselCount) {
+    carouselCount.innerText = `${sortedIds.length} Outlets`;
+  }
+
   const showMoreRow = document.getElementById('sources-show-more-row');
   if (showMoreRow) {
-    showMoreRow.style.display = sortedIds.length > 6 ? 'block' : 'none';
+    showMoreRow.style.display = 'none'; // Carousel sidescrolls all outlets
   }
 
   if (sortedIds.length === 0) {
     elements.sourcesGrid.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1; padding: 2.5rem; text-align: center;">
+      <div class="empty-state" style="padding: 2.5rem; text-align: center; width: 100%;">
         <i data-lucide="globe-2"></i>
         <span>No news outlets match the selected region filter.</span>
       </div>
@@ -2286,10 +2338,8 @@ function renderComparisonMatrix() {
     return;
   }
 
-  // Display top 6 if not expanded, or all if expanded
-  const displayIds = state.showAllOutlets ? sortedIds : sortedIds.slice(0, 6);
-  
-  displayIds.forEach(id => {
+  // In sidescroller, display all filtered outlets so user can swipe/scroll through all of them
+  sortedIds.forEach(id => {
     const source = resolvedSources[id];
     const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
     const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global Agency', flag: '🌐' };
@@ -2330,11 +2380,17 @@ function renderComparisonMatrix() {
     const neuPct = total > 0 ? ((source.distribution.neutral || 0) / total * 100).toFixed(0) : 0;
     const negPct = total > 0 ? ((source.distribution.negative || 0) / total * 100).toFixed(0) : 0;
     
+    const isSelected = state.filters.source === id;
+
     // Create card element
     const card = document.createElement('div');
-    card.className = `source-card card ${state.filters.source === id ? 'active' : ''}`;
+    card.className = `source-card card ${isSelected ? 'active' : ''}`;
     card.setAttribute('data-id', id);
     
+    const selectedBadgeHTML = isSelected 
+      ? `<span class="source-selected-badge"><i data-lucide="check-circle-2" style="width:12px;height:12px;"></i> Selected</span>`
+      : '';
+
     card.innerHTML = `
       <div class="source-card-header">
         <div class="source-meta">
@@ -2344,8 +2400,11 @@ function renderComparisonMatrix() {
             <span class="source-region-tag">${getSourceFlagHTML(id)} ${meta.regionName}</span>
           </div>
         </div>
-        <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.25rem;">
-          <span class="score-badge ${moodClass}">${badgeText}</span>
+        <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.35rem;">
+          <div style="display:flex; align-items:center; gap:0.4rem;">
+            ${selectedBadgeHTML}
+            <span class="score-badge ${moodClass}">${badgeText}</span>
+          </div>
           ${trendBadgeHTML}
         </div>
       </div>
@@ -2371,15 +2430,18 @@ function renderComparisonMatrix() {
 
       <!-- Sparkline Graph -->
       <div class="sparkline-container">
-        <div class="sparkline-label">Vibe Trend (Recent Articles)</div>
-        ${createSvgSparkline(source.articles)}
+        <div class="sparkline-label" style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Vibe Trend</span>
+          <span style="font-size:0.7rem; font-family:var(--font-mono); color:var(--text-muted);">${source.articles?.length || 0} stories</span>
+        </div>
+        ${createSvgSparkline(source.articles, id)}
       </div>
       
       <div class="card-footer">
-        <span class="text-muted small-text">Sample size: ${source.scoredCount || 0} articles</span>
-        <button class="inspect-btn">
-          <span>Filter stream</span>
-          <i data-lucide="arrow-right" style="width:12px;height:12px;"></i>
+        <span class="text-muted small-text">Sample size: ${source.scoredCount || 0} scored</span>
+        <button class="inspect-btn" style="${isSelected ? 'color: var(--accent-color); font-weight:700;' : ''}">
+          <span>${isSelected ? 'Selected (Click to deselect)' : 'Inspect Headlines'}</span>
+          <i data-lucide="${isSelected ? 'check' : 'arrow-right'}" style="width:12px;height:12px;"></i>
         </button>
       </div>
     `;
@@ -2394,7 +2456,25 @@ function renderComparisonMatrix() {
   
   // Re-create icons for dynamic templates
   lucide.createIcons();
+
+  // If an outlet is active, auto-scroll carousel to bring card into view
+  if (state.filters.source !== 'all') {
+    setTimeout(() => {
+      const activeCard = elements.sourcesGrid?.querySelector(`.source-card[data-id="${state.filters.source}"]`);
+      if (activeCard) {
+        activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }, 80);
+  }
 }
+
+// Sidescrolling navigation handler for outlets carousel
+window.scrollSourcesCarousel = function(direction) {
+  const grid = document.getElementById('sources-grid');
+  if (!grid) return;
+  const scrollAmount = (grid.clientWidth * 0.75) * direction;
+  grid.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+};
 
 // --- STORY COMPARE TAB (STORY CLUSTERS & HEAD-TO-HEAD) ---
 
@@ -3055,16 +3135,6 @@ function renderSentimentTimeline() {
     timeframeLabel = 'Past 30 Days';
   }
 
-  // Filter snapshots by timeframe
-  let series = cutoff > 0 ? rawSeries.filter(s => new Date(s.timestamp).getTime() >= cutoff) : [...rawSeries];
-
-  // If fewer than 2 snapshots exist in a tight window, show recent snapshots with a helpful indicator
-  let isWindowFallback = false;
-  if (series.length < 2 && rawSeries.length >= 2) {
-    series = rawSeries.slice(-8);
-    isWindowFallback = true;
-  }
-
   // Active source & topic filtering
   const selectedSource = state.filters.source && state.filters.source !== 'all' ? state.filters.source : null;
   const sourceName = selectedSource ? (SOURCE_META[selectedSource]?.name || (state.sources[selectedSource] ? state.sources[selectedSource].name : selectedSource)) : 'Global';
@@ -3082,67 +3152,146 @@ function renderSentimentTimeline() {
   const selectedTopic = state.macroTrendsTopic && state.macroTrendsTopic !== 'all' ? state.macroTrendsTopic : null;
   const topicMeta = selectedTopic ? categoryNames[selectedTopic] : null;
 
-  // If a topic is selected, collect articles in this topic across active desks
-  let topicArticles = [];
-  if (selectedTopic) {
-    const candidateSources = selectedSource ? [state.sources[selectedSource]].filter(Boolean) : Object.values(state.sources || {});
-    candidateSources.forEach(s => {
-      (s.articles || []).forEach(a => {
-        if (a.category === selectedTopic) {
-          const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
-          if (typeof sc === 'number') {
-            const t = new Date(a.pubDate).getTime();
-            if (!isNaN(t)) {
-              topicArticles.push({ time: t, score: sc });
-            }
+  // Calculate Historical Baseline (All-time average)
+  let histAvg = 0;
+  if (selectedSource) {
+    const rawArts = (state.sources[selectedSource] && state.sources[selectedSource].articles) || [];
+    const scored = rawArts.filter(a => typeof (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal) === 'number');
+    if (scored.length > 0) {
+      histAvg = scored.reduce((sum, a) => sum + (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal), 0) / scored.length;
+    } else if (typeof resolvedSources[selectedSource]?.averageSentiment === 'number') {
+      histAvg = resolvedSources[selectedSource].averageSentiment;
+    }
+  } else {
+    if (rawSeries.length > 0) {
+      let allAvgs = [];
+      rawSeries.forEach(s => {
+        Object.values(s.averages || {}).forEach(v => {
+          if (typeof v === 'number') allAvgs.push(v);
+        });
+      });
+      histAvg = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length) : -0.12;
+    } else {
+      histAvg = -0.12;
+    }
+  }
+
+  // --- TIME-RANGE DEPENDENT DENSE DATA GENERATION ---
+  let points = [];
+  const sourceIds = Object.keys(resolvedSources);
+
+  if (cutoff > 0 && timeframe !== 'all') {
+    // Generate 16 to 22 time buckets based on window
+    const numBuckets = (timeframe === '3h' || timeframe === '6h') ? 14 : ((timeframe === '12h' || timeframe === '24h') ? 18 : 22);
+    const bucketDuration = (now - cutoff) / numBuckets;
+
+    // Collect all scored articles across all sources
+    const allWindowArticles = [];
+    Object.entries(state.sources || {}).forEach(([sId, src]) => {
+      (src.articles || []).forEach(a => {
+        const t = new Date(a.pubDate).getTime();
+        const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
+        if (t >= cutoff && t <= now && typeof sc === 'number') {
+          if (!selectedTopic || a.category === selectedTopic) {
+            allWindowArticles.push({ sId, score: sc, time: t, category: a.category });
           }
         }
       });
     });
-    topicArticles.sort((a, b) => a.time - b.time);
+
+    // Check if snapshots exist in cutoff window
+    const matchingSnapshots = rawSeries.filter(s => new Date(s.timestamp).getTime() >= cutoff);
+
+    let lastKnownAverages = {};
+    sourceIds.forEach(id => {
+      lastKnownAverages[id] = resolvedSources[id]?.averageSentiment ?? 0;
+    });
+
+    for (let i = 0; i < numBuckets; i++) {
+      const bStart = cutoff + i * bucketDuration;
+      const bEnd = bStart + bucketDuration;
+      const timestamp = new Date(bEnd).toISOString();
+
+      // Check if a snapshot lands in this bucket
+      const snapInBucket = matchingSnapshots.find(s => {
+        const st = new Date(s.timestamp).getTime();
+        return st >= bStart && st < bEnd;
+      });
+
+      const bucketAverages = {};
+      const bucketArticles = allWindowArticles.filter(a => a.time >= bStart && a.time < bEnd);
+
+      sourceIds.forEach(sId => {
+        if (snapInBucket && typeof snapInBucket.averages?.[sId] === 'number') {
+          bucketAverages[sId] = snapInBucket.averages[sId];
+          lastKnownAverages[sId] = snapInBucket.averages[sId];
+        } else {
+          const sArts = bucketArticles.filter(a => a.sId === sId);
+          if (sArts.length > 0) {
+            const avg = sArts.reduce((acc, a) => acc + a.score, 0) / sArts.length;
+            bucketAverages[sId] = Number(avg.toFixed(3));
+            lastKnownAverages[sId] = bucketAverages[sId];
+          } else {
+            bucketAverages[sId] = lastKnownAverages[sId];
+          }
+        }
+      });
+
+      // Compute score for this bucket
+      let score = 0;
+      if (selectedTopic) {
+        if (bucketArticles.length > 0) {
+          score = bucketArticles.reduce((acc, a) => acc + a.score, 0) / bucketArticles.length;
+        } else {
+          score = points.length > 0 ? points[points.length - 1].score : histAvg;
+        }
+      } else if (selectedSource) {
+        score = bucketAverages[selectedSource] ?? lastKnownAverages[selectedSource];
+      } else {
+        const vals = Object.values(bucketAverages);
+        score = vals.length > 0 ? (vals.reduce((a, b) => a + b, 0) / vals.length) : histAvg;
+      }
+
+      points.push({
+        index: i,
+        timestamp,
+        averages: bucketAverages,
+        score: Number(score.toFixed(3))
+      });
+    }
+  } else {
+    // All time: use raw series snapshots
+    let series = [...rawSeries];
+    if (series.length < 2) {
+      series = rawSeries.slice(-10);
+    }
+    points = series.map((s, idx) => {
+      let score = null;
+      if (selectedSource) {
+        if (typeof s.averages?.[selectedSource] === 'number') score = s.averages[selectedSource];
+      } else {
+        const avgs = Object.values(s.averages || {});
+        score = avgs.length > 0 ? (avgs.reduce((a, b) => a + b, 0) / avgs.length) : null;
+      }
+      return {
+        index: idx,
+        timestamp: s.timestamp,
+        averages: s.averages || {},
+        score: score !== null ? Number(score.toFixed(3)) : null
+      };
+    }).filter(p => p.score !== null);
   }
 
-  // Compute sentiment score per snapshot (topic-specific, outlet-specific, or global cross-outlet average)
-  const points = series.map((s, idx) => {
-    let score = null;
-    const sTime = new Date(s.timestamp).getTime();
+  // Calculate current window average and vs Historical delta
+  const currentAvg = points.length > 0 ? (points.reduce((sum, p) => sum + p.score, 0) / points.length) : histAvg;
+  const delta = currentAvg - histAvg;
 
-    if (selectedTopic) {
-      const windowMs = 48 * 3600 * 1000;
-      const windowArts = topicArticles.filter(a => a.time <= sTime && a.time >= (sTime - windowMs));
-      if (windowArts.length > 0) {
-        score = windowArts.reduce((acc, a) => acc + a.score, 0) / windowArts.length;
-      } else {
-        const priorArts = topicArticles.filter(a => a.time <= sTime);
-        if (priorArts.length > 0) {
-          score = priorArts.slice(-15).reduce((acc, a) => acc + a.score, 0) / Math.min(priorArts.length, 15);
-        }
-      }
-    } else if (selectedSource) {
-      if (typeof s.averages?.[selectedSource] === 'number') {
-        score = s.averages[selectedSource];
-      }
-    } else {
-      const avgs = Object.values(s.averages || {});
-      score = avgs.length > 0 ? (avgs.reduce((a, b) => a + b, 0) / avgs.length) : null;
-    }
-
-    return {
-      index: idx,
-      timestamp: s.timestamp,
-      analyzer: s.analyzer,
-      averages: s.averages || {},
-      score: score !== null ? Number(score.toFixed(3)) : null,
-      topic: selectedTopic
-    };
-  }).filter(p => p.score !== null);
-
-  // Render Active Filter Chips in Timeline Header (Outlet, Timeframe, Topic)
+  // Render Active Filter Chips & Historical Baseline Badge in Timeline Header
   const activeFiltersWrap = document.getElementById('timeline-active-filters-wrap');
   if (activeFiltersWrap) {
     let chipsHtml = '';
     
-    // 1. Outlet Filter Pill (if an outlet is specifically filtered)
+    // 1. Outlet Filter Pill
     if (selectedSource) {
       chipsHtml += `
         <span class="timeline-filter-chip outlet-chip" title="Timeline focused on ${sourceName}">
@@ -3153,7 +3302,7 @@ function renderSentimentTimeline() {
       `;
     }
 
-    // 2. Topic Filter Pill (if a topic is specifically focused)
+    // 2. Topic Filter Pill
     if (selectedTopic && topicMeta) {
       chipsHtml += `
         <span class="timeline-filter-chip topic-chip" title="Timeline focused on ${topicMeta.name}">
@@ -3164,7 +3313,7 @@ function renderSentimentTimeline() {
       `;
     }
 
-    // 3. Time Window Pill (Interactive: directly edit the overall timeframe filter)
+    // 3. Time Window Pill
     const curTime = state.filters.time || '24h';
     chipsHtml += `
       <label class="timeline-filter-chip time-chip interactive-time-chip" title="Click to edit overall timeframe window">
@@ -3184,7 +3333,19 @@ function renderSentimentTimeline() {
       </label>
     `;
 
-    // 4. Reset Filters Action (only displayed when outlet or topic filters are actively applied)
+    // 4. Historical Baseline Comparison Badge
+    const histDeltaSign = delta >= 0 ? '+' : '';
+    const histDeltaClass = delta >= 0.04 ? 'up' : (delta <= -0.04 ? 'down' : 'stable');
+    const histDeltaIcon = delta >= 0.04 ? '▲' : (delta <= -0.04 ? '▼' : '●');
+    chipsHtml += `
+      <div class="timeline-historical-badge ${histDeltaClass}" title="${selectedSource ? sourceName : 'Global'} current window (${currentAvg.toFixed(2)}) vs historical baseline (${histAvg.toFixed(2)})">
+        <span class="timeline-hist-label">${selectedSource ? sourceName : 'Macro'} vs Hist:</span>
+        <strong class="timeline-hist-val">${histDeltaIcon} ${histDeltaSign}${delta.toFixed(2)}</strong>
+        <span class="timeline-hist-base">(Base: ${histAvg >= 0 ? '+' : ''}${histAvg.toFixed(2)})</span>
+      </div>
+    `;
+
+    // 5. Reset Filters Action
     if (selectedSource || selectedTopic) {
       chipsHtml += `
         <button type="button" class="timeline-reset-all-btn" onclick="resetTimelineScope()" title="Reset to all outlets and all topics">
@@ -3203,15 +3364,13 @@ function renderSentimentTimeline() {
   if (timeRangeEl) {
     const filterPrefix = selectedSource ? `${sourceName}: ` : '';
     const topicPrefix = topicMeta ? `${topicMeta.icon} ${topicMeta.name} — ` : '';
-    timeRangeEl.innerText = isWindowFallback && cutoff > 0
-      ? `${filterPrefix}${topicPrefix}${timeframeLabel} (Showing ${points.length} recent snapshots)`
-      : `${filterPrefix}${topicPrefix}${timeframeLabel} Trajectory`;
+    timeRangeEl.innerText = `${filterPrefix}${topicPrefix}${timeframeLabel} (${points.length} Data Points)`;
   }
 
-  // SVG dimensions: upgraded to 960 x 320 with generous label paddings
-  const width = 960;
-  const height = 320;
-  const padding = { top: 35, right: 35, bottom: 55, left: 65 };
+  // Sizing: 1060 x 360 to fill the card space cleanly
+  const width = 1060;
+  const height = 360;
+  const padding = { top: 35, right: 35, bottom: 50, left: 65 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
@@ -3220,29 +3379,22 @@ function renderSentimentTimeline() {
     return;
   }
 
-  // Dynamic Y-Domain: scale to data but always include 0.00 neutrality baseline
-  const scores = points.map(p => p.score);
-  const dataMin = Math.min(...scores);
-  const dataMax = Math.max(...scores);
-  const minY = Math.min(-0.35, Math.floor((dataMin - 0.08) * 10) / 10);
-  const maxY = Math.max(0.15, Math.ceil((dataMax + 0.08) * 10) / 10);
+  // Dynamic Y-Domain: scale to data but always include 0.00 neutrality baseline and historical baseline
+  let allScores = [0, histAvg, ...points.map(p => p.score)];
+  points.forEach(p => {
+    Object.values(p.averages || {}).forEach(v => {
+      if (typeof v === 'number') allScores.push(v);
+    });
+  });
+
+  const dataMin = Math.min(...allScores);
+  const dataMax = Math.max(...allScores);
+  const minY = Math.min(-0.4, Math.floor((dataMin - 0.08) * 10) / 10);
+  const maxY = Math.max(0.2, Math.ceil((dataMax + 0.08) * 10) / 10);
   const getY = (val) => padding.top + chartH - ((val - minY) / (maxY - minY)) * chartH;
   const getX = (idx) => padding.left + (idx / Math.max(1, points.length - 1)) * chartW;
   const zeroY = Math.max(padding.top, Math.min(padding.top + chartH, getY(0)));
-
-  // Path data for the curve
-  let pathD = `M ${getX(0)} ${getY(points[0].score)}`;
-  for (let i = 1; i < points.length; i++) {
-    const x0 = getX(i - 1);
-    const y0 = getY(points[i - 1].score);
-    const x1 = getX(i);
-    const y1 = getY(points[i].score);
-    const mx = (x0 + x1) / 2;
-    pathD += ` C ${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`;
-  }
-
-  // Area under path down to zero
-  const areaD = `${pathD} L ${getX(points.length - 1)} ${zeroY} L ${getX(0)} ${zeroY} Z`;
+  const histY = Math.max(padding.top, Math.min(padding.top + chartH, getY(histAvg)));
 
   // Grid lines and labels (clean 0.1 intervals)
   let gridHTML = '';
@@ -3255,19 +3407,21 @@ function renderSentimentTimeline() {
       <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" 
             stroke="${isZero ? 'var(--text-muted)' : 'var(--border-color)'}" 
             stroke-width="${isZero ? '1.5' : '1'}" 
-            stroke-dasharray="${isZero ? '4,4' : '2,2'}" opacity="${isZero ? '0.65' : '0.45'}"/>
+            stroke-dasharray="${isZero ? '4,4' : '2,2'}" opacity="${isZero ? '0.65' : '0.35'}"/>
       <text x="${padding.left - 12}" y="${y + 4}" text-anchor="end" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="${isZero ? 'var(--text-primary)' : 'var(--text-muted)'}">${label}</text>
     `;
   }
 
-  // Zero line editorial tag
+  // Zero line & Historical baseline line annotations
   gridHTML += `
-    <text x="${width - padding.right}" y="${zeroY - 6}" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="600" fill="var(--text-muted)" opacity="0.75">Neutrality Baseline (0.00)</text>
+    <text x="${width - padding.right}" y="${zeroY - 6}" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="600" fill="var(--text-muted)" opacity="0.6">Neutrality (0.00)</text>
+    <line x1="${padding.left}" y1="${histY}" x2="${width - padding.right}" y2="${histY}" stroke="var(--accent-color)" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.65"/>
+    <text x="${width - padding.right}" y="${histY - 6}" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="600" fill="var(--accent-color)" opacity="0.85">${selectedSource ? sourceName : 'Historical'} Baseline (${histAvg > 0 ? '+' : ''}${histAvg.toFixed(2)})</text>
   `;
 
-  // Time labels on X axis: cleanly formatted, no squishing, evenly spaced
+  // Time labels on X axis
   let xLabelsHTML = '';
-  const numLabels = Math.min(6, points.length);
+  const numLabels = Math.min(7, points.length);
   const step = Math.max(1, Math.floor(points.length / numLabels));
 
   for (let i = 0; i < points.length; i += step) {
@@ -3281,11 +3435,82 @@ function renderSentimentTimeline() {
       dateLabel = `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
     }
     xLabelsHTML += `
-      <text x="${x}" y="${height - 18}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="500" fill="var(--text-muted)">${dateLabel}</text>
+      <text x="${x}" y="${height - 14}" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="500" fill="var(--text-muted)">${dateLabel}</text>
     `;
   }
 
-  // Dots for each snapshot
+  // --- MULTI-OUTLET TRAJECTORY LINES ---
+  let outletLinesHTML = '';
+  sourceIds.forEach(srcId => {
+    const meta = SOURCE_META[srcId] || { color: '#94a3b8', name: srcId };
+    const srcPts = [];
+    points.forEach((pt, pIdx) => {
+      const val = pt.averages?.[srcId];
+      if (typeof val === 'number') {
+        srcPts.push({ x: getX(pIdx), y: getY(val), val });
+      }
+    });
+
+    if (srcPts.length < 2) return;
+
+    let pathD = `M ${srcPts[0].x} ${srcPts[0].y}`;
+    for (let i = 1; i < srcPts.length; i++) {
+      const p0 = srcPts[i - 1];
+      const p1 = srcPts[i];
+      const mx = (p0.x + p1.x) / 2;
+      pathD += ` C ${mx} ${p0.y}, ${mx} ${p1.y}, ${p1.x} ${p1.y}`;
+    }
+
+    let strokeWidth = '1.6';
+    let opacity = '0.35';
+    let extraFilter = '';
+
+    if (selectedSource) {
+      if (srcId === selectedSource) {
+        strokeWidth = '3.5';
+        opacity = '1';
+        extraFilter = `filter="drop-shadow(0 2px 8px ${meta.color}99)"`;
+      } else {
+        strokeWidth = '1.2';
+        opacity = '0.12'; // GHOSTED
+      }
+    }
+
+    outletLinesHTML += `
+      <path class="timeline-outlet-line" data-source="${srcId}" d="${pathD}" fill="none" 
+            stroke="${meta.color}" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" 
+            stroke-linecap="round" stroke-linejoin="round" ${extraFilter}/>
+    `;
+  });
+
+  // --- GLOBAL AVERAGE TRAJECTORY PATH ---
+  let globalPathD = `M ${getX(0)} ${getY(points[0].score)}`;
+  for (let i = 1; i < points.length; i++) {
+    const x0 = getX(i - 1);
+    const y0 = getY(points[i - 1].score);
+    const x1 = getX(i);
+    const y1 = getY(points[i].score);
+    const mx = (x0 + x1) / 2;
+    globalPathD += ` C ${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`;
+  }
+
+  const globalAreaD = `${globalPathD} L ${getX(points.length - 1)} ${zeroY} L ${getX(0)} ${zeroY} Z`;
+
+  let mainLineHTML = '';
+  if (!selectedSource) {
+    // If no outlet is selected, Global Average stands out with vibrant gradient & area fill
+    mainLineHTML = `
+      <path d="${globalAreaD}" fill="url(#timelineAreaGrad)"/>
+      <path d="${globalPathD}" fill="none" stroke="url(#timelineLineGrad)" stroke-width="3.8" stroke-linecap="round"/>
+    `;
+  } else {
+    // If an outlet is selected, Global Average is a clean benchmark line
+    mainLineHTML = `
+      <path d="${globalPathD}" fill="none" stroke="var(--text-primary)" stroke-width="2.6" stroke-dasharray="4,4" stroke-opacity="0.8" stroke-linecap="round"/>
+    `;
+  }
+
+  // Dots for each point on the focused line
   let dotsHTML = '';
   points.forEach((pt, idx) => {
     const x = getX(idx);
@@ -3312,8 +3537,8 @@ function renderSentimentTimeline() {
     </defs>
     ${gridHTML}
     ${xLabelsHTML}
-    <path d="${areaD}" fill="url(#timelineAreaGrad)"/>
-    <path d="${pathD}" fill="none" stroke="url(#timelineLineGrad)" stroke-width="3" stroke-linecap="round"/>
+    ${outletLinesHTML}
+    ${mainLineHTML}
     ${dotsHTML}
   `;
 
@@ -3327,6 +3552,8 @@ function renderSentimentTimeline() {
       const dateStr = new Date(pt.timestamp).toLocaleString();
       const moodText = pt.score < -0.3 ? 'Alarmist / Doom' : (pt.score < -0.05 ? 'Leaning Gloomy' : (pt.score > 0.1 ? 'Optimistic' : 'Neutral'));
       const scoreColor = pt.score > 0 ? 'var(--pos-color)' : 'var(--neg-color)';
+      const ptDelta = pt.score - histAvg;
+      const ptDeltaStr = (ptDelta >= 0 ? '+' : '') + ptDelta.toFixed(2);
       
       let tooltipContent = '';
       if (selectedTopic && topicMeta) {
@@ -3336,15 +3563,19 @@ function renderSentimentTimeline() {
             <span style="color:var(--text-secondary);">${topicMeta.icon} ${topicMeta.name}:</span>
             <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
           </div>
-          ${selectedSource ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Desk: ${sourceName}</div>` : ''}
+          <div style="font-size:0.7rem; color:var(--accent-color); font-family:var(--font-mono);">vs Hist: ${ptDeltaStr}</div>
         `;
       } else if (selectedSource) {
         tooltipContent = `
           <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
-          <div style="font-size:0.75rem; color:${scoreColor}; font-weight:700;">${sourceName}: ${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</div>
+          <div style="font-size:0.78rem; color:${scoreColor}; font-weight:700; margin-bottom:0.2rem;">${sourceName}: ${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</div>
+          <div style="display:flex; justify-content:space-between; gap:0.6rem; font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono); border-top:1px solid var(--border-color); padding-top:0.25rem;">
+            <span>vs Historical: <strong style="color:var(--accent-color);">${ptDeltaStr}</strong></span>
+            <span>Global Avg: ${pt.averages ? ((Object.values(pt.averages).reduce((a,b)=>a+b,0)/Object.values(pt.averages).length).toFixed(2)) : '-'}</span>
+          </div>
         `;
       } else {
-        const outletEntries = Object.entries(pt.averages).sort((a,b) => a[1] - b[1]);
+        const outletEntries = Object.entries(pt.averages).filter(e => typeof e[1] === 'number').sort((a,b) => a[1] - b[1]);
         const lowest = outletEntries[0];
         const highest = outletEntries[outletEntries.length - 1];
         tooltipContent = `
@@ -3353,6 +3584,7 @@ function renderSentimentTimeline() {
             <span style="color:var(--text-secondary);">Global Vibe:</span>
             <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
           </div>
+          <div style="font-size:0.7rem; color:var(--accent-color); font-family:var(--font-mono); margin-bottom:0.25rem;">vs Historical: ${ptDeltaStr}</div>
           ${lowest ? `<div style="font-size:0.7rem; color:var(--neg-color);">📉 Darkest: ${(SOURCE_META[lowest[0]]?.name || lowest[0])} (${lowest[1].toFixed(2)})</div>` : ''}
           ${highest ? `<div style="font-size:0.7rem; color:var(--pos-color);">📈 Brightest: ${(SOURCE_META[highest[0]]?.name || highest[0])} (${highest[1].toFixed(2)})</div>` : ''}
         `;
@@ -3370,7 +3602,60 @@ function renderSentimentTimeline() {
 
     dot.addEventListener('mouseleave', () => {
       if (tooltip) tooltip.style.display = 'none';
-      dot.setAttribute('r', '4');
+      dot.setAttribute('r', '4.5');
+    });
+  });
+
+  // Attach hover & click listeners to outlet lines for interactive ghosting
+  chartSvg.querySelectorAll('.timeline-outlet-line').forEach(line => {
+    const sId = line.getAttribute('data-source');
+    const meta = SOURCE_META[sId];
+    if (!meta) return;
+
+    line.addEventListener('mouseenter', (e) => {
+      if (!selectedSource) {
+        chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
+          if (l.getAttribute('data-source') === sId) {
+            l.style.strokeOpacity = '1';
+            l.style.strokeWidth = '3.5';
+            l.style.filter = `drop-shadow(0 0 8px ${meta.color}99)`;
+          } else {
+            l.style.strokeOpacity = '0.1';
+          }
+        });
+      }
+
+      if (tooltip) {
+        const histScored = (state.sources[sId]?.articles || []).filter(a => typeof a.sentiment === 'number');
+        const sHistAvg = histScored.length > 0 ? (histScored.reduce((sum,a)=>sum+a.sentiment,0)/histScored.length) : (resolvedSources[sId]?.averageSentiment || 0);
+        tooltip.innerHTML = `
+          <div style="font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${meta.color};"></span>
+            ${meta.name}
+          </div>
+          <div style="font-size:0.72rem; color:var(--text-secondary); margin-top:0.2rem;">All-Time Baseline: <strong>${sHistAvg > 0 ? '+' : ''}${sHistAvg.toFixed(2)}</strong></div>
+          <div style="font-size:0.68rem; color:var(--accent-color); margin-top:0.15rem;">Click line to focus this outlet</div>
+        `;
+        tooltip.style.display = 'block';
+        const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
+        tooltip.style.left = `${e.clientX - wrapRect.left}px`;
+        tooltip.style.top = `${e.clientY - wrapRect.top - 12}px`;
+      }
+    });
+
+    line.addEventListener('mouseleave', () => {
+      if (!selectedSource) {
+        chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
+          l.style.strokeOpacity = '0.35';
+          l.style.strokeWidth = '1.6';
+          l.style.filter = 'none';
+        });
+      }
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
+    line.addEventListener('click', () => {
+      toggleSourceFilter(sId);
     });
   });
 
