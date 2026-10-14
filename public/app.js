@@ -370,9 +370,10 @@ const elements = {
   // Model View Toggle (optional)
   modeGeminiBtn: document.getElementById('mode-gemini-btn'),
   modeVaderBtn: document.getElementById('mode-vader-btn'),
-  modeGlobalBtn: document.getElementById('mode-global-btn'),
-  spotlightBanner: document.getElementById('spotlight-banner'),
+  pulseSpotlightBanner: document.getElementById('pulse-spotlight-banner'),
+  spotlightBanner: document.getElementById('pulse-spotlight-banner') || document.getElementById('spotlight-banner'),
   deepdiveSpotlightBanner: document.getElementById('deepdive-spotlight-banner'),
+  quickNavBar: document.getElementById('quick-nav-bar'),
   deepdiveFilterIndicator: document.getElementById('deepdive-filter-indicator'),
   deepdiveFilterName: document.getElementById('deepdive-filter-name'),
   deepdiveClearFilterBtn: document.getElementById('deepdive-clear-filter-btn'),
@@ -1525,6 +1526,7 @@ function updateAppUI() {
     renderDailyPulse();
     renderSpectrum();
     renderPulseTopStories();
+    renderHeadlines();
   } else if (state.activeTab === 'trends') {
     renderHeatmapMatrix();
     renderSentimentTimeline();
@@ -2605,13 +2607,6 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
               <i data-lucide="calendar" style="width:11px;height:11px;"></i>
               ${cluster.dateRangeStr}
             </span>
-            <span class="cluster-badge cluster-score-badge ${moodClass}">
-              ${avgScoreFormatted} Avg Tone
-            </span>
-            <span class="cluster-badge cluster-spread-badge ${isHighSpread ? 'high-spread' : ''}">
-              <i data-lucide="split" style="width:11px;height:11px;"></i>
-              ${cluster.computedSpread.toFixed(2)} Spread
-            </span>
           </div>
           <h3 class="cluster-title">${cluster.story}</h3>
         </div>
@@ -2634,10 +2629,17 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
 
       <!-- Interactive Coverage Toggle Bar -->
       <div class="cluster-coverage-meta-bar">
-        <div class="cluster-coverage-info">
+        <div class="cluster-coverage-info" style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
           <span class="cluster-badge cluster-outlets-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
             <i data-lucide="radio" style="width:12px;height:12px;"></i>
             ${uniqueSources.size} Outlets
+          </span>
+          <span class="cluster-badge cluster-score-badge ${moodClass}" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
+            ${avgScoreFormatted} Avg Tone
+          </span>
+          <span class="cluster-badge cluster-spread-badge ${isHighSpread ? 'high-spread' : ''}" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
+            <i data-lucide="split" style="width:11px;height:11px;"></i>
+            ${cluster.computedSpread.toFixed(2)} Spread
           </span>
         </div>
         <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full multi-outlet coverage">
@@ -2829,16 +2831,6 @@ function renderPulseTopStories() {
 
   // Top 6 most covered stories
   const top6 = filtered.slice(0, 6);
-
-  // Update count badge
-  if (elements.topStoriesCountBadge) {
-    if (activeTopic === 'all') {
-      elements.topStoriesCountBadge.innerText = `${top6.length} Most Covered in 24h`;
-    } else {
-      const topicCap = activeTopic.charAt(0).toUpperCase() + activeTopic.slice(1);
-      elements.topStoriesCountBadge.innerText = `${top6.length} in ${topicCap}`;
-    }
-  }
 
   if (top6.length === 0) {
     const topicCap = activeTopic.charAt(0).toUpperCase() + activeTopic.slice(1);
@@ -3540,16 +3532,17 @@ function toggleSourceFilter(sourceId) {
     if (elements.filterSource) elements.filterSource.value = sourceId;
     if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = sourceId;
     
-    // If clicked from Pulse spectrum, smoothly transition to Deep Dive feed
+    // If clicked on Pulse, smoothly ensure the pulse spotlight banner is visible
     if (state.activeTab === 'pulse') {
-      switchTab('deepdives');
       setTimeout(() => {
-        const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
-        target?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+        const target = document.getElementById('pulse-spotlight-banner');
+        if (target && target.style.display !== 'none') {
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 60);
     } else {
       const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
-      target?.scrollIntoView({ behavior: 'smooth' });
+      target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
   
@@ -3635,6 +3628,17 @@ function updateFilterIndicator() {
     } else {
       elements.quickCategoryIndicator.style.display = 'none';
     }
+  }
+
+  // Highlight sticky navbar when any filter or search query is actively applied
+  const hasActiveFilters = Boolean(
+    (state.filters.source && state.filters.source !== 'all') ||
+    (state.filters.category && state.filters.category !== 'all') ||
+    (state.filters.vibe && state.filters.vibe !== 'all') ||
+    (state.filters.search && state.filters.search.trim().length > 0)
+  );
+  if (elements.quickNavBar) {
+    elements.quickNavBar.classList.toggle('has-active-filters', hasActiveFilters);
   }
 }
 
@@ -4030,9 +4034,12 @@ function setupSpectrumMagnification() {
 
 // Render Spotlight Banner for a filtered source showing interactive article sentiment plot
 function renderSpotlightBanner(filteredArticles) {
+  const pulseEl = document.getElementById('pulse-spotlight-banner') || elements.spotlightBanner;
+  const ddEl = document.getElementById('deepdive-spotlight-banner') || elements.deepdiveSpotlightBanner;
+
   const banners = [
-    { el: elements.spotlightBanner, prefix: 'pulse' },
-    { el: elements.deepdiveSpotlightBanner, prefix: 'dd' }
+    { el: pulseEl, prefix: 'pulse' },
+    { el: ddEl, prefix: 'dd' }
   ];
   
   if (state.filters.source === 'all' || filteredArticles.length === 0) {
@@ -4127,6 +4134,13 @@ function renderSpotlightBanner(filteredArticles) {
       `;
     }).join('');
 
+    const extraActionBtn = prefix === 'pulse' 
+      ? `<button type="button" class="action-btn" onclick="goToDeepDiveFeed()" style="font-size: 0.75rem; padding: 0.28rem 0.65rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; font-weight: 500;">
+           <i data-lucide="newspaper" style="width: 13px; height: 13px; color: var(--accent-color);"></i>
+           <span>View in Deep Dive &rarr;</span>
+         </button>`
+      : '';
+
     el.style.display = 'flex';
     el.style.flexDirection = 'column';
     el.style.gap = '1rem';
@@ -4136,9 +4150,13 @@ function renderSpotlightBanner(filteredArticles) {
           <div style="background-color: ${meta.color}; color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; text-transform: uppercase;">${meta.initials}</div>
           <h3 style="margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--text-primary); font-family: var(--font-serif);">${source.name} Spotlight</h3>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
           <span class="score-badge ${moodClass}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">${badgeText}</span>
           <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">(${total} Articles)</span>
+          ${extraActionBtn}
+          <button type="button" class="close-spotlight-btn" onclick="toggleSourceFilter('${sourceId}')" title="Dismiss outlet spotlight" style="background: none; border: 1px solid transparent; color: var(--text-secondary); cursor: pointer; padding: 0.28rem; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          </button>
         </div>
       </div>
       
@@ -4188,6 +4206,10 @@ function renderSpotlightBanner(filteredArticles) {
         <div class="spotlight-tooltip"></div>
       </div>
     `;
+
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+      lucide.createIcons({ root: el });
+    }
   });
 }
 
@@ -4237,14 +4259,33 @@ window.hideSpotlightTooltip = function() {
 window.scrollToArticle = function(cardId) {
   let card = document.getElementById(cardId);
   if (!card) {
-    card = document.getElementById(`art-card-pulse-${cardId}`) || document.getElementById(`art-card-dd-${cardId}`);
+    const altId = cardId.includes('-pulse-') 
+      ? cardId.replace('-pulse-', '-dd-') 
+      : cardId.replace('-dd-', '-pulse-');
+    card = document.getElementById(altId);
   }
-  if (card) {
+  
+  if (card && card.offsetParent !== null) {
     card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     card.classList.add('highlight-flash');
     setTimeout(() => {
       card.classList.remove('highlight-flash');
     }, 2000);
+  } else {
+    // If not visible in current tab, jump to Deep Dive tab
+    switchTab('deepdives');
+    renderHeadlines();
+    setTimeout(() => {
+      const ddId = cardId.replace('-pulse-', '-dd-');
+      const targetCard = document.getElementById(ddId) || document.getElementById(cardId);
+      if (targetCard) {
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetCard.classList.add('highlight-flash');
+        setTimeout(() => {
+          targetCard.classList.remove('highlight-flash');
+        }, 2000);
+      }
+    }, 150);
   }
 };
 

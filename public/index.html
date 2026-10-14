@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=3.3">
+  <link rel="stylesheet" href="style.css?v=3.4">
 </head>
 <body data-edition="doom">
 
@@ -277,8 +277,13 @@
           <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
           
           <div class="spectrum-legend">
-            <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to filter headlines below.</p>
+            <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to inspect its coverage spotlight.</p>
           </div>
+        </div>
+
+        <!-- Conditional Outlet Spotlight (Opens beneath the sentiment spectrum on Pulse when an outlet is selected) -->
+        <div id="pulse-spotlight-banner" class="spotlight-banner-unified" style="display: none; margin-top: 1.25rem;">
+          <!-- Content will be injected dynamically -->
         </div>
 
       </div>
@@ -296,7 +301,6 @@
             <div class="flex-center" style="gap: 0.6rem; flex-wrap: wrap;">
               <i data-lucide="layers" style="color: var(--accent-color); width: 22px; height: 22px;"></i>
               <h2 class="section-title" style="margin: 0; font-size: 1.35rem;">Top Developing Stories</h2>
-              <span class="badge neu" id="top-stories-count-badge" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700;">6 Most Covered in 24h</span>
             </div>
             <p class="section-desc" style="margin: 0.35rem 0 0 0;">
               The defining news events dominating international headlines right now. Compare how different newsrooms report the exact same story.
@@ -626,11 +630,6 @@
       </div>
     </section>
 
-    <!-- Spotlight Banner for Filtered Source (Positioned below comparison matrix, above headlines feed) -->
-    <div id="deepdive-spotlight-banner" class="card spotlight-banner-card" style="display: none; margin-top: 1.5rem;">
-      <!-- Content will be injected dynamically -->
-    </div>
-
     <!-- OUTLET DEEP DIVE HEADLINE FEED WITH CONTROLS -->
     <section class="headlines-section" id="deepdive-feed-section" style="margin-top: 1.5rem;">
       <div class="headlines-unified-box card" id="deepdive-headlines-box">
@@ -713,6 +712,11 @@
               Sentiment Vibe
             </button>
           </div>
+        </div>
+
+        <!-- Spotlight Banner for Filtered Source (Slides in ahead of the list of headlines when an outlet is selected) -->
+        <div id="deepdive-spotlight-banner" class="spotlight-banner-unified" style="display: none;">
+          <!-- Content will be injected dynamically -->
         </div>
 
         <!-- Filtered outlet articles injected dynamically -->
@@ -1086,6 +1090,6 @@
 
   </div>
 
-  <script src="app.js?v=3.0"></script>
+  <script src="app.js?v=3.1"></script>
 </body>
 </html>

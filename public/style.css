@@ -2228,6 +2228,17 @@ body:not([data-edition="silver"]) .cluster-summary-text {
   gap: 1rem;
 }
 
+@keyframes spotlightSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .spotlight-banner-unified {
   margin: 1.25rem 1.5rem 0.5rem;
   padding: 1.25rem;
@@ -2237,6 +2248,12 @@ body:not([data-edition="silver"]) .cluster-summary-text {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  animation: spotlightSlideDown 0.25s ease-out;
+}
+
+#pulse-spotlight-banner.spotlight-banner-unified {
+  margin: 1rem 0 0 0;
+  background: var(--bg-secondary);
 }
 
 .headlines-list-unified {
@@ -3379,6 +3396,12 @@ body:not([data-edition="silver"]) .clear-btn {
   top: 10px;
   z-index: 90;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.quick-nav-bar.has-active-filters {
+  border-color: rgba(99, 102, 241, 0.65);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.22), 0 0 0 1px rgba(99, 102, 241, 0.3);
 }
 
 select option {
@@ -4469,6 +4492,43 @@ select option {
   color: var(--text-secondary);
   line-height: 1.45;
 }
+
+/* ==========================================================================
+   LEGIBLE CONTENT LINKS (Clean match to text, colorful accent underline & hover)
+   ========================================================================== */
+
+.article-description a,
+.cluster-summary-text a,
+.hero-editorial-lead a,
+.methodology-story-p a,
+.card p a {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-decoration-color: rgba(99, 102, 241, 0.45);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  font-weight: 500;
+  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+
+.article-description a:hover,
+.cluster-summary-text a:hover,
+.hero-editorial-lead a:hover,
+.methodology-story-p a:hover,
+.card p a:hover {
+  color: var(--accent-color);
+  text-decoration-color: var(--accent-color);
+}
+
+.article-description a i,
+.article-description a [data-lucide],
+.cluster-summary-text a i,
+.cluster-summary-text a [data-lucide],
+.card p a i,
+.card p a [data-lucide] {
+  color: var(--accent-color);
+}
+
 
 
 
