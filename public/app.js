@@ -134,6 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
   switchSentimentMode(state.sentimentMode);
   setupSpectrumMagnification();
   
+  // Initialize edition attribute on body
+  document.body.setAttribute('data-edition', state.edition);
+  
   // Fetch initial data
   fetchData();
 });
@@ -236,6 +239,8 @@ function setupEventListeners() {
     elements.quickTimeframeSelect.addEventListener('change', (e) => {
       state.filters.time = e.target.value;
       if (elements.filterTime) elements.filterTime.value = e.target.value;
+      const silverTime = document.getElementById('silver-timeframe-select');
+      if (silverTime) silverTime.value = e.target.value;
       state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
       updateTimelineButtonsUI();
       updateAppUI();
@@ -281,28 +286,21 @@ function setupEventListeners() {
   const editionSilver = document.getElementById('edition-btn-silver');
   if (editionDoom && editionSilver) {
     editionDoom.addEventListener('click', () => {
-      state.edition = 'doom';
-      editionDoom.classList.add('active');
-      editionSilver.classList.remove('active');
-      document.body.classList.remove('silver-lining-edition');
-      state.filters.vibe = 'all';
-      if (elements.filterVibe) elements.filterVibe.value = 'all';
-      const brandP = document.querySelector('.brand-text p');
-      if (brandP) brandP.innerText = "There's no such thing as good news — An autonomous daily audit of global media pessimism";
-      updateFilterIndicator();
-      updateAppUI();
+      switchEdition('doom');
     });
 
     editionSilver.addEventListener('click', () => {
-      state.edition = 'silver';
-      editionSilver.classList.add('active');
-      editionDoom.classList.remove('active');
-      document.body.classList.add('silver-lining-edition');
-      state.filters.vibe = 'positive';
-      if (elements.filterVibe) elements.filterVibe.value = 'positive';
-      const brandP = document.querySelector('.brand-text p');
-      if (brandP) brandP.innerText = "Some Good News Edition — Extracting constructive breakthroughs, optimism & solutions from the wire";
-      updateFilterIndicator();
+      switchEdition('silver');
+    });
+  }
+
+  // Silver Edition Timeframe Selector
+  const silverTimeSelect = document.getElementById('silver-timeframe-select');
+  if (silverTimeSelect) {
+    silverTimeSelect.addEventListener('change', (e) => {
+      state.filters.time = e.target.value;
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
+      if (elements.filterTime) elements.filterTime.value = e.target.value;
       updateAppUI();
     });
   }
@@ -631,6 +629,30 @@ function switchTab(tabId) {
   }
   state.activeTab = tabId;
 
+  // If in silver edition, restore doom dashboard UI
+  if (state.edition === 'silver') {
+    state.edition = 'doom';
+    document.body.setAttribute('data-edition', 'doom');
+    const editionDoom = document.getElementById('edition-btn-doom');
+    const editionSilver = document.getElementById('edition-btn-silver');
+    const editionSubtitle = document.getElementById('edition-subtitle');
+    const silverSection = document.getElementById('silver-edition-section');
+    const quickNavBar = document.getElementById('quick-nav-bar');
+    if (editionDoom) editionDoom.classList.add('active');
+    if (editionSilver) editionSilver.classList.remove('active');
+    if (editionSubtitle) {
+      editionSubtitle.innerText = "There's no such thing as good news — An autonomous daily audit of global media pessimism";
+    }
+    if (silverSection) {
+      silverSection.classList.add('hidden');
+      silverSection.style.display = 'none';
+    }
+    if (quickNavBar) {
+      quickNavBar.classList.remove('hidden');
+      quickNavBar.style.display = 'flex';
+    }
+  }
+
   // Update tab buttons
   document.querySelectorAll('.nav-pill-btn[data-tab]').forEach(btn => {
     const isActive = btn.dataset.tab === tabId;
@@ -912,6 +934,12 @@ function updateAppUI() {
     }
   }
   
+  // If in silver edition, render the dedicated Some Good News view and exit
+  if (state.edition === 'silver') {
+    renderSilverEdition();
+    return;
+  }
+
   // Setup selectors
   populateFilterOptions();
   
@@ -924,6 +952,256 @@ function updateAppUI() {
   renderHeadlines();
   renderSentimentTimeline();
 }
+
+// Two-Sided App Edition Switcher (No Good News vs Some Good News)
+function switchEdition(edition) {
+  state.edition = edition;
+  document.body.setAttribute('data-edition', edition);
+
+  const editionDoom = document.getElementById('edition-btn-doom');
+  const editionSilver = document.getElementById('edition-btn-silver');
+  const editionSubtitle = document.getElementById('edition-subtitle');
+  const silverSection = document.getElementById('silver-edition-section');
+  const pulseSection = document.getElementById('pulse-section');
+  const quickNavBar = document.getElementById('quick-nav-bar');
+
+  if (edition === 'silver') {
+    if (editionSilver) editionSilver.classList.add('active');
+    if (editionDoom) editionDoom.classList.remove('active');
+    if (editionSubtitle) {
+      editionSubtitle.innerText = "Some Good News Edition — Spotlighting the 10 most constructive breakthroughs, recoveries & solutions from the wire";
+    }
+    if (silverSection) {
+      silverSection.classList.remove('hidden');
+      silverSection.style.display = 'flex';
+    }
+    if (pulseSection) {
+      pulseSection.classList.add('hidden');
+      pulseSection.style.display = 'none';
+    }
+    if (quickNavBar) {
+      quickNavBar.classList.add('hidden');
+      quickNavBar.style.display = 'none';
+    }
+
+    // Hide all standard tab panels
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.add('hidden');
+      p.style.display = 'none';
+    });
+
+    renderSilverEdition();
+  } else {
+    if (editionDoom) editionDoom.classList.add('active');
+    if (editionSilver) editionSilver.classList.remove('active');
+    if (editionSubtitle) {
+      editionSubtitle.innerText = "There's no such thing as good news — An autonomous daily audit of global media pessimism";
+    }
+    if (silverSection) {
+      silverSection.classList.add('hidden');
+      silverSection.style.display = 'none';
+    }
+    if (quickNavBar) {
+      quickNavBar.classList.remove('hidden');
+      quickNavBar.style.display = 'flex';
+    }
+
+    switchTab(state.activeTab);
+    updateAppUI();
+  }
+
+  if (window.lucide && lucide.createIcons) {
+    lucide.createIcons();
+  }
+}
+
+// Render Dedicated "Some Good News" View (Top 10 Best Stories)
+function renderSilverEdition() {
+  const silverSection = document.getElementById('silver-edition-section');
+  if (!silverSection) return;
+
+  const silverTimeSelect = document.getElementById('silver-timeframe-select');
+  if (silverTimeSelect && state.filters.time) {
+    silverTimeSelect.value = state.filters.time;
+  }
+
+  const container = document.getElementById('silver-stories-container');
+  const statCount = document.getElementById('silver-stat-count');
+  const statTopScore = document.getElementById('silver-stat-top-score');
+  const statTopCat = document.getElementById('silver-stat-top-category');
+
+  if (!container) return;
+  container.innerHTML = '';
+
+  // 1. Gather all positive articles from resolvedSources (already time-filtered)
+  const positiveArticles = [];
+  const categoryCounts = {};
+
+  Object.keys(resolvedSources).forEach(sourceId => {
+    const src = resolvedSources[sourceId];
+    if (src && src.articles) {
+      src.articles.forEach(art => {
+        if (typeof art.sentiment === 'number' && art.sentiment > 0.05) {
+          positiveArticles.push({
+            sourceId,
+            sourceName: src.name,
+            ...art
+          });
+          const cat = art.category || 'other';
+          categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  // 2. Deduplicate articles by normalized title
+  const seenTitles = new Set();
+  const uniqueArticles = [];
+  for (const art of positiveArticles) {
+    const norm = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 45);
+    if (!seenTitles.has(norm)) {
+      seenTitles.add(norm);
+      uniqueArticles.push(art);
+    }
+  }
+
+  // 3. Sort descending by highest positive sentiment score
+  uniqueArticles.sort((a, b) => b.sentiment - a.sentiment);
+
+  // 4. Update Summary Stats
+  const topScore = uniqueArticles.length > 0 ? uniqueArticles[0].sentiment : 0;
+  let topCategoryName = 'None';
+  let topCategoryCount = 0;
+  for (const [cat, count] of Object.entries(categoryCounts)) {
+    if (count > topCategoryCount) {
+      topCategoryCount = count;
+      topCategoryName = cat.charAt(0).toUpperCase() + cat.slice(1);
+    }
+  }
+
+  if (statCount) statCount.innerText = uniqueArticles.length.toString();
+  if (statTopScore) statTopScore.innerText = topScore > 0 ? `+${topScore.toFixed(2)}` : '+0.00';
+  if (statTopCat) statTopCat.innerText = topCategoryName;
+
+  // 5. Take the Top 10 Best Stories
+  const top10 = uniqueArticles.slice(0, 10);
+
+  // Timeframe label for contextual messaging
+  let timeframeLabel = 'Past 24 Hours';
+  if (state.filters.time === '3h') timeframeLabel = 'Past 3 Hours';
+  else if (state.filters.time === '6h') timeframeLabel = 'Past 6 Hours';
+  else if (state.filters.time === '12h') timeframeLabel = 'Past 12 Hours';
+  else if (state.filters.time === '3d') timeframeLabel = 'Past 3 Days';
+  else if (state.filters.time === '7d') timeframeLabel = 'Past 7 Days';
+  else if (state.filters.time === '30d') timeframeLabel = 'Past 30 Days';
+  else if (state.filters.time === 'all') timeframeLabel = 'All Time';
+
+  if (top10.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: 3rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">⛅</div>
+        <h3 style="font-size: 1.35rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism on the Wire</h3>
+        <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem; line-height: 1.6;">
+          During ${timeframeLabel}, global wire rooms published near-zero qualifying positive stories. Mainstream news rooms focus overwhelmingly on crisis and conflict.
+        </p>
+        <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('3d')">Expand to Past 3 Days</button>
+          <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('7d')">Expand to Past 7 Days</button>
+          <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('all')">View All-Time Top Stories</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Render Top 10 Story Cards
+  top10.forEach((art, idx) => {
+    const card = document.createElement('div');
+    card.className = 'silver-story-card';
+
+    // Rank badge styling
+    let rankBadgeHTML = '';
+    if (idx === 0) {
+      rankBadgeHTML = `<span class="silver-rank-pill rank-gold"><i data-lucide="crown" style="width:12px;height:12px;"></i> #1 TOP BREAKTHROUGH</span>`;
+    } else if (idx === 1) {
+      rankBadgeHTML = `<span class="silver-rank-pill rank-silver"><i data-lucide="award" style="width:12px;height:12px;"></i> #2 RUNNER UP</span>`;
+    } else if (idx === 2) {
+      rankBadgeHTML = `<span class="silver-rank-pill rank-bronze"><i data-lucide="medal" style="width:12px;height:12px;"></i> #3 SPOTLIGHT</span>`;
+    } else {
+      rankBadgeHTML = `<span class="silver-rank-pill rank-standard">#${idx + 1}</span>`;
+    }
+
+    const brandMeta = SOURCE_META[art.sourceId] || { initials: art.sourceId, color: '#3b82f6', flag: '🌐' };
+    const dateObj = new Date(art.pubDate);
+    const dateFormatted = dateObj.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const moodLabel = getMoodLabel(art.sentiment);
+    const reasonText = art.reasoning || art.explanation || 'Constructive real-world progress and positive societal impact.';
+
+    card.innerHTML = `
+      <div class="silver-story-top">
+        <div class="silver-story-badges">
+          ${rankBadgeHTML}
+          <span class="source-badge" style="background-color: ${brandMeta.color}">${brandMeta.flag || '🌐'} ${art.sourceName}</span>
+          <span class="cat-badge ${art.category || 'other'}">${art.category || 'other'}</span>
+          <span class="silver-score-badge">
+            <i data-lucide="smile" style="width:12px;height:12px;"></i> +${art.sentiment.toFixed(2)} ${moodLabel}
+          </span>
+        </div>
+        <div class="silver-story-meta-right">
+          <i data-lucide="clock" style="width:12px;height:12px;"></i>
+          <span>${dateFormatted}</span>
+        </div>
+      </div>
+
+      <h3 class="silver-story-title">
+        <a href="${art.url}" target="_blank" rel="noopener noreferrer">${art.title}</a>
+      </h3>
+
+      <div class="silver-reason-box">
+        <div class="silver-reason-header">
+          <i data-lucide="sparkles" style="width:12px;height:12px;"></i> Why it's good news
+        </div>
+        <p>${reasonText}</p>
+      </div>
+
+      <div class="silver-story-footer">
+        <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="silver-read-btn">
+          <span>Read on ${art.sourceName}</span>
+          <i data-lucide="external-link" style="width:13px;height:13px;"></i>
+        </a>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  if (top10.length < 10) {
+    const notice = document.createElement('div');
+    notice.style.cssText = 'text-align: center; padding: 1.25rem; color: var(--text-muted); font-size: 0.85rem; font-style: italic;';
+    notice.innerText = `Only ${top10.length} positive stories were identified during ${timeframeLabel}. Mainstream coverage is heavily skewed toward alarmism — expand the timeframe above to discover more.`;
+    container.appendChild(notice);
+  }
+
+  if (window.lucide && lucide.createIcons) {
+    lucide.createIcons();
+  }
+}
+
+// Global helper for timeframe switching from silver empty states
+window.setSilverTimeframe = function(val) {
+  state.filters.time = val;
+  const silverSelect = document.getElementById('silver-timeframe-select');
+  if (silverSelect) silverSelect.value = val;
+  if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
+  if (elements.filterTime) elements.filterTime.value = val;
+  updateAppUI();
+};
 
 // Populate source options dynamically in drop-down filters
 function populateFilterOptions() {
@@ -1904,6 +2182,17 @@ function getMoodClass(score) {
   if (score > 0.15) return 'positive';
   if (score < -0.15) return 'negative';
   return 'neutral';
+}
+
+function getMoodLabel(score) {
+  if (score >= 0.65) return 'Inspiring / Breakthrough';
+  if (score >= 0.35) return 'Constructive Relief';
+  if (score >= 0.15) return 'Leaning Positive';
+  if (score > 0) return 'Mildly Optimistic';
+  if (score === 0) return 'Neutral';
+  if (score > -0.15) return 'Mildly Cautious';
+  if (score > -0.45) return 'Leaning Gloomy';
+  return 'Alarmist / Severe Crisis';
 }
 
 // Toggle filters from UI selections

@@ -13,7 +13,7 @@
   <!-- Custom Styling -->
   <link rel="stylesheet" href="style.css?v=3.0">
 </head>
-<body>
+<body data-edition="doom">
 
   <!-- Background Glows -->
   <div class="glow glow-1"></div>
@@ -23,17 +23,7 @@
     
     <!-- HEADER -->
     <header class="app-header">
-      <div class="brand">
-        <div class="logo-icon">
-          <i data-lucide="newspaper"></i>
-        </div>
-        <div class="brand-text">
-          <h1>No Good News</h1>
-          <p>There's no such thing as good news — An autonomous daily audit of global media pessimism</p>
-        </div>
-      </div>
-      
-      <div class="header-actions">
+      <div class="header-edition-block">
         <!-- Two-Sided App Edition Switcher (No Good News vs Some Good News) -->
         <div class="edition-toggle-wrap" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and Some Good News">
           <button id="edition-btn-doom" class="edition-pill-btn active" data-edition="doom">
@@ -45,7 +35,13 @@
             <span>Some Good News</span>
           </button>
         </div>
-
+        <!-- Description moved directly below toggle -->
+        <p class="edition-subtitle" id="edition-subtitle">
+          There's no such thing as good news — An autonomous daily audit of global media pessimism
+        </p>
+      </div>
+      
+      <div class="header-actions">
         <div class="header-status-indicator" title="Autonomous cloud ingestion pipeline">
           <span class="status-dot green"></span>
           <span id="last-updated-text" class="status-text">Synced: Just now</span>
@@ -56,6 +52,59 @@
         </a>
       </div>
     </header>
+
+    <!-- DEDICATED SOME GOOD NEWS VIEW (TOP 10 BEST GOOD NEWS STORIES) -->
+    <section class="silver-edition-section hidden" id="silver-edition-section">
+      <!-- Sunlit Hero Card -->
+      <div class="silver-hero-card card">
+        <div class="silver-hero-top">
+          <div class="silver-title-wrap">
+            <span class="silver-sun-badge">
+              <i data-lucide="sun"></i>
+            </span>
+            <div>
+              <h1 class="silver-heading">Top 10 Good News Stories</h1>
+              <p class="silver-subheading">A curated counterweight to the 24/7 doom cycle. Spotlighting the most constructive breakthroughs, recoveries, and positive milestones on the global wire.</p>
+            </div>
+          </div>
+          
+          <div class="silver-timeframe-wrap">
+            <label for="silver-timeframe-select"><i data-lucide="clock"></i> Timeframe:</label>
+            <select id="silver-timeframe-select" class="silver-time-select" aria-label="Select timeframe for good news">
+              <option value="3h">Past 3 Hours</option>
+              <option value="6h">Past 6 Hours</option>
+              <option value="12h">Past 12 Hours</option>
+              <option value="24h" selected>Past 24 Hours</option>
+              <option value="3d">Past 3 Days</option>
+              <option value="7d">Past 7 Days</option>
+              <option value="30d">Past 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Summary Stats Strip -->
+        <div class="silver-stats-strip">
+          <div class="silver-stat-box">
+            <span class="silver-stat-label">Positive Stories in Window</span>
+            <strong id="silver-stat-count" class="silver-stat-val">0</strong>
+          </div>
+          <div class="silver-stat-box">
+            <span class="silver-stat-label">Highest Valence Score</span>
+            <strong id="silver-stat-top-score" class="silver-stat-val">+0.00</strong>
+          </div>
+          <div class="silver-stat-box">
+            <span class="silver-stat-label">Top Constructive Beat</span>
+            <strong id="silver-stat-top-category" class="silver-stat-val">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 10 Stories List -->
+      <div class="silver-stories-container" id="silver-stories-container">
+        <!-- Rendered dynamically in app.js -->
+      </div>
+    </section>
 
     <!-- HERO: GLOBAL NEWS VIBE LANDING (Prominent landing feature on Daily Pulse) -->
     <section class="pulse-hero-section" id="pulse-section">

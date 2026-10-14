@@ -192,15 +192,16 @@ VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
 - [-0.29 to -0.10]: Mild tension, stock market dip, diplomatic friction, political disputes, minor price hikes.
 - [-0.09 to +0.09]: Strictly neutral procedural news, routine election results without violence, scheduled hearings, administrative statements.
 - [+0.10 to +0.34]: Constructive policy, interest rate cuts, sports wins, mild economic stabilization, cultural awards.
-- [+0.35 to +0.64]: Justice delivered (conviction of perpetrators, hostage rescue, prisoner release), successful treaties, significant environmental or economic recovery.
+- [+0.35 to +0.64]: Genuine justice delivered (conviction of perpetrators, diplomatic hostage release, POW exchange), successful peace accords, significant environmental or economic recovery.
 - [+0.65 to +1.00]: Historic scientific discoveries, life-saving medical breakthroughs, end of armed conflicts, inspiring human triumphs.
 
 EDGE CASE RULES:
 1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "ceasefire" in a story about active strikes does NOT make it positive.
-2. Justice & Rescue: When a tragic situation resolves with a perpetrator convicted, hostages freed, or victims rescued, evaluate the constructive relief of justice/rescue (+0.35 to +0.60).
+2. Justice & Rescue vs Systemic Dysfunction: When a crisis resolves with perpetrators convicted, diplomatic hostages freed, or disaster victims rescued, evaluate the constructive relief of justice/rescue (+0.35 to +0.60). HOWEVER, do NOT confuse emergency crisis-mitigation of domestic failures with good news: releasing convicted prisoners early due to overcrowded state prisons is an alarming symptom of systemic state failure and public controversy (-0.25 to -0.40), NOT positive justice. Similarly, legal payouts or financial settlements for toxic chemical exposure or medical negligence reflect workplace injury and institutional harm (-0.15 to -0.35), not inspiring breakthroughs.
 3. Democratic Politics: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violent protests or institutional breakdown.
 4. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
-5. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
+5. Controversial & Polarized Events: For contested domestic policies (e.g. early prisoner releases, strikes, protests), assess the overarching real-world gravity and public tension rather than surface quotes of beneficiaries rejoicing.
+6. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
 
 Return a JSON array of objects with:
 - index: integer matching input index
