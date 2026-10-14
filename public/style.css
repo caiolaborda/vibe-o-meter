@@ -474,29 +474,35 @@ body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-ed
   font-weight: 500;
   line-height: 1.5;
   letter-spacing: -0.01em;
-  max-width: 680px;
+  max-width: 1050px;
+  width: 100%;
   margin: 0.35rem auto 0 auto;
+  text-align: center;
+}
+
+@media (min-width: 860px) {
+  .edition-subtitle-central {
+    white-space: nowrap;
+  }
 }
 
 .masthead-status-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  margin-top: 0.2rem;
 }
 
-.header-status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.35rem 0.85rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+.header-status-text {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
   font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 /* Doom edition specific masthead overrides */
@@ -510,11 +516,13 @@ body:not([data-edition="silver"]) .edition-subtitle-central {
   color: #cbd5e1;
 }
 
-body[data-edition="doom"] .header-status-indicator,
-body:not([data-edition="silver"]) .header-status-indicator {
-  background: #181c25;
-  border-color: #2b3345;
-  color: #cbd5e1;
+body[data-edition="doom"] .header-status-text,
+body:not([data-edition="silver"]) .header-status-text {
+  color: #94a3b8;
+}
+
+body[data-edition="silver"] .header-status-text {
+  color: #857e75;
 }
 
 body[data-edition="doom"] .app-footer,

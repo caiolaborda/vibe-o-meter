@@ -1025,7 +1025,7 @@ function setSyncingState(isSyncing, message) {
     const dot = document.querySelector('.status-dot');
     if (dot) dot.className = 'status-dot green';
     const dateStr = state.lastUpdated ? new Date(state.lastUpdated).toLocaleString() : 'Never';
-    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = `Synced: ${dateStr}`;
+    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = `Last Updated: ${dateStr}`;
   }
 }
 
@@ -1395,7 +1395,7 @@ function updateAppUI() {
     if (dot) dot.className = 'status-dot loading';
   } else {
     const dateStr = state.lastUpdated ? new Date(state.lastUpdated).toLocaleString() : 'Never';
-    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = `Synced: ${dateStr}`;
+    if (elements.lastUpdatedText) elements.lastUpdatedText.innerText = `Last Updated: ${dateStr}`;
     const dot = document.querySelector('.status-dot');
     if (dot) dot.className = 'status-dot green';
   }
