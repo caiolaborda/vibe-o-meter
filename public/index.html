@@ -66,7 +66,7 @@
           <div class="quick-timeframe-wrap silver-timeframe-wrap" title="Filter good news by topic">
             <i data-lucide="filter" class="quick-time-icon"></i>
             <select id="silver-topic-select" class="quick-time-select silver-time-select" aria-label="Select topic for good news">
-              <option value="all" selected>All Beats</option>
+              <option value="all" selected>All Topics</option>
               <option value="science">🔬 Science & Space</option>
               <option value="climate">🌱 Nature & Climate</option>
               <option value="health">🩺 Health & Medicine</option>
@@ -230,7 +230,7 @@
 
         <!-- 5. Sentiment Spectrum (Integrated directly inside Hero Pulse container) -->
         <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.45rem; margin-bottom: 0.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.2rem; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.75rem;">
             <!-- Scale Labels -->
             <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
               <span class="label-neg"><i data-lucide="frown"></i> Alarmist (-1.0)</span>
@@ -291,7 +291,7 @@
           <div class="flex-center" style="gap: 0.6rem;">
             <i data-lucide="newspaper" style="color: var(--accent-color); width: 22px; height: 22px;"></i>
             <h2 class="section-title" style="margin: 0; font-size: 1.35rem;">Headlines Feed</h2>
-            <span id="headlines-count-badge" class="badge neu" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700;">0 Stories</span>
+            <span id="headlines-count-badge" class="badge neu" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700; display: none !important;">0 Stories</span>
           </div>
           <div id="active-filter-indicator" class="filter-indicator" style="display: none;">
             Filtered to: <strong id="filter-name">-</strong>
@@ -461,7 +461,7 @@
             Topic Sentiment Dynamics in Current Window
           </h4>
           <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">
-            Relative sentiment score across key news beats. Click any topic to focus the timeline trajectory above.
+            Relative sentiment score across key news topics. Click any topic to focus the timeline trajectory above.
           </p>
           <div class="topic-trajectories-grid" id="topic-trajectories-grid">
             <!-- Dynamically rendered in app.js -->
@@ -534,9 +534,9 @@
         <div>
           <h2 class="section-title flex-center">
             <i data-lucide="swords"></i>
-            Head-to-Head Headline Compare
+            Head-to-Head Compare
           </h2>
-          <p class="section-desc">Select two outlets to compare how they cover stories side-by-side, filtered by beat and date range.</p>
+          <p class="section-desc">Select two outlets to compare how they cover stories side-by-side, filtered by topic and date range.</p>
         </div>
       </div>
       
@@ -545,9 +545,9 @@
           <!-- H2H Filter Controls Bar: Topic & Timeframe -->
           <div class="h2h-controls-bar">
             <div class="h2h-control-item">
-              <label for="h2h-topic-select"><i data-lucide="layers"></i> Compare by Beat:</label>
+              <label for="h2h-topic-select"><i data-lucide="layers"></i> Compare by Topic:</label>
               <select id="h2h-topic-select" class="select-input">
-                <option value="all" selected>All Beats (Overall)</option>
+                <option value="all" selected>All Topics (Overall)</option>
                 <option value="world">World Affairs</option>
                 <option value="politics">Politics</option>
                 <option value="business">Business & Markets</option>
@@ -690,7 +690,7 @@
           <div class="flex-center" style="gap: 0.6rem;">
             <i data-lucide="newspaper" style="color: var(--accent-color); width: 22px; height: 22px;"></i>
             <h2 class="section-title" style="margin: 0; font-size: 1.35rem;" id="deepdive-feed-title-text">Headlines Feed</h2>
-            <span id="deepdive-headlines-count-badge" class="badge neu" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700;">0 Stories</span>
+            <span id="deepdive-headlines-count-badge" class="badge neu" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700; display: none !important;">0 Stories</span>
           </div>
           <div id="deepdive-filter-indicator" class="filter-indicator" style="display: none;">
             Filtered to: <strong id="deepdive-filter-name">-</strong>
