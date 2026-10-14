@@ -21,11 +21,11 @@
 
   <div class="app-container">
     
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="header-edition-block">
-        <!-- Two-Sided App Edition Switcher (No Good News vs Some Good News) -->
-        <div class="edition-toggle-wrap" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and Some Good News">
+    <!-- CENTRAL EDITION MASTHEAD & PROMINENT TOGGLE -->
+    <header class="app-masthead-central">
+      <div class="masthead-top-row">
+        <!-- Prominent Central Edition Switcher -->
+        <div class="edition-toggle-wrap-large" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and Some Good News">
           <button id="edition-btn-doom" class="edition-pill-btn active" data-edition="doom">
             <i data-lucide="newspaper"></i>
             <span>No Good News</span>
@@ -35,21 +35,18 @@
             <span>Some Good News</span>
           </button>
         </div>
-        <!-- Description moved directly below toggle -->
-        <p class="edition-subtitle" id="edition-subtitle">
-          There's no such thing as good news — An autonomous daily audit of global media pessimism
-        </p>
       </div>
-      
-      <div class="header-actions">
+
+      <!-- Description directly below the central toggle -->
+      <p class="edition-subtitle-central" id="edition-subtitle">
+        There's no such thing as good news — An autonomous daily audit of global media pessimism
+      </p>
+
+      <div class="masthead-status-row">
         <div class="header-status-indicator" title="Autonomous cloud ingestion pipeline">
           <span class="status-dot green"></span>
           <span id="last-updated-text" class="status-text">Synced: Just now</span>
         </div>
-        <a href="https://github.com/caiolaborda/vibe-o-meter" target="_blank" rel="noopener noreferrer" class="btn btn-secondary flex-center" title="View Source on GitHub" style="text-decoration:none; gap: 0.4rem; font-weight:600; padding: 0.45rem 0.9rem; border-radius: 8px;">
-          <i data-lucide="github"></i>
-          <span>GitHub</span>
-        </a>
       </div>
     </header>
 
@@ -105,6 +102,54 @@
         <!-- Rendered dynamically in app.js -->
       </div>
     </section>
+
+    <!-- STICKY DASHBOARD TABS & QUICK CONTROLS (Positioned at top of all tabs) -->
+    <nav class="quick-nav-bar" id="quick-nav-bar">
+      <div class="quick-nav-links">
+        <button class="nav-pill-btn active" data-tab="pulse" id="tab-btn-pulse">
+          <i data-lucide="sparkles"></i><span>Daily Pulse</span>
+        </button>
+        <button class="nav-pill-btn" data-tab="trends" id="tab-btn-trends">
+          <i data-lucide="line-chart"></i><span>Macro Trends</span>
+        </button>
+        <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
+          <i data-lucide="compass"></i><span>Outlet Deep Dives</span>
+        </button>
+        <button class="nav-pill-btn" data-tab="methodology" id="tab-btn-methodology">
+          <i data-lucide="help-circle"></i><span>Methodology</span>
+        </button>
+      </div>
+      <div class="quick-nav-actions">
+        <!-- Active Source Filter Indicator in Header Bar -->
+        <div id="quick-source-indicator" class="quick-source-pill" style="display:none;" title="Click ✕ to clear filter">
+          <span class="quick-filter-dot"></span>
+          <span class="quick-filter-prefix">Source:</span>
+          <strong id="quick-source-name">BBC</strong>
+          <button id="quick-source-clear-btn" class="quick-clear-btn" aria-label="Clear source filter">&times;</button>
+        </div>
+        <!-- Active Topic Filter Indicator in Header Bar -->
+        <div id="quick-category-indicator" class="quick-source-pill topic-pill-active" style="display:none;" title="Click ✕ to clear topic filter">
+          <span class="quick-filter-dot topic-dot"></span>
+          <span class="quick-filter-prefix">Topic:</span>
+          <strong id="quick-category-name">World</strong>
+          <button id="quick-category-clear-btn" class="quick-clear-btn" aria-label="Clear topic filter">&times;</button>
+        </div>
+        <!-- Timeframe Selector -->
+        <div class="quick-timeframe-wrap" title="Filter dashboard data by timeframe">
+          <i data-lucide="clock" class="quick-time-icon"></i>
+          <select id="quick-timeframe-select" class="quick-time-select" aria-label="Select timeframe">
+            <option value="3h">Past 3 Hours</option>
+            <option value="6h">Past 6 Hours</option>
+            <option value="12h">Past 12 Hours</option>
+            <option value="24h" selected>Past 24 Hours</option>
+            <option value="3d">Past 3 Days</option>
+            <option value="7d">Past 7 Days</option>
+            <option value="30d">Past 30 Days</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+      </div>
+    </nav>
 
     <!-- HERO: GLOBAL NEWS VIBE LANDING (Prominent landing feature on Daily Pulse) -->
     <section class="pulse-hero-section" id="pulse-section">
@@ -193,54 +238,6 @@
       </div>
     </section>
 
-    <!-- STICKY DASHBOARD TABS & QUICK CONTROLS (Starts below Hero on Pulse, follows on scroll; sits right under Header on other tabs) -->
-    <nav class="quick-nav-bar" id="quick-nav-bar">
-      <div class="quick-nav-links">
-        <button class="nav-pill-btn active" data-tab="pulse" id="tab-btn-pulse">
-          <i data-lucide="sparkles"></i><span>Daily Pulse</span>
-        </button>
-        <button class="nav-pill-btn" data-tab="trends" id="tab-btn-trends">
-          <i data-lucide="line-chart"></i><span>Macro Trends</span>
-        </button>
-        <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
-          <i data-lucide="compass"></i><span>Outlet Deep Dives</span>
-        </button>
-        <button class="nav-pill-btn" data-tab="methodology" id="tab-btn-methodology">
-          <i data-lucide="help-circle"></i><span>Methodology</span>
-        </button>
-      </div>
-      <div class="quick-nav-actions">
-        <!-- Active Source Filter Indicator in Header Bar -->
-        <div id="quick-source-indicator" class="quick-source-pill" style="display:none;" title="Click ✕ to clear filter">
-          <span class="quick-filter-dot"></span>
-          <span class="quick-filter-prefix">Source:</span>
-          <strong id="quick-source-name">BBC</strong>
-          <button id="quick-source-clear-btn" class="quick-clear-btn" aria-label="Clear source filter">&times;</button>
-        </div>
-        <!-- Active Topic Filter Indicator in Header Bar -->
-        <div id="quick-category-indicator" class="quick-source-pill topic-pill-active" style="display:none;" title="Click ✕ to clear topic filter">
-          <span class="quick-filter-dot topic-dot"></span>
-          <span class="quick-filter-prefix">Topic:</span>
-          <strong id="quick-category-name">World</strong>
-          <button id="quick-category-clear-btn" class="quick-clear-btn" aria-label="Clear topic filter">&times;</button>
-        </div>
-        <!-- Timeframe Selector -->
-        <div class="quick-timeframe-wrap" title="Filter dashboard data by timeframe">
-          <i data-lucide="clock" class="quick-time-icon"></i>
-          <select id="quick-timeframe-select" class="quick-time-select" aria-label="Select timeframe">
-            <option value="3h">Past 3 Hours</option>
-            <option value="6h">Past 6 Hours</option>
-            <option value="12h">Past 12 Hours</option>
-            <option value="24h" selected>Past 24 Hours</option>
-            <option value="3d">Past 3 Days</option>
-            <option value="7d">Past 7 Days</option>
-            <option value="30d">Past 30 Days</option>
-            <option value="all">All Time</option>
-          </select>
-        </div>
-      </div>
-    </nav>
-
     <!-- TAB 1: DAILY PULSE (Spectrum & Headline Stream) -->
     <main id="tab-panel-pulse" class="tab-panel">
       <!-- HERO: SENTIMENT SPECTRUM -->
@@ -292,7 +289,7 @@
         </div>
 
         <!-- Shared Tooltip for lanes -->
-        <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
+        <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
         
         <div class="spectrum-legend">
           <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to filter headlines below.</p>
@@ -433,7 +430,6 @@
               <i data-lucide="history" style="width:14px;height:14px;"></i>
               <span id="timeline-snapshot-count">21 Snapshots Recorded</span>
             </div>
-            <span id="timeline-time-range" style="font-size:0.78rem; color:var(--text-muted); font-weight:500;">Multi-week historical tracking</span>
           </div>
         </div>
 
@@ -811,29 +807,46 @@
             </div>
 
             <!-- GNN Live Control Headlines Table -->
-            <div style="background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
               <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
                 <i data-lucide="check-circle-2" style="width: 15px; height: 15px; color: #10b981;"></i>
                 Sample Empirical Evaluations from The Good News Network Control Wire
               </div>
               <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
                   <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"Elderly Theater Worker Surprised by $146,000 for Her Retirement Crowdfunded by Young Moviegoer"</span>
                   <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.95</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
                   <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"Barbie Honors Serena Williams with New Signature Doll to Serve Inspiration to Next Generation"</span>
                   <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.80</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
                   <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"Montana High School Softball Player Discovered Long-Lost Sister on Opposing Team"</span>
                   <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.75</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color); gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
                   <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"‘Like Caring for a Pet’ – The Community App That Alerts Neighbors When Street Trees Need Water"</span>
                   <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.65</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- OPEN SOURCE & REPOSITORY -->
+          <div class="methodology-github-section" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.75rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem 1.5rem;">
+              <div>
+                <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+                  <i data-lucide="github" style="width: 18px; height: 18px;"></i> Open Source &amp; Research Data
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                  Explore the autonomous daily scraping pipeline, sentiment evaluation prompts, and dataset history on GitHub.
+                </p>
+              </div>
+              <a href="https://github.com/caiol/Vibe-O-Meter-of-News-Sources" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.85rem; padding: 0.5rem 1rem; text-decoration: none; border-radius: 8px;">
+                <i data-lucide="github" style="width: 16px; height: 16px;"></i> View Repository
+              </a>
             </div>
           </div>
 

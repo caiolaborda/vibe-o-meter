@@ -702,8 +702,10 @@ function switchTab(tabId) {
     if (panel) {
       if (id === tabId) {
         panel.classList.remove('hidden');
+        panel.style.display = '';
       } else {
         panel.classList.add('hidden');
+        panel.style.display = 'none';
       }
     }
   });
@@ -713,7 +715,7 @@ function switchTab(tabId) {
   if (heroSection) {
     if (tabId === 'pulse') {
       heroSection.classList.remove('hidden');
-      heroSection.style.display = 'block';
+      heroSection.style.display = '';
     } else {
       heroSection.classList.add('hidden');
       heroSection.style.display = 'none';
@@ -1042,7 +1044,13 @@ function switchEdition(edition) {
       quickNavBar.style.display = 'flex';
     }
 
-    switchTab(state.activeTab);
+    // Reset inline display style on all tab panels so switchTab works cleanly
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.style.display = '';
+    });
+
+    resolvedSources = getResolvedSources();
+    switchTab(state.activeTab || 'pulse');
     updateAppUI();
   }
 
@@ -1400,7 +1408,7 @@ function renderSpectrum() {
         <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; border: 2.5px solid ${markerColor}; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
           <span>${meta.initials}</span>
         </div>
-        <div class="marker-label" style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%); opacity: 0; pointer-events: none; background: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: var(--card-shadow); white-space: nowrap; color: var(--text-primary); transition: all 0.2s;">
+        <div class="marker-label" style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%); opacity: 0; pointer-events: none; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,0.18); white-space: nowrap; color: var(--text-primary); transition: all 0.2s;">
           ${source.name}: <strong style="color:${markerColor};">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</strong> ${isCategoryFiltered ? `(${state.filters.category})` : ''}
         </div>
       `;
@@ -2460,11 +2468,11 @@ function createArticleCard(art, index, prefix = 'pulse') {
       </div>
       <div style="display: flex; align-items: center; gap: 0.6rem;">
         <span class="article-date">${dateFormatted}</span>
-        <div class="article-actions" style="display: flex; gap: 0.25rem;">
-          <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="Open original article" style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; transition: all 0.2s;">
+        <div class="article-actions" style="display: flex; gap: 0.35rem;">
+          <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="Open original article">
             <i data-lucide="external-link" style="width: 13px; height: 13px;"></i>
           </a>
-          <button onclick="copyToClipboard('${feedUrl}', this)" class="action-icon-btn" title="Copy source RSS feed URL" style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-secondary); cursor: pointer; transition: all 0.2s; padding: 0;">
+          <button onclick="copyToClipboard('${feedUrl}', this)" class="action-icon-btn" title="Copy source RSS feed URL">
             <i data-lucide="copy" style="width: 13px; height: 13px;"></i>
           </button>
         </div>
