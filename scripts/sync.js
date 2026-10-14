@@ -407,10 +407,16 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
   if (!apiKey) return [];
   
   // Flatten recent headlines from all sources (up to top 10 from each outlet)
+  // Flatten recent headlines from all sources (within past 5 days to prevent stale RSS items from leaking into active news cycles)
   const candidates = [];
+  const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
   Object.entries(finalSources).forEach(([sourceId, src]) => {
-    (src.articles || []).slice(0, 10).forEach(art => {
+    (src.articles || []).slice(0, 15).forEach(art => {
       if (art && art.title && art.title.trim().length > 10) {
+        if (art.pubDate) {
+          const t = new Date(art.pubDate).getTime();
+          if (!isNaN(t) && t < fiveDaysAgo) return;
+        }
         candidates.push({
           sourceId,
           sourceName: src.name,
@@ -433,6 +439,7 @@ Group them into story clusters.
 Rules:
 - A cluster MUST include headlines from at least 2 distinct outlets reporting on the SAME underlying event or topic.
 - Provide a concise neutral story title (3-6 words, e.g. "Wayfair Misleading Sales Fines", "UK Early Prisoner Release", "Boeing Machinist Strike", "Federal Reserve Rate Cut").
+- Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how the desks are reporting it.
 - Provide the list of matching headline IDs.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
@@ -441,7 +448,7 @@ ${JSON.stringify(promptData, null, 2)}
 
 Return JSON array in format:
 [
-  { "story": "Topic Title", "ids": [0, 4, 12] }
+  { "story": "Topic Title", "summary": "1-2 sentence editorial summary of the event.", "ids": [0, 4, 12] }
 ]`;
 
   try {
@@ -471,6 +478,7 @@ Return JSON array in format:
           
           formattedClusters.push({
             story: cl.story,
+            summary: cl.summary || '',
             averageSentiment: avgScore,
             sentimentSpread: variance,
             outletCount: uniqueSources.size,

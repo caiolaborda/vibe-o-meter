@@ -26,8 +26,7 @@ let state = {
     order: 'desc' // 'desc' or 'asc'
   },
   edition: 'doom', // 'doom' (No Good News) or 'silver' (Some Good News)
-  silverViewMode: 'swipe', // 'swipe' (Deck Spotlight) or 'grid' (All Stories Magazine)
-  silverIndex: 0,
+  silverTopic: 'all',
   headlinesLimit: 20,
   sharedStoryClusters: [],
   clusterSearch: '',
@@ -395,11 +394,16 @@ const elements = {
   clustersSearchInput: document.getElementById('clusters-search-input'),
   clustersTopicSelect: document.getElementById('clusters-topic-select'),
   clustersSortSelect: document.getElementById('clusters-sort-select'),
-  clustersJumpSelect: document.getElementById('clusters-jump-select'),
   clustersCountBadge: document.getElementById('clusters-count-badge'),
   h2hTopicSelect: document.getElementById('h2h-topic-select'),
   h2hTimeframeSelect: document.getElementById('h2h-timeframe-select'),
-  h2hSpreadValue: document.getElementById('h2h-spread-value')
+  h2hSpreadValue: document.getElementById('h2h-spread-value'),
+
+  // Some Good News Elements
+  silverTopicSelect: document.getElementById('silver-topic-select'),
+  silverTimeframeSelect: document.getElementById('silver-timeframe-select'),
+  silverStatCountPill: document.getElementById('silver-stat-count-pill'),
+  silverStatScorePill: document.getElementById('silver-stat-score-pill')
 };
 
 // Initialize Application
@@ -582,6 +586,15 @@ function setupEventListeners() {
     });
   }
 
+  // Silver Edition Topic Selector
+  const silverTopicSelect = document.getElementById('silver-topic-select');
+  if (silverTopicSelect) {
+    silverTopicSelect.addEventListener('change', (e) => {
+      state.silverTopic = e.target.value;
+      renderSilverEdition();
+    });
+  }
+
   // Silver Edition Timeframe Selector
   const silverTimeSelect = document.getElementById('silver-timeframe-select');
   if (silverTimeSelect) {
@@ -593,31 +606,6 @@ function setupEventListeners() {
       updateAppUI();
     });
   }
-
-  // Silver Edition View Mode Buttons (Swipe Deck vs Grid)
-  const btnSilverSwipe = document.getElementById('btn-silver-view-swipe');
-  const btnSilverGrid = document.getElementById('btn-silver-view-grid');
-  if (btnSilverSwipe) {
-    btnSilverSwipe.addEventListener('click', () => {
-      setSilverViewMode('swipe');
-    });
-  }
-  if (btnSilverGrid) {
-    btnSilverGrid.addEventListener('click', () => {
-      setSilverViewMode('grid');
-    });
-  }
-
-  // Keyboard navigation for Swipe Deck (Left / Right Arrow)
-  window.addEventListener('keydown', (e) => {
-    if (state.edition === 'silver' && state.silverViewMode === 'swipe') {
-      if (e.key === 'ArrowLeft') {
-        navigateSilverDeck(-1);
-      } else if (e.key === 'ArrowRight') {
-        navigateSilverDeck(1);
-      }
-    }
-  });
 
   if (elements.regionFilterTabs) {
     elements.regionFilterTabs.addEventListener('click', (e) => {
@@ -745,32 +733,6 @@ function setupEventListeners() {
     elements.clustersSortSelect.addEventListener('change', (e) => {
       state.clusterSort = e.target.value;
       renderStoryClusters();
-    });
-  }
-
-  if (elements.clustersJumpSelect) {
-    elements.clustersJumpSelect.addEventListener('change', (e) => {
-      const clusterId = e.target.value;
-      if (!clusterId) return;
-      const card = document.getElementById(clusterId);
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        card.classList.add('highlight-flash');
-        setTimeout(() => card.classList.remove('highlight-flash'), 2500);
-        // Expand details if collapsed
-        const grid = card.querySelector('.cluster-coverage-grid');
-        const btn = card.querySelector('.cluster-toggle-btn');
-        if (grid && grid.style.display === 'none') {
-          grid.style.display = 'grid';
-          if (btn) {
-            const span = btn.querySelector('span');
-            const icon = btn.querySelector('i');
-            if (span) span.innerText = 'Collapse Coverage';
-            if (icon) icon.setAttribute('data-lucide', 'chevron-up');
-            if (window.lucide) lucide.createIcons();
-          }
-        }
-      }
     });
   }
 
@@ -1381,7 +1343,7 @@ function switchEdition(edition) {
     if (editionSilver) editionSilver.classList.add('active');
     if (editionDoom) editionDoom.classList.remove('active');
     if (editionSubtitle) {
-      editionSubtitle.innerText = "Some Good News Edition — Spotlighting the 10 most constructive breakthroughs, recoveries & solutions from the wire";
+      editionSubtitle.innerText = "Turns out not everything is on fire — Sifting rare specks of hope from the 24/7 doom machine";
     }
     if (silverSection) {
       silverSection.classList.remove('hidden');
@@ -1434,38 +1396,19 @@ function switchEdition(edition) {
 }
 
 // Global navigation helpers for Silver Edition
-window._silverTop10Count = 0;
-
 window.setSilverTimeframe = function(val) {
   state.filters.time = val;
   const silverSelect = document.getElementById('silver-timeframe-select');
   if (silverSelect) silverSelect.value = val;
   if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
   if (elements.filterTime) elements.filterTime.value = val;
-  state.silverIndex = 0;
   updateAppUI();
 };
 
-window.setSilverViewMode = function(mode) {
-  state.silverViewMode = mode;
-  const btnSwipe = document.getElementById('btn-silver-view-swipe');
-  const btnGrid = document.getElementById('btn-silver-view-grid');
-  if (btnSwipe) btnSwipe.classList.toggle('active', mode === 'swipe');
-  if (btnGrid) btnGrid.classList.toggle('active', mode === 'grid');
-  renderSilverEdition();
-};
-
-window.navigateSilverDeck = function(dir) {
-  const count = window._silverTop10Count || 10;
-  let next = (state.silverIndex || 0) + dir;
-  if (next < 0) next = 0;
-  if (next >= count) next = count - 1;
-  state.silverIndex = next;
-  renderSilverEdition();
-};
-
-window.jumpSilverDeck = function(idx) {
-  state.silverIndex = idx;
+window.setSilverTopic = function(val) {
+  state.silverTopic = val;
+  const topicSelect = document.getElementById('silver-topic-select');
+  if (topicSelect) topicSelect.value = val;
   renderSilverEdition();
 };
 
@@ -1483,7 +1426,7 @@ window.copyStoryLink = function(url, btn) {
   }
 };
 
-// Render Dedicated "Some Good News" View (Top 10 Best Stories with Swipe Deck & Magazine Grid)
+// Render Dedicated "Some Good News" View (Broadsheet Magazine Grid with Topic & Timeframe Filters)
 function renderSilverEdition() {
   const silverSection = document.getElementById('silver-edition-section');
   if (!silverSection) return;
@@ -1493,36 +1436,48 @@ function renderSilverEdition() {
     silverTimeSelect.value = state.filters.time;
   }
 
-  // Update view mode toggle active class
-  const btnSwipe = document.getElementById('btn-silver-view-swipe');
-  const btnGrid = document.getElementById('btn-silver-view-grid');
-  if (btnSwipe) btnSwipe.classList.toggle('active', state.silverViewMode === 'swipe');
-  if (btnGrid) btnGrid.classList.toggle('active', state.silverViewMode === 'grid');
+  const silverTopicSelect = document.getElementById('silver-topic-select');
+  if (silverTopicSelect) {
+    silverTopicSelect.value = state.silverTopic || 'all';
+  }
 
   const container = document.getElementById('silver-stories-container');
-  const statCount = document.getElementById('silver-stat-count');
-  const statTopScore = document.getElementById('silver-stat-top-score');
-  const statTopCat = document.getElementById('silver-stat-top-category');
+  const statCount = document.getElementById('silver-stat-count-pill');
+  const statTopScore = document.getElementById('silver-stat-score-pill');
 
   if (!container) return;
   container.innerHTML = '';
 
   // 1. Gather all positive articles from resolvedSources (already time-filtered)
   const positiveArticles = [];
-  const categoryCounts = {};
+  const activeTopic = (state.silverTopic || 'all').toLowerCase();
 
   Object.keys(resolvedSources).forEach(sourceId => {
     const src = resolvedSources[sourceId];
     if (src && src.articles) {
       src.articles.forEach(art => {
         if (typeof art.sentiment === 'number' && art.sentiment > 0.05) {
-          positiveArticles.push({
-            sourceId,
-            sourceName: src.name,
-            ...art
-          });
-          const cat = art.category || 'other';
-          categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+          const cat = (art.category || 'other').toLowerCase();
+          let matchesTopic = (activeTopic === 'all');
+          if (!matchesTopic) {
+            if (activeTopic === 'climate') matchesTopic = (cat === 'climate' || cat === 'environment' || cat === 'nature');
+            else if (activeTopic === 'science') matchesTopic = (cat === 'science' || cat === 'technology' || cat === 'tech' || cat === 'space');
+            else if (activeTopic === 'world') matchesTopic = (cat === 'world' || cat === 'society' || cat === 'global');
+            else if (activeTopic === 'health') matchesTopic = (cat === 'health' || cat === 'medicine');
+            else if (activeTopic === 'business') matchesTopic = (cat === 'business' || cat === 'markets' || cat === 'economy');
+            else if (activeTopic === 'politics') matchesTopic = (cat === 'politics' || cat === 'policy');
+            else if (activeTopic === 'culture') matchesTopic = (cat === 'culture' || cat === 'arts' || cat === 'entertainment');
+            else if (activeTopic === 'sports') matchesTopic = (cat === 'sports');
+            else matchesTopic = (cat === activeTopic);
+          }
+
+          if (matchesTopic) {
+            positiveArticles.push({
+              sourceId,
+              sourceName: src.name,
+              ...art
+            });
+          }
         }
       });
     }
@@ -1542,24 +1497,10 @@ function renderSilverEdition() {
   // 3. Sort descending by highest positive sentiment score
   uniqueArticles.sort((a, b) => b.sentiment - a.sentiment);
 
-  // 4. Update Summary Stats
+  // 4. Update Summary Stats Pills
   const topScore = uniqueArticles.length > 0 ? uniqueArticles[0].sentiment : 0;
-  let topCategoryName = 'None';
-  let topCategoryCount = 0;
-  for (const [cat, count] of Object.entries(categoryCounts)) {
-    if (count > topCategoryCount) {
-      topCategoryCount = count;
-      topCategoryName = cat === 'climate' ? 'Nature & Climate' : (cat.charAt(0).toUpperCase() + cat.slice(1));
-    }
-  }
-
-  if (statCount) statCount.innerText = uniqueArticles.length.toString();
-  if (statTopScore) statTopScore.innerText = topScore > 0 ? `+${topScore.toFixed(2)}` : '+0.00';
-  if (statTopCat) statTopCat.innerText = topCategoryName;
-
-  // 5. Take the Top 10 Best Stories
-  const top10 = uniqueArticles.slice(0, 10);
-  window._silverTop10Count = top10.length;
+  if (statCount) statCount.innerText = `${uniqueArticles.length} Stor${uniqueArticles.length === 1 ? 'y' : 'ies'}`;
+  if (statTopScore) statTopScore.innerText = topScore > 0 ? `+${topScore.toFixed(2)} Max` : '+0.00 Max';
 
   // Timeframe label for contextual messaging
   let timeframeLabel = 'Past 24 Hours';
@@ -1571,15 +1512,16 @@ function renderSilverEdition() {
   else if (state.filters.time === '30d') timeframeLabel = 'Past 30 Days';
   else if (state.filters.time === 'all') timeframeLabel = 'All Time';
 
-  if (top10.length === 0) {
+  if (uniqueArticles.length === 0) {
     container.innerHTML = `
-      <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px;">
+      <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; width: 100%;">
         <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">⛅</div>
         <h3 style="font-size: 1.45rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism on the Wire</h3>
         <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem; line-height: 1.6;">
-          During ${timeframeLabel}, global wire rooms published near-zero qualifying positive stories. Commercial news desks operate overwhelmingly on threats and alarm. Expand the window below to uncover constructive breakthroughs.
+          During ${timeframeLabel}${activeTopic !== 'all' ? ` for "${activeTopic}"` : ''}, global wire rooms published near-zero qualifying positive stories. Commercial news desks operate overwhelmingly on threats and alarm. Expand the window below to uncover constructive breakthroughs.
         </p>
         <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
+          ${activeTopic !== 'all' ? '<button class="btn btn-secondary btn-sm" onclick="setSilverTopic(\'all\')">Clear Beat Filter</button>' : ''}
           <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('3d')">Expand to Past 3 Days</button>
           <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('7d')">Expand to Past 7 Days</button>
           <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('all')">View All-Time Top Stories</button>
@@ -1589,91 +1531,19 @@ function renderSilverEdition() {
     return;
   }
 
-  // 6. Render according to chosen View Mode: 'swipe' (Deck) or 'grid' (All Stories)
-  if (state.silverViewMode === 'swipe') {
-    const curIdx = Math.max(0, Math.min(state.silverIndex || 0, top10.length - 1));
-    state.silverIndex = curIdx;
-    const currentArt = top10[curIdx];
-    const related = findRelatedCoverage(currentArt, uniqueArticles);
+  // 5. Render directly in BroadSheet Grid
+  const gridEl = document.createElement('div');
+  gridEl.className = 'silver-grid-container';
 
-    const deckWrapper = document.createElement('div');
-    deckWrapper.className = 'silver-swipe-deck-wrapper';
+  uniqueArticles.forEach((art, idx) => {
+    const card = document.createElement('div');
+    card.className = 'silver-story-card silver-card-grid-item';
+    const related = findRelatedCoverage(art, uniqueArticles);
+    card.innerHTML = createSilverCardHTML(art, idx, related, false);
+    gridEl.appendChild(card);
+  });
 
-    // Deck Navigation Bar
-    const navBarHTML = `
-      <div class="silver-deck-nav">
-        <button type="button" class="silver-nav-arrow-btn prev-btn" ${curIdx === 0 ? 'disabled' : ''} onclick="navigateSilverDeck(-1)">
-          <i data-lucide="chevron-left" style="width:16px;height:16px;"></i> <span>Previous</span>
-        </button>
-        <div class="silver-deck-counter">
-          <span class="counter-label">Story <strong>#${curIdx + 1}</strong> of <strong>${top10.length}</strong></span>
-          <div class="silver-deck-dots">
-            ${top10.map((_, i) => `
-              <button type="button" class="silver-deck-dot ${i === curIdx ? 'active' : ''} ${i === 0 ? 'gold' : ''}" onclick="jumpSilverDeck(${i})" title="Jump to Story #${i + 1}">
-                ${i + 1}
-              </button>
-            `).join('')}
-          </div>
-        </div>
-        <button type="button" class="silver-nav-arrow-btn next-btn" ${curIdx === top10.length - 1 ? 'disabled' : ''} onclick="navigateSilverDeck(1)">
-          <span>Next</span> <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
-        </button>
-      </div>
-    `;
-
-    // Active Card (rendered first)
-    const cardEl = document.createElement('div');
-    cardEl.className = 'silver-story-card silver-card-spotlight';
-    cardEl.id = 'silver-active-spotlight-card';
-    cardEl.innerHTML = createSilverCardHTML(currentArt, curIdx, related, true);
-    deckWrapper.appendChild(cardEl);
-
-    // Deck Navigation Bar / Paginator (rendered below the card)
-    const navBarEl = document.createElement('div');
-    navBarEl.innerHTML = navBarHTML.trim();
-    if (navBarEl.firstElementChild) {
-      deckWrapper.appendChild(navBarEl.firstElementChild);
-    }
-
-    // Touch swipe gesture listener
-    attachSwipeListeners(deckWrapper);
-
-    container.appendChild(deckWrapper);
-  } else {
-    // Grid Mode: render all 10 cards in a multi-column broadsheet grid
-    const gridEl = document.createElement('div');
-    gridEl.className = 'silver-grid-container';
-
-    top10.forEach((art, idx) => {
-      const card = document.createElement('div');
-      card.className = 'silver-story-card silver-card-grid-item';
-      const related = findRelatedCoverage(art, uniqueArticles);
-      card.innerHTML = createSilverCardHTML(art, idx, related, false);
-      gridEl.appendChild(card);
-    });
-
-    container.appendChild(gridEl);
-
-    // Summary footer below the top 10 grid
-    const gridFooter = document.createElement('div');
-    gridFooter.className = 'silver-grid-footer';
-    gridFooter.innerHTML = `
-      <div class="silver-grid-footer-bar">
-        <span class="silver-grid-footer-count">Showing <strong>${top10.length}</strong> Most Uplifting Stories</span>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="setSilverViewMode('swipe')">
-          <i data-lucide="layers" style="width:13px;height:13px;"></i> <span>Open in Swipe Deck</span>
-        </button>
-      </div>
-    `;
-    container.appendChild(gridFooter);
-  }
-
-  if (top10.length < 10) {
-    const notice = document.createElement('div');
-    notice.style.cssText = 'text-align: center; padding: 1.25rem; color: var(--text-muted); font-size: 0.85rem; font-style: italic;';
-    notice.innerText = `Only ${top10.length} positive stories were identified during ${timeframeLabel}. Mainstream coverage is heavily skewed toward alarmism — expand the timeframe above to discover more.`;
-    container.appendChild(notice);
-  }
+  container.appendChild(gridEl);
 
   if (window.lucide && lucide.createIcons) {
     lucide.createIcons();
@@ -2342,20 +2212,6 @@ function renderStoryClusters() {
     return;
   }
 
-  // Populate Jump to Story Selector
-  if (elements.clustersJumpSelect) {
-    const currentVal = elements.clustersJumpSelect.value;
-    const sortedForJump = [...rawClusters].sort((a, b) => (b.coverage?.length || 0) - (a.coverage?.length || 0));
-    elements.clustersJumpSelect.innerHTML = `
-      <option value="">Jump to Major Story (${sortedForJump.length})...</option>
-      ${sortedForJump.map(c => {
-        const id = 'cluster-' + encodeURIComponent(c.story.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
-        return `<option value="${id}">[${c.coverage?.length || 0} Outlets] ${c.story}</option>`;
-      }).join('')}
-    `;
-    if (currentVal) elements.clustersJumpSelect.value = currentVal;
-  }
-
   // Topic filter & Search filter
   const activeTopic = state.clusterTopic || 'all';
   const searchTerm = (state.clusterSearch || '').toLowerCase().trim();
@@ -2370,28 +2226,51 @@ function renderStoryClusters() {
     const computedSpread = sentiments.length > 1 ? Number((maxS - minS).toFixed(2)) : (c.sentimentSpread || 0);
     const avgSentiment = sentiments.length > 0 ? Number((sentiments.reduce((a, b) => a + b, 0) / sentiments.length).toFixed(2)) : (c.averageSentiment || 0);
 
-    // Compute cluster date range from coverage article pubDates
-    let minTime = Infinity;
-    let maxTime = -Infinity;
+    // Compute cluster date range from coverage article pubDates (with news cycle windowing)
+    const validTimestamps = [];
     coverage.forEach(cov => {
       const src = state.sources && state.sources[cov.sourceId];
       if (src && src.articles) {
         const match = src.articles.find(a => (a.link && a.link === cov.link) || (a.title && a.title === cov.title));
         if (match && match.pubDate) {
           const t = new Date(match.pubDate).getTime();
-          if (!isNaN(t)) {
-            if (t < minTime) minTime = t;
-            if (t > maxTime) maxTime = t;
-          }
+          if (!isNaN(t)) validTimestamps.push(t);
         }
       }
     });
 
     let dateRangeStr = 'Current Wire Cycle';
-    if (minTime !== Infinity && maxTime !== -Infinity) {
+    let minTime = Infinity;
+    let maxTime = -Infinity;
+    if (validTimestamps.length > 0) {
+      validTimestamps.sort((a, b) => a - b);
+      maxTime = validTimestamps[validTimestamps.length - 1];
+      // Max window for an active news cycle: 5 days from newest article
+      const cycleCutoff = maxTime - (5 * 24 * 60 * 60 * 1000);
+      const activeTimestamps = validTimestamps.filter(t => t >= cycleCutoff);
+      minTime = activeTimestamps.length > 0 ? activeTimestamps[0] : maxTime;
+
       const dMin = new Date(minTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const dMax = new Date(maxTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       dateRangeStr = dMin === dMax ? dMin : `${dMin} – ${dMax}`;
+    }
+
+    // High quality editorial summary
+    let summaryText = '';
+    if (c.summary && c.summary.trim().length > 15) {
+      summaryText = c.summary.trim();
+    } else {
+      const outlets = [...new Set(coverage.map(cov => cov.sourceName || cov.sourceId))];
+      const outletsList = outlets.slice(0, 3).join(', ') + (outlets.length > 3 ? ` +${outlets.length - 3} others` : '');
+      if (computedSpread >= 0.35) {
+        summaryText = `Editorial divergence across ${coverage.length} desks (${outletsList}): framing swings by ${computedSpread.toFixed(2)} pts between urgent alarm and measured policy context.`;
+      } else if (avgSentiment < -0.3) {
+        summaryText = `High-gravity wire reports across ${coverage.length} desks (${outletsList}) focusing on disruption, systemic risks, and ongoing investigations.`;
+      } else if (avgSentiment > 0.1) {
+        summaryText = `Constructive cross-wire reporting across ${coverage.length} desks (${outletsList}) spotlighting positive momentum, resolution, and progress.`;
+      } else {
+        summaryText = `Synchronized reporting across ${coverage.length} newsrooms (${outletsList}) providing balanced, factual developments on the evolving wire.`;
+      }
     }
 
     return {
@@ -2401,6 +2280,7 @@ function renderStoryClusters() {
       computedSpread,
       averageSentiment: avgSentiment,
       dateRangeStr,
+      summaryText,
       minTime,
       maxTime
     };
@@ -2439,7 +2319,7 @@ function renderStoryClusters() {
   // Empty state if filtered out
   if (processed.length === 0) {
     container.innerHTML = `
-      <div class="card" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px;">
+      <div class="card" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; grid-column: 1 / -1;">
         <i data-lucide="search-x" style="width: 36px; height: 36px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
         <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem;">No Matching Story Clusters</h3>
         <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 440px; margin: 0 auto;">
@@ -2451,8 +2331,8 @@ function renderStoryClusters() {
     return;
   }
 
-  // Render cluster cards
-  container.innerHTML = processed.map((cluster, clusterIndex) => {
+  // Render cluster cards in grid (collapsed by default, expandable to full width)
+  container.innerHTML = processed.map(cluster => {
     const clusterId = 'cluster-' + encodeURIComponent(cluster.story.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
     const topicLabel = CLUSTER_TOPIC_LABELS[cluster.topic] || cluster.topic;
     const moodClass = getMoodClass(cluster.averageSentiment);
@@ -2493,7 +2373,7 @@ function renderStoryClusters() {
       return sa - sb;
     });
 
-    // Build article cards in coverage grid (WITHOUT the "Alarmist Angle" / "Constructive Angle" tags)
+    // Build article cards in coverage grid
     const coverageCardsHTML = sortedCoverage.map(art => {
       const meta = SOURCE_META[art.sourceId] || { initials: art.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
       const score = typeof art.sentiment === 'number' ? art.sentiment : 0;
@@ -2527,9 +2407,6 @@ function renderStoryClusters() {
       `;
     }).join('');
 
-    // Collapse coverage by default if not among the first 3 or if > 4 articles
-    const isInitiallyCollapsed = clusterIndex >= 3 && sortedCoverage.length > 3;
-
     return `
       <article class="cluster-card card" id="${clusterId}">
         <div class="cluster-header">
@@ -2549,12 +2426,15 @@ function renderStoryClusters() {
               </span>
               <span class="cluster-badge cluster-spread-badge ${isHighSpread ? 'high-spread' : ''}">
                 <i data-lucide="split" style="width:11px;height:11px;"></i>
-                ${cluster.computedSpread.toFixed(2)} Tone Spread
+                ${cluster.computedSpread.toFixed(2)} Spread
               </span>
             </div>
             <h3 class="cluster-title">${cluster.story}</h3>
           </div>
         </div>
+
+        <!-- Editorial Summary -->
+        <p class="cluster-summary-text">${cluster.summaryText}</p>
 
         <!-- Mini-Spectrum Distribution Track across all covering desks -->
         <div class="cluster-spectrum-wrap">
@@ -2572,16 +2452,16 @@ function renderStoryClusters() {
         <div class="cluster-coverage-meta-bar">
           <div class="cluster-coverage-info">
             <i data-lucide="layers" style="width:13px;height:13px;"></i>
-            <span>Reporting Desks (${sortedCoverage.length} articles, sorted by valence: Critical &rarr; Constructive)</span>
+            <span>${sortedCoverage.length} Reporting Desks (Critical &rarr; Constructive)</span>
           </div>
-          <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCoverage('${clusterId}')" title="Toggle coverage visibility">
-            <span>${isInitiallyCollapsed ? 'Show All Coverage (' + sortedCoverage.length + ')' : 'Collapse Coverage'}</span>
-            <i data-lucide="${isInitiallyCollapsed ? 'chevron-down' : 'chevron-up'}" style="width:12px;height:12px;"></i>
+          <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full cross-wire coverage">
+            <span>Inspect Full Wire Coverage (${sortedCoverage.length})</span>
+            <i data-lucide="chevron-down" style="width:12px;height:12px;"></i>
           </button>
         </div>
 
-        <!-- Coverage Grid of Desks -->
-        <div class="cluster-coverage-grid" style="${isInitiallyCollapsed ? 'display: none;' : ''}">
+        <!-- Coverage Grid of Desks (Collapsed by default) -->
+        <div class="cluster-coverage-grid" style="display: none;">
           ${coverageCardsHTML}
         </div>
       </article>
@@ -2594,24 +2474,26 @@ function renderStoryClusters() {
 }
 window.renderStoryClusters = renderStoryClusters;
 
-// Toggle cluster coverage accordion
-window.toggleClusterCoverage = function(clusterId) {
+// Toggle cluster coverage accordion & expand card to full width
+window.toggleClusterCard = function(clusterId) {
   const card = document.getElementById(clusterId);
   if (!card) return;
+  const isExpanded = card.classList.toggle('is-expanded');
   const grid = card.querySelector('.cluster-coverage-grid');
   const btn = card.querySelector('.cluster-toggle-btn');
-  if (!grid) return;
-  const isHidden = grid.style.display === 'none';
-  grid.style.display = isHidden ? 'grid' : 'none';
+  if (grid) {
+    grid.style.display = isExpanded ? 'grid' : 'none';
+  }
   if (btn) {
     const span = btn.querySelector('span');
     const icon = btn.querySelector('i');
     const count = card.querySelectorAll('.cluster-article-card').length;
-    if (span) span.innerText = isHidden ? 'Collapse Coverage' : `Show All Coverage (${count})`;
-    if (icon) icon.setAttribute('data-lucide', isHidden ? 'chevron-up' : 'chevron-down');
+    if (span) span.innerText = isExpanded ? 'Collapse Coverage' : `Inspect Full Wire Coverage (${count})`;
+    if (icon) icon.setAttribute('data-lucide', isExpanded ? 'chevron-up' : 'chevron-down');
     if (window.lucide) lucide.createIcons();
   }
 };
+window.toggleClusterCoverage = window.toggleClusterCard;
 
 // Render Head-to-Head Comparison column
 function renderHeadToHead() {
