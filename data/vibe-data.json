@@ -1,11 +1,11 @@
 {
-  "lastUpdated": "2026-10-14T12:33:55.816Z",
+  "lastUpdated": "2026-10-14T12:39:25.712Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-10-14",
   "editorialSummary": "The global wires arrived with their usual cheerful dispatch, featuring domestic tragedies, cracked cockpit glass, and sovereign real estate squabbles. Somewhere out in the cosmos, scientists discovered planets actually worth visiting, which feels like an entirely reasonable reaction to the neighborhood.",
   "globalStats": {
-    "globalSentiment": -0.232,
-    "totalArticles": 3162,
+    "globalSentiment": -0.23,
+    "totalArticles": 3211,
     "mostNegativeOutlet": {
       "id": "spiegel",
       "name": "Spiegel International",
@@ -14,17 +14,17 @@
     "mostPositiveOutlet": {
       "id": "cnbc",
       "name": "CNBC News",
-      "score": -0.111
+      "score": -0.103
     },
     "categoryAverages": {
       "health": -0.224,
-      "business": -0.107,
-      "world": -0.56,
+      "business": -0.104,
+      "world": -0.561,
       "other": -0.356,
-      "politics": -0.217,
+      "politics": -0.216,
       "science": 0.223,
       "entertainment": -0.02,
-      "technology": -0.108,
+      "technology": -0.103,
       "sports": 0.029,
       "lifestyle": 0.05,
       "education": -0.22,
@@ -16833,9 +16833,26 @@
       "distribution": {
         "positive": 68,
         "neutral": 85,
-        "negative": 177
+        "negative": 178
       },
       "articles": [
+        {
+          "sourceId": "guardian",
+          "title": "‘From liabilities to goldmines’: refineries eye record profits from diesel shortage",
+          "description": "Firms turning crude oil into the ‘workhorse’ fuel stand to gain most despite economic fallout from record prices Business live – latest updates Days after Donald Trump announced a deal to import Russian diesel into the US in an effort to lower soaring pump prices, the world’s energy watchdog has warned that the global fuel shortage will drag into 2027. Trump’s temporary sanctions reprieve was criticised for offering “too little, too late” to t...",
+          "link": "https://www.theguardian.com/business/2026/oct/14/refineries-record-profits-diesel-shortage-fuel-crude-oil",
+          "pubDate": "Wed, 14 Oct 2026 12:26:27 GMT",
+          "sentimentAFINN": -0.75,
+          "sentimentVADER": -0.796,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.80) and AFINN-111 (-0.75).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Persistent fuel shortages and soaring prices create economic hardship, mitigated only by record corporate windfall profits.",
+          "categoryGemini": "business",
+          "sentiment": -0.22,
+          "explanation": "Persistent fuel shortages and soaring prices create economic hardship, mitigated only by record corporate windfall profits.",
+          "category": "business"
+        },
         {
           "sourceId": "guardian",
           "title": "Winter of the Crow review – Lesley Manville magnificently on edge in intriguing cold war thriller",
@@ -40547,13 +40564,30 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.331,
+      "averageSentiment": -0.33,
       "distribution": {
         "positive": 49,
-        "neutral": 66,
+        "neutral": 67,
         "negative": 253
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Colombia opens embassy in Jerusalem and restores free trade with Israel",
+          "description": "Colombia has opened an embassy in West Jerusalem under new far-right President Abelardo de la Espriella.",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/10/14/colombia-opens-embassy-in-jerusalem-and-restores-free-trade-with-israel?traffic_source=rss",
+          "pubDate": "Wed, 14 Oct 2026 12:28:06 +0000",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.67,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.67) and AFINN-111 (0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": 0.15,
+          "explanationGemini": "Diplomatic realignment involving an embassy opening and restored trade represents a modest constructive development in bilateral relations.",
+          "categoryGemini": "politics",
+          "sentiment": 0.15,
+          "explanation": "Diplomatic realignment involving an embassy opening and restored trade represents a modest constructive development in bilateral relations.",
+          "category": "politics"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Fulham manager Arbeloa fined for Man Utd refereeing outburst",
@@ -47012,11 +47046,11 @@
     },
     "npr": {
       "name": "NPR News",
-      "averageSentiment": -0.253,
+      "averageSentiment": -0.254,
       "distribution": {
         "positive": 17,
         "neutral": 25,
-        "negative": 65
+        "negative": 66
       },
       "articles": [
         {
@@ -47123,23 +47157,6 @@
         },
         {
           "sourceId": "npr",
-          "title": "The skincare sample is free. What happens next can cost thousands",
-          "description": "For years, customers have complained of aggressive sales tactics and charges at mall skincare stores. NPR investigated the business that connects many of them.",
-          "link": "https://www.npr.org/2026/10/14/nx-s1-6000621/mazal-group-investigation-documentary",
-          "pubDate": "Wed, 14 Oct 2026 05:00:00 -0400",
-          "sentimentAFINN": -0.625,
-          "sentimentVADER": -0.273,
-          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.27) and AFINN-111 (-0.63).",
-          "categoryLocal": "other",
-          "sentimentGemini": -0.38,
-          "explanationGemini": "Aggressive sales tactics and fraudulent charges targeting consumers constitute deceptive and harmful commercial practices.",
-          "categoryGemini": "business",
-          "sentiment": -0.38,
-          "explanation": "Aggressive sales tactics and fraudulent charges targeting consumers constitute deceptive and harmful commercial practices.",
-          "category": "business"
-        },
-        {
-          "sourceId": "npr",
           "title": "The skincare scheme that led to consumer complaints, lawsuits and a federal investigation",
           "description": "Free samples, high-pressure pitches and $50,000 bills: An NPR investigation reveals how a network of mall skincare stores systematically targeted older adults and people with disabilities across the U.S..",
           "link": "https://www.npr.org/2026/10/14/nx-s1-5550974/skincare-scheme-mazal-group-investigation",
@@ -47153,6 +47170,40 @@
           "categoryGemini": "business",
           "sentiment": -0.52,
           "explanation": "Systematic targeting of older adults and vulnerable populations with multi-thousand-dollar scams is a severe consumer protection failure.",
+          "category": "business"
+        },
+        {
+          "sourceId": "npr",
+          "title": "VIDEO: The skincare sample is free. What happens next can cost thousands",
+          "description": "For years, customers have complained of aggressive sales tactics and charges at mall skincare stores. NPR investigated the business that connects many of them.",
+          "link": "https://www.npr.org/2026/10/14/nx-s1-6000621/mazal-group-investigation-documentary",
+          "pubDate": "Wed, 14 Oct 2026 05:00:00 -0400",
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.273,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.27) and AFINN-111 (-0.63).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "Investigative reporting reveals deceptive commercial practices and aggressive sales tactics trapping consumers into thousands of dollars in unwanted charges.",
+          "categoryGemini": "business",
+          "sentiment": -0.35,
+          "explanation": "Investigative reporting reveals deceptive commercial practices and aggressive sales tactics trapping consumers into thousands of dollars in unwanted charges.",
+          "category": "business"
+        },
+        {
+          "sourceId": "npr",
+          "title": "The skincare sample is free. What happens next can cost thousands",
+          "description": "For years, customers have complained of aggressive sales tactics and charges at mall skincare stores. NPR investigated the business that connects many of them.",
+          "link": "https://www.npr.org/2026/10/14/nx-s1-6000621/mazal-group-investigation-documentary",
+          "pubDate": "Wed, 14 Oct 2026 05:00:00 -0400",
+          "sentimentAFINN": -0.625,
+          "sentimentVADER": -0.273,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.27) and AFINN-111 (-0.63).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "Aggressive sales tactics and fraudulent charges targeting consumers constitute deceptive and harmful commercial practices.",
+          "categoryGemini": "business",
+          "sentiment": -0.38,
+          "explanation": "Aggressive sales tactics and fraudulent charges targeting consumers constitute deceptive and harmful commercial practices.",
           "category": "business"
         },
         {
@@ -49054,13 +49105,30 @@
     },
     "cnbc": {
       "name": "CNBC News",
-      "averageSentiment": -0.111,
+      "averageSentiment": -0.103,
       "distribution": {
-        "positive": 51,
-        "neutral": 62,
-        "negative": 88
+        "positive": 64,
+        "neutral": 75,
+        "negative": 103
       },
       "articles": [
+        {
+          "sourceId": "cnbc",
+          "title": "Bank of America shares drop 5% after third-quarter revenue miss and regulatory penalty",
+          "description": "Bank of America shares fell Wednesday after the company posted weaker-than-expected trading revenue and the impact of a $1.2 billion Treasury fine.",
+          "link": "https://www.cnbc.com/2026/10/14/bank-of-america-bac-q3-2026-earnings.html",
+          "pubDate": "Wed, 14 Oct 2026 12:36:54 GMT",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": 0.077,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.08) and AFINN-111 (-0.13).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "A major bank experiences a stock drop, weak revenue, and a substantial $1.2 billion treasury penalty.",
+          "categoryGemini": "business",
+          "sentiment": -0.42,
+          "explanation": "A major bank experiences a stock drop, weak revenue, and a substantial $1.2 billion treasury penalty.",
+          "category": "business"
+        },
         {
           "sourceId": "cnbc",
           "title": "Consumer prices rose 0.6% in September, putting annual inflation rate at 3.7%",
@@ -52363,11 +52431,20 @@
           "description": "The healthcare giant is working to stabilize margins by shrinking membership, exiting unprofitable contracts and pouring $1.5 billion into AI.",
           "link": "https://www.cnbc.com/2026/07/16/unitedhealth-group-unh-earnings-q2-2026.html",
           "pubDate": "Thu, 16 Jul 2026 10:07:33 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentimentGemini": 0.35,
+          "explanationGemini": "Strong financial performance, cost-cutting success, and robust earnings outlook upgrades reflect substantial corporate progress.",
+          "categoryGemini": "business",
+          "sentiment": 0.35,
+          "explanation": "Strong financial performance, cost-cutting success, and robust earnings outlook upgrades reflect substantial corporate progress."
         },
         {
           "sourceId": "cnbc",
@@ -52375,7 +52452,16 @@
           "description": "Ukrainian protesters took to the streets of Kyiv on Thursday, decrying Zelenskyy's surprise decision to dismiss Defense Minister Mykhailo Fedorov.",
           "link": "https://www.cnbc.com/2026/07/16/ukraine-russia-zelenskyy-crimea-putin.html",
           "pubDate": "Thu, 16 Jul 2026 09:32:12 GMT",
-          "category": "politics"
+          "category": "politics",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": 0.511,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.51) and AFINN-111 (-0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.38,
+          "explanationGemini": "A surprise government shake-up sparks street protests and civil unrest in the capital during wartime.",
+          "categoryGemini": "politics",
+          "sentiment": -0.38,
+          "explanation": "A surprise government shake-up sparks street protests and civil unrest in the capital during wartime."
         },
         {
           "sourceId": "cnbc",
@@ -52383,7 +52469,16 @@
           "description": "Trump warned that the U.S. will target Iranian infrastructure next week if negotiations do not resume.",
           "link": "https://www.cnbc.com/2026/07/16/iran-warns-of-hormuz-red-line-retaliation-to-trumps-strike-threats.html",
           "pubDate": "Thu, 16 Jul 2026 09:18:55 GMT",
-          "category": "politics"
+          "category": "world",
+          "sentimentAFINN": -0.875,
+          "sentimentVADER": -0.7,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.70) and AFINN-111 (-0.88).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.68,
+          "explanationGemini": "Severe geopolitical escalation involving mutual threats of military strikes and red lines creates imminent conflict risks.",
+          "categoryGemini": "world",
+          "sentiment": -0.68,
+          "explanation": "Severe geopolitical escalation involving mutual threats of military strikes and red lines creates imminent conflict risks."
         },
         {
           "sourceId": "cnbc",
@@ -52391,7 +52486,16 @@
           "description": "James Patten is the person to be sentenced for a scheme that sent the market capitalization of a company that owned just a small New Jersey deli soaring.",
           "link": "https://www.cnbc.com/2026/07/15/new-jersey-deli-fraud-james-patten-sentencing-request.html",
           "pubDate": "Thu, 16 Jul 2026 09:15:23 GMT",
-          "category": "business"
+          "category": "business",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.856,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.86) and AFINN-111 (-1.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.45,
+          "explanationGemini": "A defendant convicted of a massive stock market fraud scheme attempts to avoid prison time following a major financial crime.",
+          "categoryGemini": "business",
+          "sentiment": -0.45,
+          "explanation": "A defendant convicted of a massive stock market fraud scheme attempts to avoid prison time following a major financial crime."
         },
         {
           "sourceId": "cnbc",
@@ -52399,7 +52503,16 @@
           "description": "Two Indian AI startups have become unicorns in a month, which has raised hopes that the country could shed its reputation as an AI laggard.",
           "link": "https://www.cnbc.com/2026/07/16/catching-up-in-the-ai-race-india-gets-its-second-ai-unicorn-in-a-month.html",
           "pubDate": "Thu, 16 Jul 2026 09:03:27 GMT",
-          "category": "technology"
+          "category": "technology",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.421,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.42) and AFINN-111 (0.25).",
+          "categoryLocal": "technology",
+          "sentimentGemini": 0.32,
+          "explanationGemini": "Rapid startup growth and the rise of new tech unicorns in India signify meaningful regional economic and technological advancement.",
+          "categoryGemini": "technology",
+          "sentiment": 0.32,
+          "explanation": "Rapid startup growth and the rise of new tech unicorns in India signify meaningful regional economic and technological advancement."
         },
         {
           "sourceId": "cnbc",
@@ -52407,7 +52520,16 @@
           "description": "The case marks one of the most prominent U.S. prosecutions alleging Chinese intelligence targeting of U.S. institutions, as Trump intensifies its pursuit of foreign economic espionage.",
           "link": "https://www.cnbc.com/2026/07/16/ex-fed-adviser-gets-jailtime-lying-about-china-ties-economic-espionage-.html",
           "pubDate": "Thu, 16 Jul 2026 08:59:24 GMT",
-          "category": "politics"
+          "category": "politics",
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.252,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.25) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.52,
+          "explanationGemini": "A federal sentencing for lying about foreign intelligence ties highlights serious national security breaches and espionage prosecution.",
+          "categoryGemini": "politics",
+          "sentiment": -0.52,
+          "explanation": "A federal sentencing for lying about foreign intelligence ties highlights serious national security breaches and espionage prosecution."
         },
         {
           "sourceId": "cnbc",
@@ -52415,7 +52537,16 @@
           "description": "TSMC announced a second-quarter profit, following its June revenue figures released earlier this week.",
           "link": "https://www.cnbc.com/2026/07/16/tsmc-second-quarter-profit-.html",
           "pubDate": "Thu, 16 Jul 2026 08:24:49 GMT",
-          "category": "sports"
+          "category": "business",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.7,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.70) and AFINN-111 (0.50).",
+          "categoryLocal": "sports",
+          "sentimentGemini": 0.62,
+          "explanationGemini": "A massive multi-billion dollar capital investment paired with soaring corporate profits represents substantial industrial and economic growth.",
+          "categoryGemini": "business",
+          "sentiment": 0.62,
+          "explanation": "A massive multi-billion dollar capital investment paired with soaring corporate profits represents substantial industrial and economic growth."
         },
         {
           "sourceId": "cnbc",
@@ -52423,7 +52554,16 @@
           "description": "The Indian government bond market is drawing interest from foreign investors as it readies for a likely inclusion in Bloomberg index.",
           "link": "https://www.cnbc.com/2026/07/16/fii-buy-india-bonds-sell-nifty.html",
           "pubDate": "Thu, 16 Jul 2026 08:01:32 GMT",
-          "category": "politics"
+          "category": "business",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.459,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.46) and AFINN-111 (0.13).",
+          "categoryLocal": "politics",
+          "sentimentGemini": 0.15,
+          "explanationGemini": "Increased foreign investment in government bonds indicates stable capital inflows despite broader equity sell-offs.",
+          "categoryGemini": "business",
+          "sentiment": 0.15,
+          "explanation": "Increased foreign investment in government bonds indicates stable capital inflows despite broader equity sell-offs."
         },
         {
           "sourceId": "cnbc",
@@ -52431,7 +52571,16 @@
           "description": "A separate U.S. probe into forced-labor enforcement could see an additional 12.5% duty on Brazilian goods on top of the 25%, with the decision due next week.",
           "link": "https://www.cnbc.com/2026/07/16/us-tariffs-brazil-unfair-trade-practices-section-301-.html",
           "pubDate": "Thu, 16 Jul 2026 06:32:39 GMT",
-          "category": "business"
+          "category": "business",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": -0.318,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.32) and AFINN-111 (0.25).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.48,
+          "explanationGemini": "Imposition of heavy trade tariffs and potential forced-labor investigations signal significant punitive economic actions.",
+          "categoryGemini": "business",
+          "sentiment": -0.48,
+          "explanation": "Imposition of heavy trade tariffs and potential forced-labor investigations signal significant punitive economic actions."
         },
         {
           "sourceId": "cnbc",
@@ -52439,7 +52588,16 @@
           "description": "The technological rivalry between China and the U.S. has intensified, as they race for AI dominance.",
           "link": "https://www.cnbc.com/2026/07/16/alibaba-baidu-shares-jump-apple-ai-partnership-.html",
           "pubDate": "Thu, 16 Jul 2026 03:17:20 GMT",
-          "category": "technology"
+          "category": "technology",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.459,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.46) and AFINN-111 (0.13).",
+          "categoryLocal": "technology",
+          "sentimentGemini": 0.28,
+          "explanationGemini": "A major technological partnership drives stock gains in major tech firms amid ongoing market competition.",
+          "categoryGemini": "technology",
+          "sentiment": 0.28,
+          "explanation": "A major technological partnership drives stock gains in major tech firms amid ongoing market competition."
         },
         {
           "sourceId": "cnbc",
@@ -52447,7 +52605,16 @@
           "description": "The 25 basis point hike by the Bank of Korea was in line with a survey of economists polled by Reuters.",
           "link": "https://www.cnbc.com/2026/07/16/bok-interest-rate-monetary-policy-markets-kospi-skhynix.html",
           "pubDate": "Thu, 16 Jul 2026 02:12:44 GMT",
-          "category": "business"
+          "category": "business",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "A central bank interest rate hike represents mild monetary tightening in response to economic conditions.",
+          "categoryGemini": "business",
+          "sentiment": -0.15,
+          "explanation": "A central bank interest rate hike represents mild monetary tightening in response to economic conditions."
         },
         {
           "sourceId": "cnbc",
@@ -52455,7 +52622,16 @@
           "description": "CNBC's Jim Cramer said he’s looking for companies to start showing measurable financial returns from their AI investments.",
           "link": "https://www.cnbc.com/2026/07/15/jim-cramer-needs-proof-ai-paying-off-.html",
           "pubDate": "Wed, 15 Jul 2026 22:51:22 GMT",
-          "category": "technology"
+          "category": "business",
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.103,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.10) and AFINN-111 (0.00).",
+          "categoryLocal": "technology",
+          "sentimentGemini": -0.12,
+          "explanationGemini": "Financial commentary expressing skepticism about AI returns represents routine market doubt and mild corporate friction.",
+          "categoryGemini": "business",
+          "sentiment": -0.12,
+          "explanation": "Financial commentary expressing skepticism about AI returns represents routine market doubt and mild corporate friction."
         },
         {
           "sourceId": "cnbc",
@@ -52463,11 +52639,20 @@
           "description": "The new Fed chairman avoided major stumbles in two days of testimony before the House and Senate, but faces a rapid test of his commitment to price stability.",
           "link": "https://www.cnbc.com/2026/07/15/fed-chairman-kevin-warsh-inflation-credibility-test-analysis.html",
           "pubDate": "Wed, 15 Jul 2026 21:43:39 GMT",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.40) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.40) and AFINN-111 (0.13).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "A central bank chairman navigating routine congressional hearings reflects procedural economic governance.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05,
+          "explanation": "A central bank chairman navigating routine congressional hearings reflects procedural economic governance."
         },
         {
           "sourceId": "cnbc",
@@ -52475,11 +52660,20 @@
           "description": "Like last month's average, Kalshi traders see gas prices surpassing $4 by the end of July.",
           "link": "https://www.cnbc.com/2026/07/15/kalshi-traders-see-gas-prices-crossing-4-by-end-of-july-.html",
           "pubDate": "Wed, 15 Jul 2026 21:11:03 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.36) and AFINN-111 (score: 0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.361,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.36) and AFINN-111 (0.25).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "Prediction markets forecasting higher gas prices highlight mild consumer cost-of-living pressures.",
+          "categoryGemini": "business",
+          "sentiment": -0.18,
+          "explanation": "Prediction markets forecasting higher gas prices highlight mild consumer cost-of-living pressures."
         },
         {
           "sourceId": "cnbc",
@@ -52487,11 +52681,20 @@
           "description": "The latest edition of the Fed's beige book indicated that the soccer tournament wasn't necessarily translating to broader economic growth.",
           "link": "https://www.cnbc.com/2026/07/15/world-cup-economy-spending-alcohol-hotels-fed.html",
           "pubDate": "Wed, 15 Jul 2026 21:03:45 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.44) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.44,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.44) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.08,
+          "explanationGemini": "A sports tournament providing localized economic boosts to hospitality offers a modest, incremental positive.",
+          "categoryGemini": "business",
+          "sentiment": 0.08,
+          "explanation": "A sports tournament providing localized economic boosts to hospitality offers a modest, incremental positive."
         },
         {
           "sourceId": "cnbc",
@@ -52499,11 +52702,20 @@
           "description": "Fighting in the Middle East has intensified in recent days, but could escalate further if Iran fails to cooperate, President Donald Trump said.",
           "link": "https://www.cnbc.com/2026/07/15/trump-iran-hormuz-strikes-power-plants-targeted.html",
           "pubDate": "Wed, 15 Jul 2026 20:49:32 GMT",
-          "category": "other",
+          "category": "world",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.87) and AFINN-111 (score: -1.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -1,
+          "sentimentVADER": -0.865,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.87) and AFINN-111 (-1.00).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.82,
+          "explanationGemini": "Intensifying military strikes in the Middle East and ongoing risks of a prolonged war represent severe armed conflict.",
+          "categoryGemini": "world",
+          "sentiment": -0.82,
+          "explanation": "Intensifying military strikes in the Middle East and ongoing risks of a prolonged war represent severe armed conflict."
         },
         {
           "sourceId": "cnbc",
@@ -52511,11 +52723,20 @@
           "description": "New York became the first state in the U.S. to impose a ban of its kind when the governor signed the executive order Tuesday.",
           "link": "https://www.cnbc.com/2026/07/15/trump-blasts-new-york-gov-hochul-over-ai-data-center-moratorium.html",
           "pubDate": "Wed, 15 Jul 2026 20:35:40 GMT",
-          "category": "other",
+          "category": "technology",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.34) and AFINN-111 (score: -0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.34,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.34) and AFINN-111 (-0.13).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Political conflict over a state-level moratorium on AI data centers introduces regulatory friction for the tech sector.",
+          "categoryGemini": "technology",
+          "sentiment": -0.22,
+          "explanation": "Political conflict over a state-level moratorium on AI data centers introduces regulatory friction for the tech sector."
         },
         {
           "sourceId": "cnbc",
@@ -52523,11 +52744,20 @@
           "description": "United reported higher revenue for premium, corporate and no-frills basic economy tickets and higher revenue for both domestic and international trips.",
           "link": "https://www.cnbc.com/2026/07/15/united-airlines-ual-2q-2026-earnings.html",
           "pubDate": "Wed, 15 Jul 2026 20:17:34 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.72) and AFINN-111 (score: 0.50) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.5,
+          "sentimentVADER": 0.718,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.72) and AFINN-111 (0.50).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.15,
+          "explanationGemini": "An airline reporting earnings that beat expectations represents modest positive corporate performance despite cost headwinds.",
+          "categoryGemini": "business",
+          "sentiment": 0.15,
+          "explanation": "An airline reporting earnings that beat expectations represents modest positive corporate performance despite cost headwinds."
         },
         {
           "sourceId": "cnbc",
@@ -52535,11 +52765,20 @@
           "description": "The Senate Intelligence Committee is considering Jay Clayton's nomination to be the director of national intelligence.",
           "link": "https://www.cnbc.com/2026/07/15/trump-dni-jay-clayton-senate-2020-election.html",
           "pubDate": "Wed, 15 Jul 2026 19:48:29 GMT",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.92) and AFINN-111 (score: 0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0.919,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.92) and AFINN-111 (0.38).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "Political controversy during a cabinet nomination hearing highlights partisan friction and institutional tensions.",
+          "categoryGemini": "politics",
+          "sentiment": -0.15,
+          "explanation": "Political controversy during a cabinet nomination hearing highlights partisan friction and institutional tensions."
         },
         {
           "sourceId": "cnbc",
@@ -52547,11 +52786,20 @@
           "description": "New York became the first state in the U.S. to impose a ban of its kind, after the state executive order was signed by the governor Tuesday.",
           "link": "https://www.cnbc.com/2026/07/15/trump-blasts-new-york-gov-hochul-over-ai-data-center-moratorium.html",
           "pubDate": "Wed, 15 Jul 2026 19:39:40 GMT",
-          "category": "other",
+          "category": "technology",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.72) and AFINN-111 (score: -0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.718,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.72) and AFINN-111 (-0.38).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.22,
+          "explanationGemini": "Political condemnation of a new state-level AI data center ban reflects ongoing regulatory disputes.",
+          "categoryGemini": "technology",
+          "sentiment": -0.22,
+          "explanation": "Political condemnation of a new state-level AI data center ban reflects ongoing regulatory disputes."
         },
         {
           "sourceId": "cnbc",
@@ -52559,11 +52807,20 @@
           "description": "Johnson & Johnson's quarter was imperfect, but enough is going right to validate our ownership of the stock.",
           "link": "https://www.cnbc.com/2026/07/15/jj-falls-despite-a-beat-and-raise-quarter-why-were-raising-our-price-target-anyways.html",
           "pubDate": "Wed, 15 Jul 2026 19:30:30 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.38) and AFINN-111 (score: -0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": 0.382,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.38) and AFINN-111 (-0.13).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.18,
+          "explanationGemini": "An earnings beat and raised price target indicate healthy, incremental financial validation for the company.",
+          "categoryGemini": "business",
+          "sentiment": 0.18,
+          "explanation": "An earnings beat and raised price target indicate healthy, incremental financial validation for the company."
         },
         {
           "sourceId": "cnbc",
@@ -52571,11 +52828,20 @@
           "description": "Part of congressionally mandated Capitol Hill appearances for the central bank leader, Warsh spoke Tuesday to the House Financial Services Committee.",
           "link": "https://www.cnbc.com/2026/07/15/watch-fed-chairman-kevin-warsh-testify-live-before-senate-banking-committee.html",
           "pubDate": "Wed, 15 Jul 2026 19:05:12 GMT",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.46) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.459,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.46) and AFINN-111 (0.13).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "A central bank leader delivering routine congressional testimony on the economy is a standard administrative procedure.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05,
+          "explanation": "A central bank leader delivering routine congressional testimony on the economy is a standard administrative procedure."
         },
         {
           "sourceId": "cnbc",
@@ -52583,11 +52849,20 @@
           "description": "Attorney General nominee Todd Blanche previously served as a criminal defense lawyer for President Donald Trump.",
           "link": "https://www.cnbc.com/2026/07/15/todd-blanche-attorney-general-trump-senate-nomination-hearing.html",
           "pubDate": "Wed, 15 Jul 2026 18:52:05 GMT",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.03) and AFINN-111 (score: -0.38) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.375,
+          "sentimentVADER": -0.026,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.03) and AFINN-111 (-0.38).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.08,
+          "explanationGemini": "Political statements of confidence in a controversial nominee represent routine administrative appointments and partisan alignment.",
+          "categoryGemini": "politics",
+          "sentiment": -0.08,
+          "explanation": "Political statements of confidence in a controversial nominee represent routine administrative appointments and partisan alignment."
         },
         {
           "sourceId": "cnbc",
@@ -52595,7 +52870,16 @@
           "description": "Every weekday, the Investing Club releases the Homestretch; an actionable afternoon update just in time for the last hour of trading.",
           "link": "https://www.cnbc.com/2026/07/15/apples-china-breakthrough-provides-another-tailwind-for-its-stock.html",
           "pubDate": "Wed, 15 Jul 2026 18:36:11 GMT",
-          "category": "business"
+          "category": "technology",
+          "sentimentAFINN": 0.375,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.38).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.22,
+          "explanationGemini": "A major corporate breakthrough in an international market provides positive momentum for a tech giant.",
+          "categoryGemini": "technology",
+          "sentiment": 0.22,
+          "explanation": "A major corporate breakthrough in an international market provides positive momentum for a tech giant."
         },
         {
           "sourceId": "cnbc",
@@ -52603,11 +52887,20 @@
           "description": "Brown helped launch one of AWS' oldest services and also oversaw its compute and machine learning units.",
           "link": "https://www.cnbc.com/2026/07/15/amazon-dave-brown-treadwell-aws.html",
           "pubDate": "Wed, 15 Jul 2026 18:23:06 GMT",
-          "category": "other",
+          "category": "technology",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.18) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.178,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.18) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.15,
+          "explanationGemini": "The departure of a long-serving senior cloud executive is a notable corporate personnel change.",
+          "categoryGemini": "technology",
+          "sentiment": -0.15,
+          "explanation": "The departure of a long-serving senior cloud executive is a notable corporate personnel change."
         },
         {
           "sourceId": "cnbc",
@@ -52615,11 +52908,20 @@
           "description": "Recent changes to Public Service Loan Forgiveness should prompt borrowers to confirm that their repayment plan and loan type remain eligible for the relief.",
           "link": "https://www.cnbc.com/2026/07/15/public-service-loan-forgiveness-pslf-changes.html",
           "pubDate": "Wed, 15 Jul 2026 17:58:41 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.74) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.743,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.74) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "Administrative updates to student loan forgiveness rules offer procedural guidance for borrowers navigating debt relief.",
+          "categoryGemini": "business",
+          "sentiment": 0.12,
+          "explanation": "Administrative updates to student loan forgiveness rules offer procedural guidance for borrowers navigating debt relief."
         },
         {
           "sourceId": "cnbc",
@@ -52627,11 +52929,20 @@
           "description": "Anthropic is lining up investor meetings ahead of a potential IPO as soon as October as the AI startup behind looks to beat rival OpenAI to the public markets.",
           "link": "https://www.cnbc.com/2026/07/15/anthropic-ipo-banks-investor-meetings.html",
           "pubDate": "Wed, 15 Jul 2026 17:22:51 GMT",
-          "category": "other",
+          "category": "technology",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.25,
+          "explanationGemini": "An artificial intelligence startup advancing toward a major initial public offering represents significant corporate growth.",
+          "categoryGemini": "technology",
+          "sentiment": 0.25,
+          "explanation": "An artificial intelligence startup advancing toward a major initial public offering represents significant corporate growth."
         },
         {
           "sourceId": "cnbc",
@@ -52639,11 +52950,20 @@
           "description": "IBM shares fell just over $73 to ~$217 — a jaw-dropping 25% single-day decapitation.",
           "link": "https://www.cnbc.com/2026/07/15/historic-ibm-stock-crash-sets-up-unique-options-strategy.html",
           "pubDate": "Wed, 15 Jul 2026 17:17:38 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.13) and AFINN-111 (score: -0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.128,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.13) and AFINN-111 (-0.13).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.58,
+          "explanationGemini": "A massive, historic single-day stock crash constitutes severe financial and market trauma for the company involved.",
+          "categoryGemini": "business",
+          "sentiment": -0.58,
+          "explanation": "A massive, historic single-day stock crash constitutes severe financial and market trauma for the company involved."
         },
         {
           "sourceId": "cnbc",
@@ -52651,11 +52971,20 @@
           "description": "Kevin Warsh said Wednesday that he speaks with Treasury Secretary Scott Bessent frequently outside their regular weekly meetings.",
           "link": "https://www.cnbc.com/2026/07/15/feds-warsh-says-he-meets-often-with-trump-administration.html",
           "pubDate": "Wed, 15 Jul 2026 17:16:14 GMT",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.20) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.202,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.20) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.05,
+          "explanationGemini": "A central bank chief discussing communications with the administration touches on routine institutional independence debates.",
+          "categoryGemini": "politics",
+          "sentiment": -0.05,
+          "explanation": "A central bank chief discussing communications with the administration touches on routine institutional independence debates."
         },
         {
           "sourceId": "cnbc",
@@ -52663,11 +52992,20 @@
           "description": "SpaceX shares fell for a fourth-straight session on Wednesday days after entering the Nasdaq-100",
           "link": "https://www.cnbc.com/2026/07/15/spacex-spcx-stock-ipo-price.html",
           "pubDate": "Wed, 15 Jul 2026 17:07:11 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.30) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.296,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.30) and AFINN-111 (0.13).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.35,
+          "explanationGemini": "A high-profile stock falling below its initial public offering price reflects negative market sentiment and valuation pressure.",
+          "categoryGemini": "business",
+          "sentiment": -0.35,
+          "explanation": "A high-profile stock falling below its initial public offering price reflects negative market sentiment and valuation pressure."
         },
         {
           "sourceId": "cnbc",
@@ -52675,7 +53013,16 @@
           "description": "The Berkshire Hathaway chairman left out the Gates Foundation from his annual charitable stock gifts for the first time in 20 years.",
           "link": "https://www.cnbc.com/2026/07/15/warren-buffett-calls-bill-gates-actions-with-epstein-distasteful-but-people-make-mistakes.html",
           "pubDate": "Wed, 15 Jul 2026 14:58:54 GMT",
-          "category": "business"
+          "category": "business",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.077,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.08) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "High-profile public commentary regarding association with a disgraced figure involves solemn reputational fallout.",
+          "categoryGemini": "business",
+          "sentiment": -0.32,
+          "explanation": "High-profile public commentary regarding association with a disgraced figure involves solemn reputational fallout."
         },
         {
           "sourceId": "cnbc",
@@ -52683,11 +53030,20 @@
           "description": "The DTCC is pushing to bring tokenization of real world assets from concept to reality using existing financial infrastructure.",
           "link": "https://www.cnbc.com/2026/07/15/dtcc-wall-streets-post-trade-powerhouse-tests-tokenized-markets-with-industry-heavy-hitters.html",
           "pubDate": "Wed, 15 Jul 2026 14:49:03 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.18) and AFINN-111 (score: 0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.178,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.18) and AFINN-111 (0.25).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.22,
+          "explanationGemini": "This represents an incremental technological and financial development aimed at modernizing market infrastructure.",
+          "categoryGemini": "business",
+          "sentiment": 0.22,
+          "explanation": "This represents an incremental technological and financial development aimed at modernizing market infrastructure."
         },
         {
           "sourceId": "cnbc",
@@ -52695,11 +53051,20 @@
           "description": "Kathryn Ruemmler said earlier this year she would leave Goldman Sachs at the end of June after fallout over her emails with Jeffrey Epstein.",
           "link": "https://www.cnbc.com/2026/07/15/epstein-files-kathryn-ruemmler-goldman-sachs-house-oversight-interview.html",
           "pubDate": "Wed, 15 Jul 2026 14:47:00 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.15) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.153,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.15) and AFINN-111 (0.13).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.42,
+          "explanationGemini": "The article discusses fallout and professional consequences tied to association with a notorious sex offender.",
+          "categoryGemini": "business",
+          "sentiment": -0.42,
+          "explanation": "The article discusses fallout and professional consequences tied to association with a notorious sex offender."
         },
         {
           "sourceId": "cnbc",
@@ -52707,11 +53072,20 @@
           "description": "The investor has been sharply critical of the stock market, one that he says is increasingly defined by speculative trading as opposed to long-term investing.",
           "link": "https://www.cnbc.com/2026/07/15/warren-buffett-on-the-market-today-its-tough-to-find-values-when-everybody-is-preferring-gambling.html",
           "pubDate": "Wed, 15 Jul 2026 13:48:15 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.08) and AFINN-111 (score: -0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": 0.077,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.08) and AFINN-111 (-0.25).",
+          "categoryLocal": "business",
+          "sentimentGemini": -0.18,
+          "explanationGemini": "A cautionary market critique reflecting mild tension regarding speculative trading trends.",
+          "categoryGemini": "business",
+          "sentiment": -0.18,
+          "explanation": "A cautionary market critique reflecting mild tension regarding speculative trading trends."
         },
         {
           "sourceId": "cnbc",
@@ -52719,11 +53093,20 @@
           "description": "JPMorgan Chase CEO Jamie Dimon unveiled a $24 million package to bolster American shipbuilding, funding a new submarine facility at the Philadelphia Navy Yard.",
           "link": "https://www.cnbc.com/2026/07/15/jamie-dimon-jpmorgan-chase-defense.html",
           "pubDate": "Wed, 15 Jul 2026 13:45:27 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.40) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.402,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.40) and AFINN-111 (0.13).",
+          "categoryLocal": "other",
+          "sentimentGemini": 0.42,
+          "explanationGemini": "A substantial capital investment initiative supporting domestic industrial capacity and infrastructure.",
+          "categoryGemini": "business",
+          "sentiment": 0.42,
+          "explanation": "A substantial capital investment initiative supporting domestic industrial capacity and infrastructure."
         },
         {
           "sourceId": "cnbc",
@@ -52731,11 +53114,20 @@
           "description": "Stripe and Advent International have made a joint offer to acquire PayPal for $60.50 per share, in a deal that would valued at more than $53 billion.",
           "link": "https://www.cnbc.com/2026/07/15/stripe-advent-offer-to-buy-paypal-for-more-than-53-billion-reuters.html",
           "pubDate": "Wed, 15 Jul 2026 13:41:02 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.62) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0.625,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.62) and AFINN-111 (0.13).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.35,
+          "explanationGemini": "A major corporate acquisition proposal generating significant market activity and higher valuations.",
+          "categoryGemini": "business",
+          "sentiment": 0.35,
+          "explanation": "A major corporate acquisition proposal generating significant market activity and higher valuations."
         },
         {
           "sourceId": "cnbc",
@@ -52743,11 +53135,20 @@
           "description": "Hassett, on CNBC, credited President Donald Trump's policies after the latest consumer price index reading came in much lower than expected.",
           "link": "https://www.cnbc.com/2026/07/15/kevin-hassett-warsh-fed-interest-rates.html",
           "pubDate": "Wed, 15 Jul 2026 12:38:18 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.23) and AFINN-111 (score: -0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": -0.125,
+          "sentimentVADER": -0.226,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.23) and AFINN-111 (-0.13).",
+          "categoryLocal": "politics",
+          "sentimentGemini": 0.25,
+          "explanationGemini": "Positive commentary on inflation data and monetary policy outlook following lower-than-expected price increases.",
+          "categoryGemini": "business",
+          "sentiment": 0.25,
+          "explanation": "Positive commentary on inflation data and monetary policy outlook following lower-than-expected price increases."
         },
         {
           "sourceId": "cnbc",
@@ -52755,11 +53156,20 @@
           "description": "",
           "link": "https://www.cnbc.com/2026/07/15/wholesale-inflation-june-2026-.html",
           "pubDate": "Wed, 15 Jul 2026 12:35:46 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: -0.27) and AFINN-111 (score: 0.00) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0,
+          "sentimentVADER": -0.273,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.27) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.28,
+          "explanationGemini": "An unexpected drop in wholesale prices offers mild cost-of-relief for the broader economy.",
+          "categoryGemini": "business",
+          "sentiment": 0.28,
+          "explanation": "An unexpected drop in wholesale prices offers mild cost-of-relief for the broader economy."
         },
         {
           "sourceId": "cnbc",
@@ -52767,11 +53177,20 @@
           "description": "The Treasury Department is putting a top official in charge of the new program as it enrolls millions of families.",
           "link": "https://www.cnbc.com/2026/07/15/irs-chief-frank-bisignano-will-lead-trump-accounts-expansion.html",
           "pubDate": "Wed, 15 Jul 2026 12:32:16 GMT",
-          "category": "other",
+          "category": "politics",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.38) and AFINN-111 (score: 0.25) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.382,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.38) and AFINN-111 (0.25).",
+          "categoryLocal": "politics",
+          "sentimentGemini": 0.05,
+          "explanationGemini": "A routine administrative assignment for a government program rollout.",
+          "categoryGemini": "politics",
+          "sentiment": 0.05,
+          "explanation": "A routine administrative assignment for a government program rollout."
         },
         {
           "sourceId": "cnbc",
@@ -52779,11 +53198,20 @@
           "description": "Warren Buffett said he was the driving force behind the conglomerate's recent big investment in Alphabet.",
           "link": "https://www.cnbc.com/2026/07/15/warren-buffett-tells-cnbc-he-initiated-berkshire-hathaways-investment-in-alphabet.html",
           "pubDate": "Wed, 15 Jul 2026 12:18:19 GMT",
-          "category": "other",
+          "category": "business",
           "sentimentOpenRouter": 0,
           "explanationOpenRouter": "Analyzed locally using averaged VADER (score: 0.00) and AFINN-111 (score: 0.13) models.",
           "categoryOpenRouter": "other",
-          "openRouterModelUsed": "openrouter/free"
+          "openRouterModelUsed": "openrouter/free",
+          "sentimentAFINN": 0.125,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.13).",
+          "categoryLocal": "world",
+          "sentimentGemini": 0.18,
+          "explanationGemini": "An ordinary corporate investment disclosure involving major market players.",
+          "categoryGemini": "business",
+          "sentiment": 0.18,
+          "explanation": "An ordinary corporate investment disclosure involving major market players."
         },
         {
           "sourceId": "cnbc",
@@ -55142,10 +55570,10 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.214,
+      "averageSentiment": -0.212,
       "distribution": {
         "positive": 69,
-        "neutral": 76,
+        "neutral": 78,
         "negative": 210
       },
       "articles": [
@@ -55168,6 +55596,23 @@
         },
         {
           "sourceId": "reuters",
+          "title": "Eutelsat shares jump as Ukraine flags curbs on Starlink military-grade service - Reuters",
+          "description": "Eutelsat shares jump as Ukraine flags curbs on Starlink military-grade service Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxOVWhWbm1PUEtEQWFtY2lHdjRoWHhiVDdhaHo5U2NoLWMwVXlydnFvYUowbHRHMXNyX2NKSlJQZWY4VTZ1emotSGNkVHZUaEc2OGRJZjhmWFFZbGtVWHBXbzdUdUdJcmRnN2xpOFIxSU5NRzRKZzVtOUNqVXFvNThadVZZa0E0Um5FTUJUMEdhYkV0cjNlemFXUnFrMUViTjljVW9hSGRObGkySjJLcXY5OXBoN3FpQ3ZH?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 11:53:20 GMT",
+          "sentimentAFINN": 0.25,
+          "sentimentVADER": 0.527,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.53) and AFINN-111 (0.25).",
+          "categoryLocal": "entertainment",
+          "sentimentGemini": 0.12,
+          "explanationGemini": "Company shares jump following a regulatory and geopolitical shift involving military-grade service curbs.",
+          "categoryGemini": "business",
+          "sentiment": 0.12,
+          "explanation": "Company shares jump following a regulatory and geopolitical shift involving military-grade service curbs.",
+          "category": "business"
+        },
+        {
+          "sourceId": "reuters",
           "title": "Saudi Aramco headquarters suffered extensive damage in Houthi attack, sources say - Reuters",
           "description": "Saudi Aramco headquarters suffered extensive damage in Houthi attack, sources say Reuters",
           "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQTEY0UDJsbGo1MXFVX1FoY1RIdkFLeW96R3hMOEkwQTNRTFpLby1wZEFGRy10SThxSkhSaXZKQ1psYmdiQVZQd19uaDFtZFBZa1pJZzZCT0dsd0lSdmV1UWV0dExiRmU2Y2lVUS1SaWs1UzNkZ25lUnRJaklfWnlOeEFVQTg2dDVQTWF4UWp1aTcyR2JsUWN5d0JzSWRqMlp1ZDY3OXpncUZDN2FuVk9tN0VuaGtIMVpXM1F4RU5QX00xek9q?oc=5",
@@ -55181,6 +55626,23 @@
           "categoryGemini": "business",
           "sentiment": -0.78,
           "explanation": "Extensive physical damage was inflicted on major energy headquarters as a result of a military strike.",
+          "category": "business"
+        },
+        {
+          "sourceId": "reuters",
+          "title": "Fed's Bowman says there's time to 'wait and see' before any more action - Reuters",
+          "description": "Fed's Bowman says there's time to 'wait and see' before any more action Reuters",
+          "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPSkUzM2NCLVljQkh5Nmlsd0FjZ2NYSWhFWUI2QUhxUjJpbXU0RFdtOEdYYUlkdnJZUldNcmVIRUFhMnhsVUtPR0tUUEdsYXNaZXlENDF2NlpDQnVOcHRJcnhMV1IxcmtxZHdtYTFDTnlEVEoyNU94cHMwbDAzcWJYeVJzYllzeVlhbk9tZ29lYVRBQXFrc09WNTlyMVV3RTY3VVpwSE9mVHg?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 11:39:43 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "business",
+          "sentimentGemini": 0.02,
+          "explanationGemini": "A standard central bank administrative statement suggesting a pause in policy changes reflects strictly neutral procedural news.",
+          "categoryGemini": "business",
+          "sentiment": 0.02,
+          "explanation": "A standard central bank administrative statement suggesting a pause in policy changes reflects strictly neutral procedural news.",
           "category": "business"
         },
         {
@@ -63512,11 +63974,11 @@
     },
     "bloomberg": {
       "name": "Bloomberg",
-      "averageSentiment": -0.125,
+      "averageSentiment": -0.129,
       "distribution": {
         "positive": 76,
         "neutral": 75,
-        "negative": 149
+        "negative": 152
       },
       "articles": [
         {
@@ -63534,6 +63996,23 @@
           "categoryGemini": "business",
           "sentiment": 0.32,
           "explanation": "Strong financial performance driven by overwhelming demand for semiconductor manufacturing gear reflects positive market conditions.",
+          "category": "business"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "US Mortgage Rates Hit 7.5%, Extending Slump in Purchase Activity - Bloomberg.com",
+          "description": "US Mortgage Rates Hit 7.5%, Extending Slump in Purchase Activity Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPaXN2V1daY2pfR3pUS09BOURuNHByLW5QWmViOUViTHd2bzkybTB0YmNyVlRPQlZwUGk1WEtaXzVKNHNMSDBrbS1DcXJnZi1qR3VkY2Q4Z3d4eW0xS1FaQkRCVmREVUwzY1l5MlZ6NDdYNFozVEVQSTcxcU5EOXplR29wU0FzNUg3Z2cxRHg3Mzh4UE9nV0ktQVJfeEdSVWlha291cTMteWlBNkVtOWtuaU5QQQ?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 11:00:00 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.00) and AFINN-111 (0.00).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.32,
+          "explanationGemini": "Surging mortgage rates extending a slump in consumer purchasing activity represent a notable negative economic constraint.",
+          "categoryGemini": "business",
+          "sentiment": -0.32,
+          "explanation": "Surging mortgage rates extending a slump in consumer purchasing activity represent a notable negative economic constraint.",
           "category": "business"
         },
         {
@@ -63620,6 +64099,23 @@
           "sentiment": 0.15,
           "explanation": "Standard entertainment industry news regarding video game development.",
           "category": "entertainment"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Germany to Push EU to Impose Caps on Additional Chinese Imports - Bloomberg.com",
+          "description": "Germany to Push EU to Impose Caps on Additional Chinese Imports Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPbldSTHZveDM2RmhTeFpsOTFGS0ltR1F6RnpnN0FqY3dNYnIwTk93UEg1ODBwb0w1UG12aDNpUWJLa3RYeWpGYVBvaERWSzR0RXNCY3JqNWZfby14U0VlQUFoWWpLQWpFRjRSR1R2bmNrTDlIczZHaGNuaWhHZFFpUGxlV0l1c2FFMUlBZVY1TzFEZERtOUpUZ0FyU1B0aWVBdlE1S2FsbXRrMHZwbEMtS3VzaE0?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 09:57:11 GMT",
+          "sentimentAFINN": -0.25,
+          "sentimentVADER": -0.527,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (-0.53) and AFINN-111 (-0.25).",
+          "categoryLocal": "other",
+          "sentimentGemini": -0.25,
+          "explanationGemini": "Escalating trade friction and protectionist measures between major economic powers signal growing diplomatic and commercial tension.",
+          "categoryGemini": "business",
+          "sentiment": -0.25,
+          "explanation": "Escalating trade friction and protectionist measures between major economic powers signal growing diplomatic and commercial tension.",
+          "category": "business"
         },
         {
           "sourceId": "bloomberg",
@@ -63756,6 +64252,23 @@
           "sentiment": 0.15,
           "explanation": "Economic data suggesting potential stimulus measures offers a constructive outlook for financial stabilization.",
           "category": "business"
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Russia Hits Ukraine Energy Plants in a Blow to Trump’s Truce - Bloomberg.com",
+          "description": "Russia Hits Ukraine Energy Plants in a Blow to Trump’s Truce Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxNc1hrdFBNUlY1LWVPM2xHWGJBN3JpNHZ4MmxJQ2pNZk1YOERkMklrdkhRaktabDV2SHYwN1lZb3VTTUxZSUpxOGlCNEN6Zjh2WE9EQy05RHhNOXVQc2cyYXRFalROYkZwOHhsaDF2WjRjelM2Y0NUeHlKc0FIbWk2MG43bmpaTUVTTmtrNFVQUUUyVzJFNlJwaUw4SjMydVkxOU9TdmxZU3NlcWdZNE1yWm9td0FyQQ?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 07:42:30 GMT",
+          "sentimentAFINN": 0,
+          "sentimentVADER": 0.494,
+          "explanationLocal": "Analyzed locally with news-calibrated VADER (0.49) and AFINN-111 (0.00).",
+          "categoryLocal": "politics",
+          "sentimentGemini": -0.85,
+          "explanationGemini": "Military strikes on vital civilian energy infrastructure during active conflict cause severe humanitarian and systemic damage.",
+          "categoryGemini": "world",
+          "sentiment": -0.85,
+          "explanation": "Military strikes on vital civilian energy infrastructure during active conflict cause severe humanitarian and systemic damage.",
+          "category": "world"
         },
         {
           "sourceId": "bloomberg",
