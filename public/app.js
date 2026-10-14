@@ -2188,6 +2188,7 @@ function renderSentimentTimeline() {
 
     const categoryNames = {
       science: { name: 'Science & Space', icon: '🚀' },
+      climate: { name: 'Nature & Climate', icon: '🌱' },
       technology: { name: 'Tech & AI', icon: '⚡' },
       business: { name: 'Business & Economy', icon: '📈' },
       health: { name: 'Health & Medicine', icon: '🏥' },
@@ -3054,7 +3055,7 @@ function renderDailyPulse() {
   const mostUplifting = validOutlets[validOutlets.length - 1] || { name: 'N/A', score: 0, id: 'all' };
 
   // Calculate Biggest Outlet Clash on the same topic
-  const categoriesToCheck = ['world', 'politics', 'business', 'technology', 'science', 'health'];
+  const categoriesToCheck = ['world', 'politics', 'business', 'technology', 'science', 'health', 'climate'];
   let maxClash = {
     cat: null,
     catName: '',
@@ -3248,13 +3249,14 @@ function renderDailyPulse() {
   // Topic Vibes Chips (renamed from Beat)
   const chipsContainer = document.getElementById('pulse-category-chips');
   if (chipsContainer) {
-    const mainCategories = ['world', 'politics', 'business', 'technology', 'science', 'health'];
+    const mainCategories = ['world', 'politics', 'business', 'technology', 'science', 'climate', 'health'];
     const catIcons = {
       world: '🌍',
       politics: '🗳️',
       business: '📈',
       technology: '⚡',
       science: '🚀',
+      climate: '🌱',
       health: '🏥'
     };
 
@@ -3269,7 +3271,7 @@ function renderDailyPulse() {
         chip.className = `beat-chip ${isActive ? 'active' : ''}`;
         chip.setAttribute('data-cat', cat);
         chip.setAttribute('title', isActive ? 'Click to clear topic filter' : `Filter entire dashboard to ${cat} news`);
-        chip.innerHTML = `<span>${catIcons[cat] || '📰'} ${cat.charAt(0).toUpperCase() + cat.slice(1)}</span> <span class="beat-chip-val ${valClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>`;
+        chip.innerHTML = `<span>${catIcons[cat] || '📰'} ${cat === 'climate' ? 'Climate' : (cat.charAt(0).toUpperCase() + cat.slice(1))}</span> <span class="beat-chip-val ${valClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>`;
         chip.onclick = () => {
           if (state.filters.category === cat) {
             state.filters.category = 'all';
@@ -3300,13 +3302,14 @@ function renderHeatmapMatrix() {
   const sourceIds = Object.keys(sources);
   if (sourceIds.length === 0) return;
 
-  const categories = ['world', 'politics', 'business', 'technology', 'science', 'health'];
+  const categories = ['world', 'politics', 'business', 'technology', 'science', 'climate', 'health'];
   const catLabels = {
     world: '🌍 World',
     politics: '🗳️ Politics',
     business: '📈 Business',
     technology: '⚡ Tech',
     science: '🚀 Science',
+    climate: '🌱 Climate',
     health: '🏥 Health'
   };
 

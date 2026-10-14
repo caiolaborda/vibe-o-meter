@@ -229,13 +229,11 @@ VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
 FIRST PRINCIPLES & EVALUATION RULES:
 1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "aid delivery" in a story about active strikes does NOT make it positive.
 2. The Counterfactual World State Principle (Harm vs. Mitigation): Ask: "If this whole situation never occurred, would the world be better or worse?" Regulatory fines, legal payouts, compensation settlements, prison overflow decanting, and corporate bailouts are reactions to underlying harm, negligence, or misconduct. Do NOT score administrative remedies as positive victories; score them as sober or mildly negative (-0.15 to -0.35) reflecting the damage that necessitated them.
-3. The 6 Archetypes of Genuine Good News: Positive scores (+0.25 to +1.00) require proactive progress, human flourishing, or genuine resolution. Look for:
-   - Scientific Discovery & Space Exploration (+0.70 to +0.95)
-   - Medical Breakthroughs & Disease Eradication (+0.65 to +0.90)
-   - Genuine Reconciliation, Hostage Freedom & Peace Accords (+0.50 to +0.75)
-   - Ecological, Wildlife & Clean Energy Milestones (+0.40 to +0.70)
-   - Tangible Citizen Economic Relief (e.g. rate cuts easing debt, real wage growth) (+0.25 to +0.45)
-   - Inspiring Altruism, Heroic Rescue & Cultural Achievements (+0.40 to +0.80)
+3. Scale & Impact Over Topic Label: Do NOT assume any single category is inherently more positive or negative than another. Positive and negative sentiment occur across ALL beats. Evaluate based strictly on the REAL-WORLD MAGNITUDE AND HUMAN CONSEQUENCE:
+   - High Transformative Impact (+0.60 to +1.00): Paradigm scientific discoveries, global peace accords, disease eradication, breakthrough clean energy abundance, landmark poverty reductions.
+   - Substantial Constructive Progress (+0.30 to +0.59): Meaningful diplomatic reconciliations, tangible citizen economic relief, endangered wildlife/ecosystem recoveries, notable community milestones.
+   - Incremental / Everyday Good (+0.10 to +0.29): Sports victories, localized civic initiatives, cultural awards, incremental research insights.
+   Note: A historic world peace accord or major economic poverty reduction can reach +0.85, while a trivial science discovery is only +0.15.
 4. Democratic Governance: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violence or constitutional crisis.
 5. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
 6. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
@@ -243,7 +241,7 @@ FIRST PRINCIPLES & EVALUATION RULES:
 Return a JSON array of objects with:
 - index: integer matching input index
 - score: float between -1.00 and 1.00 (2 decimal places)
-- category: one of 'politics', 'world', 'business', 'technology', 'science', 'health', 'entertainment', 'sports', 'other'
+- category: one of 'politics', 'world', 'business', 'technology', 'science', 'health', 'climate', 'entertainment', 'sports', 'other'
 - explanation: concise 1-sentence analytical rationale
 
 Input Articles:
