@@ -2916,20 +2916,13 @@ function renderSentimentTimeline() {
       </span>
     `;
 
-    // 4. Quick Action or Scope Badge
+    // 4. Reset Filters Action (only displayed when outlet or topic filters are actively applied)
     if (selectedSource || selectedTopic) {
       chipsHtml += `
         <button type="button" class="timeline-reset-all-btn" onclick="resetTimelineScope()" title="Reset to all outlets and all topics">
           <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i>
-          <span>Reset Timeline Scope</span>
+          <span>Reset Filters</span>
         </button>
-      `;
-    } else {
-      chipsHtml += `
-        <span class="timeline-filter-chip neutral-chip" title="Trajectory synthesized across all outlets and topics">
-          <i data-lucide="sparkles" style="width:12px;height:12px;"></i>
-          <span>Global Unfiltered Synthesis</span>
-        </span>
       `;
     }
 

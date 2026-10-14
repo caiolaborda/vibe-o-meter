@@ -265,8 +265,8 @@ h1, h2, h3, h4 {
   justify-content: center;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
-  padding: 1.5rem 0 2rem 0;
-  gap: 1.15rem;
+  padding: 1.75rem 0 2.25rem 0;
+  gap: 1.25rem;
   width: 100%;
   position: relative;
 }
@@ -288,8 +288,8 @@ h1, h2, h3, h4 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.45rem;
-  margin: 0.15rem 0;
+  padding: 0.6rem;
+  margin: 0.85rem 0 0.5rem 0;
 }
 
 /* Ambient Semicircular / Radial Faded Aura */
@@ -298,29 +298,29 @@ h1, h2, h3, h4 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 140%;
-  height: 160%;
-  border-radius: 50%;
+  width: 145%;
+  height: 185%;
+  border-radius: 9999px;
   pointer-events: none;
   z-index: 0;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Doom Mode Ambient Aura: Midnight Slate & Obsidian Deep Atmosphere */
 body[data-edition="doom"] .edition-ambient-glow,
 body:not([data-edition="silver"]) .edition-ambient-glow {
-  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.55) 45%, transparent 75%);
-  filter: blur(28px);
-  opacity: 0.85;
+  background: radial-gradient(ellipse 75% 65% at 50% 50%, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.65) 45%, transparent 75%);
+  filter: blur(34px);
+  opacity: 0.9;
   transform: translate(-50%, -50%) scale(1);
 }
 
 /* Silver Mode Ambient Aura: Warm Sunlit Golden Dawn */
 body[data-edition="silver"] .edition-ambient-glow {
-  background: radial-gradient(ellipse 75% 65% at 50% 50%, rgba(251, 191, 36, 0.5) 0%, rgba(245, 158, 11, 0.25) 50%, transparent 80%);
-  filter: blur(34px);
-  opacity: 0.95;
-  transform: translate(-50%, -50%) scale(1.18);
+  background: radial-gradient(ellipse 78% 68% at 50% 50%, rgba(251, 191, 36, 0.55) 0%, rgba(245, 158, 11, 0.28) 48%, transparent 80%);
+  filter: blur(38px);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
 /* Large Central Toggle Pill Wrapper */
@@ -330,84 +330,104 @@ body[data-edition="silver"] .edition-ambient-glow {
   display: inline-flex;
   align-items: center;
   background: var(--bg-tertiary);
-  border: 1.5px solid var(--border-color);
-  border-radius: 44px;
-  padding: 6px;
-  gap: 6px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 2px solid var(--border-color);
+  border-radius: 52px;
+  padding: 8px;
+  gap: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body[data-edition="doom"] .edition-toggle-wrap-large,
 body:not([data-edition="silver"]) .edition-toggle-wrap-large {
-  background: rgba(18, 22, 32, 0.92);
+  background: rgba(14, 18, 27, 0.96);
   border-color: rgba(59, 74, 105, 0.5);
-  box-shadow: 0 10px 32px -4px rgba(0, 0, 0, 0.65), 0 0 1px 1px rgba(255, 255, 255, 0.06);
+  box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.08);
 }
 
 body[data-edition="silver"] .edition-toggle-wrap-large {
-  background: rgba(255, 255, 255, 0.94);
-  border-color: rgba(245, 158, 11, 0.4);
-  box-shadow: 0 10px 32px -4px rgba(217, 119, 6, 0.18), 0 0 1px 1px rgba(251, 191, 36, 0.15);
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 12px 36px -6px rgba(217, 119, 6, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
 
 /* Central Edition Buttons */
 .edition-toggle-wrap-large .edition-pill-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.72rem 1.85rem;
-  border-radius: 36px;
+  gap: 0.75rem;
+  padding: 0.88rem 2.35rem;
+  border-radius: 44px;
   border: 1.5px solid transparent;
   background: transparent;
   color: var(--text-secondary);
-  font-family: var(--font-serif);
-  font-size: 1.12rem;
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
   font-weight: 700;
   cursor: pointer;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
   user-select: none;
 }
 
+/* SVG and Icon Support for Lucide Icons */
+.edition-toggle-wrap-large .edition-pill-btn svg,
 .edition-toggle-wrap-large .edition-pill-btn i {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.28s ease;
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease, filter 0.25s ease;
   flex-shrink: 0;
 }
 
-/* Interactive Hover States & Premise Micro-animations */
-/* Doom button hover: newspaper tilts like an ink-stamped broadsheet */
-.edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover i {
-  transform: rotate(-10deg) scale(1.18);
-  color: #60a5fa;
-}
-
-/* Silver button hover: sun spins and radiates warm golden light */
-.edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover i {
-  transform: rotate(45deg) scale(1.22);
-  color: #f59e0b;
-}
-
+/* Interactive Hover Peak States & Premise Micro-animations */
 .edition-toggle-wrap-large .edition-pill-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* Doom button hover: button peaks, newspaper tilts like a broadsheet */
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover {
+  background: rgba(36, 44, 60, 0.45);
+}
+
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover svg,
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover i {
+  transform: rotate(-14deg) scale(1.22);
+  color: #60a5fa;
+  filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.6));
+}
+
+/* Silver button hover: button peaks, sun rotates with warm solar glow */
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover {
+  background: rgba(254, 243, 199, 0.35);
+}
+
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover svg,
+.edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover i {
+  transform: rotate(55deg) scale(1.28);
+  color: #f59e0b;
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
 }
 
 /* Active State: No Good News (Doom) */
 body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active,
 body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active {
-  background: linear-gradient(145deg, #242c3c 0%, #1a202c 100%);
+  background: linear-gradient(145deg, #242c3c 0%, #171d29 100%);
   color: #ffffff;
-  border-color: rgba(99, 102, 241, 0.45);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transform: scale(1.02);
 }
 
+body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active svg,
 body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active i,
+body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active svg,
 body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"].active i {
   color: #93c5fd;
+  filter: drop-shadow(0 0 6px rgba(147, 197, 253, 0.45));
 }
 
 /* Active State: Some Good News (Silver) */
@@ -415,13 +435,15 @@ body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-ed
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   color: #78350f;
   border-color: #f59e0b;
-  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   transform: scale(1.02);
 }
 
+body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"].active svg,
 body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"].active i {
   color: #d97706;
-  animation: sunSpinSlow 20s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+  animation: sunSpinSlow 24s linear infinite;
 }
 
 @keyframes sunSpinSlow {
@@ -2882,7 +2904,7 @@ body:not([data-edition="silver"]) .clear-btn {
 }
 
 .pulse-hero-card {
-  padding: 1.75rem 2rem;
+  padding: 2rem 2.25rem;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -2918,7 +2940,7 @@ body:not([data-edition="silver"]) .clear-btn {
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  padding-bottom: 0.25rem;
+  padding: 0.35rem 0 0.85rem 0;
   border-bottom: none;
 }
 
@@ -2963,9 +2985,9 @@ body:not([data-edition="silver"]) .clear-btn {
 
 .pulse-hero-score {
   font-family: var(--font-mono);
-  font-size: 2.2rem;
+  font-size: 1.85rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1;
   transform: translateY(1px);
 }
