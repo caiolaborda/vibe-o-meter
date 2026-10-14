@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=3.2">
+  <link rel="stylesheet" href="style.css?v=3.3">
 </head>
 <body data-edition="doom">
 
@@ -287,108 +287,54 @@
     <!-- TAB 1: DAILY PULSE (Headline Stream) -->
     <main id="tab-panel-pulse" class="tab-panel">
       <!-- HEADLINES EXPLORER (MERGED INTO A SINGLE UNIFIED BOX) -->
-      <section class="headlines-section" id="feed-section">
-      <div class="headlines-unified-box card" id="headlines-unified-box">
+    <!-- TOP DEVELOPING STORIES (LAST 24 HOURS) -->
+    <section class="top-stories-section" id="top-stories-section">
+      <div class="top-stories-box card">
         <!-- Header Row inside the box -->
-        <div class="headlines-box-header">
-          <div class="flex-center" style="gap: 0.6rem;">
-            <i data-lucide="newspaper" style="color: var(--accent-color); width: 22px; height: 22px;"></i>
-            <h2 class="section-title" style="margin: 0; font-size: 1.35rem;">Headlines Feed</h2>
-            <span id="headlines-count-badge" class="badge neu" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700; display: none !important;">0 Stories</span>
-          </div>
-          <div id="active-filter-indicator" class="filter-indicator" style="display: none;">
-            Filtered to: <strong id="filter-name">-</strong>
-            <button id="clear-filter-btn" class="clear-btn">&times; Clear</button>
-          </div>
-        </div>
-
-        <!-- Filter Controls Area -->
-        <div class="headlines-filter-area">
-          <!-- Quick Trending Topic Pills -->
-          <div class="trending-pills-row">
-            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
-              <i data-lucide="flame" style="width: 14px; height: 14px; color: #f97316;"></i> Quick Topics:
-            </span>
-            <button class="topic-pill-btn active" data-topic="all">All Stories</button>
-            <button class="topic-pill-btn" data-topic="world">🌍 World &amp; Global Affairs</button>
-            <button class="topic-pill-btn" data-topic="politics">🗳️ Politics</button>
-            <button class="topic-pill-btn" data-topic="business">📈 Business &amp; Inflation</button>
-            <button class="topic-pill-btn" data-topic="technology">⚡ Tech &amp; AI</button>
-            <button class="topic-pill-btn" data-topic="science">🚀 Science &amp; Space</button>
-            <button class="topic-pill-btn" data-topic="climate">🌱 Nature &amp; Climate</button>
-            <button class="topic-pill-btn" data-topic="health">🏥 Health</button>
-          </div>
-
-          <div class="filter-controls">
-            <div class="control-group">
-              <label for="filter-source"><i data-lucide="globe"></i> Source</label>
-              <select id="filter-source" class="select-input">
-                <option value="all">All Sources</option>
-              </select>
+        <div class="top-stories-header">
+          <div class="top-stories-title-wrap">
+            <div class="flex-center" style="gap: 0.6rem; flex-wrap: wrap;">
+              <i data-lucide="layers" style="color: var(--accent-color); width: 22px; height: 22px;"></i>
+              <h2 class="section-title" style="margin: 0; font-size: 1.35rem;">Top Developing Stories</h2>
+              <span class="badge neu" id="top-stories-count-badge" style="font-size: 0.72rem; padding: 0.2rem 0.6rem; font-family: var(--font-mono); font-weight: 700;">6 Most Covered in 24h</span>
             </div>
-            
-            <div class="control-group">
-              <label for="filter-category"><i data-lucide="tag"></i> Category</label>
-              <select id="filter-category" class="select-input">
-                <option value="all">All Categories</option>
-                <option value="politics">Politics</option>
-                <option value="world">World &amp; Global Affairs</option>
-                <option value="business">Business</option>
-                <option value="technology">Technology</option>
-                <option value="science">Science</option>
-                <option value="climate">Nature &amp; Climate</option>
-                <option value="health">Health</option>
-                <option value="entertainment">Entertainment</option>
-                <option value="sports">Sports</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            <div class="control-group">
-              <label for="filter-vibe"><i data-lucide="smile"></i> Vibe</label>
-              <select id="filter-vibe" class="select-input">
-                <option value="all">All Vibes</option>
-                <option value="positive">Uplifting (&gt; 0.15)</option>
-                <option value="neutral">Neutral (-0.15 to 0.15)</option>
-                <option value="negative">Doom-laden (&lt; -0.15)</option>
-              </select>
-            </div>
-
-            <div class="control-group search-group">
-              <label for="search-input"><i data-lucide="search"></i> Search</label>
-              <div class="search-input-wrapper">
-                <input type="text" id="search-input" placeholder="Search headlines..." class="text-input">
-                <button id="clear-search-btn" class="clear-input-btn">&times;</button>
-              </div>
-            </div>
+            <p class="section-desc" style="margin: 0.35rem 0 0 0;">
+              The defining news events dominating international headlines right now. Compare how different newsrooms report the exact same story.
+            </p>
           </div>
-
-          <div class="sort-controls">
-            <span class="sort-label">Sort By:</span>
-            <button id="sort-date" class="sort-btn active" data-sort="date">
-              Date <i data-lucide="arrow-down-narrow-wide"></i>
-            </button>
-            <button id="sort-vibe" class="sort-btn" data-sort="vibe">
-              Sentiment Vibe
+          <div class="top-stories-actions">
+            <button class="btn btn-outline btn-sm" onclick="switchTab('compare')" style="gap: 0.45rem; display: inline-flex; align-items: center; white-space: nowrap;">
+              <span>View All Story Clusters</span>
+              <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
             </button>
           </div>
         </div>
 
-        <!-- Spotlight Banner for Filtered Source (Inside the unified box) -->
-        <div id="spotlight-banner" class="spotlight-banner-unified" style="display: none;">
-          <!-- Content will be injected dynamically -->
+        <!-- Active Topic Filter Indicator for Pulse Top Stories -->
+        <div id="pulse-cluster-topic-indicator" class="filter-indicator" style="display: none; margin: 1rem 1.5rem 0 1.5rem;">
+          Showing stories filtered by topic: <strong id="pulse-cluster-topic-name">World</strong>
+          <button class="clear-btn" onclick="clearPulseClusterTopic()">&times; Show All Topics</button>
         </div>
 
-        <!-- Articles list container (Inside the unified box) -->
-        <div id="headlines-container" class="headlines-list-unified">
-          <!-- Articles will be injected here dynamically -->
+        <!-- Top 6 Stories Grid Container -->
+        <div id="pulse-top-stories-container" class="pulse-top-stories-grid">
+          <!-- Populated dynamically in app.js with top 6 story clusters -->
         </div>
 
-        <!-- Pagination / Show More Row -->
-        <div id="headlines-pagination-wrap" class="headlines-pagination-wrap">
-          <button id="headlines-show-more-btn" class="btn btn-secondary flex-center" style="margin: 0 auto; gap: 0.45rem; padding: 0.55rem 1.4rem; font-weight: 600;">
-            <i data-lucide="chevrons-down"></i>
-            <span id="headlines-show-more-text">Show More Stories</span>
+        <!-- Footer Jump Banner to Deep Dive Feed -->
+        <div class="top-stories-footer-banner">
+          <div class="footer-banner-text">
+            <div class="footer-banner-title">
+              <i data-lucide="newspaper" style="width: 18px; height: 18px; color: var(--accent-color);"></i>
+              <strong>Looking for the full chronological news feed?</strong>
+            </div>
+            <p class="footer-banner-sub">
+              Browse, search, and filter all 900+ raw headlines across all 17 global outlets in Outlets Deep Dive.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm flex-center" onclick="goToDeepDiveFeed()" style="gap: 0.5rem; white-space: nowrap; padding: 0.6rem 1.25rem; font-weight: 700;">
+            <span>Browse Full Headlines Feed</span>
+            <i data-lucide="arrow-down-right" style="width: 15px; height: 15px;"></i>
           </button>
         </div>
       </div>
@@ -661,7 +607,7 @@
           <button class="region-pill" data-region="UK"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (3)</button>
           <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/de.png" class="flag-icon-img" width="16" height="12" alt="DE"> Europe (1)</button>
           <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (1)</button>
-          <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.25rem;">🌐</span> Global Wire (2)</button>
+          <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.25rem;">🌐</span> Global Agencies (2)</button>
         </div>
 
         <div id="sources-grid" class="sources-grid">
@@ -697,27 +643,45 @@
           </div>
           <div id="deepdive-filter-indicator" class="filter-indicator" style="display: none;">
             Filtered to: <strong id="deepdive-filter-name">-</strong>
-            <button id="deepdive-clear-filter-btn" class="clear-btn">&times; Show All Outlets</button>
+            <button id="deepdive-clear-filter-btn" class="clear-btn">&times; Reset Filters</button>
           </div>
         </div>
 
         <!-- Filter Controls Area for Deep Dives -->
         <div class="headlines-filter-area">
+          <!-- Topic Pills Row for Deep Dive -->
+          <div class="trending-pills-row" id="deepdive-topic-pills-row">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
+              <i data-lucide="tag" style="width: 14px; height: 14px; color: var(--accent-color);"></i> Topics:
+            </span>
+            <button class="topic-pill-btn active" data-topic="all">All Stories</button>
+            <button class="topic-pill-btn" data-topic="world">🌍 World</button>
+            <button class="topic-pill-btn" data-topic="politics">🗳️ Politics</button>
+            <button class="topic-pill-btn" data-topic="business">📈 Business</button>
+            <button class="topic-pill-btn" data-topic="technology">⚡ Tech &amp; AI</button>
+            <button class="topic-pill-btn" data-topic="science">🚀 Science &amp; Space</button>
+            <button class="topic-pill-btn" data-topic="climate">🌱 Nature &amp; Climate</button>
+            <button class="topic-pill-btn" data-topic="health">🏥 Health</button>
+            <button class="topic-pill-btn" data-topic="entertainment">🎭 Entertainment</button>
+            <button class="topic-pill-btn" data-topic="sports">⚽ Sports</button>
+          </div>
+
           <div class="filter-controls">
             <div class="control-group">
-              <label for="deepdive-filter-category"><i data-lucide="tag"></i> Category</label>
-              <select id="deepdive-filter-category" class="select-input">
-                <option value="all">All Categories</option>
-                <option value="politics">Politics</option>
-                <option value="world">World &amp; Global Affairs</option>
-                <option value="business">Business</option>
-                <option value="technology">Technology</option>
-                <option value="science">Science</option>
-                <option value="climate">Nature &amp; Climate</option>
-                <option value="health">Health</option>
-                <option value="entertainment">Entertainment</option>
-                <option value="sports">Sports</option>
-                <option value="other">Other</option>
+              <label for="deepdive-filter-source"><i data-lucide="globe"></i> Source</label>
+              <select id="deepdive-filter-source" class="select-input">
+                <option value="all">All 17 Outlets</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="deepdive-filter-time"><i data-lucide="clock"></i> Timeframe</label>
+              <select id="deepdive-filter-time" class="select-input">
+                <option value="all" selected>All Time</option>
+                <option value="24h">Past 24 Hours</option>
+                <option value="3d">Past 3 Days</option>
+                <option value="7d">Past 7 Days</option>
+                <option value="30d">Past 30 Days</option>
               </select>
             </div>
 
@@ -794,7 +758,7 @@
               <strong>No Good News</strong> was built to answer a very simple, visceral question: <em>"Why does opening any major news website immediately trigger feelings of existential exhaustion?"</em>
             </p>
             <p class="methodology-story-p">
-              We started with a hypothesis: commercial media operates primarily as a <strong>24-hour threat-surveillance machine</strong>. Bad news gets published because humans are biologically wired to click on danger signals. But to test that empirically without human editorial bias or preconceived expectations, we needed an autonomous audit engine capable of reading the global wire every day, scoring emotional valence objectively across all categories, and measuring the true prevalence and tone of constructive breakthroughs and good news against the prevailing tide of alarmism.
+              We started with a hypothesis: commercial media operates primarily as a <strong>24-hour threat-surveillance machine</strong>. Bad news gets published because humans are biologically wired to click on danger signals. But to test that empirically without human editorial bias or preconceived expectations, we needed an autonomous audit engine capable of reading the global news stream every day, scoring emotional valence objectively across all categories, and measuring the true prevalence and tone of constructive breakthroughs and good news against the prevailing tide of alarmism.
             </p>
           </div>
 
@@ -1122,6 +1086,6 @@
 
   </div>
 
-  <script src="app.js?v=2.9"></script>
+  <script src="app.js?v=3.0"></script>
 </body>
 </html>

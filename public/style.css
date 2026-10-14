@@ -4381,5 +4381,95 @@ select option {
   transition: width 0.3s ease;
 }
 
+/* ==========================================================================
+   TOP DEVELOPING STORIES SECTION (DAILY PULSE HOMEPAGE)
+   ========================================================================== */
+
+.top-stories-section {
+  margin-top: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.top-stories-box {
+  padding: 1.5rem;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.top-stories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.top-stories-title-wrap {
+  flex: 1;
+  min-width: 260px;
+}
+
+.top-stories-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pulse-top-stories-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .pulse-top-stories-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.top-stories-footer-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: 1.15rem 1.4rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  margin-top: 0.5rem;
+}
+
+.footer-banner-text {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.footer-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.98rem;
+  color: var(--text-primary);
+}
+
+.footer-banner-sub {
+  margin: 0;
+  font-size: 0.83rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+
 
 

@@ -377,6 +377,9 @@ const elements = {
   deepdiveFilterName: document.getElementById('deepdive-filter-name'),
   deepdiveClearFilterBtn: document.getElementById('deepdive-clear-filter-btn'),
   deepdiveFilterCategory: document.getElementById('deepdive-filter-category'),
+  deepdiveFilterSource: document.getElementById('deepdive-filter-source'),
+  deepdiveFilterTime: document.getElementById('deepdive-filter-time'),
+  deepdiveTopicPillsRow: document.getElementById('deepdive-topic-pills-row'),
   deepdiveFilterVibe: document.getElementById('deepdive-filter-vibe'),
   deepdiveSearchInput: document.getElementById('deepdive-search-input'),
   deepdiveClearSearchBtn: document.getElementById('deepdive-clear-search-btn'),
@@ -386,6 +389,12 @@ const elements = {
   deepdiveHeadlinesPaginationWrap: document.getElementById('deepdive-headlines-pagination-wrap'),
   deepdiveHeadlinesShowMoreBtn: document.getElementById('deepdive-headlines-show-more-btn'),
   deepdiveHeadlinesShowMoreText: document.getElementById('deepdive-headlines-show-more-text'),
+
+  // Pulse Top Developing Stories Elements
+  pulseTopStoriesContainer: document.getElementById('pulse-top-stories-container'),
+  topStoriesCountBadge: document.getElementById('top-stories-count-badge'),
+  pulseClusterTopicIndicator: document.getElementById('pulse-cluster-topic-indicator'),
+  pulseClusterTopicName: document.getElementById('pulse-cluster-topic-name'),
   
   // Filters
   filterSource: document.getElementById('filter-source'),
@@ -537,6 +546,56 @@ function setupEventListeners() {
       updateAppUI();
     });
   }
+
+  // Deep Dive Dedicated Source Filter
+  if (elements.deepdiveFilterSource) {
+    elements.deepdiveFilterSource.addEventListener('change', (e) => {
+      state.filters.source = e.target.value;
+      state.headlinesLimit = 20;
+      if (elements.filterSource) elements.filterSource.value = e.target.value;
+      document.querySelectorAll('.source-card').forEach(c => {
+        c.classList.toggle('active', c.dataset.source === e.target.value);
+      });
+      document.querySelectorAll('.outlet-marker').forEach(m => {
+        m.classList.toggle('active', m.dataset.source === e.target.value);
+      });
+      updateFilterIndicator();
+      renderHeadlines();
+      updateAppUI();
+    });
+  }
+
+  // Deep Dive Dedicated Timeframe Filter
+  if (elements.deepdiveFilterTime) {
+    elements.deepdiveFilterTime.addEventListener('change', (e) => {
+      state.filters.time = e.target.value;
+      state.headlinesLimit = 20;
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
+      if (elements.filterTime) elements.filterTime.value = e.target.value;
+      const silverTime = document.getElementById('silver-timeframe-select');
+      if (silverTime) silverTime.value = e.target.value;
+      state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
+      updateTimelineButtonsUI();
+      updateAppUI();
+    });
+  }
+
+  // Deep Dive Topic Pills Selector
+  if (elements.deepdiveTopicPillsRow) {
+    elements.deepdiveTopicPillsRow.addEventListener('click', (e) => {
+      const btn = e.target.closest('.topic-pill-btn');
+      if (!btn) return;
+      const topic = btn.dataset.topic || 'all';
+      state.filters.category = topic;
+      state.headlinesLimit = 20;
+      if (elements.filterCategory) elements.filterCategory.value = topic;
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = topic;
+      updateTopicPillsActive(topic);
+      updateFilterIndicator();
+      updateAppUI();
+    });
+  }
+
   if (elements.filterVibe) {
     elements.filterVibe.addEventListener('change', (e) => {
       state.filters.vibe = e.target.value;
@@ -559,6 +618,7 @@ function setupEventListeners() {
       state.filters.time = e.target.value;
       state.headlinesLimit = 20;
       if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
+      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = e.target.value;
       state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
       updateTimelineButtonsUI();
       updateAppUI();
@@ -570,6 +630,7 @@ function setupEventListeners() {
       state.filters.time = e.target.value;
       state.headlinesLimit = 20;
       if (elements.filterTime) elements.filterTime.value = e.target.value;
+      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = e.target.value;
       const silverTime = document.getElementById('silver-timeframe-select');
       if (silverTime) silverTime.value = e.target.value;
       state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
@@ -583,6 +644,7 @@ function setupEventListeners() {
       state.filters.source = 'all';
       state.headlinesLimit = 20;
       if (elements.filterSource) elements.filterSource.value = 'all';
+      if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = 'all';
       document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
       updateFilterIndicator();
@@ -596,6 +658,7 @@ function setupEventListeners() {
       state.filters.category = 'all';
       state.headlinesLimit = 20;
       if (elements.filterCategory) elements.filterCategory.value = 'all';
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
       updateTopicPillsActive('all');
       updateFilterIndicator();
       updateAppUI();
@@ -605,10 +668,21 @@ function setupEventListeners() {
   if (elements.deepdiveClearFilterBtn) {
     elements.deepdiveClearFilterBtn.addEventListener('click', () => {
       state.filters.source = 'all';
+      state.filters.category = 'all';
+      state.filters.vibe = 'all';
+      state.filters.search = '';
       state.headlinesLimit = 20;
       if (elements.filterSource) elements.filterSource.value = 'all';
+      if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = 'all';
+      if (elements.filterCategory) elements.filterCategory.value = 'all';
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
+      if (elements.filterVibe) elements.filterVibe.value = 'all';
+      if (elements.deepdiveFilterVibe) elements.deepdiveFilterVibe.value = 'all';
+      if (elements.searchInput) elements.searchInput.value = '';
+      if (elements.deepdiveSearchInput) elements.deepdiveSearchInput.value = '';
       document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
+      updateTopicPillsActive('all');
       updateFilterIndicator();
       renderHeadlines();
       updateAppUI();
@@ -1097,6 +1171,7 @@ function switchSentimentMode(mode) {
 // Switch Dashboard Tab (Pulse, Trends, Deep Dives, Methodology)
 function switchTab(tabId) {
   if (tabId === 'feed') tabId = 'pulse';
+  if (tabId === 'sources') tabId = 'deepdives';
   if (!['pulse', 'trends', 'compare', 'deepdives', 'methodology'].includes(tabId)) {
     tabId = 'pulse';
   }
@@ -1182,7 +1257,7 @@ function switchTab(tabId) {
   } else if (tabId === 'pulse') {
     renderDailyPulse();
     renderSpectrum();
-    renderHeadlines();
+    renderPulseTopStories();
   }
 
   // Update hash without jumping page scroll
@@ -1191,6 +1266,31 @@ function switchTab(tabId) {
   }
 }
 window.switchTab = switchTab;
+
+// Smooth jump from Pulse to Outlets Deep Dive Feed
+window.goToDeepDiveFeed = function(topic) {
+  switchTab('deepdives');
+  if (topic && topic !== 'all') {
+    state.filters.category = topic;
+    updateTopicPillsActive(topic);
+    updateFilterIndicator();
+  }
+  renderHeadlines();
+  setTimeout(() => {
+    const el = document.getElementById('deepdive-feed-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 100);
+};
+
+// Reset Pulse Top Stories topic filter
+window.clearPulseClusterTopic = function() {
+  state.filters.category = 'all';
+  updateTopicPillsActive('all');
+  updateFilterIndicator();
+  updateAppUI();
+};
 
 // Switch active spectrum view mode (Averages vs Beeswarm Lanes)
 function switchSpectrumViewMode(mode) {
@@ -1424,7 +1524,7 @@ function updateAppUI() {
   if (state.activeTab === 'pulse') {
     renderDailyPulse();
     renderSpectrum();
-    renderHeadlines();
+    renderPulseTopStories();
   } else if (state.activeTab === 'trends') {
     renderHeatmapMatrix();
     renderSentimentTimeline();
@@ -1695,11 +1795,27 @@ function populateFilterOptions() {
   }));
   
   // Populate filter source dropdown
-  elements.filterSource.innerHTML = '<option value="all">All Sources</option>';
-  sources.forEach(src => {
-    elements.filterSource.innerHTML += `<option value="${src.id}">${src.name}</option>`;
-  });
-  elements.filterSource.value = state.filters.source;
+  if (elements.filterSource) {
+    elements.filterSource.innerHTML = '<option value="all">All Sources</option>';
+    sources.forEach(src => {
+      elements.filterSource.innerHTML += `<option value="${src.id}">${src.name}</option>`;
+    });
+    elements.filterSource.value = state.filters.source;
+  }
+
+  // Populate Deep Dive dedicated source filter dropdown
+  if (elements.deepdiveFilterSource) {
+    elements.deepdiveFilterSource.innerHTML = `<option value="all">All ${sources.length} Outlets</option>`;
+    sources.forEach(src => {
+      elements.deepdiveFilterSource.innerHTML += `<option value="${src.id}">${src.name}</option>`;
+    });
+    elements.deepdiveFilterSource.value = state.filters.source;
+  }
+
+  // Sync Deep Dive timeframe filter dropdown
+  if (elements.deepdiveFilterTime && elements.deepdiveFilterTime.value !== state.filters.time) {
+    elements.deepdiveFilterTime.value = state.filters.time;
+  }
   
   // Populate H2H source dropdowns
   const prevA = elements.h2hSourceA.value;
@@ -2174,7 +2290,7 @@ function renderComparisonMatrix() {
   displayIds.forEach(id => {
     const source = resolvedSources[id];
     const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
-    const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global Wire', flag: '🌐' };
+    const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global Agency', flag: '🌐' };
     
     // Mood Class Label
     let moodClass = 'neutral';
@@ -2312,8 +2428,231 @@ const CLUSTER_TOPIC_LABELS = {
   science: '🔬 Science & Space',
   health: '🩺 Health & Medicine',
   climate: '🌱 Nature & Climate',
+  entertainment: '🎭 Entertainment',
+  sports: '⚽ Sports',
   other: '📰 General News'
 };
+
+// Annotate a raw cluster with calculated metrics, date range, and editorial summaries
+function annotateStoryCluster(c) {
+  const topic = getClusterTopic(c);
+  const coverage = c.coverage || [];
+  const sentiments = coverage.map(cov => cov.sentiment).filter(s => typeof s === 'number');
+  const maxS = sentiments.length > 0 ? Math.max(...sentiments) : 0;
+  const minS = sentiments.length > 0 ? Math.min(...sentiments) : 0;
+  const computedSpread = sentiments.length > 1 ? Number((maxS - minS).toFixed(2)) : (c.sentimentSpread || 0);
+  const avgSentiment = sentiments.length > 0 ? Number((sentiments.reduce((a, b) => a + b, 0) / sentiments.length).toFixed(2)) : (c.averageSentiment || 0);
+
+  // Compute cluster date range from coverage article pubDates (with news cycle windowing)
+  const validTimestamps = [];
+  coverage.forEach(cov => {
+    const src = state.sources && state.sources[cov.sourceId];
+    if (src && src.articles) {
+      const match = src.articles.find(a => (a.link && a.link === cov.link) || (a.title && a.title === cov.title));
+      if (match && match.pubDate) {
+        const t = new Date(match.pubDate).getTime();
+        if (!isNaN(t)) validTimestamps.push(t);
+      }
+    }
+  });
+
+  let dateRangeStr = 'Current News Cycle';
+  let minTime = Infinity;
+  let maxTime = -Infinity;
+  if (validTimestamps.length > 0) {
+    validTimestamps.sort((a, b) => a - b);
+    maxTime = validTimestamps[validTimestamps.length - 1];
+    // Max window for an active news cycle: 5 days from newest article
+    const cycleCutoff = maxTime - (5 * 24 * 60 * 60 * 1000);
+    const activeTimestamps = validTimestamps.filter(t => t >= cycleCutoff);
+    minTime = activeTimestamps.length > 0 ? activeTimestamps[0] : maxTime;
+
+    const dMin = new Date(minTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const dMax = new Date(maxTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    dateRangeStr = dMin === dMax ? dMin : `${dMin} – ${dMax}`;
+  }
+
+  // High quality editorial summary
+  let summaryText = '';
+  if (c.summary && c.summary.trim().length > 15) {
+    summaryText = c.summary.trim();
+  } else {
+    const outlets = [...new Set(coverage.map(cov => cov.sourceName || cov.sourceId))];
+    const outletsList = outlets.slice(0, 3).join(', ') + (outlets.length > 3 ? ` +${outlets.length - 3} others` : '');
+    if (computedSpread >= 0.35) {
+      summaryText = `Editorial divergence across ${coverage.length} desks (${outletsList}): framing swings by ${computedSpread.toFixed(2)} pts between urgent alarm and measured policy context.`;
+    } else if (avgSentiment < -0.3) {
+      summaryText = `High-gravity reporting across ${coverage.length} newsrooms (${outletsList}) focusing on disruption, systemic risks, and ongoing investigations.`;
+    } else if (avgSentiment > 0.1) {
+      summaryText = `Constructive cross-outlet reporting across ${coverage.length} newsrooms (${outletsList}) spotlighting positive momentum, resolution, and progress.`;
+    } else {
+      summaryText = `Synchronized reporting across ${coverage.length} newsrooms (${outletsList}) providing balanced, factual developments on the evolving story.`;
+    }
+  }
+
+  return {
+    ...c,
+    topic,
+    coverage,
+    computedSpread,
+    averageSentiment: avgSentiment,
+    dateRangeStr,
+    summaryText,
+    minTime,
+    maxTime
+  };
+}
+
+// Generate HTML for a single interactive cluster card
+function buildClusterCardHTML(cluster, prefix = 'cluster') {
+  const clusterId = `${prefix}-${encodeURIComponent(cluster.story.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase())}`;
+  const topicLabel = CLUSTER_TOPIC_LABELS[cluster.topic] || cluster.topic;
+  const moodClass = getMoodClass(cluster.averageSentiment);
+  const avgScoreFormatted = `${cluster.averageSentiment > 0 ? '+' : ''}${cluster.averageSentiment.toFixed(2)}`;
+  const isHighSpread = cluster.computedSpread >= 0.35;
+
+  // Deduplicate coverage articles (keep freshest per outlet canonical link / clean title)
+  const seenCovUrls = new Set();
+  const seenCovTitles = new Set();
+  const dedupedCoverage = [];
+  const sortedRawCoverage = [...(cluster.coverage || [])].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+  for (const cov of sortedRawCoverage) {
+    const cUrl = `${cov.sourceId || ''}_${canonicalUrl(cov.link)}`;
+    const cTitle = `${cov.sourceId || ''}_${cleanHeadlineTitle(cov.title)}`;
+    if (seenCovUrls.has(cUrl) || seenCovTitles.has(cTitle)) continue;
+    seenCovUrls.add(cUrl);
+    seenCovTitles.add(cTitle);
+    dedupedCoverage.push(cov);
+  }
+
+  const uniqueSources = new Set(dedupedCoverage.map(x => x.sourceId));
+
+  // Build mini-spectrum bubbles (deduplicate by sourceId for plot clarity)
+  const uniqueCoverage = [];
+  const seenSources = new Set();
+  dedupedCoverage.forEach(cov => {
+    if (!seenSources.has(cov.sourceId)) {
+      seenSources.add(cov.sourceId);
+      uniqueCoverage.push(cov);
+    }
+  });
+
+  const bubblesHTML = uniqueCoverage.map(cov => {
+    const meta = SOURCE_META[cov.sourceId] || { initials: cov.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
+    const score = typeof cov.sentiment === 'number' ? cov.sentiment : 0;
+    const leftPct = clamp(((score + 1) / 2) * 100, 4, 96);
+    const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
+    const cleanTitle = (cov.title || '').replace(/"/g, '&quot;');
+
+    return `
+      <div class="cluster-outlet-bubble" 
+           style="left: ${leftPct}%; background-color: ${meta.color};"
+           title="${meta.regionName || ''} (${cov.sourceName}): ${scoreStr} - ${cleanTitle}"
+           onclick="window.open('${cov.link}', '_blank', 'noopener,noreferrer')">
+        ${meta.initials}
+      </div>
+    `;
+  }).join('');
+
+  // Sort reporting inside each story topic strictly by valence (from most negative to most positive)
+  const sortedCoverage = [...dedupedCoverage].sort((a, b) => {
+    const sa = typeof a.sentiment === 'number' ? a.sentiment : 0;
+    const sb = typeof b.sentiment === 'number' ? b.sentiment : 0;
+    return sa - sb;
+  });
+
+  // Build article cards in coverage grid
+  const coverageCardsHTML = sortedCoverage.map(art => {
+    const meta = SOURCE_META[art.sourceId] || { initials: art.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
+    const score = typeof art.sentiment === 'number' ? art.sentiment : 0;
+    const scoreClass = getMoodClass(score);
+    const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
+
+    return `
+      <div class="cluster-article-card">
+        <div class="cluster-article-top">
+          <span class="cluster-article-outlet">
+            <span class="source-badge" style="background-color: ${meta.color};">${getSourceFlagHTML(art.sourceId)} ${art.sourceName}</span>
+          </span>
+          <div style="display:flex; align-items:center; gap:0.4rem;">
+            <span class="score-badge ${scoreClass}" style="font-size:0.75rem; padding:0.15rem 0.45rem;">${scoreStr}</span>
+          </div>
+        </div>
+        <h4 class="cluster-article-title">
+          <a href="${art.link}" target="_blank" rel="noopener noreferrer">${art.title}</a>
+        </h4>
+        <div class="cluster-article-footer">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="copyStoryLink('${art.link}', this)" title="Share headline link" style="padding:0.25rem 0.55rem; font-size:0.72rem; gap:0.3rem;">
+            <i data-lucide="link" style="width:11px;height:11px;"></i>
+            <span>Share</span>
+          </button>
+          <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="cluster-read-link">
+            <span>Read Dispatch</span>
+            <i data-lucide="external-link" style="width:11px;height:11px;"></i>
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <article class="cluster-card card" id="${clusterId}" onclick="handleClusterCardClick(event, '${clusterId}')">
+      <div class="cluster-header">
+        <div class="cluster-header-left">
+          <div class="cluster-badges-strip">
+            <span class="cluster-badge cluster-topic-badge">${topicLabel}</span>
+            <span class="cluster-badge cluster-date-badge">
+              <i data-lucide="calendar" style="width:11px;height:11px;"></i>
+              ${cluster.dateRangeStr}
+            </span>
+            <span class="cluster-badge cluster-score-badge ${moodClass}">
+              ${avgScoreFormatted} Avg Tone
+            </span>
+            <span class="cluster-badge cluster-spread-badge ${isHighSpread ? 'high-spread' : ''}">
+              <i data-lucide="split" style="width:11px;height:11px;"></i>
+              ${cluster.computedSpread.toFixed(2)} Spread
+            </span>
+          </div>
+          <h3 class="cluster-title">${cluster.story}</h3>
+        </div>
+      </div>
+
+      <!-- Editorial Summary -->
+      <p class="cluster-summary-text">${cluster.summaryText}</p>
+
+      <!-- Mini-Spectrum Distribution Track across all covering desks -->
+      <div class="cluster-spectrum-wrap">
+        <div class="cluster-spectrum-scale-labels">
+          <span>Crisis / Gloomy (-1.0)</span>
+          <span>Neutral (0.0)</span>
+          <span>Constructive / Optimistic (+1.0)</span>
+        </div>
+        <div class="cluster-spectrum-track">
+          ${bubblesHTML}
+        </div>
+      </div>
+
+      <!-- Interactive Coverage Toggle Bar -->
+      <div class="cluster-coverage-meta-bar">
+        <div class="cluster-coverage-info">
+          <span class="cluster-badge cluster-outlets-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
+            <i data-lucide="radio" style="width:12px;height:12px;"></i>
+            ${uniqueSources.size} Outlets
+          </span>
+        </div>
+        <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full multi-outlet coverage">
+          <span>Inspect Full Coverage (${sortedCoverage.length})</span>
+          <i data-lucide="chevron-down" style="width:12px;height:12px;"></i>
+        </button>
+      </div>
+
+      <!-- Coverage Grid of Desks (Smooth CSS Accordion) -->
+      <div class="cluster-coverage-grid">
+        ${coverageCardsHTML}
+      </div>
+    </article>
+  `;
+}
 
 // Render whole Story Compare tab
 function renderComparePage() {
@@ -2354,74 +2693,7 @@ function renderStoryClusters() {
   const searchTerm = (state.clusterSearch || '').toLowerCase().trim();
 
   // Annotate and filter clusters
-  const processed = rawClusters.map(c => {
-    const topic = getClusterTopic(c);
-    const coverage = c.coverage || [];
-    const sentiments = coverage.map(cov => cov.sentiment).filter(s => typeof s === 'number');
-    const maxS = sentiments.length > 0 ? Math.max(...sentiments) : 0;
-    const minS = sentiments.length > 0 ? Math.min(...sentiments) : 0;
-    const computedSpread = sentiments.length > 1 ? Number((maxS - minS).toFixed(2)) : (c.sentimentSpread || 0);
-    const avgSentiment = sentiments.length > 0 ? Number((sentiments.reduce((a, b) => a + b, 0) / sentiments.length).toFixed(2)) : (c.averageSentiment || 0);
-
-    // Compute cluster date range from coverage article pubDates (with news cycle windowing)
-    const validTimestamps = [];
-    coverage.forEach(cov => {
-      const src = state.sources && state.sources[cov.sourceId];
-      if (src && src.articles) {
-        const match = src.articles.find(a => (a.link && a.link === cov.link) || (a.title && a.title === cov.title));
-        if (match && match.pubDate) {
-          const t = new Date(match.pubDate).getTime();
-          if (!isNaN(t)) validTimestamps.push(t);
-        }
-      }
-    });
-
-    let dateRangeStr = 'Current News Cycle';
-    let minTime = Infinity;
-    let maxTime = -Infinity;
-    if (validTimestamps.length > 0) {
-      validTimestamps.sort((a, b) => a - b);
-      maxTime = validTimestamps[validTimestamps.length - 1];
-      // Max window for an active news cycle: 5 days from newest article
-      const cycleCutoff = maxTime - (5 * 24 * 60 * 60 * 1000);
-      const activeTimestamps = validTimestamps.filter(t => t >= cycleCutoff);
-      minTime = activeTimestamps.length > 0 ? activeTimestamps[0] : maxTime;
-
-      const dMin = new Date(minTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const dMax = new Date(maxTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      dateRangeStr = dMin === dMax ? dMin : `${dMin} – ${dMax}`;
-    }
-
-    // High quality editorial summary
-    let summaryText = '';
-    if (c.summary && c.summary.trim().length > 15) {
-      summaryText = c.summary.trim();
-    } else {
-      const outlets = [...new Set(coverage.map(cov => cov.sourceName || cov.sourceId))];
-      const outletsList = outlets.slice(0, 3).join(', ') + (outlets.length > 3 ? ` +${outlets.length - 3} others` : '');
-      if (computedSpread >= 0.35) {
-        summaryText = `Editorial divergence across ${coverage.length} desks (${outletsList}): framing swings by ${computedSpread.toFixed(2)} pts between urgent alarm and measured policy context.`;
-      } else if (avgSentiment < -0.3) {
-        summaryText = `High-gravity reporting across ${coverage.length} newsrooms (${outletsList}) focusing on disruption, systemic risks, and ongoing investigations.`;
-      } else if (avgSentiment > 0.1) {
-        summaryText = `Constructive cross-outlet reporting across ${coverage.length} newsrooms (${outletsList}) spotlighting positive momentum, resolution, and progress.`;
-      } else {
-        summaryText = `Synchronized reporting across ${coverage.length} newsrooms (${outletsList}) providing balanced, factual developments on the evolving story.`;
-      }
-    }
-
-    return {
-      ...c,
-      topic,
-      coverage,
-      computedSpread,
-      averageSentiment: avgSentiment,
-      dateRangeStr,
-      summaryText,
-      minTime,
-      maxTime
-    };
-  }).filter(c => {
+  const processed = rawClusters.map(annotateStoryCluster).filter(c => {
     // Topic filter
     if (activeTopic !== 'all' && c.topic !== activeTopic) {
       return false;
@@ -2469,155 +2741,7 @@ function renderStoryClusters() {
   }
 
   // Render cluster cards in grid (collapsed by default, expandable to full width)
-  container.innerHTML = processed.map(cluster => {
-    const clusterId = 'cluster-' + encodeURIComponent(cluster.story.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
-    const topicLabel = CLUSTER_TOPIC_LABELS[cluster.topic] || cluster.topic;
-    const moodClass = getMoodClass(cluster.averageSentiment);
-    const avgScoreFormatted = `${cluster.averageSentiment > 0 ? '+' : ''}${cluster.averageSentiment.toFixed(2)}`;
-    const isHighSpread = cluster.computedSpread >= 0.35;
-
-    // Deduplicate coverage articles (keep freshest per outlet canonical link / clean title)
-    const seenCovUrls = new Set();
-    const seenCovTitles = new Set();
-    const dedupedCoverage = [];
-    const sortedRawCoverage = [...(cluster.coverage || [])].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-    for (const cov of sortedRawCoverage) {
-      const cUrl = `${cov.sourceId || ''}_${canonicalUrl(cov.link)}`;
-      const cTitle = `${cov.sourceId || ''}_${cleanHeadlineTitle(cov.title)}`;
-      if (seenCovUrls.has(cUrl) || seenCovTitles.has(cTitle)) continue;
-      seenCovUrls.add(cUrl);
-      seenCovTitles.add(cTitle);
-      dedupedCoverage.push(cov);
-    }
-
-    const uniqueSources = new Set(dedupedCoverage.map(x => x.sourceId));
-
-    // Build mini-spectrum bubbles (deduplicate by sourceId for plot clarity)
-    const uniqueCoverage = [];
-    const seenSources = new Set();
-    dedupedCoverage.forEach(cov => {
-      if (!seenSources.has(cov.sourceId)) {
-        seenSources.add(cov.sourceId);
-        uniqueCoverage.push(cov);
-      }
-    });
-
-    const bubblesHTML = uniqueCoverage.map(cov => {
-      const meta = SOURCE_META[cov.sourceId] || { initials: cov.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
-      const score = typeof cov.sentiment === 'number' ? cov.sentiment : 0;
-      const leftPct = clamp(((score + 1) / 2) * 100, 4, 96);
-      const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
-      const cleanTitle = (cov.title || '').replace(/"/g, '&quot;');
-
-      return `
-        <div class="cluster-outlet-bubble" 
-             style="left: ${leftPct}%; background-color: ${meta.color};"
-             title="${meta.regionName || ''} (${cov.sourceName}): ${scoreStr} - ${cleanTitle}"
-             onclick="window.open('${cov.link}', '_blank', 'noopener,noreferrer')">
-          ${meta.initials}
-        </div>
-      `;
-    }).join('');
-
-    // Sort reporting inside each story topic strictly by valence (from most negative to most positive)
-    const sortedCoverage = [...dedupedCoverage].sort((a, b) => {
-      const sa = typeof a.sentiment === 'number' ? a.sentiment : 0;
-      const sb = typeof b.sentiment === 'number' ? b.sentiment : 0;
-      return sa - sb;
-    });
-
-    // Build article cards in coverage grid
-    const coverageCardsHTML = sortedCoverage.map(art => {
-      const meta = SOURCE_META[art.sourceId] || { initials: art.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
-      const score = typeof art.sentiment === 'number' ? art.sentiment : 0;
-      const scoreClass = getMoodClass(score);
-      const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
-
-      return `
-        <div class="cluster-article-card">
-          <div class="cluster-article-top">
-            <span class="cluster-article-outlet">
-              <span class="source-badge" style="background-color: ${meta.color};">${getSourceFlagHTML(art.sourceId)} ${art.sourceName}</span>
-            </span>
-            <div style="display:flex; align-items:center; gap:0.4rem;">
-              <span class="score-badge ${scoreClass}" style="font-size:0.75rem; padding:0.15rem 0.45rem;">${scoreStr}</span>
-            </div>
-          </div>
-          <h4 class="cluster-article-title">
-            <a href="${art.link}" target="_blank" rel="noopener noreferrer">${art.title}</a>
-          </h4>
-          <div class="cluster-article-footer">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="copyStoryLink('${art.link}', this)" title="Share headline link" style="padding:0.25rem 0.55rem; font-size:0.72rem; gap:0.3rem;">
-              <i data-lucide="link" style="width:11px;height:11px;"></i>
-              <span>Share</span>
-            </button>
-            <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="cluster-read-link">
-              <span>Read Dispatch</span>
-              <i data-lucide="external-link" style="width:11px;height:11px;"></i>
-            </a>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    return `
-      <article class="cluster-card card" id="${clusterId}" onclick="handleClusterCardClick(event, '${clusterId}')">
-        <div class="cluster-header">
-          <div class="cluster-header-left">
-            <div class="cluster-badges-strip">
-              <span class="cluster-badge cluster-topic-badge">${topicLabel}</span>
-              <span class="cluster-badge cluster-date-badge">
-                <i data-lucide="calendar" style="width:11px;height:11px;"></i>
-                ${cluster.dateRangeStr}
-              </span>
-              <span class="cluster-badge cluster-score-badge ${moodClass}">
-                ${avgScoreFormatted} Avg Tone
-              </span>
-              <span class="cluster-badge cluster-spread-badge ${isHighSpread ? 'high-spread' : ''}">
-                <i data-lucide="split" style="width:11px;height:11px;"></i>
-                ${cluster.computedSpread.toFixed(2)} Spread
-              </span>
-            </div>
-            <h3 class="cluster-title">${cluster.story}</h3>
-          </div>
-        </div>
-
-        <!-- Editorial Summary -->
-        <p class="cluster-summary-text">${cluster.summaryText}</p>
-
-        <!-- Mini-Spectrum Distribution Track across all covering desks -->
-        <div class="cluster-spectrum-wrap">
-          <div class="cluster-spectrum-scale-labels">
-            <span>Crisis / Gloomy (-1.0)</span>
-            <span>Neutral (0.0)</span>
-            <span>Constructive / Optimistic (+1.0)</span>
-          </div>
-          <div class="cluster-spectrum-track">
-            ${bubblesHTML}
-          </div>
-        </div>
-
-        <!-- Interactive Coverage Toggle Bar -->
-        <div class="cluster-coverage-meta-bar">
-          <div class="cluster-coverage-info">
-            <span class="cluster-badge cluster-outlets-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
-              <i data-lucide="radio" style="width:12px;height:12px;"></i>
-              ${uniqueSources.size} Outlets
-            </span>
-          </div>
-          <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full multi-outlet coverage">
-            <span>Inspect Full Coverage (${sortedCoverage.length})</span>
-            <i data-lucide="chevron-down" style="width:12px;height:12px;"></i>
-          </button>
-        </div>
-
-        <!-- Coverage Grid of Desks (Smooth CSS Accordion) -->
-        <div class="cluster-coverage-grid">
-          ${coverageCardsHTML}
-        </div>
-      </article>
-    `;
-  }).join('');
+  container.innerHTML = processed.map(cluster => buildClusterCardHTML(cluster, 'compare')).join('');
 
   if (window.lucide) {
     lucide.createIcons();
@@ -2649,6 +2773,99 @@ window.toggleClusterCard = function(clusterId) {
   }
 };
 window.toggleClusterCoverage = window.toggleClusterCard;
+
+// Render Top 6 Developing Stories on Daily Pulse Homepage
+function renderPulseTopStories() {
+  const container = elements.pulseTopStoriesContainer || document.getElementById('pulse-top-stories-container');
+  if (!container) return;
+
+  const rawClusters = state.sharedStoryClusters || [];
+  if (!rawClusters || rawClusters.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="padding: 2.2rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; grid-column: 1 / -1;">
+        <i data-lucide="layers" style="width: 34px; height: 34px; color: var(--text-muted); margin-bottom: 0.6rem;"></i>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem;">No Developing Stories Detected</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 480px; margin: 0 auto 1.25rem;">
+          Cross-outlet story clusters are computed during daily news ingestion when 2 or more newsrooms report on identical breaking events.
+        </p>
+        <button class="btn btn-primary btn-sm" onclick="syncData()" style="gap: 0.5rem; display: inline-flex; align-items: center; margin: 0 auto;">
+          <i data-lucide="refresh-cw"></i> Sync Feeds Now
+        </button>
+      </div>
+    `;
+    if (elements.topStoriesCountBadge) elements.topStoriesCountBadge.innerText = '0 Stories';
+    if (elements.pulseClusterTopicIndicator) elements.pulseClusterTopicIndicator.style.display = 'none';
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  // Annotate all clusters
+  const annotated = rawClusters.map(annotateStoryCluster);
+
+  // Filter by topic if active
+  const activeTopic = state.filters.category || 'all';
+  const filtered = activeTopic === 'all' 
+    ? annotated 
+    : annotated.filter(c => c.topic === activeTopic);
+
+  // Update Topic Indicator
+  if (elements.pulseClusterTopicIndicator && elements.pulseClusterTopicName) {
+    if (activeTopic !== 'all') {
+      const topicCap = activeTopic.charAt(0).toUpperCase() + activeTopic.slice(1);
+      elements.pulseClusterTopicName.innerText = topicCap;
+      elements.pulseClusterTopicIndicator.style.display = 'flex';
+    } else {
+      elements.pulseClusterTopicIndicator.style.display = 'none';
+    }
+  }
+
+  // Sort by coverage breadth (most covering outlets first), then by divergence spread
+  filtered.sort((a, b) => {
+    const covA = a.coverage?.length || 0;
+    const covB = b.coverage?.length || 0;
+    if (covB !== covA) return covB - covA;
+    return b.computedSpread - a.computedSpread;
+  });
+
+  // Top 6 most covered stories
+  const top6 = filtered.slice(0, 6);
+
+  // Update count badge
+  if (elements.topStoriesCountBadge) {
+    if (activeTopic === 'all') {
+      elements.topStoriesCountBadge.innerText = `${top6.length} Most Covered in 24h`;
+    } else {
+      const topicCap = activeTopic.charAt(0).toUpperCase() + activeTopic.slice(1);
+      elements.topStoriesCountBadge.innerText = `${top6.length} in ${topicCap}`;
+    }
+  }
+
+  if (top6.length === 0) {
+    const topicCap = activeTopic.charAt(0).toUpperCase() + activeTopic.slice(1);
+    container.innerHTML = `
+      <div class="card" style="padding: 2.2rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; grid-column: 1 / -1;">
+        <i data-lucide="layers" style="width: 32px; height: 32px; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.35rem;">No Top Stories in ${topicCap}</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 440px; margin: 0 auto 1.25rem;">
+          No multi-outlet clusters found for this topic right now. Explore other topics or clear the filter.
+        </p>
+        <button class="btn btn-secondary btn-sm" onclick="clearPulseClusterTopic()" style="margin: 0 auto;">
+          Show All Topics
+        </button>
+      </div>
+    `;
+    if (window.lucide) lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = top6.map(cluster => buildClusterCardHTML(cluster, 'pulse-top')).join('');
+
+  if (window.lucide && lucide.createIcons) {
+    lucide.createIcons();
+  }
+}
+window.renderPulseTopStories = renderPulseTopStories;
+
 
 // Render Head-to-Head Comparison column
 function renderHeadToHead() {
@@ -3316,20 +3533,21 @@ function toggleSourceFilter(sourceId) {
     // Clear filter
     state.filters.source = 'all';
     if (elements.filterSource) elements.filterSource.value = 'all';
+    if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = 'all';
   } else {
     // Set filter
     state.filters.source = sourceId;
     if (elements.filterSource) elements.filterSource.value = sourceId;
+    if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = sourceId;
     
-    // Navigate to appropriate feed/spotlight based on active tab
-    if (state.activeTab === 'deepdives') {
-      const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
-      target?.scrollIntoView({ behavior: 'smooth' });
-    } else if (state.activeTab === 'pulse') {
-      const target = document.getElementById('spotlight-banner') || document.getElementById('feed-section');
-      target?.scrollIntoView({ behavior: 'smooth' });
-    } else {
+    // If clicked from Pulse spectrum, smoothly transition to Deep Dive feed
+    if (state.activeTab === 'pulse') {
       switchTab('deepdives');
+      setTimeout(() => {
+        const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
+        target?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
       const target = document.getElementById('deepdive-spotlight-banner') || document.getElementById('deepdive-feed-section');
       target?.scrollIntoView({ behavior: 'smooth' });
     }
@@ -3457,7 +3675,12 @@ function toggleSort(field) {
 
 // Render filterable and sortable list of articles
 function renderHeadlines() {
-  elements.headlinesContainer.innerHTML = '';
+  if (elements.headlinesContainer) {
+    elements.headlinesContainer.innerHTML = '';
+  }
+  if (elements.deepdiveHeadlinesContainer) {
+    elements.deepdiveHeadlinesContainer.innerHTML = '';
+  }
   
   // 1. Gather all articles into flat array
   const rawArticles = [];
@@ -3616,6 +3839,12 @@ function createArticleCard(art, index, prefix = 'pulse') {
   }
 
   // Sync filter control values if necessary
+  if (elements.deepdiveFilterSource && elements.deepdiveFilterSource.value !== state.filters.source) {
+    elements.deepdiveFilterSource.value = state.filters.source;
+  }
+  if (elements.deepdiveFilterTime && elements.deepdiveFilterTime.value !== state.filters.time) {
+    elements.deepdiveFilterTime.value = state.filters.time;
+  }
   if (elements.deepdiveFilterCategory && elements.deepdiveFilterCategory.value !== state.filters.category) {
     elements.deepdiveFilterCategory.value = state.filters.category;
   }
