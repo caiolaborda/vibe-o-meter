@@ -3551,7 +3551,6 @@ function renderSentimentTimeline() {
         <i data-lucide="clock" style="width:13px;height:13px;"></i>
         <span>Window:</span>
         <select class="timeline-timeframe-inline-select" onchange="changeTimelineWindow(this.value)" aria-label="Edit overall timeframe">
-          <option value="3h" ${curTime === '3h' ? 'selected' : ''}>Past 3 Hours</option>
           <option value="6h" ${curTime === '6h' ? 'selected' : ''}>Past 6 Hours</option>
           <option value="12h" ${curTime === '12h' ? 'selected' : ''}>Past 12 Hours</option>
           <option value="24h" ${curTime === '24h' ? 'selected' : ''}>Past 24 Hours</option>
@@ -5553,12 +5552,13 @@ function restoreStateFromUrl() {
     const topicParam = params.get('topic') || params.get('category');
     const timeParam = params.get('time');
 
-    if (timeParam && ['3h', '6h', '12h', '24h', '3d', '7d', '30d', 'all'].includes(timeParam)) {
-      state.filters.time = timeParam;
-      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = timeParam;
-      if (elements.filterTime) elements.filterTime.value = timeParam;
-      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = timeParam;
-      if (elements.silverTimeframeSelect) elements.silverTimeframeSelect.value = timeParam;
+    const normalizedTime = timeParam === '3h' ? '6h' : timeParam;
+    if (normalizedTime && ['6h', '12h', '24h', '3d', '7d', '30d', 'all'].includes(normalizedTime)) {
+      state.filters.time = normalizedTime;
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = normalizedTime;
+      if (elements.filterTime) elements.filterTime.value = normalizedTime;
+      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = normalizedTime;
+      if (elements.silverTimeframeSelect) elements.silverTimeframeSelect.value = normalizedTime;
     }
 
     if (sourceParam && state.sources && state.sources[sourceParam]) {
