@@ -587,7 +587,7 @@ Return JSON array in format:
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
-          generationConfig: { temperature: 0.1, maxOutputTokens: 8192, responseMimeType: 'application/json' }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 16384, responseMimeType: 'application/json' }
         });
         const generatePromise = model.generateContent(prompt);
         const timeoutPromise = new Promise((_, reject) =>
@@ -785,6 +785,7 @@ async function main() {
   const currentCache = readCache();
 
   const geminiKey = process.env.GEMINI_API_KEY || config.apiKey;
+  const geminiPaidKey = process.env.GEMINI_PAID_API_KEY || config.paidApiKey || geminiKey;
   const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
   // Build lookup of already analyzed articles
@@ -1082,15 +1083,34 @@ async function main() {
   }
 
   // 5.7 Cross-Outlet Story Clustering (Method A: Single Aggregation Pass)
+  // Runs on a regular interval (default: every 6 hours, or via --force / --cluster)
+  // using GEMINI_PAID_API_KEY if configured (falling back to GEMINI_API_KEY with a brief rate-limit cooldown).
   let sharedStoryClusters = currentCache.sharedStoryClusters || [];
-  try {
-    const clusters = await clusterCrossOutletStories(finalSources, geminiKey);
-    if (clusters && clusters.length > 0) {
-      sharedStoryClusters = clusters;
-      console.log(`[Sync] Successfully identified ${sharedStoryClusters.length} cross-outlet story clusters.`);
+  let lastClusteredAt = currentCache.lastClusteredAt || (currentCache.globalStats && currentCache.globalStats.lastClusteredAt) || null;
+  const clusterIntervalHours = Number(process.env.CLUSTER_INTERVAL_HOURS || 6);
+  const hoursSinceLastCluster = lastClusteredAt ? (now.getTime() - new Date(lastClusteredAt).getTime()) / (1000 * 60 * 60) : Infinity;
+  const forceCluster = process.argv.includes('--force') || process.argv.includes('--cluster');
+  const shouldRunClustering = forceCluster || sharedStoryClusters.length === 0 || hoursSinceLastCluster >= clusterIntervalHours;
+
+  if (shouldRunClustering) {
+    try {
+      const usingSeparatePaidKey = Boolean(process.env.GEMINI_PAID_API_KEY || config.paidApiKey);
+      if (!usingSeparatePaidKey && newlyAnalyzedCount > 0) {
+        console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
+        await new Promise(r => setTimeout(r, 6000));
+      }
+      console.log(`[Sync] Running cross-outlet story clustering (key: ${usingSeparatePaidKey ? 'PAID' : 'PRIMARY'}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
+      const clusters = await clusterCrossOutletStories(finalSources, geminiPaidKey);
+      if (clusters && clusters.length > 0) {
+        sharedStoryClusters = clusters;
+        lastClusteredAt = now.toISOString();
+        console.log(`[Sync] Successfully identified ${sharedStoryClusters.length} cross-outlet story clusters.`);
+      }
+    } catch (clusterErr) {
+      console.warn('[Sync] Non-blocking story clustering notice:', clusterErr.message);
     }
-  } catch (clusterErr) {
-    console.warn('[Sync] Non-blocking story clustering notice:', clusterErr.message);
+  } else {
+    console.log(`[Sync] Skipping story clustering (last clustered ${hoursSinceLastCluster.toFixed(1)}h ago; interval is ${clusterIntervalHours}h).`);
   }
 
   const globalStats = {
@@ -1101,12 +1121,14 @@ async function main() {
     categoryAverages,
     editorialSummary,
     editorialSummaryDate: todayDateStr,
+    lastClusteredAt,
     sharedStoryClusters
   };
 
   // 6. Build Payloads
   const fullPayload = {
     lastUpdated: now.toISOString(),
+    lastClusteredAt,
     analyzerUsed: activeAnalyzerLabel,
     editorialSummaryDate: todayDateStr,
     editorialSummary,
@@ -1118,6 +1140,7 @@ async function main() {
 
   const summaryPayload = {
     lastUpdated: now.toISOString(),
+    lastClusteredAt,
     analyzerUsed: activeAnalyzerLabel,
     editorialSummaryDate: todayDateStr,
     editorialSummary,

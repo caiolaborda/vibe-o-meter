@@ -33,9 +33,9 @@ function normalizeClusterTokens(text) {
 }
 
 async function main() {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const apiKey = process.env.GEMINI_PAID_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    console.error('Missing GEMINI_API_KEY');
+    console.error('Missing GEMINI_PAID_API_KEY / GEMINI_API_KEY');
     process.exit(1);
   }
 
@@ -44,11 +44,11 @@ async function main() {
   const data = JSON.parse(fs.readFileSync(targetDataFile, 'utf8'));
   const finalSources = data.sources || {};
 
-  // Flatten recent headlines from all sources: include all articles from the past 36h (up to 80 per outlet),
-  // falling back to up to 18 articles within the past 5 days for lower-frequency feeds.
+  // Flatten recent headlines from all sources: focus tightly on the past 30h (up to 32 per outlet),
+  // falling back to up to 8 articles within the past 72h for lower-frequency feeds.
   const candidates = [];
-  const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
-  const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
+  const thirtyHoursAgo = Date.now() - (30 * 60 * 60 * 1000);
+  const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
   Object.entries(finalSources).forEach(([sourceId, src]) => {
     const articles = src.articles || [];
     let addedForSource = 0;
@@ -56,11 +56,11 @@ async function main() {
       const art = articles[i];
       if (!art || !art.title || art.title.trim().length <= 10) continue;
       const t = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
-      if (!isNaN(t) && t < fiveDaysAgo) continue;
+      if (!isNaN(t) && t < threeDaysAgo) continue;
 
-      const isRecent36h = !isNaN(t) && t >= thirtySixHoursAgo;
-      if (addedForSource >= 80) break;
-      if (!isRecent36h && addedForSource >= 18) continue;
+      const isRecent30h = !isNaN(t) && t >= thirtyHoursAgo;
+      if (addedForSource >= 32) break;
+      if (!isRecent30h && addedForSource >= 8) continue;
 
       candidates.push({
         sourceId,
@@ -101,6 +101,18 @@ Return JSON array in format:
   { "story": "Topic Title", "summary": "Two-sentence editorial summary of the event.", "ids": [0, 4, 12] }
 ]`;
 
+function tryRepairJsonArray(text) {
+  let clean = text.trim();
+  clean = clean.replace(/:\s*\+(\d)/g, ': $1');
+  if (!clean.startsWith('[')) return clean;
+  if (clean.endsWith(']')) return clean;
+  if (clean.endsWith('}')) return clean + ']';
+  if (clean.endsWith(',')) return clean.slice(0, -1).trim() + ']';
+  const lastBrace = clean.lastIndexOf('}');
+  if (lastBrace !== -1) return clean.substring(0, lastBrace + 1) + ']';
+  return clean;
+}
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     process.env.GEMINI_MODEL,
@@ -118,14 +130,14 @@ Return JSON array in format:
         console.log(`Calling ${modelName} for clustering (attempt ${attempt}/${maxAttempts})...`);
         const model = genAI.getGenerativeModel({
           model: modelName,
-          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 16384, responseMimeType: 'application/json' }
         });
         const resp = await model.generateContent(prompt);
         let text = resp.response.text().trim();
         if (text.startsWith('```json')) text = text.substring(7);
         else if (text.startsWith('```')) text = text.substring(3);
         if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-        const parsed = JSON.parse(text.trim());
+        const parsed = JSON.parse(tryRepairJsonArray(text.trim()));
         if (Array.isArray(parsed) && parsed.length > 0) {
           rawClusters = parsed;
           console.log(`${modelName} returned ${rawClusters.length} raw clusters.`);
@@ -209,26 +221,47 @@ Return JSON array in format:
     }
   });
 
-  formattedClusters.sort((a, b) => (b.outletCount * (b.sentimentSpread + 0.1)) - (a.outletCount * (a.sentimentSpread + 0.1)));
+  const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+  formattedClusters.sort((a, b) => {
+    const newestA = Math.max(...(a.coverage || []).map(m => new Date(m.pubDate).getTime() || 0));
+    const newestB = Math.max(...(b.coverage || []).map(m => new Date(m.pubDate).getTime() || 0));
+    const recencyBoostA = newestA >= twentyFourHoursAgo ? 1.35 : 1.0;
+    const recencyBoostB = newestB >= twentyFourHoursAgo ? 1.35 : 1.0;
+    return (b.outletCount * (b.sentimentSpread + 0.1) * recencyBoostB) - (a.outletCount * (a.sentimentSpread + 0.1) * recencyBoostA);
+  });
+
   console.log(`Formatted ${formattedClusters.length} valid multi-source clusters:`);
   formattedClusters.forEach(c => {
     console.log(` - [${c.outletCount} outlets, spread ${c.sentimentSpread}] ${c.story}: ${c.summary}`);
   });
 
+  const nowIso = new Date().toISOString();
   // Save back to data files
+  data.lastClusteredAt = nowIso;
   data.sharedStoryClusters = formattedClusters;
-  if (data.globalStats) data.globalStats.sharedStoryClusters = formattedClusters;
+  if (data.globalStats) {
+    data.globalStats.lastClusteredAt = nowIso;
+    data.globalStats.sharedStoryClusters = formattedClusters;
+  }
   fs.writeFileSync('data/vibe-data.json', JSON.stringify(data, null, 2), 'utf8');
   if (fs.existsSync('public/data/data.json')) {
     const pubData = JSON.parse(fs.readFileSync('public/data/data.json', 'utf8'));
+    pubData.lastClusteredAt = nowIso;
     pubData.sharedStoryClusters = formattedClusters;
-    if (pubData.globalStats) pubData.globalStats.sharedStoryClusters = formattedClusters;
+    if (pubData.globalStats) {
+      pubData.globalStats.lastClusteredAt = nowIso;
+      pubData.globalStats.sharedStoryClusters = formattedClusters;
+    }
     fs.writeFileSync('public/data/data.json', JSON.stringify(pubData), 'utf8');
   }
   if (fs.existsSync('public/data/summary.json')) {
     const pubSummary = JSON.parse(fs.readFileSync('public/data/summary.json', 'utf8'));
+    pubSummary.lastClusteredAt = nowIso;
     pubSummary.sharedStoryClusters = formattedClusters;
-    if (pubSummary.globalStats) pubSummary.globalStats.sharedStoryClusters = formattedClusters;
+    if (pubSummary.globalStats) {
+      pubSummary.globalStats.lastClusteredAt = nowIso;
+      pubSummary.globalStats.sharedStoryClusters = formattedClusters;
+    }
     fs.writeFileSync('public/data/summary.json', JSON.stringify(pubSummary), 'utf8');
   }
 
