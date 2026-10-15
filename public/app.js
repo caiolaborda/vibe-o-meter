@@ -127,21 +127,21 @@ function getStoryImage(art) {
   return pool[hash];
 }
 
-function findRelatedCoverage(art, allArticles) {
+function findRelatedCoverage(art) {
   const related = [];
   const currentTitle = (art.title || '').toLowerCase().trim();
   const currentClean = cleanHeadlineTitle(art.title);
   const currentUrl = canonicalUrl(art.link || art.url);
 
-  // 1. From AI-generated sharedStoryClusters
+  // Only match verified cross-outlet stories from AI-generated sharedStoryClusters
   const clusters = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
   for (const c of clusters) {
     const isMatch = (c.coverage || []).some(m => {
       if (currentUrl && m.link && canonicalUrl(m.link) === currentUrl) return true;
       if (currentClean && m.title && cleanHeadlineTitle(m.title) === currentClean) return true;
       const mTitle = (m.title || '').toLowerCase().trim();
-      return (mTitle.length >= 15 && currentTitle.includes(mTitle.slice(0, 30))) ||
-             (currentTitle.length >= 15 && mTitle.includes(currentTitle.slice(0, 30)));
+      return (mTitle.length >= 18 && currentTitle.includes(mTitle.slice(0, 32))) ||
+             (currentTitle.length >= 18 && mTitle.includes(currentTitle.slice(0, 32)));
     });
     if (isMatch) {
       (c.coverage || []).forEach(m => {
@@ -159,43 +159,18 @@ function findRelatedCoverage(art, allArticles) {
     }
   }
 
-  // 2. Supplement with Keyword/Topic Cross-Outlet Matching across full candidate pool
-  if (allArticles && allArticles.length > 0 && related.length < 4) {
-    const stopWords = new Set(['about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second', 'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over', 'under', 'while', 'where', 'these', 'those', 'found', 'says', 'amid', 'thought']);
-    const normalizeWords = (str) => (str || '')
-      .toLowerCase()
-      .replace(/türkiye|turkiye|turkish/g, 'turkey')
-      .replace(/britain|british|\buk\b/g, 'uk')
-      .replace(/united states|\bu\.s\.\b|\busa\b|american/g, 'usa')
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .split(/\s+/)
-      .filter(w => w.length >= 4 && !stopWords.has(w));
-
-    const words = normalizeWords(currentTitle);
-      
-    if (words.length > 0) {
-      for (const other of allArticles) {
-        if (other.sourceId !== art.sourceId && !related.some(r => r.sourceId === other.sourceId)) {
-          const otherTitle = (other.title || '').toLowerCase();
-          const otherWords = new Set(normalizeWords(otherTitle));
-          const matchCount = words.filter(w => otherWords.has(w) || (w.length >= 5 && otherTitle.includes(w))).length;
-          if (matchCount >= 2 || (words.length === 1 && matchCount === 1 && other.category === art.category)) {
-            related.push({
-              sourceId: other.sourceId,
-              sourceName: other.sourceName,
-              title: other.title,
-              sentiment: other.sentiment,
-              link: other.url || other.link
-            });
-            if (related.length >= 4) break;
-          }
-        }
-      }
-    }
-  }
-
-  return related.slice(0, 4);
+  return related.slice(0, 6);
 }
+
+window.toggleSilverCoverageDrawer = function(btn, event) {
+  if (event) event.stopPropagation();
+  const cardBody = btn.closest('.silver-card-body');
+  if (!cardBody) return;
+  const drawer = cardBody.querySelector('.silver-coverage-drawer');
+  if (!drawer) return;
+  const isOpen = drawer.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+};
 
 function attachSwipeListeners(el) {
   if (!el) return;
@@ -249,7 +224,6 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
     minute: '2-digit'
   });
 
-  const moodLabel = getMoodLabel(art.sentiment);
   let cleanDesc = (art.description || '')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
@@ -266,24 +240,43 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
   const heroImgUrl = getStoryImage(art);
   const storyUrl = art.url || art.link || '#';
 
-  let relatedHTML = '';
+  let drawerHTML = '';
+  let footerLeftHTML = `<span class="silver-origin-label">Published by ${art.sourceName}</span>`;
+
   if (related && related.length > 0) {
-    relatedHTML = `
-      <div class="silver-related-box">
-        <div class="silver-related-label">
-          <i data-lucide="layers" style="width:12px;height:12px;"></i>
-          <span>Related Outlet Coverage:</span>
+    const rowsHTML = related.map(r => {
+      const meta = SOURCE_META[r.sourceId] || { color: '#3b82f6' };
+      const cleanHeadline = (r.title || '').replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com).*$/i, '').trim();
+      return `
+        <a href="${r.link}" target="_blank" rel="noopener noreferrer" class="silver-cluster-outlet-row" title="${cleanHeadline.replace(/"/g, '&quot;')}">
+          <span class="cluster-row-source" style="border-left: 3px solid ${meta.color};">
+            ${getSourceFlagHTML(r.sourceId)} ${r.sourceName}
+          </span>
+          <span class="cluster-row-headline">${cleanHeadline}</span>
+          <span class="cluster-row-score ${r.sentiment > 0.15 ? 'pos' : ''}">${r.sentiment > 0 ? '+' : ''}${r.sentiment.toFixed(2)}</span>
+          <i data-lucide="external-link" style="width:11px;height:11px;flex-shrink:0;opacity:0.65;"></i>
+        </a>
+      `;
+    }).join('');
+
+    drawerHTML = `
+      <div class="silver-coverage-drawer">
+        <div class="silver-drawer-header">
+          <span><i data-lucide="layers" style="width:12px;height:12px;"></i> Related Outlet Coverage (${related.length})</span>
+          <button type="button" class="silver-drawer-close" onclick="toggleSilverCoverageDrawer(this, event)" aria-label="Close">×</button>
         </div>
-        <div class="silver-related-chips">
-          ${related.map(r => `
-            <a href="${r.link}" target="_blank" rel="noopener noreferrer" class="silver-related-chip" title="${r.title.replace(/"/g, '&quot;')}">
-              <span class="related-chip-outlet">${r.sourceName}</span>
-              <span class="related-chip-score ${r.sentiment > 0.15 ? 'pos' : ''}">${r.sentiment > 0 ? '+' : ''}${r.sentiment.toFixed(2)}</span>
-              <i data-lucide="external-link" style="width:10px;height:10px;"></i>
-            </a>
-          `).join('')}
+        <div class="silver-cluster-rows">
+          ${rowsHTML}
         </div>
       </div>
+    `;
+
+    footerLeftHTML = `
+      <button type="button" class="silver-coverage-toggle-btn" onclick="toggleSilverCoverageDrawer(this, event)">
+        <i data-lucide="layers" style="width:12px;height:12px;"></i>
+        <span>+${related.length} Related Outlet${related.length === 1 ? '' : 's'}</span>
+        <i data-lucide="chevron-up" class="drawer-chevron" style="width:12px;height:12px;"></i>
+      </button>
     `;
   }
 
@@ -317,11 +310,11 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
 
       <p class="silver-story-desc">${cleanDesc}</p>
 
-      ${relatedHTML}
+      ${drawerHTML}
 
       <div class="silver-story-footer">
         <div class="silver-footer-left">
-          <span class="silver-origin-label">Published by ${art.sourceName}</span>
+          ${footerLeftHTML}
         </div>
         <div class="silver-footer-actions">
           <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${storyUrl}', this)" title="Copy link to clipboard">
@@ -340,11 +333,22 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
 
 function normalizeSilverTokens(str) {
   const stopWords = new Set([
-    'about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second',
-    'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over', 'under',
-    'while', 'where', 'these', 'those', 'found', 'says', 'amid', 'thought', 'prize', 'awarded',
-    'work', 'help', 'helped', 'helps', 'save', 'saved', 'saves', 'life', 'lives', 'back', 'bill',
-    'pass', 'passed', 'tackle', 'wins'
+    'about', 'after', 'again', 'against', 'amid', 'among', 'around', 'awarded', 'back', 'been',
+    'before', 'behind', 'between', 'beyond', 'bill', 'both', 'calls', 'claim', 'claims', 'could',
+    'despite', 'down', 'even', 'find', 'finds', 'first', 'five', 'four', 'from', 'gave', 'give',
+    'good', 'have', 'help', 'helped', 'helps', 'high', 'home', 'into', 'just', 'keep', 'kept',
+    'know', 'last', 'late', 'latest', 'lead', 'left', 'life', 'like', 'live', 'lives', 'long',
+    'look', 'made', 'major', 'make', 'makes', 'many', 'more', 'most', 'much', 'must', 'near',
+    'need', 'news', 'next', 'nine', 'only', 'open', 'other', 'over', 'part', 'pass', 'passed',
+    'past', 'people', 'plan', 'plans', 'play', 'post', 'prize', 'push', 'report', 'reports',
+    'right', 'rise', 'rule', 'rules', 'said', 'save', 'saved', 'saves', 'says', 'second', 'seen',
+    'seek', 'seeks', 'seven', 'show', 'shows', 'side', 'since', 'some', 'soon', 'state', 'states',
+    'still', 'stop', 'study', 'tackle', 'take', 'takes', 'talk', 'talks', 'team', 'tell', 'tells',
+    'than', 'that', 'their', 'them', 'then', 'there', 'these', 'they', 'this', 'those', 'thought',
+    'three', 'time', 'times', 'today', 'told', 'took', 'turn', 'turns', 'under', 'until', 'upon',
+    'used', 'very', 'vote', 'want', 'wants', 'warn', 'warns', 'week', 'weeks', 'well', 'were',
+    'what', 'when', 'where', 'which', 'while', 'will', 'wins', 'with', 'within', 'without',
+    'work', 'works', 'world', 'would', 'year', 'years', 'young'
   ]);
   return (str || '')
     .toLowerCase()
@@ -513,11 +517,7 @@ function createSilverClusterCardHTML(item, idx) {
     cleanDesc = `Confirmed constructive story reported across ${item.articles.length} international newsrooms.`;
   }
 
-  // Render interactive outlet breakdown list (top 3 shown as full headline rows, any additional shown as compact chips)
-  const topRows = item.articles.slice(0, 3);
-  const extraChips = item.articles.slice(3);
-
-  const outletRowsHTML = topRows.map(m => {
+  const outletRowsHTML = item.articles.map(m => {
     const meta = SOURCE_META[m.sourceId] || { color: '#3b82f6' };
     const cleanHeadline = (m.title || '').replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com).*$/i, '').trim();
     const url = m.url || m.link || '#';
@@ -532,18 +532,6 @@ function createSilverClusterCardHTML(item, idx) {
       </a>
     `;
   }).join('');
-
-  const extraChipsHTML = extraChips.length > 0 ? `
-    <div class="silver-related-chips" style="margin-top: 0.45rem;">
-      ${extraChips.map(r => `
-        <a href="${r.url || r.link || '#'}" target="_blank" rel="noopener noreferrer" class="silver-related-chip" title="${(r.title || '').replace(/"/g, '&quot;')}">
-          <span class="related-chip-outlet">${getSourceFlagHTML(r.sourceId)} ${r.sourceName}</span>
-          <span class="related-chip-score pos">+${r.sentiment.toFixed(2)}</span>
-          <i data-lucide="external-link" style="width:10px;height:10px;"></i>
-        </a>
-      `).join('')}
-    </div>
-  ` : '';
 
   const outletDotsHTML = item.articles.slice(0, 6).map(m => {
     const meta = SOURCE_META[m.sourceId] || { color: '#10b981' };
@@ -588,20 +576,23 @@ function createSilverClusterCardHTML(item, idx) {
 
       <p class="silver-story-desc">${cleanDesc}</p>
 
-      <div class="silver-cluster-box">
-        <div class="silver-related-label">
-          <i data-lucide="newspaper" style="width:12px;height:12px;"></i>
-          <span>Aggregated Coverage (${item.articles.length} Newsrooms):</span>
+      <div class="silver-coverage-drawer">
+        <div class="silver-drawer-header">
+          <span><i data-lucide="newspaper" style="width:12px;height:12px;"></i> Aggregated Coverage (${item.articles.length} Newsrooms)</span>
+          <button type="button" class="silver-drawer-close" onclick="toggleSilverCoverageDrawer(this, event)" aria-label="Close">×</button>
         </div>
         <div class="silver-cluster-rows">
           ${outletRowsHTML}
         </div>
-        ${extraChipsHTML}
       </div>
 
       <div class="silver-story-footer">
         <div class="silver-footer-left">
-          <span class="silver-origin-label">Peak +${item.maxSentiment.toFixed(2)} (${item.articles[0].sourceName})</span>
+          <button type="button" class="silver-coverage-toggle-btn" onclick="toggleSilverCoverageDrawer(this, event)">
+            ${outletDotsHTML}
+            <span>${item.articles.length} Newsrooms (+${item.maxSentiment.toFixed(2)} Peak)</span>
+            <i data-lucide="chevron-up" class="drawer-chevron" style="width:12px;height:12px;"></i>
+          </button>
         </div>
         <div class="silver-footer-actions">
           <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${leadUrl}', this)" title="Copy link to clipboard">
@@ -609,7 +600,7 @@ function createSilverClusterCardHTML(item, idx) {
             <span>Share</span>
           </button>
           <a href="${leadUrl}" target="_blank" rel="noopener noreferrer" class="silver-read-btn">
-            <span>Read Lead Report</span>
+            <span>Read Lead</span>
             <i data-lucide="external-link" style="width:12px;height:12px;"></i>
           </a>
         </div>
