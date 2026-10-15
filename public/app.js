@@ -338,6 +338,286 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
   `;
 }
 
+function normalizeSilverTokens(str) {
+  const stopWords = new Set([
+    'about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second',
+    'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over', 'under',
+    'while', 'where', 'these', 'those', 'found', 'says', 'amid', 'thought', 'prize', 'awarded',
+    'work', 'help', 'helped', 'helps', 'save', 'saved', 'saves', 'life', 'lives', 'back', 'bill',
+    'pass', 'passed', 'tackle', 'wins'
+  ]);
+  return (str || '')
+    .toLowerCase()
+    .replace(/(\d),(\d)/g, '$1$2')
+    .replace(/\b(türkiye|turkiye|turkish)\b/g, 'turkey')
+    .replace(/\b(britain|british|uk)\b/g, 'uk')
+    .replace(/\b(united states|u\.s\.|usa|americans?)\b/g, 'usa')
+    .replace(/working\s+week|work\s+week/g, 'workweek')
+    .replace(/\b(economists?|economics?|economies|economy)\b/g, 'economics')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 4 && !stopWords.has(w));
+}
+
+function groupSilverArticlesIntoFeedItems(uniqueArticles) {
+  const used = new Set();
+  const feedItems = [];
+  const clusters = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
+
+  // 1. Group via AI-generated sharedStoryClusters first
+  clusters.forEach(cl => {
+    const matched = [];
+    const clTokens = new Set(normalizeSilverTokens(cl.story + ' ' + (cl.coverage || []).map(c => c.title).join(' ')));
+    uniqueArticles.forEach((a, idx) => {
+      if (used.has(idx)) return;
+      const aClean = cleanHeadlineTitle(a.title);
+      const aUrl = canonicalUrl(a.link || a.url);
+      const inCl = (cl.coverage || []).some(c =>
+        (aUrl && c.link && canonicalUrl(c.link) === aUrl) ||
+        (aClean && c.title && cleanHeadlineTitle(c.title) === aClean)
+      );
+      const toksA = normalizeSilverTokens(a.title);
+      const sharedCl = toksA.filter(t => clTokens.has(t));
+      if (inCl || sharedCl.length >= 3) {
+        matched.push({ a, idx });
+      }
+    });
+
+    const positiveClusterCov = (cl.coverage || []).filter(c => typeof c.sentiment === 'number' && c.sentiment > 0.05);
+    if (matched.length >= 2 || (matched.length === 1 && cl.averageSentiment > 0.15 && positiveClusterCov.length >= 2)) {
+      matched.forEach(m => used.add(m.idx));
+      const rawCov = [...matched.map(m => m.a)];
+      positiveClusterCov.forEach(c => {
+        if (!rawCov.some(x => x.sourceId === c.sourceId)) {
+          rawCov.push(c);
+        }
+      });
+      rawCov.sort((x, y) => y.sentiment - x.sentiment);
+      const seenS = new Set();
+      const dedupedCov = [];
+      rawCov.forEach(x => {
+        if (!seenS.has(x.sourceId)) {
+          seenS.add(x.sourceId);
+          dedupedCov.push(x);
+        }
+      });
+
+      if (dedupedCov.length >= 2) {
+        const avgScore = Number((dedupedCov.reduce((s, x) => s + x.sentiment, 0) / dedupedCov.length).toFixed(2));
+        const leadArt = matched[0].a;
+        feedItems.push({
+          isCluster: true,
+          title: cl.story || leadArt.title,
+          summary: cl.summary || leadArt.description || '',
+          category: leadArt.category || 'world',
+          pubDate: leadArt.pubDate,
+          sentiment: avgScore,
+          maxSentiment: dedupedCov[0].sentiment,
+          leadArticle: rawCov.find(x => x.imageUrl) || leadArt,
+          articles: dedupedCov
+        });
+      } else {
+        matched.forEach(m => used.delete(m.idx));
+      }
+    }
+  });
+
+  // 2. Group remaining multi-outlet duplicate stories by normalized entity/keyword overlap
+  uniqueArticles.forEach((a, idx) => {
+    if (used.has(idx)) return;
+    used.add(idx);
+    const toksA = new Set(normalizeSilverTokens(a.title));
+    const groupArts = [a];
+
+    uniqueArticles.forEach((b, jdx) => {
+      if (used.has(jdx)) return;
+      const toksB = normalizeSilverTokens(b.title);
+      const shared = toksB.filter(t => toksA.has(t));
+      const timeDiffH = Math.abs(new Date(a.pubDate) - new Date(b.pubDate)) / 3600000;
+      if (shared.length >= 3 || (shared.length >= 2 && timeDiffH <= 48 && shared.some(w => w.length >= 6))) {
+        used.add(jdx);
+        groupArts.push(b);
+      }
+    });
+
+    const seenS = new Set();
+    const dedupedOutlets = [];
+    groupArts.forEach(g => {
+      if (!seenS.has(g.sourceId)) {
+        seenS.add(g.sourceId);
+        dedupedOutlets.push(g);
+      }
+    });
+
+    if (dedupedOutlets.length >= 2) {
+      dedupedOutlets.sort((x, y) => y.sentiment - x.sentiment);
+      const avgScore = Number((dedupedOutlets.reduce((s, x) => s + x.sentiment, 0) / dedupedOutlets.length).toFixed(2));
+      const cleanLeadTitle = a.title.replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com|BBC|The Guardian|Sky News).*$/i, '').trim();
+      feedItems.push({
+        isCluster: true,
+        title: cleanLeadTitle,
+        summary: a.description || '',
+        category: a.category || 'world',
+        pubDate: a.pubDate,
+        sentiment: avgScore,
+        maxSentiment: dedupedOutlets[0].sentiment,
+        leadArticle: groupArts.find(x => x.imageUrl) || a,
+        articles: dedupedOutlets
+      });
+    } else {
+      feedItems.push({
+        isCluster: false,
+        ...a
+      });
+    }
+  });
+
+  // Sort feed items descending by sentiment score (breaking ties with maxSentiment)
+  feedItems.sort((a, b) => (b.sentiment - a.sentiment) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment)));
+  return feedItems;
+}
+
+function createSilverClusterCardHTML(item, idx) {
+  let rankBadgeHTML = '';
+  if (idx === 0) {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-gold"><i data-lucide="crown" style="width:12px;height:12px;"></i> #1 TOP BREAKTHROUGH</span>`;
+  } else if (idx === 1) {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-silver"><i data-lucide="award" style="width:12px;height:12px;"></i> #2 RUNNER UP</span>`;
+  } else if (idx === 2) {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-bronze"><i data-lucide="medal" style="width:12px;height:12px;"></i> #3 SPOTLIGHT</span>`;
+  } else {
+    rankBadgeHTML = `<span class="silver-rank-pill rank-standard">#${idx + 1}</span>`;
+  }
+
+  const leadArt = item.leadArticle || item.articles[0];
+  const heroImgUrl = getStoryImage(leadArt);
+  const leadUrl = leadArt.url || leadArt.link || '#';
+  const dateObj = new Date(item.pubDate || leadArt.pubDate);
+  const dateFormatted = dateObj.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  let cleanDesc = (item.summary || leadArt.description || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!cleanDesc || cleanDesc.length < 15) {
+    cleanDesc = `Confirmed constructive story reported across ${item.articles.length} international newsrooms.`;
+  }
+
+  // Render interactive outlet breakdown list (top 3 shown as full headline rows, any additional shown as compact chips)
+  const topRows = item.articles.slice(0, 3);
+  const extraChips = item.articles.slice(3);
+
+  const outletRowsHTML = topRows.map(m => {
+    const meta = SOURCE_META[m.sourceId] || { color: '#3b82f6' };
+    const cleanHeadline = (m.title || '').replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com).*$/i, '').trim();
+    const url = m.url || m.link || '#';
+    return `
+      <a href="${url}" target="_blank" rel="noopener noreferrer" class="silver-cluster-outlet-row" title="${cleanHeadline.replace(/"/g, '&quot;')}">
+        <span class="cluster-row-source" style="border-left: 3px solid ${meta.color};">
+          ${getSourceFlagHTML(m.sourceId)} ${m.sourceName}
+        </span>
+        <span class="cluster-row-headline">${cleanHeadline}</span>
+        <span class="cluster-row-score">+${m.sentiment.toFixed(2)}</span>
+        <i data-lucide="external-link" style="width:11px;height:11px;flex-shrink:0;opacity:0.65;"></i>
+      </a>
+    `;
+  }).join('');
+
+  const extraChipsHTML = extraChips.length > 0 ? `
+    <div class="silver-related-chips" style="margin-top: 0.45rem;">
+      ${extraChips.map(r => `
+        <a href="${r.url || r.link || '#'}" target="_blank" rel="noopener noreferrer" class="silver-related-chip" title="${(r.title || '').replace(/"/g, '&quot;')}">
+          <span class="related-chip-outlet">${getSourceFlagHTML(r.sourceId)} ${r.sourceName}</span>
+          <span class="related-chip-score pos">+${r.sentiment.toFixed(2)}</span>
+          <i data-lucide="external-link" style="width:10px;height:10px;"></i>
+        </a>
+      `).join('')}
+    </div>
+  ` : '';
+
+  const outletDotsHTML = item.articles.slice(0, 6).map(m => {
+    const meta = SOURCE_META[m.sourceId] || { color: '#10b981' };
+    return `<span class="silver-cluster-dot" style="background:${meta.color}" title="${m.sourceName}"></span>`;
+  }).join('');
+
+  return `
+    <div class="silver-media-hero">
+      <img src="${heroImgUrl}" alt="${item.title.replace(/"/g, '&quot;')}" class="silver-hero-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'" />
+      <div class="silver-media-overlay"></div>
+      <div class="silver-media-badges">
+        <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+          ${rankBadgeHTML}
+          <span class="silver-cluster-pill">
+            <i data-lucide="layers" style="width:11px;height:11px;"></i> ${item.articles.length} OUTLETS
+          </span>
+        </div>
+        <span class="silver-score-badge" title="Average across ${item.articles.length} outlets (Peak +${item.maxSentiment.toFixed(2)})">
+          <i data-lucide="sparkles" style="width:12px;height:12px;"></i> Avg +${item.sentiment.toFixed(2)}
+        </span>
+      </div>
+    </div>
+
+    <div class="silver-card-body">
+      <div class="silver-story-meta-bar">
+        <div class="silver-story-meta-left">
+          <span class="silver-consensus-tag">
+            ${outletDotsHTML}
+            <span>Cross-Outlet Story</span>
+          </span>
+          <span class="cat-badge ${item.category || 'other'}">${item.category === 'climate' ? '🌱 Nature & Climate' : (item.category || 'other')}</span>
+        </div>
+        <div class="silver-story-meta-right">
+          <i data-lucide="clock" style="width:12px;height:12px;"></i>
+          <span>${dateFormatted}</span>
+        </div>
+      </div>
+
+      <h2 class="silver-story-title">
+        <a href="${leadUrl}" target="_blank" rel="noopener noreferrer">${item.title}</a>
+      </h2>
+
+      <p class="silver-story-desc">${cleanDesc}</p>
+
+      <div class="silver-cluster-box">
+        <div class="silver-related-label">
+          <i data-lucide="newspaper" style="width:12px;height:12px;"></i>
+          <span>Aggregated Coverage (${item.articles.length} Newsrooms):</span>
+        </div>
+        <div class="silver-cluster-rows">
+          ${outletRowsHTML}
+        </div>
+        ${extraChipsHTML}
+      </div>
+
+      <div class="silver-story-footer">
+        <div class="silver-footer-left">
+          <span class="silver-origin-label">Peak +${item.maxSentiment.toFixed(2)} (${item.articles[0].sourceName})</span>
+        </div>
+        <div class="silver-footer-actions">
+          <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${leadUrl}', this)" title="Copy link to clipboard">
+            <i data-lucide="link" style="width:13px;height:13px;"></i>
+            <span>Share</span>
+          </button>
+          <a href="${leadUrl}" target="_blank" rel="noopener noreferrer" class="silver-read-btn">
+            <span>Read Lead Report</span>
+            <i data-lucide="external-link" style="width:12px;height:12px;"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // RSS Feed URLs for copying
 const SOURCE_FEEDS = {
   bbc: 'https://feeds.bbci.co.uk/news/rss.xml',
@@ -1657,12 +1937,13 @@ function renderSilverEdition() {
     uniqueArticles.push(art);
   }
 
-  // 3. Sort descending by highest positive sentiment score
+  // 3. Sort descending by highest positive sentiment score and group multi-outlet clusters
   uniqueArticles.sort((a, b) => b.sentiment - a.sentiment);
+  const feedItems = groupSilverArticlesIntoFeedItems(uniqueArticles);
 
   // 4. Update Summary Stats Pills
   const topScore = uniqueArticles.length > 0 ? uniqueArticles[0].sentiment : 0;
-  if (statCount) statCount.innerText = `${uniqueArticles.length} Stor${uniqueArticles.length === 1 ? 'y' : 'ies'}`;
+  if (statCount) statCount.innerText = `${feedItems.length} Stor${feedItems.length === 1 ? 'y' : 'ies'}`;
   if (statTopScore) statTopScore.innerText = topScore > 0 ? `+${topScore.toFixed(2)} Max` : '+0.00 Max';
 
   // Timeframe label for contextual messaging
@@ -1675,7 +1956,7 @@ function renderSilverEdition() {
   else if (state.filters.time === '30d') timeframeLabel = 'Past 30 Days';
   else if (state.filters.time === 'all') timeframeLabel = 'All Time';
 
-  if (uniqueArticles.length === 0) {
+  if (feedItems.length === 0) {
     container.innerHTML = `
       <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; width: 100%;">
         <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">⛅</div>
@@ -1696,29 +1977,34 @@ function renderSilverEdition() {
 
   // 5. Render directly in BroadSheet Grid (sliced to initial batch for instant 60fps switching)
   state.silverLimit = state.silverLimit || 24;
-  const displayedArticles = uniqueArticles.slice(0, state.silverLimit);
+  const displayedItems = feedItems.slice(0, state.silverLimit);
 
   const gridEl = document.createElement('div');
   gridEl.className = 'silver-grid-container';
 
-  displayedArticles.forEach((art, idx) => {
+  displayedItems.forEach((item, idx) => {
     const card = document.createElement('div');
-    card.className = 'silver-story-card silver-card-grid-item';
-    const related = findRelatedCoverage(art, uniqueArticles);
-    card.innerHTML = createSilverCardHTML(art, idx, related, false);
+    if (item.isCluster) {
+      card.className = 'silver-story-card silver-card-grid-item silver-cluster-card';
+      card.innerHTML = createSilverClusterCardHTML(item, idx);
+    } else {
+      card.className = 'silver-story-card silver-card-grid-item';
+      const related = findRelatedCoverage(item, uniqueArticles);
+      card.innerHTML = createSilverCardHTML(item, idx, related, false);
+    }
     gridEl.appendChild(card);
   });
 
   container.appendChild(gridEl);
 
   // Load More Constructive Stories
-  if (uniqueArticles.length > displayedArticles.length) {
+  if (feedItems.length > displayedItems.length) {
     const moreWrap = document.createElement('div');
     moreWrap.className = 'silver-load-more-wrap';
     moreWrap.style.cssText = 'text-align: center; margin: 2rem 0 3.5rem 0; width: 100%;';
     moreWrap.innerHTML = `
       <button class="btn btn-secondary" style="padding: 0.75rem 2.2rem; border-radius: 28px; font-weight: 600; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--bg-card); border: 1.5px solid var(--border-color); color: var(--text-primary); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);" id="silver-load-more-btn">
-        <i data-lucide="chevron-down"></i> Load More Constructive Stories (${displayedArticles.length} of ${uniqueArticles.length})
+        <i data-lucide="chevron-down"></i> Load More Constructive Stories (${displayedItems.length} of ${feedItems.length})
       </button>
     `;
     container.appendChild(moreWrap);

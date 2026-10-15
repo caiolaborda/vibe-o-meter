@@ -5139,8 +5139,116 @@ select option {
   }
 }
 
+/* ============================================================
+   AGGREGATED CLUSTER CARDS IN SOME GOOD NEWS
+   ============================================================ */
+.silver-cluster-card {
+  border: 1.5px solid rgba(16, 185, 129, 0.35) !important;
+  box-shadow: 0 8px 26px rgba(16, 185, 129, 0.08);
+}
 
+.silver-cluster-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(15, 23, 42, 0.82);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  backdrop-filter: blur(8px);
+}
 
+.silver-consensus-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--positive-color, #10b981);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
 
+.silver-cluster-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
 
+.silver-cluster-box {
+  margin-top: auto;
+  margin-bottom: 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.05);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+}
+
+.silver-cluster-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+  margin-top: 0.45rem;
+}
+
+.silver-cluster-outlet-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.38rem 0.5rem;
+  border-radius: 7px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.16s ease;
+}
+
+.silver-cluster-outlet-row:hover {
+  border-color: rgba(16, 185, 129, 0.45);
+  transform: translateX(2px);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.cluster-row-source {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding-left: 0.4rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cluster-row-headline {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.cluster-row-score {
+  font-size: 0.7rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 0.12rem 0.38rem;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
 
