@@ -417,6 +417,7 @@ function attachAntidoteSwipeCard(cardEl, totalDeckSteps) {
   let isHorizontalSwipe = null;
 
   const onStart = (clientX, clientY, target) => {
+    if (!cardEl.classList.contains('is-active')) return;
     if (target && target.closest('a, button, .silver-consensus-hover-wrap')) return;
     startX = clientX;
     startY = clientY;
@@ -438,13 +439,13 @@ function attachAntidoteSwipeCard(cardEl, totalDeckSteps) {
     if (e && e.cancelable) e.preventDefault();
 
     currentX = dx;
-    const rot = Math.max(-10, Math.min(10, dx * 0.045));
-    cardEl.style.transform = `translate3d(${dx}px, ${Math.abs(dx) * 0.03}px, 0) rotate(${rot}deg)`;
+    const rot = Math.max(-8, Math.min(8, dx * 0.04));
+    cardEl.style.transform = `translate3d(${dx}px, 0, 0) rotate(${rot}deg)`;
 
     const badgeNext = cardEl.querySelector('.swipe-stamp-next');
     const badgePrev = cardEl.querySelector('.swipe-stamp-prev');
-    if (badgeNext) badgeNext.style.opacity = dx < -25 ? Math.min(1, (-dx - 25) / 70) : 0;
-    if (badgePrev) badgePrev.style.opacity = dx > 25 ? Math.min(1, (dx - 25) / 70) : 0;
+    if (badgeNext) badgeNext.style.opacity = dx < -25 ? Math.min(1, (-dx - 25) / 65) : 0;
+    if (badgePrev) badgePrev.style.opacity = dx > 25 ? Math.min(1, (dx - 25) / 65) : 0;
   };
 
   const onEnd = () => {
@@ -455,19 +456,16 @@ function attachAntidoteSwipeCard(cardEl, totalDeckSteps) {
     if (badgeNext) badgeNext.style.opacity = 0;
     if (badgePrev) badgePrev.style.opacity = 0;
 
-    cardEl.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease';
-    if (currentX < -65 && state.silverDeckIndex < totalDeckSteps - 1) {
-      cardEl.style.transform = 'translate3d(-115%, 20px, 0) rotate(-12deg)';
-      cardEl.style.opacity = '0';
-      setTimeout(() => navigateSilverDeck(1), 170);
-    } else if (currentX > 65 && state.silverDeckIndex > 0) {
-      cardEl.style.transform = 'translate3d(115%, 20px, 0) rotate(12deg)';
-      cardEl.style.opacity = '0';
-      setTimeout(() => navigateSilverDeck(-1), 170);
-    } else {
-      cardEl.style.transform = '';
-    }
+    const deltaX = currentX;
     currentX = 0;
+    cardEl.style.transition = '';
+    cardEl.style.transform = '';
+
+    if (deltaX < -55 && state.silverDeckIndex < totalDeckSteps - 1) {
+      navigateSilverDeck(1);
+    } else if (deltaX > 55 && state.silverDeckIndex > 0) {
+      navigateSilverDeck(-1);
+    }
   };
 
   cardEl.addEventListener('touchstart', (e) => {
@@ -592,11 +590,13 @@ function createSilverCardHTML(art, idx, related, isDeckCard) {
         </div>
       </div>
 
-      <h2 class="silver-story-title">
-        <a href="${storyUrl}" target="_blank" rel="noopener noreferrer">${cleanTitle}</a>
-      </h2>
+      <div class="silver-card-scroll-area">
+        <h2 class="silver-story-title">
+          <a href="${storyUrl}" target="_blank" rel="noopener noreferrer">${cleanTitle}</a>
+        </h2>
 
-      <p class="silver-story-desc">${cleanDesc}</p>
+        <p class="silver-story-desc">${cleanDesc}</p>
+      </div>
 
       <div class="silver-story-footer ${isDeckCard ? 'is-deck-footer' : ''}">
         <div class="silver-footer-actions">
@@ -874,11 +874,13 @@ function createSilverClusterCardHTML(item, idx, isDeckCard) {
         </div>
       </div>
 
-      <h2 class="silver-story-title">
-        <a href="${leadUrl}" target="_blank" rel="noopener noreferrer">${cleanTitle}</a>
-      </h2>
+      <div class="silver-card-scroll-area">
+        <h2 class="silver-story-title">
+          <a href="${leadUrl}" target="_blank" rel="noopener noreferrer">${cleanTitle}</a>
+        </h2>
 
-      <p class="silver-story-desc">${cleanDesc}</p>
+        <p class="silver-story-desc">${cleanDesc}</p>
+      </div>
 
       <div class="silver-story-footer ${isDeckCard ? 'is-deck-footer' : ''}">
         <div class="silver-footer-actions">
@@ -2114,24 +2116,98 @@ function switchEdition(edition) {
 // Global navigation helpers for Silver Edition
 window.setSilverViewMode = function(mode) {
   state.silverViewMode = mode === 'grid' ? 'grid' : 'antidote';
-  if (state.silverViewMode === 'antidote' && state.silverDeckIndex > 5) {
+  if (state.silverViewMode === 'antidote' && state.silverDeckIndex > (state.silverAntidoteCount || 5)) {
     state.silverDeckIndex = 0;
   }
   renderSilverEdition();
 };
+
+function syncAntidoteDeckDOM() {
+  const stackFrame = document.querySelector('#silver-stories-container .antidote-stack-frame');
+  if (!stackFrame) return false;
+
+  const totalStories = state.silverAntidoteCount || 5;
+  const currentIdx = Math.max(0, Math.min(totalStories, state.silverDeckIndex || 0));
+  state.silverDeckIndex = currentIdx;
+  const isComplete = currentIdx >= totalStories;
+
+  const cards = stackFrame.querySelectorAll('.antidote-deck-card[data-deck-idx]');
+  if (!cards.length) return false;
+
+  cards.forEach(cardEl => {
+    const idx = parseInt(cardEl.getAttribute('data-deck-idx'), 10);
+    cardEl.classList.remove('is-active', 'is-next', 'is-third', 'is-hidden');
+    cardEl.style.transition = '';
+    cardEl.style.transform = '';
+
+    const nextStamp = cardEl.querySelector('.swipe-stamp-next');
+    const prevStamp = cardEl.querySelector('.swipe-stamp-prev');
+    if (nextStamp) nextStamp.style.opacity = '0';
+    if (prevStamp) prevStamp.style.opacity = '0';
+
+    if (idx === currentIdx) {
+      cardEl.classList.add('is-active');
+      cardEl.setAttribute('aria-hidden', 'false');
+      const scrollArea = cardEl.querySelector('.silver-card-scroll-area, .antidote-recap-list');
+      if (scrollArea) scrollArea.scrollTop = 0;
+    } else if (!isComplete && idx === currentIdx + 1 && idx < totalStories) {
+      cardEl.classList.add('is-next');
+      cardEl.setAttribute('aria-hidden', 'true');
+    } else if (!isComplete && idx === currentIdx + 2 && idx < totalStories) {
+      cardEl.classList.add('is-third');
+      cardEl.setAttribute('aria-hidden', 'true');
+    } else {
+      cardEl.classList.add('is-hidden');
+      cardEl.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  // Update progress bubbles
+  const bubbles = document.querySelectorAll('#silver-stories-container .antidote-step-bubble[data-step-idx]');
+  bubbles.forEach(btn => {
+    const bIdx = parseInt(btn.getAttribute('data-step-idx'), 10);
+    btn.classList.remove('active', 'visited');
+    if (bIdx === currentIdx) {
+      btn.classList.add('active');
+    } else if (bIdx < currentIdx && bIdx < totalStories) {
+      btn.classList.add('visited');
+    }
+  });
+
+  // Update hint text
+  const hintSpan = document.querySelector('#silver-stories-container .antidote-hint-pill span');
+  if (hintSpan) {
+    hintSpan.textContent = isComplete
+      ? 'Ritual Complete ☀️'
+      : `Story ${currentIdx + 1} of ${totalStories} • Swipe or use ← →`;
+  }
+
+  // Update side arrow disabled states
+  const prevArrow = document.querySelector('#silver-stories-container .antidote-side-arrow.prev');
+  const nextArrow = document.querySelector('#silver-stories-container .antidote-side-arrow.next');
+  if (prevArrow) prevArrow.disabled = (currentIdx === 0);
+  if (nextArrow) nextArrow.disabled = isComplete;
+
+  return true;
+}
 
 window.navigateSilverDeck = function(delta) {
   const maxStep = state.silverAntidoteCount || 5;
   const nextIdx = Math.max(0, Math.min(maxStep, (state.silverDeckIndex || 0) + delta));
   if (nextIdx !== state.silverDeckIndex) {
     state.silverDeckIndex = nextIdx;
-    renderSilverEdition();
+    if (!syncAntidoteDeckDOM()) {
+      renderSilverEdition();
+    }
   }
 };
 
 window.jumpSilverDeck = function(idx) {
-  state.silverDeckIndex = Math.max(0, idx);
-  renderSilverEdition();
+  const maxStep = state.silverAntidoteCount || 5;
+  state.silverDeckIndex = Math.max(0, Math.min(maxStep, idx));
+  if (!syncAntidoteDeckDOM()) {
+    renderSilverEdition();
+  }
 };
 
 // Keyboard arrow navigation for Daily 5 Antidote Deck
@@ -2188,6 +2264,15 @@ function renderSilverEdition() {
 
   usedSilverFallbackImages.clear();
 
+  const activeMode = state.silverViewMode || 'antidote';
+  silverSection.setAttribute('data-silver-mode', activeMode);
+
+  // Only show Topic + Timeframe filter dropdowns when viewing All Good News ('grid')
+  const controlsRight = silverSection.querySelector('.silver-controls-right');
+  if (controlsRight) {
+    controlsRight.style.display = activeMode === 'grid' ? 'flex' : 'none';
+  }
+
   const silverTimeSelect = document.getElementById('silver-timeframe-select');
   if (silverTimeSelect && state.filters.time) {
     silverTimeSelect.value = state.filters.time;
@@ -2208,6 +2293,8 @@ function renderSilverEdition() {
   // 1. Gather all positive articles from resolvedSources (already time-filtered)
   const positiveArticles = [];
   const activeTopic = (state.silverTopic || 'all').toLowerCase();
+  // In Daily 5 Antidote mode, always pull across all topics unless user is in All Good News grid mode
+  const effectiveTopic = activeMode === 'antidote' ? 'all' : activeTopic;
 
   Object.keys(resolvedSources).forEach(sourceId => {
     const src = resolvedSources[sourceId];
@@ -2215,17 +2302,17 @@ function renderSilverEdition() {
       src.articles.forEach(art => {
         if (typeof art.sentiment === 'number' && art.sentiment > 0.05) {
           const cat = (art.category || 'other').toLowerCase();
-          let matchesTopic = (activeTopic === 'all');
+          let matchesTopic = (effectiveTopic === 'all');
           if (!matchesTopic) {
-            if (activeTopic === 'climate') matchesTopic = (cat === 'climate' || cat === 'environment' || cat === 'nature');
-            else if (activeTopic === 'science') matchesTopic = (cat === 'science' || cat === 'technology' || cat === 'tech' || cat === 'space');
-            else if (activeTopic === 'world') matchesTopic = (cat === 'world' || cat === 'society' || cat === 'global');
-            else if (activeTopic === 'health') matchesTopic = (cat === 'health' || cat === 'medicine');
-            else if (activeTopic === 'business') matchesTopic = (cat === 'business' || cat === 'markets' || cat === 'economy');
-            else if (activeTopic === 'politics') matchesTopic = (cat === 'politics' || cat === 'policy');
-            else if (activeTopic === 'culture') matchesTopic = (cat === 'culture' || cat === 'arts' || cat === 'entertainment');
-            else if (activeTopic === 'sports') matchesTopic = (cat === 'sports');
-            else matchesTopic = (cat === activeTopic);
+            if (effectiveTopic === 'climate') matchesTopic = (cat === 'climate' || cat === 'environment' || cat === 'nature');
+            else if (effectiveTopic === 'science') matchesTopic = (cat === 'science' || cat === 'technology' || cat === 'tech' || cat === 'space');
+            else if (effectiveTopic === 'world') matchesTopic = (cat === 'world' || cat === 'society' || cat === 'global');
+            else if (effectiveTopic === 'health') matchesTopic = (cat === 'health' || cat === 'medicine');
+            else if (effectiveTopic === 'business') matchesTopic = (cat === 'business' || cat === 'markets' || cat === 'economy');
+            else if (effectiveTopic === 'politics') matchesTopic = (cat === 'politics' || cat === 'policy');
+            else if (effectiveTopic === 'culture') matchesTopic = (cat === 'culture' || cat === 'arts' || cat === 'entertainment');
+            else if (effectiveTopic === 'sports') matchesTopic = (cat === 'sports');
+            else matchesTopic = (cat === effectiveTopic);
           }
 
           if (matchesTopic) {
@@ -2259,11 +2346,10 @@ function renderSilverEdition() {
   uniqueArticles.sort((a, b) => b.sentiment - a.sentiment);
   const feedItems = groupSilverArticlesIntoFeedItems(uniqueArticles);
 
-  // Sync top mode buttons & count label
+  // Sync mode buttons & count label
   const btnAntidote = document.getElementById('silver-mode-antidote');
   const btnGrid = document.getElementById('silver-mode-grid');
   const gridCountLabel = document.getElementById('silver-grid-count-label');
-  const activeMode = state.silverViewMode || 'antidote';
   if (btnAntidote) btnAntidote.classList.toggle('active', activeMode === 'antidote');
   if (btnGrid) btnGrid.classList.toggle('active', activeMode === 'grid');
   if (gridCountLabel) gridCountLabel.innerText = `All Good News (${feedItems.length})`;
@@ -2288,10 +2374,10 @@ function renderSilverEdition() {
         <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">⛅</div>
         <h3 style="font-size: 1.45rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism Across Global News</h3>
         <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem; line-height: 1.6;">
-          During ${timeframeLabel}${activeTopic !== 'all' ? ` for "${activeTopic}"` : ''}, major global newsrooms published near-zero qualifying positive stories. Commercial news desks operate overwhelmingly on threats and alarm. Expand the window below to uncover constructive breakthroughs.
+          During ${timeframeLabel}${effectiveTopic !== 'all' ? ` for "${effectiveTopic}"` : ''}, major global newsrooms published near-zero qualifying positive stories. Commercial news desks operate overwhelmingly on threats and alarm. Expand the window below to uncover constructive breakthroughs.
         </p>
         <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
-          ${activeTopic !== 'all' ? '<button class="btn btn-secondary btn-sm" onclick="setSilverTopic(\'all\')">Clear Topic Filter</button>' : ''}
+          ${effectiveTopic !== 'all' ? '<button class="btn btn-secondary btn-sm" onclick="setSilverTopic(\'all\')">Clear Topic Filter</button>' : ''}
           <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('3d')">Expand to Past 3 Days</button>
           <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('7d')">Expand to Past 7 Days</button>
           <button class="btn btn-secondary btn-sm" onclick="setSilverTimeframe('all')">View All-Time Top Stories</button>
@@ -2301,7 +2387,7 @@ function renderSilverEdition() {
     return;
   }
 
-  // MODE A: DAILY 5 ANTIDOTE (TINDER-STYLE INTERACTIVE STACKED CARD DECK)
+  // MODE A: DAILY 5 ANTIDOTE (PRE-RENDERED STACKED CARD DECK FOR INSTANT ZERO-GLITCH SWITCHING)
   if (activeMode === 'antidote') {
     const antidoteItems = feedItems.slice(0, 5);
     state.silverAntidoteCount = antidoteItems.length;
@@ -2312,12 +2398,12 @@ function renderSilverEdition() {
     const progressPillsHTML = antidoteItems.map((it, i) => {
       const stateClass = i === currentIdx ? 'active' : (i < currentIdx ? 'visited' : '');
       return `
-        <button type="button" class="antidote-step-bubble ${stateClass}" onclick="jumpSilverDeck(${i})" title="Breakthrough #${i + 1}">
+        <button type="button" class="antidote-step-bubble ${stateClass}" data-step-idx="${i}" onclick="jumpSilverDeck(${i})" title="Breakthrough #${i + 1}">
           <span>#${i + 1}</span>
         </button>
       `;
     }).join('') + `
-      <button type="button" class="antidote-step-bubble finish-bubble ${isComplete ? 'active' : ''}" onclick="jumpSilverDeck(${antidoteItems.length})" title="Antidote Complete">
+      <button type="button" class="antidote-step-bubble finish-bubble ${isComplete ? 'active' : ''}" data-step-idx="${antidoteItems.length}" onclick="jumpSilverDeck(${antidoteItems.length})" title="Antidote Complete">
         <span>☀️ Done</span>
       </button>
     `;
@@ -2325,71 +2411,58 @@ function renderSilverEdition() {
     const stageWrap = document.createElement('div');
     stageWrap.className = 'silver-antidote-stage';
 
+    // Pre-render all 5 story cards + the 6th completion card once so switching never rebuilds DOM or reloads images
     let deckCardsHTML = '';
-    if (isComplete) {
-      const recapRowsHTML = antidoteItems.map((it, i) => {
-        const title = cleanDisplayHeadline(it.title || it.leadArticle?.title);
-        const url = it.isCluster ? (it.leadArticle?.url || it.leadArticle?.link || '#') : (it.url || it.link || '#');
-        const badge = it.isCluster ? `${it.articles.length} Outlets` : (it.sourceName || 'Global Press');
-        return `
-          <a href="${url}" target="_blank" rel="noopener noreferrer" class="antidote-recap-row">
-            <span class="recap-rank">#${i + 1}</span>
-            <span class="recap-title">${title}</span>
-            <span class="recap-meta">${badge} • +${it.sentiment.toFixed(2)}</span>
-            <i data-lucide="external-link" style="width:13px;height:13px;flex-shrink:0;opacity:0.65;"></i>
-          </a>
-        `;
-      }).join('');
+    antidoteItems.forEach((item, idx) => {
+      const innerHTML = item.isCluster
+        ? createSilverClusterCardHTML(item, idx, true)
+        : createSilverCardHTML(item, idx, findRelatedCoverage(item, uniqueArticles), true);
+      deckCardsHTML += `
+        <div class="silver-story-card antidote-deck-card ${item.isCluster ? 'silver-cluster-card' : ''} is-hidden" data-deck-idx="${idx}">
+          ${innerHTML}
+        </div>
+      `;
+    });
 
-      deckCardsHTML = `
-        <div class="silver-story-card antidote-deck-card antidote-completion-card is-active">
+    const recapRowsHTML = antidoteItems.map((it, i) => {
+      const title = cleanDisplayHeadline(it.title || it.leadArticle?.title);
+      const url = it.isCluster ? (it.leadArticle?.url || it.leadArticle?.link || '#') : (it.url || it.link || '#');
+      const badge = it.isCluster ? `${it.articles.length} Outlets` : (it.sourceName || 'Global Press');
+      return `
+        <a href="${url}" target="_blank" rel="noopener noreferrer" class="antidote-recap-row">
+          <span class="recap-rank">#${i + 1}</span>
+          <span class="recap-title">${title}</span>
+          <span class="recap-meta">${badge} • +${it.sentiment.toFixed(2)}</span>
+          <i data-lucide="external-link" style="width:13px;height:13px;flex-shrink:0;opacity:0.65;"></i>
+        </a>
+      `;
+    }).join('');
+
+    deckCardsHTML += `
+      <div class="silver-story-card antidote-deck-card antidote-completion-card is-hidden" data-deck-idx="${antidoteItems.length}">
+        <div class="antidote-completion-header">
           <div class="antidote-sun-orb">☀️</div>
           <span class="antidote-complete-pill">DAILY ANTIDOTE COMPLETE</span>
           <h2 class="antidote-complete-title">You're Caught Up on Human Progress.</h2>
           <p class="antidote-complete-desc">
-            You just absorbed the <strong>${antidoteItems.length} highest-impact breakthroughs</strong> from ${timeframeLabel}. Step away from the doomscroll and enjoy your day—or explore all <strong>${feedItems.length} constructive stories</strong> in the full dataset.
+            You just absorbed the <strong>${antidoteItems.length} highest-impact breakthroughs</strong> from ${timeframeLabel}. Step away from the doomscroll—or explore all <strong>${feedItems.length} constructive stories</strong> in the full dataset.
           </p>
-          <div class="antidote-recap-list">
-            ${recapRowsHTML}
-          </div>
-          <div class="antidote-complete-actions">
-            <button type="button" class="antidote-cta-primary" onclick="setSilverViewMode('grid')">
-              <i data-lucide="layout-grid" style="width:16px;height:16px;"></i>
-              <span>Browse All ${feedItems.length} Positive Stories</span>
-            </button>
-            <button type="button" class="antidote-cta-secondary" onclick="jumpSilverDeck(0)">
-              <i data-lucide="rotate-ccw" style="width:15px;height:15px;"></i>
-              <span>Replay Top ${antidoteItems.length}</span>
-            </button>
-          </div>
         </div>
-      `;
-    } else {
-      // Render background preview cards (next + third) for tactile physical stack depth
-      for (let offset = Math.min(2, antidoteItems.length - 1 - currentIdx); offset >= 1; offset--) {
-        const bgItem = antidoteItems[currentIdx + offset];
-        const depthClass = offset === 1 ? 'is-next' : 'is-third';
-        const bgHTML = bgItem.isCluster
-          ? createSilverClusterCardHTML(bgItem, currentIdx + offset, false)
-          : createSilverCardHTML(bgItem, currentIdx + offset, findRelatedCoverage(bgItem, uniqueArticles), false);
-        deckCardsHTML += `
-          <div class="silver-story-card antidote-deck-card ${bgItem.isCluster ? 'silver-cluster-card' : ''} ${depthClass}" aria-hidden="true">
-            ${bgHTML}
-          </div>
-        `;
-      }
-
-      // Render active foreground card
-      const activeItem = antidoteItems[currentIdx];
-      const activeHTML = activeItem.isCluster
-        ? createSilverClusterCardHTML(activeItem, currentIdx, true)
-        : createSilverCardHTML(activeItem, currentIdx, findRelatedCoverage(activeItem, uniqueArticles), true);
-      deckCardsHTML += `
-        <div class="silver-story-card antidote-deck-card ${activeItem.isCluster ? 'silver-cluster-card' : ''} is-active" id="active-antidote-card">
-          ${activeHTML}
+        <div class="antidote-recap-list">
+          ${recapRowsHTML}
         </div>
-      `;
-    }
+        <div class="antidote-complete-actions">
+          <button type="button" class="antidote-cta-primary" onclick="setSilverViewMode('grid')">
+            <i data-lucide="layout-grid" style="width:16px;height:16px;"></i>
+            <span>Browse All ${feedItems.length} Positive Stories</span>
+          </button>
+          <button type="button" class="antidote-cta-secondary" onclick="jumpSilverDeck(0)">
+            <i data-lucide="rotate-ccw" style="width:15px;height:15px;"></i>
+            <span>Replay Top ${antidoteItems.length}</span>
+          </button>
+        </div>
+      </div>
+    `;
 
     stageWrap.innerHTML = `
       <div class="antidote-progress-header">
@@ -2427,10 +2500,17 @@ function renderSilverEdition() {
 
     container.appendChild(stageWrap);
 
-    const activeCardEl = document.getElementById('active-antidote-card');
-    if (activeCardEl) {
-      attachAntidoteSwipeCard(activeCardEl, antidoteItems.length + 1);
-    }
+    // Attach swipe gesture listener to every pre-rendered story card
+    const storyCards = stageWrap.querySelectorAll('.antidote-deck-card[data-deck-idx]');
+    storyCards.forEach(cardEl => {
+      const idx = parseInt(cardEl.getAttribute('data-deck-idx'), 10);
+      if (idx < antidoteItems.length) {
+        attachAntidoteSwipeCard(cardEl, antidoteItems.length + 1);
+      }
+    });
+
+    // Apply initial active/next/third/hidden states
+    syncAntidoteDeckDOM();
 
     if (window.lucide && lucide.createIcons) {
       lucide.createIcons();
