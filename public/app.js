@@ -25,8 +25,9 @@ let state = {
     field: 'date', // 'date' or 'vibe'
     order: 'desc' // 'desc' or 'asc'
   },
-  edition: 'doom', // 'doom' (No Good News) or 'silver' (Some Good News)
+  edition: 'silver', // 'silver' (Some Good News - Default Home) or 'doom' (No Good News)
   silverTopic: 'all',
+  silverTime: '24h', // Decoupled timeframe for Some Good News
   silverViewMode: 'antidote', // 'antidote' (5-Story Antidote Deck) or 'grid' (All Good News Grid)
   silverDeckIndex: 0,
   headlinesLimit: 20,
@@ -1138,18 +1139,19 @@ function setupEventListeners() {
     });
   }
 
-  // Deep Dive Dedicated Timeframe Filter
+  // Deep Dive Dedicated Timeframe Filter (Decoupled from Some Good News)
   if (elements.deepdiveFilterTime) {
     elements.deepdiveFilterTime.addEventListener('change', (e) => {
-      state.filters.time = e.target.value;
+      const val = e.target.value;
+      state.filters.time = val;
       state.headlinesLimit = 20;
-      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
-      if (elements.filterTime) elements.filterTime.value = e.target.value;
-      const silverTime = document.getElementById('silver-timeframe-select');
-      if (silverTime) silverTime.value = e.target.value;
-      state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
+      if (elements.filterTime) elements.filterTime.value = val;
+      state.timelineRange = val === 'all' ? 'all' : (val === '7d' ? 'recent' : 'custom');
       updateTimelineButtonsUI();
-      updateAppUI();
+      runWithViewLoader(val === 'all' ? 'Loading All-Time Archive...' : 'Updating Timeframe...', () => {
+        updateAppUI();
+      });
     });
   }
 
@@ -1188,27 +1190,31 @@ function setupEventListeners() {
   
   if (elements.filterTime) {
     elements.filterTime.addEventListener('change', (e) => {
-      state.filters.time = e.target.value;
+      const val = e.target.value;
+      state.filters.time = val;
       state.headlinesLimit = 20;
-      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
-      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = e.target.value;
-      state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
+      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = val;
+      state.timelineRange = val === 'all' ? 'all' : (val === '7d' ? 'recent' : 'custom');
       updateTimelineButtonsUI();
-      updateAppUI();
+      runWithViewLoader(val === 'all' ? 'Loading All-Time Archive...' : 'Updating Timeframe...', () => {
+        updateAppUI();
+      });
     });
   }
 
   if (elements.quickTimeframeSelect) {
     elements.quickTimeframeSelect.addEventListener('change', (e) => {
-      state.filters.time = e.target.value;
+      const val = e.target.value;
+      state.filters.time = val;
       state.headlinesLimit = 20;
-      if (elements.filterTime) elements.filterTime.value = e.target.value;
-      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = e.target.value;
-      const silverTime = document.getElementById('silver-timeframe-select');
-      if (silverTime) silverTime.value = e.target.value;
-      state.timelineRange = e.target.value === 'all' ? 'all' : (e.target.value === '7d' ? 'recent' : 'custom');
+      if (elements.filterTime) elements.filterTime.value = val;
+      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = val;
+      state.timelineRange = val === 'all' ? 'all' : (val === '7d' ? 'recent' : 'custom');
       updateTimelineButtonsUI();
-      updateAppUI();
+      runWithViewLoader(val === 'all' ? 'Loading All-Time Archive...' : 'Updating Timeframe...', () => {
+        updateAppUI();
+      });
     });
   }
 
@@ -1262,39 +1268,45 @@ function setupEventListeners() {
     });
   }
 
-  // Two-Sided App Edition Switcher (No Good News vs Some Good News)
+  // Two-Sided App Edition Switcher (Some Good News vs No Good News)
   const editionDoom = document.getElementById('edition-btn-doom');
   const editionSilver = document.getElementById('edition-btn-silver');
   if (editionDoom && editionSilver) {
     editionDoom.addEventListener('click', () => {
+      if (state.edition === 'doom') return;
       switchEdition('doom');
     });
 
     editionSilver.addEventListener('click', () => {
+      if (state.edition === 'silver') return;
       switchEdition('silver');
     });
   }
 
-  // Silver Edition Topic Selector
+  // Silver Edition Topic Selector (Decoupled from No Good News)
   const silverTopicSelect = document.getElementById('silver-topic-select');
   if (silverTopicSelect) {
     silverTopicSelect.addEventListener('change', (e) => {
       state.silverTopic = e.target.value;
       state.silverLimit = 24;
-      renderSilverEdition();
+      runWithViewLoader('Filtering Positive Stories...', () => {
+        renderSilverEdition();
+        syncUrlState();
+      });
     });
   }
 
-  // Silver Edition Timeframe Selector
+  // Silver Edition Timeframe Selector (Decoupled from No Good News)
   const silverTimeSelect = document.getElementById('silver-timeframe-select');
   if (silverTimeSelect) {
     silverTimeSelect.addEventListener('change', (e) => {
-      state.filters.time = e.target.value;
-      state.headlinesLimit = 20;
+      const val = e.target.value;
+      state.silverTime = val;
       state.silverLimit = 24;
-      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = e.target.value;
-      if (elements.filterTime) elements.filterTime.value = e.target.value;
-      updateAppUI();
+      runWithViewLoader(val === 'all' ? 'Loading All-Time Good News...' : 'Updating Good News Timeframe...', () => {
+        renderSilverEdition();
+        syncUrlState();
+      });
     });
   }
 
@@ -1902,9 +1914,31 @@ function switchSpectrumViewMode(mode) {
   renderSpectrum();
 }
 
-// Compute dynamic statistics based on selected mode (local ensemble vs Gemini)
-function getResolvedSources() {
+// Smooth non-blocking view loader so toggle pills & dropdowns animate at 60fps before heavy DOM renders
+let viewLoaderTimer = null;
+function runWithViewLoader(label, workFn) {
+  const loader = document.getElementById('view-transition-loader');
+  const textEl = document.getElementById('view-loader-text');
+  if (loader && textEl) {
+    textEl.textContent = label || 'Loading stories...';
+    loader.classList.remove('hidden');
+  }
+  if (viewLoaderTimer) clearTimeout(viewLoaderTimer);
+  requestAnimationFrame(() => {
+    viewLoaderTimer = setTimeout(() => {
+      try {
+        workFn();
+      } finally {
+        if (loader) loader.classList.add('hidden');
+      }
+    }, 24);
+  });
+}
+
+// Compute dynamic statistics based on selected mode and optional timeOverride (decouples Some Good News vs No Good News)
+function getResolvedSources(timeOverride) {
   const resolved = {};
+  const activeTime = timeOverride || state.filters.time || '24h';
   
   Object.keys(state.sources).forEach(id => {
     const source = state.sources[id];
@@ -1919,18 +1953,18 @@ function getResolvedSources() {
     
     articles.forEach(art => {
       // Apply Time Range filter
-      if (state.filters.time !== 'all') {
+      if (activeTime !== 'all') {
         const artDate = new Date(art.pubDate);
         const timeDiff = new Date() - artDate;
         let limitMs = 0;
         
-        if (state.filters.time === '3h') limitMs = 3 * 60 * 60 * 1000;
-        else if (state.filters.time === '6h') limitMs = 6 * 60 * 60 * 1000;
-        else if (state.filters.time === '12h') limitMs = 12 * 60 * 60 * 1000;
-        else if (state.filters.time === '24h') limitMs = 24 * 60 * 60 * 1000;
-        else if (state.filters.time === '3d') limitMs = 3 * 24 * 60 * 60 * 1000;
-        else if (state.filters.time === '7d') limitMs = 7 * 24 * 60 * 60 * 1000;
-        else if (state.filters.time === '30d') limitMs = 30 * 24 * 60 * 60 * 1000;
+        if (activeTime === '3h') limitMs = 3 * 60 * 60 * 1000;
+        else if (activeTime === '6h') limitMs = 6 * 60 * 60 * 1000;
+        else if (activeTime === '12h') limitMs = 12 * 60 * 60 * 1000;
+        else if (activeTime === '24h') limitMs = 24 * 60 * 60 * 1000;
+        else if (activeTime === '3d') limitMs = 3 * 24 * 60 * 60 * 1000;
+        else if (activeTime === '7d') limitMs = 7 * 24 * 60 * 60 * 1000;
+        else if (activeTime === '30d') limitMs = 30 * 24 * 60 * 60 * 1000;
         
         if (timeDiff > limitMs) {
           return; // Skip article if outside time range
@@ -1992,8 +2026,8 @@ function updateAppUI() {
     return;
   }
   
-  // Resolve active sources metrics based on selected sentiment view mode
-  resolvedSources = getResolvedSources();
+  // Resolve active sources metrics for No Good News using state.filters.time
+  resolvedSources = getResolvedSources(state.filters.time);
   syncUrlState();
 
   // Update control bar texts
@@ -2045,7 +2079,7 @@ function updateAppUI() {
   }
 }
 
-// Two-Sided App Edition Switcher (No Good News vs Some Good News)
+// Two-Sided App Edition Switcher (Some Good News vs No Good News)
 function switchEdition(edition) {
   state.edition = edition;
   document.body.setAttribute('data-edition', edition);
@@ -2057,69 +2091,92 @@ function switchEdition(edition) {
   const pulseSection = document.getElementById('pulse-section');
   const quickNavBar = document.getElementById('quick-nav-bar');
 
+  // Update button classes & subtitle immediately so the sliding pill animates smoothly at 60fps
   if (edition === 'silver') {
     if (editionSilver) editionSilver.classList.add('active');
     if (editionDoom) editionDoom.classList.remove('active');
     if (editionSubtitle) {
       editionSubtitle.innerText = "Turns out not everything is on fire — Sifting rare specks of hope from the 24/7 doom machine";
     }
-    if (silverSection) {
-      silverSection.classList.remove('hidden');
-      silverSection.style.display = 'flex';
-    }
-    if (pulseSection) {
-      pulseSection.classList.add('hidden');
-      pulseSection.style.display = 'none';
-    }
-    if (quickNavBar) {
-      quickNavBar.classList.add('hidden');
-      quickNavBar.style.display = 'none';
-    }
-
-    // Hide all standard tab panels
-    document.querySelectorAll('.tab-panel').forEach(p => {
-      p.classList.add('hidden');
-      p.style.display = 'none';
-    });
-
-    renderSilverEdition();
   } else {
     if (editionDoom) editionDoom.classList.add('active');
     if (editionSilver) editionSilver.classList.remove('active');
     if (editionSubtitle) {
       editionSubtitle.innerText = "There's no such thing as good news — An autonomous daily audit of global media pessimism";
     }
-    if (silverSection) {
-      silverSection.classList.add('hidden');
-      silverSection.style.display = 'none';
-    }
-    if (quickNavBar) {
-      quickNavBar.classList.remove('hidden');
-      quickNavBar.style.display = 'flex';
-    }
-
-    // Reset inline display style on all tab panels so switchTab works cleanly
-    document.querySelectorAll('.tab-panel').forEach(p => {
-      p.style.display = '';
-    });
-
-    resolvedSources = getResolvedSources();
-    switchTab(state.activeTab || 'pulse');
   }
 
-  syncUrlState();
-  if (window.lucide && lucide.createIcons) {
-    lucide.createIcons();
-  }
+  const loaderLabel = edition === 'silver' ? 'Loading Some Good News...' : 'Loading Pessimism Audit...';
+  runWithViewLoader(loaderLabel, () => {
+    if (edition === 'silver') {
+      if (silverSection) {
+        silverSection.classList.remove('hidden');
+        silverSection.style.display = 'flex';
+      }
+      if (pulseSection) {
+        pulseSection.classList.add('hidden');
+        pulseSection.style.display = 'none';
+      }
+      if (quickNavBar) {
+        quickNavBar.classList.add('hidden');
+        quickNavBar.style.display = 'none';
+      }
+
+      // Hide all standard tab panels
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.add('hidden');
+        p.style.display = 'none';
+      });
+
+      renderSilverEdition();
+    } else {
+      if (silverSection) {
+        silverSection.classList.add('hidden');
+        silverSection.style.display = 'none';
+      }
+      if (quickNavBar) {
+        quickNavBar.classList.remove('hidden');
+        quickNavBar.style.display = 'flex';
+      }
+
+      // Reset inline display style on all tab panels so switchTab works cleanly
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.style.display = '';
+      });
+
+      resolvedSources = getResolvedSources(state.filters.time);
+      switchTab(state.activeTab || 'pulse');
+    }
+
+    syncUrlState();
+    if (window.lucide && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  });
 }
 
 // Global navigation helpers for Silver Edition
 window.setSilverViewMode = function(mode) {
-  state.silverViewMode = mode === 'grid' ? 'grid' : 'antidote';
-  if (state.silverViewMode === 'antidote' && state.silverDeckIndex > (state.silverAntidoteCount || 5)) {
+  const nextMode = mode === 'grid' ? 'grid' : 'antidote';
+  state.silverViewMode = nextMode;
+  if (nextMode === 'antidote' && state.silverDeckIndex > (state.silverAntidoteCount || 5)) {
     state.silverDeckIndex = 0;
   }
-  renderSilverEdition();
+
+  // Update active button states immediately for instant tactile feedback
+  const btnAntidote = document.getElementById('silver-mode-antidote');
+  const btnGrid = document.getElementById('silver-mode-grid');
+  const mobBtnAntidote = document.getElementById('silver-mobile-btn-antidote');
+  const mobBtnGrid = document.getElementById('silver-mobile-btn-grid');
+  if (btnAntidote) btnAntidote.classList.toggle('active', nextMode === 'antidote');
+  if (btnGrid) btnGrid.classList.toggle('active', nextMode === 'grid');
+  if (mobBtnAntidote) mobBtnAntidote.classList.toggle('active', nextMode === 'antidote');
+  if (mobBtnGrid) mobBtnGrid.classList.toggle('active', nextMode === 'grid');
+
+  const label = nextMode === 'grid' ? 'Loading All Good News...' : 'Loading Daily 5 Antidote...';
+  runWithViewLoader(label, () => {
+    renderSilverEdition();
+  });
 };
 
 function syncAntidoteDeckDOM() {
@@ -2224,14 +2281,15 @@ document.addEventListener('keydown', (e) => {
 });
 
 window.setSilverTimeframe = function(val) {
-  state.filters.time = val;
+  state.silverTime = val;
   state.silverLimit = 24;
   state.silverDeckIndex = 0;
   const silverSelect = document.getElementById('silver-timeframe-select');
   if (silverSelect) silverSelect.value = val;
-  if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
-  if (elements.filterTime) elements.filterTime.value = val;
-  updateAppUI();
+  runWithViewLoader(val === 'all' ? 'Loading All-Time Good News...' : 'Updating Good News Timeframe...', () => {
+    renderSilverEdition();
+    syncUrlState();
+  });
 };
 
 window.setSilverTopic = function(val) {
@@ -2240,7 +2298,10 @@ window.setSilverTopic = function(val) {
   state.silverDeckIndex = 0;
   const topicSelect = document.getElementById('silver-topic-select');
   if (topicSelect) topicSelect.value = val;
-  renderSilverEdition();
+  runWithViewLoader('Filtering Positive Stories...', () => {
+    renderSilverEdition();
+    syncUrlState();
+  });
 };
 
 window.copyStoryLink = function(url, btn) {
@@ -2290,9 +2351,10 @@ function renderSilverEdition() {
     controlsRight.style.display = activeMode === 'grid' ? 'flex' : 'none';
   }
 
+  const activeSilverTime = state.silverTime || '24h';
   const silverTimeSelect = document.getElementById('silver-timeframe-select');
-  if (silverTimeSelect && state.filters.time) {
-    silverTimeSelect.value = state.filters.time;
+  if (silverTimeSelect) {
+    silverTimeSelect.value = activeSilverTime;
   }
 
   const silverTopicSelect = document.getElementById('silver-topic-select');
@@ -2307,14 +2369,17 @@ function renderSilverEdition() {
   if (!container) return;
   container.innerHTML = '';
 
-  // 1. Gather all positive articles from resolvedSources (already time-filtered)
+  // 1. Gather all positive articles using Some Good News's decoupled timeframe (state.silverTime)
+  // In Daily 5 Antidote mode, always pull from the past 24h across all topics (or state.silverTime if user explicitly expanded)
+  const effectiveTime = activeMode === 'antidote' ? (activeSilverTime === '24h' ? '24h' : activeSilverTime) : activeSilverTime;
+  const silverSources = getResolvedSources(effectiveTime);
+
   const positiveArticles = [];
   const activeTopic = (state.silverTopic || 'all').toLowerCase();
-  // In Daily 5 Antidote mode, always pull across all topics unless user is in All Good News grid mode
   const effectiveTopic = activeMode === 'antidote' ? 'all' : activeTopic;
 
-  Object.keys(resolvedSources).forEach(sourceId => {
-    const src = resolvedSources[sourceId];
+  Object.keys(silverSources).forEach(sourceId => {
+    const src = silverSources[sourceId];
     if (src && src.articles) {
       src.articles.forEach(art => {
         if (typeof art.sentiment === 'number' && art.sentiment > 0.05) {
@@ -2394,12 +2459,12 @@ function renderSilverEdition() {
 
   // Timeframe label for contextual messaging
   let timeframeLabel = 'Past 24 Hours';
-  if (state.filters.time === '6h') timeframeLabel = 'Past 6 Hours';
-  else if (state.filters.time === '12h') timeframeLabel = 'Past 12 Hours';
-  else if (state.filters.time === '3d') timeframeLabel = 'Past 3 Days';
-  else if (state.filters.time === '7d') timeframeLabel = 'Past 7 Days';
-  else if (state.filters.time === '30d') timeframeLabel = 'Past 30 Days';
-  else if (state.filters.time === 'all') timeframeLabel = 'All Time';
+  if (effectiveTime === '6h') timeframeLabel = 'Past 6 Hours';
+  else if (effectiveTime === '12h') timeframeLabel = 'Past 12 Hours';
+  else if (effectiveTime === '3d') timeframeLabel = 'Past 3 Days';
+  else if (effectiveTime === '7d') timeframeLabel = 'Past 7 Days';
+  else if (effectiveTime === '30d') timeframeLabel = 'Past 30 Days';
+  else if (effectiveTime === 'all') timeframeLabel = 'All Time';
 
   if (feedItems.length === 0) {
     container.innerHTML = `
@@ -2498,17 +2563,8 @@ function renderSilverEdition() {
       </div>
     `;
 
+    // Card viewport on TOP, 1-2-3-4-5-Done bar BENEATH the card on both desktop and mobile
     stageWrap.innerHTML = `
-      <div class="antidote-progress-header">
-        <div class="antidote-bubbles-row">
-          ${progressPillsHTML}
-        </div>
-        <button type="button" class="antidote-desktop-grid-switch" onclick="setSilverViewMode('grid')" title="Browse and filter the full constructive news dataset">
-          <i data-lucide="layout-grid" style="width:13px;height:13px;"></i>
-          <span>All Good News (${feedItems.length}) →</span>
-        </button>
-      </div>
-
       <div class="antidote-deck-viewport">
         <button type="button" class="antidote-side-arrow prev" onclick="navigateSilverDeck(-1)" ${currentIdx === 0 ? 'disabled' : ''} aria-label="Previous story">
           <i data-lucide="chevron-left"></i>
@@ -2520,6 +2576,16 @@ function renderSilverEdition() {
 
         <button type="button" class="antidote-side-arrow next" onclick="navigateSilverDeck(1)" ${isComplete ? 'disabled' : ''} aria-label="Next story">
           <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="antidote-progress-header">
+        <div class="antidote-bubbles-row">
+          ${progressPillsHTML}
+        </div>
+        <button type="button" class="antidote-desktop-grid-switch" onclick="setSilverViewMode('grid')" title="Browse and filter the full constructive news dataset">
+          <i data-lucide="layout-grid" style="width:13px;height:13px;"></i>
+          <span>All Good News (${feedItems.length}) →</span>
         </button>
       </div>
     `;
@@ -2544,7 +2610,7 @@ function renderSilverEdition() {
     return;
   }
 
-  // MODE B: FULL BROADSHEET GRID (WITH 5-STORY ANTIDOTE CHECKPOINT BANNER)
+  // MODE B: FULL BROADSHEET GRID (Clean 3-column rows without mid-grid banner interruption)
   state.silverLimit = state.silverLimit || 24;
   const displayedItems = feedItems.slice(0, state.silverLimit);
 
@@ -2562,26 +2628,6 @@ function renderSilverEdition() {
       card.innerHTML = createSilverCardHTML(item, idx, related, false);
     }
     gridEl.appendChild(card);
-
-    // Insert the 5-Story Daily Antidote Checkpoint Banner right after Story #5
-    if (idx === 4 && displayedItems.length > 5) {
-      const checkpoint = document.createElement('div');
-      checkpoint.className = 'silver-antidote-grid-checkpoint';
-      checkpoint.innerHTML = `
-        <div class="checkpoint-left">
-          <span class="checkpoint-sun">☀️</span>
-          <div>
-            <strong>5-Story Daily Antidote Complete</strong>
-            <p>You've read the top 5 highest-impact breakthroughs for ${timeframeLabel}. Pause here with a clear head—or keep scrolling to explore ${feedItems.length - 5} more positive stories below.</p>
-          </div>
-        </div>
-        <button type="button" class="antidote-bridge-btn" onclick="setSilverViewMode('antidote')">
-          <i data-lucide="sun" style="width:14px;height:14px;"></i>
-          <span>Switch to Swipe Deck</span>
-        </button>
-      `;
-      gridEl.appendChild(checkpoint);
-    }
   });
 
   container.appendChild(gridEl);
@@ -6150,13 +6196,19 @@ function restoreStateFromUrl() {
     const topicParam = params.get('topic') || params.get('category');
     const timeParam = params.get('time');
 
+    const wantsDoom = editionParam === 'doom' || editionParam === 'bad' || editionParam === 'audit' || (!editionParam && (tabParam || sourceParam));
+
     const normalizedTime = timeParam === '3h' ? '6h' : timeParam;
     if (normalizedTime && ['6h', '12h', '24h', '3d', '7d', '30d', 'all'].includes(normalizedTime)) {
-      state.filters.time = normalizedTime;
-      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = normalizedTime;
-      if (elements.filterTime) elements.filterTime.value = normalizedTime;
-      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = normalizedTime;
-      if (elements.silverTimeframeSelect) elements.silverTimeframeSelect.value = normalizedTime;
+      if (wantsDoom) {
+        state.filters.time = normalizedTime;
+        if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = normalizedTime;
+        if (elements.filterTime) elements.filterTime.value = normalizedTime;
+        if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = normalizedTime;
+      } else {
+        state.silverTime = normalizedTime;
+        if (elements.silverTimeframeSelect) elements.silverTimeframeSelect.value = normalizedTime;
+      }
     }
 
     if (sourceParam && state.sources && state.sources[sourceParam]) {
@@ -6165,21 +6217,28 @@ function restoreStateFromUrl() {
       if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = sourceParam;
     }
 
-    if (topicParam && ['world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports'].includes(topicParam)) {
-      state.filters.category = topicParam;
-      state.silverTopic = topicParam;
-      if (elements.filterCategory) elements.filterCategory.value = topicParam;
-      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = topicParam;
-      if (elements.silverTopicSelect) elements.silverTopicSelect.value = topicParam;
-      updateTopicPillsActive(topicParam);
+    if (topicParam && ['world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports', 'culture'].includes(topicParam)) {
+      if (wantsDoom) {
+        state.filters.category = topicParam;
+        if (elements.filterCategory) elements.filterCategory.value = topicParam;
+        if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = topicParam;
+        updateTopicPillsActive(topicParam);
+      } else {
+        state.silverTopic = topicParam;
+        if (elements.silverTopicSelect) elements.silverTopicSelect.value = topicParam;
+      }
     }
 
     updateFilterIndicator();
 
-    if (editionParam === 'good' || editionParam === 'silver') {
-      switchEdition('silver');
-    } else if (tabParam && ['pulse', 'trends', 'compare', 'deepdives', 'methodology'].includes(tabParam)) {
-      switchTab(tabParam);
+    if (wantsDoom) {
+      switchEdition('doom');
+      if (tabParam && ['pulse', 'trends', 'compare', 'deepdives', 'methodology'].includes(tabParam)) {
+        switchTab(tabParam);
+      }
+    } else {
+      state.edition = 'silver';
+      document.body.setAttribute('data-edition', 'silver');
     }
   } catch (e) {
     console.warn('Could not restore URL state:', e);
@@ -6193,15 +6252,14 @@ function syncUrlState() {
   try {
     const params = new URLSearchParams();
     if (state.edition === 'silver') {
-      params.set('edition', 'good');
       if (state.silverTopic && state.silverTopic !== 'all') params.set('topic', state.silverTopic);
+      if (state.silverTime && state.silverTime !== '24h') params.set('time', state.silverTime);
     } else {
+      params.set('edition', 'doom');
       if (state.activeTab && state.activeTab !== 'pulse') params.set('tab', state.activeTab);
       if (state.filters.source && state.filters.source !== 'all') params.set('outlet', state.filters.source);
       if (state.filters.category && state.filters.category !== 'all') params.set('topic', state.filters.category);
-    }
-    if (state.filters.time && state.filters.time !== '24h') {
-      params.set('time', state.filters.time);
+      if (state.filters.time && state.filters.time !== '24h') params.set('time', state.filters.time);
     }
 
     const qs = params.toString();

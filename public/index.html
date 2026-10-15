@@ -11,9 +11,9 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=4.4">
+  <link rel="stylesheet" href="style.css?v=4.5">
 </head>
-<body data-edition="doom">
+<body data-edition="silver" data-silver-mode="antidote">
 
   <!-- Background Glows -->
   <div class="glow glow-1"></div>
@@ -27,14 +27,15 @@
         <!-- Prominent Central Edition Switcher with Ambient Aura -->
         <div class="edition-toggle-stage">
           <div class="edition-ambient-glow" id="edition-ambient-glow"></div>
-          <div class="edition-toggle-wrap-large" id="edition-toggle-wrap" title="Toggle between the Pessimism Audit and Some Good News">
-            <button id="edition-btn-doom" class="edition-pill-btn active" data-edition="doom">
-              <i data-lucide="newspaper"></i>
-              <span>No Good News</span>
-            </button>
-            <button id="edition-btn-silver" class="edition-pill-btn" data-edition="silver">
+          <div class="edition-toggle-wrap-large" id="edition-toggle-wrap" title="Toggle between Some Good News and the Pessimism Audit">
+            <div class="edition-slider-pill" aria-hidden="true"></div>
+            <button id="edition-btn-silver" class="edition-pill-btn active" data-edition="silver">
               <i data-lucide="sun"></i>
               <span>Some Good News</span>
+            </button>
+            <button id="edition-btn-doom" class="edition-pill-btn" data-edition="doom">
+              <i data-lucide="newspaper"></i>
+              <span>No Good News</span>
             </button>
           </div>
         </div>
@@ -42,7 +43,7 @@
 
       <!-- Description directly below the central toggle -->
       <p class="edition-subtitle-central" id="edition-subtitle">
-        There's no such thing as good news — An autonomous daily audit of global media pessimism
+        Turns out not everything is on fire — Sifting rare specks of hope from the 24/7 doom machine
       </p>
 
       <div class="masthead-status-row">
@@ -50,8 +51,16 @@
       </div>
     </header>
 
+    <!-- INSTANT VIEW / TIMEFRAME TRANSITION LOADER -->
+    <div id="view-transition-loader" class="view-transition-loader hidden" role="status" aria-live="polite">
+      <div class="view-loader-pill">
+        <i data-lucide="loader-2" class="spin"></i>
+        <span id="view-loader-text">Loading stories...</span>
+      </div>
+    </div>
+
     <!-- DEDICATED SOME GOOD NEWS VIEW -->
-    <section class="silver-edition-section hidden" id="silver-edition-section">
+    <section class="silver-edition-section" id="silver-edition-section">
       <!-- Sunlit Quick Controls Bar -->
       <div class="silver-controls-bar">
         <div class="silver-controls-left">
@@ -113,7 +122,7 @@
     </section>
 
     <!-- STICKY DASHBOARD TABS & QUICK CONTROLS (Positioned at top of all tabs) -->
-    <nav class="quick-nav-bar" id="quick-nav-bar">
+    <nav class="quick-nav-bar hidden" id="quick-nav-bar">
       <div class="quick-nav-links">
         <button class="nav-pill-btn active" data-tab="pulse" id="tab-btn-pulse">
           <i data-lucide="sparkles"></i><span>Daily Pulse</span>
@@ -163,7 +172,7 @@
     </nav>
 
     <!-- HERO: GLOBAL NEWS VIBE LANDING (Prominent landing feature on Daily Pulse) -->
-    <section class="pulse-hero-section" id="pulse-section">
+    <section class="pulse-hero-section hidden" id="pulse-section">
       <div class="pulse-hero-card card">
         
         <!-- Big Clean Hero Banner with Integrated Meta -->
@@ -304,7 +313,7 @@
     </section>
 
     <!-- TAB 1: DAILY PULSE (Headline Stream) -->
-    <main id="tab-panel-pulse" class="tab-panel">
+    <main id="tab-panel-pulse" class="tab-panel hidden">
       <!-- HEADLINES EXPLORER (MERGED INTO A SINGLE UNIFIED BOX) -->
     <!-- TOP DEVELOPING STORIES (LAST 24 HOURS) -->
     <section class="top-stories-section" id="top-stories-section">
@@ -1004,6 +1013,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=4.4"></script>
+  <script src="app.js?v=4.5"></script>
 </body>
 </html>
