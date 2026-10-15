@@ -1914,8 +1914,17 @@ function switchSpectrumViewMode(mode) {
   renderSpectrum();
 }
 
-// Smooth non-blocking view loader so toggle pills & dropdowns animate at 60fps before heavy DOM renders
+// Smooth non-blocking view loader reserved strictly for heavy multi-thousand-article archive queries ('all' / '30d')
 let viewLoaderTimer = null;
+function hideViewLoaderImmediately() {
+  if (viewLoaderTimer) {
+    clearTimeout(viewLoaderTimer);
+    viewLoaderTimer = null;
+  }
+  const loader = document.getElementById('view-transition-loader');
+  if (loader) loader.classList.add('hidden');
+}
+
 function runWithViewLoader(label, workFn) {
   const loader = document.getElementById('view-transition-loader');
   const textEl = document.getElementById('view-loader-text');
@@ -1933,6 +1942,78 @@ function runWithViewLoader(label, workFn) {
       }
     }, 24);
   });
+}
+
+// 24-Hour / New-Day Cache Reset for Some Good News Daily 5 Antidote
+const ANTIDOTE_STORAGE_KEY = 'vibe_daily_antidote_state_v1';
+const ANTIDOTE_RESET_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+function getLocalDayKey(ts = Date.now()) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function loadAntidoteProgress() {
+  try {
+    const raw = localStorage.getItem(ANTIDOTE_STORAGE_KEY);
+    const now = Date.now();
+    const todayKey = getLocalDayKey(now);
+    if (!raw) {
+      const initial = { deckIndex: 0, cycleStartMs: now, dayKey: todayKey };
+      localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(initial));
+      state.silverDeckIndex = 0;
+      return initial;
+    }
+    const parsed = JSON.parse(raw);
+    const cycleStartMs = Number(parsed?.cycleStartMs) || 0;
+    const elapsed = now - cycleStartMs;
+    const isNewDay = parsed?.dayKey && parsed.dayKey !== todayKey;
+    // Reset to Story #1 if 24+ hours have passed OR it is a new calendar day
+    if (!cycleStartMs || elapsed >= ANTIDOTE_RESET_WINDOW_MS || isNewDay) {
+      const fresh = { deckIndex: 0, cycleStartMs: now, dayKey: todayKey };
+      localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(fresh));
+      state.silverDeckIndex = 0;
+      return fresh;
+    }
+    const savedIdx = typeof parsed.deckIndex === 'number' ? Math.max(0, Math.min(5, parsed.deckIndex)) : 0;
+    state.silverDeckIndex = savedIdx;
+    return { deckIndex: savedIdx, cycleStartMs, dayKey: parsed.dayKey || todayKey };
+  } catch (e) {
+    return { deckIndex: state.silverDeckIndex || 0, cycleStartMs: Date.now(), dayKey: getLocalDayKey() };
+  }
+}
+
+function saveAntidoteProgress(deckIndex) {
+  try {
+    const current = loadAntidoteProgress();
+    const updated = {
+      deckIndex: Math.max(0, Math.min(5, Number(deckIndex) || 0)),
+      cycleStartMs: current.cycleStartMs || Date.now(),
+      dayKey: current.dayKey || getLocalDayKey()
+    };
+    localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(updated));
+  } catch (e) {
+    // Ignore storage quota / private mode errors
+  }
+}
+
+function getHoursUntilNextAntidote() {
+  try {
+    // Calculate hours until the next 4-hour sync cycle OR remaining 24h cycle window
+    if (state.lastUpdated) {
+      const lastSyncMs = new Date(state.lastUpdated).getTime();
+      if (!isNaN(lastSyncMs)) {
+        const nextSyncMs = lastSyncMs + (4 * 60 * 60 * 1000);
+        const diffHrs = Math.ceil((nextSyncMs - Date.now()) / (60 * 60 * 1000));
+        if (diffHrs >= 1 && diffHrs <= 4) return diffHrs;
+      }
+    }
+    const current = loadAntidoteProgress();
+    const remainingMs = Math.max(0, (current.cycleStartMs + ANTIDOTE_RESET_WINDOW_MS) - Date.now());
+    return Math.max(1, Math.min(24, Math.ceil(remainingMs / (60 * 60 * 1000))));
+  } catch (e) {
+    return 4;
+  }
 }
 
 // Compute dynamic statistics based on selected mode and optional timeOverride (decouples Some Good News vs No Good News)
@@ -2079,8 +2160,9 @@ function updateAppUI() {
   }
 }
 
-// Two-Sided App Edition Switcher (Some Good News vs No Good News)
+// Two-Sided App Edition Switcher (Some Good News vs No Good News) — Synchronous single-frame swap for smooth CSS fade
 function switchEdition(edition) {
+  hideViewLoaderImmediately();
   state.edition = edition;
   document.body.setAttribute('data-edition', edition);
 
@@ -2091,79 +2173,76 @@ function switchEdition(edition) {
   const pulseSection = document.getElementById('pulse-section');
   const quickNavBar = document.getElementById('quick-nav-bar');
 
-  // Update button classes & subtitle immediately so the sliding pill animates smoothly at 60fps
+  // Update button classes, subtitle, and DOM sections in the exact same frame so background & layout transition together
   if (edition === 'silver') {
     if (editionSilver) editionSilver.classList.add('active');
     if (editionDoom) editionDoom.classList.remove('active');
     if (editionSubtitle) {
       editionSubtitle.innerText = "Turns out not everything is on fire — Sifting rare specks of hope from the 24/7 doom machine";
     }
+
+    if (silverSection) {
+      silverSection.classList.remove('hidden');
+      silverSection.style.display = 'flex';
+    }
+    if (pulseSection) {
+      pulseSection.classList.add('hidden');
+      pulseSection.style.display = 'none';
+    }
+    if (quickNavBar) {
+      quickNavBar.classList.add('hidden');
+      quickNavBar.style.display = 'none';
+    }
+
+    // Hide all standard tab panels immediately
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.add('hidden');
+      p.style.display = 'none';
+    });
+
+    renderSilverEdition();
   } else {
     if (editionDoom) editionDoom.classList.add('active');
     if (editionSilver) editionSilver.classList.remove('active');
     if (editionSubtitle) {
       editionSubtitle.innerText = "There's no such thing as good news — An autonomous daily audit of global media pessimism";
     }
+
+    if (silverSection) {
+      silverSection.classList.add('hidden');
+      silverSection.style.display = 'none';
+    }
+    if (quickNavBar) {
+      quickNavBar.classList.remove('hidden');
+      quickNavBar.style.display = 'flex';
+    }
+
+    // Reset inline display style on all tab panels so switchTab works cleanly
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.style.display = '';
+    });
+
+    resolvedSources = getResolvedSources(state.filters.time);
+    switchTab(state.activeTab || 'pulse');
   }
 
-  const loaderLabel = edition === 'silver' ? 'Loading Some Good News...' : 'Loading Pessimism Audit...';
-  runWithViewLoader(loaderLabel, () => {
-    if (edition === 'silver') {
-      if (silverSection) {
-        silverSection.classList.remove('hidden');
-        silverSection.style.display = 'flex';
-      }
-      if (pulseSection) {
-        pulseSection.classList.add('hidden');
-        pulseSection.style.display = 'none';
-      }
-      if (quickNavBar) {
-        quickNavBar.classList.add('hidden');
-        quickNavBar.style.display = 'none';
-      }
-
-      // Hide all standard tab panels
-      document.querySelectorAll('.tab-panel').forEach(p => {
-        p.classList.add('hidden');
-        p.style.display = 'none';
-      });
-
-      renderSilverEdition();
-    } else {
-      if (silverSection) {
-        silverSection.classList.add('hidden');
-        silverSection.style.display = 'none';
-      }
-      if (quickNavBar) {
-        quickNavBar.classList.remove('hidden');
-        quickNavBar.style.display = 'flex';
-      }
-
-      // Reset inline display style on all tab panels so switchTab works cleanly
-      document.querySelectorAll('.tab-panel').forEach(p => {
-        p.style.display = '';
-      });
-
-      resolvedSources = getResolvedSources(state.filters.time);
-      switchTab(state.activeTab || 'pulse');
-    }
-
-    syncUrlState();
-    if (window.lucide && lucide.createIcons) {
-      lucide.createIcons();
-    }
-  });
+  syncUrlState();
+  if (window.lucide && lucide.createIcons) {
+    lucide.createIcons();
+  }
 }
 
 // Global navigation helpers for Silver Edition
 window.setSilverViewMode = function(mode) {
+  hideViewLoaderImmediately();
   const nextMode = mode === 'grid' ? 'grid' : 'antidote';
   state.silverViewMode = nextMode;
   if (nextMode === 'antidote' && state.silverDeckIndex > (state.silverAntidoteCount || 5)) {
     state.silverDeckIndex = 0;
+    saveAntidoteProgress(0);
   }
 
-  // Update active button states immediately for instant tactile feedback
+  // Update active button states and render synchronously in the same frame
   const btnAntidote = document.getElementById('silver-mode-antidote');
   const btnGrid = document.getElementById('silver-mode-grid');
   const mobBtnAntidote = document.getElementById('silver-mobile-btn-antidote');
@@ -2173,10 +2252,7 @@ window.setSilverViewMode = function(mode) {
   if (mobBtnAntidote) mobBtnAntidote.classList.toggle('active', nextMode === 'antidote');
   if (mobBtnGrid) mobBtnGrid.classList.toggle('active', nextMode === 'grid');
 
-  const label = nextMode === 'grid' ? 'Loading All Good News...' : 'Loading Daily 5 Antidote...';
-  runWithViewLoader(label, () => {
-    renderSilverEdition();
-  });
+  renderSilverEdition();
 };
 
 function syncAntidoteDeckDOM() {
@@ -2253,6 +2329,7 @@ window.navigateSilverDeck = function(delta) {
   const nextIdx = Math.max(0, Math.min(maxStep, (state.silverDeckIndex || 0) + delta));
   if (nextIdx !== state.silverDeckIndex) {
     state.silverDeckIndex = nextIdx;
+    saveAntidoteProgress(nextIdx);
     if (!syncAntidoteDeckDOM()) {
       renderSilverEdition();
     }
@@ -2262,6 +2339,7 @@ window.navigateSilverDeck = function(delta) {
 window.jumpSilverDeck = function(idx) {
   const maxStep = state.silverAntidoteCount || 5;
   state.silverDeckIndex = Math.max(0, Math.min(maxStep, idx));
+  saveAntidoteProgress(state.silverDeckIndex);
   if (!syncAntidoteDeckDOM()) {
     renderSilverEdition();
   }
@@ -2286,10 +2364,15 @@ window.setSilverTimeframe = function(val) {
   state.silverDeckIndex = 0;
   const silverSelect = document.getElementById('silver-timeframe-select');
   if (silverSelect) silverSelect.value = val;
-  runWithViewLoader(val === 'all' ? 'Loading All-Time Good News...' : 'Updating Good News Timeframe...', () => {
+  if (val === 'all' || val === '30d') {
+    runWithViewLoader(val === 'all' ? 'Loading All-Time Good News...' : 'Loading 30-Day Archive...', () => {
+      renderSilverEdition();
+      syncUrlState();
+    });
+  } else {
     renderSilverEdition();
     syncUrlState();
-  });
+  }
 };
 
 window.setSilverTopic = function(val) {
@@ -2298,10 +2381,8 @@ window.setSilverTopic = function(val) {
   state.silverDeckIndex = 0;
   const topicSelect = document.getElementById('silver-topic-select');
   if (topicSelect) topicSelect.value = val;
-  runWithViewLoader('Filtering Positive Stories...', () => {
-    renderSilverEdition();
-    syncUrlState();
-  });
+  renderSilverEdition();
+  syncUrlState();
 };
 
 window.copyStoryLink = function(url, btn) {
@@ -2334,6 +2415,9 @@ function isBackgroundSeriesOrMixedFeature(item) {
 function renderSilverEdition() {
   const silverSection = document.getElementById('silver-edition-section');
   if (!silverSection) return;
+
+  // Ensure 24-hour / new-day reset is checked whenever rendering Some Good News
+  loadAntidoteProgress();
 
   usedSilverFallbackImages.clear();
 
@@ -2537,14 +2621,17 @@ function renderSilverEdition() {
       `;
     }).join('');
 
+    const hoursLeft = getHoursUntilNextAntidote();
+    const hoursText = hoursLeft === 1 ? '1 hr' : `${hoursLeft} hrs`;
+
     deckCardsHTML += `
       <div class="silver-story-card antidote-deck-card antidote-completion-card is-hidden" data-deck-idx="${antidoteItems.length}">
         <div class="antidote-completion-header">
           <div class="antidote-sun-orb">☀️</div>
-          <span class="antidote-complete-pill">DAILY ANTIDOTE COMPLETE</span>
+          <span class="antidote-complete-pill">DAILY ANTIDOTE COMPLETE • CHECK BACK IN ${hoursText.toUpperCase()}</span>
           <h2 class="antidote-complete-title">You're Caught Up on Human Progress.</h2>
           <p class="antidote-complete-desc">
-            You just absorbed the <strong>${antidoteItems.length} highest-impact breakthroughs</strong> from ${timeframeLabel}. Step away from the doomscroll—or explore all <strong>${feedItems.length} constructive stories</strong> in the full dataset.
+            You've read today's <strong>${antidoteItems.length} highest-impact breakthroughs</strong>. Check back in <strong>${hoursText}</strong> for a fresh set of good news — or explore <a href="javascript:void(0)" onclick="setSilverViewMode('grid')" style="color:#b45309;font-weight:700;text-decoration:underline;text-underline-offset:3px;">All Good News (${feedItems.length})</a> right now.
           </p>
         </div>
         <div class="antidote-recap-list">
@@ -2553,7 +2640,7 @@ function renderSilverEdition() {
         <div class="antidote-complete-actions">
           <button type="button" class="antidote-cta-primary" onclick="setSilverViewMode('grid')">
             <i data-lucide="layout-grid" style="width:16px;height:16px;"></i>
-            <span>Browse All ${feedItems.length} Positive Stories</span>
+            <span>See All Good News (${feedItems.length})</span>
           </button>
           <button type="button" class="antidote-cta-secondary" onclick="jumpSilverDeck(0)">
             <i data-lucide="rotate-ccw" style="width:15px;height:15px;"></i>

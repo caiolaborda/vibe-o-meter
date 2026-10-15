@@ -92,7 +92,15 @@ body {
   overflow-x: hidden;
   line-height: 1.5;
   min-height: 100vh;
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.35s ease;
+}
+
+body[data-edition="doom"] {
+  background-color: #0e1015;
+}
+
+body[data-edition="silver"] {
+  background-color: #fcfbf7;
 }
 
 /* --- BACKGROUND GLOWS --- */
@@ -323,6 +331,20 @@ body[data-edition="silver"] .edition-ambient-glow {
   transform: translate(-50%, -50%) scale(1.1);
 }
 
+/* Whole-Toggle Ambient Glow Shift When Hovering the Target Edition Button */
+body[data-edition="doom"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow,
+body:not([data-edition="silver"]) .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow {
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(251, 191, 36, 0.62) 0%, rgba(245, 158, 11, 0.34) 48%, transparent 80%);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.14);
+}
+
+body[data-edition="silver"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="doom"]:hover) .edition-ambient-glow {
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(59, 130, 246, 0.52) 0%, rgba(30, 58, 138, 0.32) 48%, transparent 80%);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.14);
+}
+
 /* Large Central Toggle Pill Wrapper with Sliding Indicator */
 .edition-toggle-wrap-large {
   position: relative;
@@ -336,7 +358,7 @@ body[data-edition="silver"] .edition-ambient-glow {
   padding: 8px;
   gap: 10px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.38s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Sliding Background Pill inside Edition Toggle */
@@ -386,6 +408,18 @@ body[data-edition="silver"] .edition-toggle-wrap-large {
   box-shadow: 0 12px 36px -6px rgba(217, 119, 6, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
 
+/* Whole-Toggle Shadow Glow Shifts Beneath the Entire Toggle When Hovering Target Mode */
+body[data-edition="doom"] .edition-toggle-wrap-large:has(.edition-pill-btn[data-edition="silver"]:hover),
+body:not([data-edition="silver"]) .edition-toggle-wrap-large:has(.edition-pill-btn[data-edition="silver"]:hover) {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 14px 40px -4px rgba(245, 158, 11, 0.45), 0 0 24px rgba(251, 191, 36, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+body[data-edition="silver"] .edition-toggle-wrap-large:has(.edition-pill-btn[data-edition="doom"]:hover) {
+  border-color: rgba(59, 130, 246, 0.48);
+  box-shadow: 0 14px 40px -4px rgba(59, 130, 246, 0.38), 0 0 24px rgba(96, 165, 250, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
 /* Central Edition Buttons */
 .edition-toggle-wrap-large .edition-pill-btn {
   position: relative;
@@ -404,11 +438,7 @@ body[data-edition="silver"] .edition-toggle-wrap-large {
   font-weight: 700;
   cursor: pointer;
   letter-spacing: -0.015em;
-  transition:
-    background 0.28s ease,
-    color 0.25s ease,
-    border-color 0.28s ease,
-    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background 0.25s ease, color 0.25s ease;
   user-select: none;
   transform: none;
   white-space: nowrap;
@@ -425,49 +455,43 @@ body[data-edition="silver"] .edition-toggle-wrap-large {
   flex-shrink: 0;
 }
 
-/* Interactive Hover Peak States */
+/* Interactive Hover Peak States — Original clean button hover (no individual button glow) */
 .edition-toggle-wrap-large .edition-pill-btn:hover {
   transform: none;
 }
 
-/* Doom button hover when inactive (from Some Good News): electric blue text + blue shadow beneath button */
 body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"] {
   color: #64748b;
 }
 
 body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover {
-  color: #2563eb !important;
-  background: rgba(59, 130, 246, 0.10);
-  border-color: rgba(59, 130, 246, 0.38);
-  box-shadow: 0 12px 28px -4px rgba(59, 130, 246, 0.45), 0 4px 14px rgba(96, 165, 250, 0.26);
+  color: #1e293b;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover svg,
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover i {
   transform: rotate(-12deg) scale(1.18);
-  color: #3b82f6;
-  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.55));
+  color: #60a5fa;
+  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5));
 }
 
-/* Silver button hover when inactive (from No Good News): warm golden-yellow text + yellow shadow beneath button */
 body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"],
 body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"] {
-  color: #cbd5e1;
+  color: #94a3b8;
 }
 
 body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover,
 body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover {
-  color: #fbbf24 !important;
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.45);
-  box-shadow: 0 12px 28px -4px rgba(245, 158, 11, 0.52), 0 4px 16px rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  background: rgba(254, 243, 199, 0.12);
 }
 
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover svg,
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover i {
   transform: rotate(45deg) scale(1.22);
-  color: #fbbf24;
-  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.65));
+  color: #f59e0b;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
 }
 
 /* Active State: No Good News (Doom) — background handled by .edition-slider-pill */
