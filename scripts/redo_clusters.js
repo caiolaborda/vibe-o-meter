@@ -117,13 +117,13 @@ Return JSON array in format:
     if (uniqueSources.size >= 2) {
       const scores = matchingArticles.map(m => m.sentiment);
       const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
-      const variance = Number((scores.reduce((acc, val) => acc + Math.pow(val - avgScore, 2), 0) / scores.length).toFixed(3));
+      const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
       
       formattedClusters.push({
         story: cl.story,
         summary: cl.summary || '',
         averageSentiment: avgScore,
-        sentimentSpread: variance,
+        sentimentSpread: spreadRange,
         outletCount: uniqueSources.size,
         coverage: matchingArticles.map(m => ({
           sourceId: m.sourceId,

@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=3.7">
+  <link rel="stylesheet" href="style.css?v=3.8">
 </head>
 <body data-edition="doom">
 
@@ -92,6 +92,12 @@
               <option value="all">All Time</option>
             </select>
           </div>
+
+          <!-- Share Good News Button -->
+          <button type="button" class="share-vibe-btn silver-share-btn" onclick="toggleSharePopover(event)" title="Share this view or download a snapshot card">
+            <i data-lucide="share-2"></i>
+            <span>Share</span>
+          </button>
         </div>
       </div>
 
@@ -166,6 +172,10 @@
           </div>
           <div class="pulse-meta-info">
             <span id="pulse-article-count" class="pulse-count-text">197 Headlines Analyzed</span>
+            <button type="button" class="share-vibe-btn" onclick="toggleSharePopover(event)" title="Share today's audit or download a Daily Vibe Card">
+              <i data-lucide="share-2"></i>
+              <span>Share Audit</span>
+            </button>
           </div>
         </div>
 
@@ -1100,6 +1110,33 @@
 
   </div>
 
-  <script src="app.js?v=3.6"></script>
+  <!-- SHARE POPOVER MENU -->
+  <div id="share-vibe-popover" class="share-vibe-popover hidden" role="dialog" aria-label="Share options">
+    <div class="share-popover-header">
+      <span>Share Daily Audit</span>
+      <button type="button" class="share-popover-close" onclick="closeSharePopover()" aria-label="Close share menu">&times;</button>
+    </div>
+    <div class="share-popover-actions">
+      <button type="button" class="share-action-item" onclick="handleShareSummaryAndLink()">
+        <div class="share-action-icon"><i data-lucide="link-2"></i></div>
+        <div class="share-action-text">
+          <strong>Copy Summary &amp; Link</strong>
+          <span>Formatted briefing + deep link to current view</span>
+        </div>
+      </button>
+      <button type="button" class="share-action-item" onclick="handleDownloadVibeCard()">
+        <div class="share-action-icon"><i data-lucide="image"></i></div>
+        <div class="share-action-text">
+          <strong>Download Daily Vibe Card (PNG)</strong>
+          <span>High-DPI social snapshot of today's audit</span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- SHARE TOAST -->
+  <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
+
+  <script src="app.js?v=3.7"></script>
 </body>
 </html>

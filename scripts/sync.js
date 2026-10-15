@@ -244,7 +244,30 @@ function tryRepairJsonArray(text) {
   return clean;
 }
 
-// Structured Gemini sentiment analysis with batching & calibrated prompt
+// Interleave articles across outlets (round-robin) so every batch contains a cross-outlet mix of the current news cycle
+function interleaveByOutlet(articles) {
+  const bySource = {};
+  articles.forEach(art => {
+    const sid = art.sourceId || 'unknown';
+    if (!bySource[sid]) bySource[sid] = [];
+    bySource[sid].push(art);
+  });
+  const queues = Object.values(bySource);
+  const interleaved = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const q of queues) {
+      if (q.length > 0) {
+        interleaved.push(q.shift());
+        added = true;
+      }
+    }
+  }
+  return interleaved;
+}
+
+// Structured Gemini sentiment analysis with cross-outlet batching & 2-step Event Base + Editorial Framing rubric
 async function analyzeWithGemini(headlines, apiKey, requestedModel) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
@@ -252,50 +275,60 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel) {
     process.env.GEMINI_MODEL,
     'gemini-3.5-flash',
     'gemini-3.5-flash-lite',
-    'gemini-3.8-flash'
+    'gemini-3.8-flash',
+    'gemini-2.5-flash'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
-  const BATCH_SIZE = 20;
+  // Interleave across outlets so simultaneous coverage of the same story sits in the same context window
+  const orderedHeadlines = interleaveByOutlet(headlines);
+  const BATCH_SIZE = 75;
   const allResults = [];
   let modelUsed = modelsToTry[0];
 
-  for (let i = 0; i < headlines.length; i += BATCH_SIZE) {
-    const chunk = headlines.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
+    const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
     const promptData = chunk.map((item, index) => ({
       index,
+      outlet: item.sourceId,
       headline: item.title,
       description: item.description || ''
     }));
 
     const prompt = `You are a world-class news sentiment analyst and senior media editor.
-Analyze the inherent emotional valence of the real-world events described in each article headline and short description.
+Evaluate each article on a continuous -1.00 to +1.00 scale by computing TWO components and summing them:
+  FINAL SCORE = EVENT BASE (-0.85 to +0.85) + EDITORIAL FRAMING (-0.15 to +0.15)
 
-VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
-- [-1.00 to -0.65]: Catastrophe, active warfare, deadly strikes/bombings, mass casualties, severe humanitarian trauma.
-- [-0.64 to -0.30]: Conflict, mass layoffs, corruption scandals, natural disaster damage, solemn obituaries, major regulatory penalties, broken truces.
-- [-0.29 to -0.10]: Mild tension, stock market dip, diplomatic friction, political disputes, minor price hikes.
-- [-0.09 to +0.09]: Strictly neutral procedural news, routine election results without violence, scheduled hearings, administrative statements.
-- [+0.10 to +0.34]: Incremental or modest constructive developments across any domain—mild economic improvements, routine sports or cultural honors, localized civic initiatives, or minor research insights.
-- [+0.35 to +0.64]: Substantial real-world progress across any domain—meaningful citizen debt or cost-of-living relief, tangible diplomatic agreements, significant wildlife or ecological rebounds, major infrastructure completions.
-- [+0.65 to +1.00]: Epochal, transformative human milestones across ANY domain—historic peace accords ending warfare, disease eradication, systemic poverty reductions, breakthrough clean energy abundance, paradigm scientific discoveries, or extraordinary human triumphs.
+STEP 1: EVENT BASE (-0.85 to +0.85) — Strictly by Scope & Permanence of Human Impact:
+Determine the inherent real-world valence of the underlying event based on how many lives it affects and how lasting the consequence is (NEVER anchor to topic/category labels):
+- Civilizational / Mass-Scale & Lasting (-0.85 to -0.65 OR +0.65 to +0.85):
+  * Negative (-0.85 to -0.65): Active warfare, deadly bombings/strikes, mass casualties, famine, systemic catastrophe.
+  * Positive (+0.65 to +0.85): Historic peace accords ending war, curing/eradicating a major disease, paradigm-shifting scientific or clean-energy breakthroughs, systemic human rights or poverty victories.
+- Societal / National / Multi-Year (-0.60 to -0.35 OR +0.35 to +0.60):
+  * Negative (-0.60 to -0.35): Armed standoff, severe disaster damage, mass layoffs, major corruption/abuse indictments, democratic or institutional breakdown, solemn obituaries.
+  * Positive (+0.35 to +0.60): Binding diplomatic treaties, tangible household cost-of-living/debt relief, verified ecological/species recovery, major archaeological or scientific discoveries, wrongful-conviction exonerations.
+- Organizational / Localized / Transitory (-0.30 to -0.10 OR +0.10 to +0.30):
+  * Negative (-0.30 to -0.10): Partisan political friction, single-company stock dip or fine, localized dispute, minor price uptick.
+  * Positive (+0.10 to +0.30): Single-company quarterly earnings/revenue beat, corporate IPO/investment, routine sports championship, celebrity/cultural milestone, localized civic win. (Routine corporate profit reports belong here in +0.10 to +0.25, NEVER above +0.30).
+- Procedural / Status Quo (-0.08 to +0.08):
+  * Scheduled hearings, routine governance/appointments without crisis, standard weather or cultural reviews.
 
-FIRST PRINCIPLES & EVALUATION RULES:
-1. Event Substance Over Journalistic Tone: Calm, formal reporting of tragic events (e.g. bombings, strikes, civilian deaths) is DEEPLY NEGATIVE (-0.65 to -1.00). Mentioning "peace talks" or "aid delivery" in a story about active strikes does NOT make it positive.
-2. The Counterfactual World State Principle (Harm vs. Mitigation): Ask: "If this whole situation never occurred, would the world be better or worse?" Regulatory fines, legal payouts, compensation settlements, prison overflow decanting, and corporate bailouts are reactions to underlying harm, negligence, or misconduct. Do NOT score administrative remedies as positive victories; score them as sober or mildly negative (-0.15 to -0.35) reflecting the damage that necessitated them.
-3. Scale & Impact Over Topic Label: NEVER anchor scores, ceilings, or floors to topic/beat labels. All topics can span the full continuous range from -1.00 to +1.00 based strictly on the REAL-WORLD MAGNITUDE AND HUMAN CONSEQUENCE of the event:
-   - High Transformative Impact (+0.65 to +1.00): Monumental, paradigm-shifting events in ANY beat—a historic peace accord, curing a major disease, eliminating extreme poverty, clean energy abundance, or paradigm science breakthrough.
-   - Substantial Constructive Progress (+0.35 to +0.64): Tangible, meaningful relief or progress in ANY beat—substantial purchasing power gains, diplomatic treaties, ecosystem protection milestones, major institutional progress.
-   - Incremental / Everyday Good (+0.10 to +0.34): Routine or localized positive news in ANY beat—modest rate or market stabilization, local community wins, sports championships, incremental research notes.
-   Golden Rule: An epochal peace treaty, global poverty eradication milestone, or planet-scale climate recovery reaches +0.90 to +1.00, while a trivial or niche science observation scores only +0.10 to +0.20. No category has an artificial ceiling or floor.
-4. Democratic Governance: Routine electoral victories, party transitions, or cabinet appointments in functioning democracies are neutral (-0.08 to +0.08) unless accompanied by violence or constitutional crisis.
-5. Obituaries: Passing of prominent or beloved figures is solemn/negative (-0.30 to -0.50).
-6. Granularity & JSON Format: Avoid round numbers like 0.0 or 0.5. Use realistic continuous floats to 2 decimal places (e.g. -0.42, 0.38, -0.85). Strictly never prepend a '+' sign to positive numbers (use 0.38, not +0.38) as '+' is invalid in JSON.
+STEP 2: EDITORIAL FRAMING MODIFIER (-0.15 to +0.15) — How This Outlet Phrased the Headline:
+Compare the headline's language against a plain, neutral wire-service statement of the same fact:
+- [-0.15 to -0.05] Alarmist / Polarising / Conflict-Amplifying: Uses loaded conflict verbs ("slams", "betrayed", "crushed", "chaos", "crisis"), fear-inducing speculation, or highlights worst-case confrontation.
+- [0.00] Matter-of-Fact / Neutral Reporting: Reports the event plainly without emotional spin.
+- [+0.05 to +0.15] Constructive / Composed / Solution-Oriented: Highlights verified resilience, cooperation, de-escalation, or forward progress.
+
+CRITICAL CONSISTENCY RULES:
+1. Cross-Outlet Parity within Batch: If multiple articles in this batch cover the SAME underlying event, they MUST share the exact same EVENT BASE, differing ONLY by their Editorial Framing Modifier (-0.15 to +0.15). If two headlines state the same fact in plain language, give them virtually identical scores.
+2. Counterfactual Harm & Criminal Trials: Criminal convictions, guilty pleas, prison sentences, regulatory fines, or lawsuits for violent crimes, fraud, or disasters are reactions to underlying harm. Grade them in the negative range (-0.20 to -0.55) reflecting the crime/harm—NEVER score a criminal conviction or sentencing as positive "good news" (+). Only overturning a wrongful conviction or freeing a hostage/prisoner of conscience is positive.
+3. Explainers & Q&As ("What is X?", "Why Y matters"): Grade explainers on the Event Base of the real-world situation they are explaining (modulated by their calm informational framing), not as 0.00 dictionary definitions.
+4. Continuous Precision & Valid JSON: Use precise 2-decimal floats across the full spectrum (do not cluster on .15, .35, .42, or .45). Never prepend '+' to positive numbers in JSON.
 
 Return a JSON array of objects with:
 - index: integer matching input index
-- score: float between -1.00 and 1.00 (2 decimal places)
-- category: one of 'politics', 'world', 'business', 'technology', 'science', 'health', 'climate', 'entertainment', 'sports', 'other'
-- explanation: concise 1-sentence analytical rationale
+- score: float between -1.00 and 1.00 (Event Base + Framing Modifier, rounded to 2 decimal places)
+- category: strictly one of 'world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports', 'other'
+- explanation: concise 1-sentence rationale noting both event impact and headline framing
 
 Articles:
 ${JSON.stringify(promptData, null, 2)}
@@ -307,7 +340,7 @@ Return ONLY valid JSON.`;
       if (batchSuccess) break;
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(headlines.length / BATCH_SIZE)} using ${modelName} (attempt ${attempt}/2)...`);
+          console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} (attempt ${attempt}/2)...`);
           const model = genAI.getGenerativeModel({
             model: modelName,
             generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
@@ -315,7 +348,7 @@ Return ONLY valid JSON.`;
 
           const generatePromise = model.generateContent(prompt);
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Gemini API call timed out after 30s')), 30000)
+            setTimeout(() => reject(new Error('Gemini API call timed out after 45s')), 45000)
           );
           const response = await Promise.race([generatePromise, timeoutPromise]);
           let text = response.response.text().trim();
@@ -328,16 +361,14 @@ Return ONLY valid JSON.`;
           if (Array.isArray(parsed)) {
             chunk.forEach((item, idx) => {
               const match = parsed.find(r => r.index === idx) || { score: 0, category: 'other' };
+              const cleanScore = Number(Math.max(-1, Math.min(1, Number(match.score) || 0)).toFixed(2));
               allResults.push({
                 sourceId: item.sourceId,
                 title: item.title,
                 link: item.link,
-                sentiment: Number(match.score) || 0,
-                sentimentGemini: Number(match.score) || 0,
+                sentiment: cleanScore,
                 category: match.category || 'other',
-                categoryGemini: match.category || 'other',
-                explanation: match.explanation || `Analyzed via Gemini (${modelName}).`,
-                explanationGemini: match.explanation || `Analyzed via Gemini (${modelName}).`
+                explanation: match.explanation || `Analyzed via Gemini (${modelName}).`
               });
             });
             modelUsed = modelName;
@@ -359,7 +390,7 @@ Return ONLY valid JSON.`;
       console.warn(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1} (${chunk.length} items) could not be evaluated due to temporary upstream spikes. STRICT ZERO-OFFLINE POLICY: Skipping batch without offline fallback. Articles remain queued for next sync.`);
     }
 
-    if (i + BATCH_SIZE < headlines.length) {
+    if (i + BATCH_SIZE < orderedHeadlines.length) {
       await new Promise(r => setTimeout(r, 1200));
     }
   }
@@ -549,13 +580,13 @@ Return JSON array in format:
       if (uniqueSources.size >= 2) {
         const scores = matchingArticles.map(m => m.sentiment);
         const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
-        const variance = Number((scores.reduce((acc, val) => acc + Math.pow(val - avgScore, 2), 0) / scores.length).toFixed(3));
+        const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
         
         formattedClusters.push({
           story: cl.story,
           summary: cl.summary || '',
           averageSentiment: avgScore,
-          sentimentSpread: variance,
+          sentimentSpread: spreadRange,
           outletCount: uniqueSources.size,
           coverage: matchingArticles.map(m => ({
             sourceId: m.sourceId,
@@ -611,6 +642,38 @@ async function enrichTopPositiveArticleImages(finalSources) {
   }));
 }
 
+// Helper: check if an article has a valid Gemini evaluation (not an old local lexicon fallback)
+function hasValidGeminiScore(art) {
+  if (!art) return false;
+  const exp = art.explanationGemini || art.explanation || '';
+  if (exp.includes('Analyzed locally')) return false;
+  const s = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : art.sentiment;
+  return typeof s === 'number' && !isNaN(s);
+}
+
+// Helper: strip legacy AFINN/VADER/duplicate fields to keep JSON payload lean
+function compactArticleRecord(art, sourceId) {
+  const hasGemini = hasValidGeminiScore(art);
+  const score = hasGemini ? Number((art.sentimentGemini ?? art.sentiment).toFixed(2)) : null;
+  const category = art.categoryGemini || art.category || 'other';
+  const explanation = hasGemini ? (art.explanationGemini || art.explanation || '') : undefined;
+
+  const clean = {
+    sourceId: art.sourceId || sourceId,
+    title: art.title,
+    description: art.description || '',
+    link: art.link || '',
+    ...(art.imageUrl ? { imageUrl: art.imageUrl } : {}),
+    pubDate: art.pubDate
+  };
+  if (score !== null) {
+    clean.sentiment = score;
+    clean.category = category;
+    if (explanation) clean.explanation = explanation;
+  }
+  return clean;
+}
+
 // Main execution routine
 async function main() {
   console.log('==============================================');
@@ -622,12 +685,7 @@ async function main() {
   const currentCache = readCache();
 
   const geminiKey = process.env.GEMINI_API_KEY || config.apiKey;
-  const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const groqKey = process.env.GROQ_API_KEY || config.groqApiKey;
-  const groqModel = process.env.GROQ_MODEL || config.groqModel || 'llama-3.1-8b-instant';
-  const preferredAnalyzer = process.env.DEFAULT_ANALYZER || config.analyzer || (geminiKey ? 'gemini' : (groqKey ? 'groq' : 'local'));
-
-  console.log(`Configured Strategy: Preferred Analyzer = "${preferredAnalyzer}"`);
+  const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
   // Build lookup of already analyzed articles
   const existingMap = new Map();
@@ -687,7 +745,7 @@ async function main() {
             cached.pubDate = item.pubDate;
             cached.title = item.title;
           }
-          if (preferredAnalyzer === 'gemini' && (cached.sentimentGemini === undefined || cached.sentimentGemini === null)) {
+          if (!hasValidGeminiScore(cached)) {
             unanalyzedArticles.push(cached);
           }
           sourceArticles.push(cached);
@@ -704,48 +762,31 @@ async function main() {
     }
   }
 
-  // Also pull in backlogged pending articles from historical cache if any exist (up to 40 per run, or up to 120 if --backlog specified)
+  // Pull in backlogged pending articles from historical cache if any exist
   const maxBacklog = process.argv.includes('--backlog') ? 120 : 40;
   let backlogAdded = 0;
-  if (preferredAnalyzer === 'gemini') {
-    const unanalyzedKeys = new Set(unanalyzedArticles.map(a => `${a.sourceId}_${a.title.trim().toLowerCase()}`));
-    for (const [key, article] of existingMap.entries()) {
-      if (backlogAdded >= maxBacklog) break;
-      if (article.sentimentGemini === undefined || article.sentimentGemini === null) {
-        if (!unanalyzedKeys.has(key)) {
-          unanalyzedArticles.push(article);
-          unanalyzedKeys.add(key);
-          backlogAdded++;
-        }
+  const unanalyzedKeys = new Set(unanalyzedArticles.map(a => `${a.sourceId}_${a.title.trim().toLowerCase()}`));
+  for (const [key, article] of existingMap.entries()) {
+    if (backlogAdded >= maxBacklog) break;
+    if (!hasValidGeminiScore(article)) {
+      const dedupeKey = `${article.sourceId}_${(article.title || '').trim().toLowerCase()}`;
+      if (!unanalyzedKeys.has(dedupeKey)) {
+        unanalyzedArticles.push(article);
+        unanalyzedKeys.add(dedupeKey);
+        backlogAdded++;
       }
     }
   }
 
-  console.log(`[Queue] Found ${unanalyzedArticles.length} articles requiring sentiment analysis (${backlogAdded} pulled from historical backlog).`);
+  console.log(`[Queue] Found ${unanalyzedArticles.length} articles requiring Gemini sentiment analysis (${backlogAdded} pulled from historical backlog).`);
 
-  // 2. Perform Local Lexicon Analysis purely as secondary comparative reference fields (AFINN / VADER)
-  // NEVER as primary sentiment (strictly zero offline fallback policy).
-  if (unanalyzedArticles.length > 0) {
-    const localScores = analyzeLocally(unanalyzedArticles);
-    localScores.forEach((res, idx) => {
-      const target = unanalyzedArticles[idx];
-      target.sentimentAFINN = res.sentimentAFINN;
-      target.sentimentVADER = res.sentimentVADER;
-      target.explanationLocal = res.explanation;
-      target.categoryLocal = res.category;
-      // Do NOT set target.sentiment = res.sentimentLocal
-      // Primary sentiment remains unassigned until evaluated by Gemini
-    });
-  }
-
-  // 3. Perform AI Analysis if keys are available
+  // 2. Perform Gemini AI Analysis
   let activeAnalyzerLabel = currentCache.analyzerUsed || 'Gemini';
   let newlyAnalyzedCount = 0;
   let aiSuccess = false;
 
   if (unanalyzedArticles.length > 0) {
-    // Try Gemini
-    if (preferredAnalyzer === 'gemini' && geminiKey) {
+    if (geminiKey) {
       try {
         console.log(`[AI] Processing ${unanalyzedArticles.length} articles with Gemini (${geminiModel})...`);
         const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiKey, geminiModel);
@@ -757,9 +798,6 @@ async function main() {
           const key = `${res.sourceId}_${res.title.trim().toLowerCase()}`;
           const target = articleMap.get(key);
           if (target) {
-            target.sentimentGemini = res.sentiment;
-            target.explanationGemini = res.explanation;
-            target.categoryGemini = res.category;
             target.sentiment = res.sentiment;
             target.explanation = res.explanation;
             target.category = res.category;
@@ -777,41 +815,15 @@ async function main() {
       }
     }
 
-    // Try Groq if Gemini wasn't used or failed
-    if (!aiSuccess && (preferredAnalyzer === 'groq' || groqKey) && groqKey) {
-      try {
-        console.log(`[AI] Processing ${unanalyzedArticles.length} articles with Groq (${groqModel})...`);
-        const groqRes = await analyzeWithGroq(unanalyzedArticles, groqKey, groqModel);
-        groqRes.results.forEach((res, idx) => {
-          const target = unanalyzedArticles[idx];
-          if (target) {
-            target.sentimentGroq = res.sentiment;
-            target.explanationGroq = res.explanation;
-            target.categoryGroq = res.category;
-            target.sentiment = res.sentiment;
-            target.explanation = res.explanation;
-            target.category = res.category;
-            newlyAnalyzedCount++;
-          }
-        });
-        if (newlyAnalyzedCount > 0) {
-          activeAnalyzerLabel = `Groq (${groqRes.modelUsed})`;
-          aiSuccess = true;
-        }
-      } catch (groqErr) {
-        console.error('[Groq] Analysis failed:', groqErr.message);
-      }
-    }
-
     if (!aiSuccess && unanalyzedArticles.length > 0) {
-      console.warn(`[Sync] Notice: AI was unavailable to evaluate the ${unanalyzedArticles.length} queued articles during this cycle.`);
+      console.warn(`[Sync] Notice: Gemini AI was unavailable to evaluate the ${unanalyzedArticles.length} queued articles during this cycle.`);
       console.warn(`[Sync] STRICT ZERO-OFFLINE POLICY: Skipping without assigning local fallback. Articles remain queued for next sync.`);
     }
   } else if (currentCache.analyzerUsed) {
     activeAnalyzerLabel = currentCache.analyzerUsed;
   }
 
-  // 4. Combine historical records and calculate statistics
+  // 3. Combine historical records, compact legacy fields, and calculate statistics
   const finalSources = {};
   const summarySources = {};
 
@@ -823,7 +835,7 @@ async function main() {
     // Sort newest first so freshest revisions take precedence
     combined.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
 
-    // Deduplicate by canonical URL and clean title
+    // Deduplicate by canonical URL and clean title, and compact fields
     const seenUrls = new Set();
     const seenTitles = new Set();
     combined = combined.filter(art => {
@@ -837,7 +849,8 @@ async function main() {
       if (cUrl) seenUrls.add(cUrl);
       if (cTitle) seenTitles.add(cTitle);
       return true;
-    });
+    }).map(art => compactArticleRecord(art, source.id));
+
     if (combined.length > MAX_ARTICLES_PER_SOURCE) {
       combined = combined.slice(0, MAX_ARTICLES_PER_SOURCE);
     }
@@ -849,9 +862,8 @@ async function main() {
     let scoredCount = 0;
 
     combined.forEach(art => {
-      // ONLY pure Gemini evaluations count towards scores
-      if (typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'))) {
-        const s = art.sentimentGemini;
+      if (typeof art.sentiment === 'number' && !isNaN(art.sentiment)) {
+        const s = art.sentiment;
         totalScore += s;
         scoredCount++;
         if (s > 0.15) posCount++;
@@ -873,7 +885,7 @@ async function main() {
     };
 
     // Lightweight summary source entry (for instant <15KB initial load)
-    const sortedBySentiment = [...combined].sort((a, b) => (a.sentiment ?? 0) - (b.sentiment ?? 0));
+    const sortedBySentiment = [...combined].filter(a => typeof a.sentiment === 'number').sort((a, b) => a.sentiment - b.sentiment);
     summarySources[source.id] = {
       name: source.name,
       averageSentiment: avg,
@@ -898,7 +910,7 @@ async function main() {
     return;
   }
 
-  // 5. Append time series snapshot
+  // 4. Append time series snapshot
   const timeSeries = currentCache.timeSeries || [];
   const now = new Date();
   const lastEntry = timeSeries[timeSeries.length - 1];
@@ -916,18 +928,18 @@ async function main() {
     });
   }
 
-  // 5.5 Compute Global Vibe Metrics and Editorial Summary
+  // 4.5 Compute Global Vibe Metrics and Editorial Summary
   let allArticlesTotal = 0;
   let allArticlesScore = 0;
   const categoryStats = {};
 
   Object.values(finalSources).forEach(src => {
     (src.articles || []).forEach(art => {
-      if (typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'))) {
+      if (typeof art.sentiment === 'number' && !isNaN(art.sentiment)) {
         allArticlesTotal++;
-        const s = art.sentimentGemini;
+        const s = art.sentiment;
         allArticlesScore += s;
-        const cat = art.categoryGemini || art.category || 'other';
+        const cat = art.category || 'other';
         if (!categoryStats[cat]) categoryStats[cat] = { total: 0, count: 0 };
         categoryStats[cat].total += s;
         categoryStats[cat].count++;

@@ -1017,6 +1017,7 @@ async function fetchData() {
       state.timeSeries = data.timeSeries || [];
       state.sharedStoryClusters = data.sharedStoryClusters || [];
 
+      restoreStateFromUrl();
       updateAppUI();
     } else {
       // Prompt user to sync if cache is empty
@@ -1267,10 +1268,8 @@ function switchTab(tabId) {
     renderPulseTopStories();
   }
 
-  // Update hash without jumping page scroll
-  if (history.replaceState) {
-    history.replaceState(null, null, '#' + tabId);
-  }
+  // Sync URL state without jumping page scroll
+  syncUrlState();
 }
 window.switchTab = switchTab;
 
@@ -1376,10 +1375,12 @@ function getResolvedSources() {
       let explanation = 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).';
       let category = art.categoryGemini || art.category || 'other';
 
-      const hasGemini = typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'));
+      const rawScore = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : art.sentiment;
+      const rawExp = art.explanationGemini || art.explanation || '';
+      const hasGemini = typeof rawScore === 'number' && !isNaN(rawScore) && !rawExp.includes('Analyzed locally');
       if (hasGemini) {
-        score = art.sentimentGemini;
-        explanation = art.explanationGemini || `Analyzed using Google Gemini. Score: ${score.toFixed(2)}.`;
+        score = rawScore;
+        explanation = rawExp || `Analyzed using Google Gemini. Score: ${score.toFixed(2)}.`;
       }
       
       if (score !== null && score !== undefined) {
@@ -1426,6 +1427,7 @@ function updateAppUI() {
   
   // Resolve active sources metrics based on selected sentiment view mode
   resolvedSources = getResolvedSources();
+  syncUrlState();
 
   // Update control bar texts
   if (state.isSyncing) {
@@ -1538,6 +1540,7 @@ function switchEdition(edition) {
     switchTab(state.activeTab || 'pulse');
   }
 
+  syncUrlState();
   if (window.lucide && lucide.createIcons) {
     lucide.createIcons();
   }
@@ -1863,6 +1866,11 @@ function renderSpectrum() {
       }
     }
 
+    const isMobileTrack = window.innerWidth <= 640;
+    const minGapPct = isMobileTrack ? 9.5 : 5.2;
+    const rowStepPx = isMobileTrack ? 36 : 42;
+    const bubbleSize = isMobileTrack ? 28 : 34;
+
     Object.keys(sources).forEach(id => {
       const source = sources[id];
       const data = sourceScores[id];
@@ -1878,7 +1886,7 @@ function renderSpectrum() {
       while (collision) {
         collision = false;
         for (const pos of markerPositions) {
-          if (Math.abs(pos.x - percentage) < 5.2 && pos.y === yLevel) {
+          if (Math.abs(pos.x - percentage) < minGapPct && pos.y === yLevel) {
             yLevel++;
             collision = true;
             break;
@@ -1892,7 +1900,10 @@ function renderSpectrum() {
       const markerColor = getValenceColor(avg);
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
-      const yOffset = yLevel * 42;
+      const yOffset = yLevel * rowStepPx;
+      const labelPosStyle = percentage < 22
+        ? 'left: 0; transform: none;'
+        : (percentage > 78 ? 'right: 0; left: auto; transform: none;' : 'left: 50%; transform: translateX(-50%);');
       
       const marker = document.createElement('div');
       marker.className = `outlet-marker ${state.filters.source === id ? 'active' : ''}`;
@@ -1901,10 +1912,10 @@ function renderSpectrum() {
       marker.setAttribute('data-id', id);
       
       marker.innerHTML = `
-        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; border: 2.5px solid ${markerColor}; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
+        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: ${bubbleSize}px; height: ${bubbleSize}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: ${isMobileTrack ? '0.66rem' : '0.75rem'}; border: 2.5px solid ${markerColor}; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
           <span>${meta.initials}</span>
         </div>
-        <div class="marker-label" style="position: absolute; top: -28px; left: 50%; transform: translateX(-50%); opacity: 0; pointer-events: none; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,0.18); white-space: nowrap; color: var(--text-primary); transition: all 0.2s;">
+        <div class="marker-label" style="position: absolute; top: -28px; ${labelPosStyle} opacity: 0; pointer-events: none; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,0.18); white-space: nowrap; color: var(--text-primary); transition: all 0.2s; z-index: 40;">
           ${source.name}: <strong style="color:${markerColor};">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</strong> ${isCategoryFiltered ? `(${state.filters.category})` : ''}
         </div>
       `;
@@ -1920,7 +1931,7 @@ function renderSpectrum() {
     const maxY = markerPositions.length > 0 ? Math.max(...markerPositions.map(p => p.y), 0) : 0;
     const trackContainerElem = document.querySelector('.spectrum-track-container');
     if (trackContainerElem) {
-      const calculatedHeight = Math.max(195, 75 + ((maxY + 1) * 44));
+      const calculatedHeight = Math.max(isMobileTrack ? 175 : 195, 70 + ((maxY + 1) * (rowStepPx + 2)));
       trackContainerElem.style.height = `${calculatedHeight}px`;
     }
 
@@ -4991,10 +5002,10 @@ function renderDailyPulse() {
 
     Object.values(state.sources || {}).forEach(src => {
       (src.articles || []).forEach(art => {
-        const hasGemini = typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'));
-        if (!hasGemini) return;
+        const s = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : art.sentiment;
+        const exp = art.explanationGemini || art.explanation || '';
+        if (typeof s !== 'number' || isNaN(s) || exp.includes('Analyzed locally')) return;
         const cat = art.categoryGemini || art.category || 'other';
-        const s = art.sentimentGemini;
 
         const ageMs = nowMs - new Date(art.pubDate).getTime();
         if (ageMs > h24Ms && ageMs <= h48Ms) {
@@ -5243,4 +5254,409 @@ function updateTopicPillsActive(topic) {
     chip.classList.toggle('active', chipCat === topic);
   });
 }
+
+// --- URL STATE SYNC (DEEP LINKING) ---
+let isRestoringUrlState = false;
+
+function restoreStateFromUrl() {
+  try {
+    isRestoringUrlState = true;
+    const params = new URLSearchParams(window.location.search);
+    const hashTab = window.location.hash.replace('#', '');
+
+    const editionParam = params.get('edition');
+    const tabParam = params.get('tab') || (['pulse', 'trends', 'compare', 'deepdives', 'methodology'].includes(hashTab) ? hashTab : null);
+    const sourceParam = params.get('source') || params.get('outlet');
+    const topicParam = params.get('topic') || params.get('category');
+    const timeParam = params.get('time');
+
+    if (timeParam && ['3h', '6h', '12h', '24h', '3d', '7d', '30d', 'all'].includes(timeParam)) {
+      state.filters.time = timeParam;
+      if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = timeParam;
+      if (elements.filterTime) elements.filterTime.value = timeParam;
+      if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = timeParam;
+      if (elements.silverTimeframeSelect) elements.silverTimeframeSelect.value = timeParam;
+    }
+
+    if (sourceParam && state.sources && state.sources[sourceParam]) {
+      state.filters.source = sourceParam;
+      if (elements.filterSource) elements.filterSource.value = sourceParam;
+      if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = sourceParam;
+    }
+
+    if (topicParam && ['world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports'].includes(topicParam)) {
+      state.filters.category = topicParam;
+      state.silverTopic = topicParam;
+      if (elements.filterCategory) elements.filterCategory.value = topicParam;
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = topicParam;
+      if (elements.silverTopicSelect) elements.silverTopicSelect.value = topicParam;
+      updateTopicPillsActive(topicParam);
+    }
+
+    updateFilterIndicator();
+
+    if (editionParam === 'good' || editionParam === 'silver') {
+      switchEdition('silver');
+    } else if (tabParam && ['pulse', 'trends', 'compare', 'deepdives', 'methodology'].includes(tabParam)) {
+      switchTab(tabParam);
+    }
+  } catch (e) {
+    console.warn('Could not restore URL state:', e);
+  } finally {
+    isRestoringUrlState = false;
+  }
+}
+
+function syncUrlState() {
+  if (isRestoringUrlState || !window.history || !window.history.replaceState) return;
+  try {
+    const params = new URLSearchParams();
+    if (state.edition === 'silver') {
+      params.set('edition', 'good');
+      if (state.silverTopic && state.silverTopic !== 'all') params.set('topic', state.silverTopic);
+    } else {
+      if (state.activeTab && state.activeTab !== 'pulse') params.set('tab', state.activeTab);
+      if (state.filters.source && state.filters.source !== 'all') params.set('outlet', state.filters.source);
+      if (state.filters.category && state.filters.category !== 'all') params.set('topic', state.filters.category);
+    }
+    if (state.filters.time && state.filters.time !== '24h') {
+      params.set('time', state.filters.time);
+    }
+
+    const qs = params.toString();
+    const newUrl = window.location.pathname + (qs ? `?${qs}` : '');
+    if (newUrl !== window.location.pathname + window.location.search) {
+      window.history.replaceState(null, '', newUrl);
+    }
+  } catch (_) {}
+}
+
+// --- SHARE POPOVER & HIGH-DPI DAILY VIBE CARD SNAPSHOT ---
+window.toggleSharePopover = function(event) {
+  if (event) event.stopPropagation();
+  const pop = document.getElementById('share-vibe-popover');
+  if (!pop) return;
+
+  const isHidden = pop.classList.contains('hidden');
+  if (!isHidden) {
+    pop.classList.add('hidden');
+    return;
+  }
+
+  pop.classList.remove('hidden');
+  if (event && event.currentTarget) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const popWidth = 285;
+    let left = rect.right - popWidth;
+    if (left < 12) left = 12;
+    if (left + popWidth > window.innerWidth - 12) left = window.innerWidth - popWidth - 12;
+    let top = rect.bottom + 8;
+    if (top + 180 > window.innerHeight) {
+      top = Math.max(12, rect.top - 175);
+    }
+    pop.style.top = `${top}px`;
+    pop.style.left = `${left}px`;
+  }
+  if (window.lucide && lucide.createIcons) lucide.createIcons({ root: pop });
+};
+
+window.closeSharePopover = function() {
+  const pop = document.getElementById('share-vibe-popover');
+  if (pop) pop.classList.add('hidden');
+};
+
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('share-vibe-popover');
+  if (!pop || pop.classList.contains('hidden')) return;
+  if (!pop.contains(e.target) && !e.target.closest('.share-vibe-btn')) {
+    pop.classList.add('hidden');
+  }
+});
+
+function showShareToast(msg) {
+  const toast = document.getElementById('share-toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  toast.classList.add('visible');
+  clearTimeout(window._shareToastTimer);
+  window._shareToastTimer = setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.classList.add('hidden'), 250);
+  }, 2600);
+}
+
+window.handleShareSummaryAndLink = async function() {
+  closeSharePopover();
+  syncUrlState();
+  const shareUrl = window.location.href;
+  const isSilver = state.edition === 'silver';
+
+  const scoreText = document.getElementById('global-mood-score')?.innerText || '-0.25';
+  const countText = document.getElementById('pulse-article-count')?.innerText || '';
+  const rawLead = (document.getElementById('daily-editorial-summary')?.innerText || '').trim();
+  const alarmistName = document.getElementById('pulse-alarmist-name')?.innerText || '';
+  const alarmistScore = document.getElementById('pulse-alarmist-score')?.innerText || '';
+  const upliftingName = document.getElementById('pulse-uplifting-name')?.innerText || '';
+  const upliftingScore = document.getElementById('pulse-uplifting-score')?.innerText || '';
+
+  let summaryText = '';
+  if (isSilver) {
+    summaryText = `☀️ Some Good News — Rescued Constructive Breakthroughs\nSifting verified human, scientific & ecological progress from global newsrooms.\n\n🔗 ${shareUrl}`;
+  } else {
+    summaryText = `🌍 No Good News — Daily Global Media Vibe: ${scoreText} (${countText})\n\n"${rawLead}"\n\n📉 Most Alarmist: ${alarmistName} (${alarmistScore}) | 📈 Most Composed: ${upliftingName} (${upliftingScore})\n🔗 ${shareUrl}`;
+  }
+
+  // Use native mobile Web Share API on touch devices if available
+  const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.innerWidth <= 820;
+  if (isMobileDevice && navigator.share) {
+    try {
+      await navigator.share({
+        title: isSilver ? 'Some Good News | Global News Audit' : `No Good News | Global News Vibe: ${scoreText}`,
+        text: summaryText,
+        url: shareUrl
+      });
+      return;
+    } catch (_) {}
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    await navigator.clipboard.writeText(summaryText);
+    showShareToast('Copied briefing & deep link to clipboard!');
+  }
+};
+
+// Helper to draw rounded rectangle on Canvas
+function drawRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Helper to word-wrap text on Canvas
+function wrapCanvasText(ctx, text, maxWidth, maxLines) {
+  const words = (text || '').split(/\s+/);
+  const lines = [];
+  let current = '';
+  for (let i = 0; i < words.length; i++) {
+    const test = current ? `${current} ${words[i]}` : words[i];
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = words[i];
+      if (lines.length >= maxLines - 1) {
+        const rest = words.slice(i).join(' ');
+        let lastLine = rest;
+        while (ctx.measureText(lastLine + '…').width > maxWidth && lastLine.length > 0) {
+          lastLine = lastLine.slice(0, -1).trim();
+        }
+        lines.push(lastLine + (lastLine.length < rest.length ? '…' : ''));
+        return lines;
+      }
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+window.handleDownloadVibeCard = function() {
+  closeSharePopover();
+  showShareToast('Generating high-DPI Daily Vibe Card...');
+
+  const canvas = document.createElement('canvas');
+  const W = 1200;
+  const H = 630;
+  canvas.width = W * 2; // 2x Retina DPI (2400x1260)
+  canvas.height = H * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+
+  const isSilver = state.edition === 'silver';
+  const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+  if (isSilver) {
+    bgGrad.addColorStop(0, '#fffbeb');
+    bgGrad.addColorStop(1, '#fef3c7');
+  } else {
+    bgGrad.addColorStop(0, '#0b0f17');
+    bgGrad.addColorStop(1, '#131b2e');
+  }
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle outer frame border
+  drawRoundRect(ctx, 24, 24, W - 48, H - 48, 22);
+  ctx.fillStyle = isSilver ? 'rgba(255, 255, 255, 0.88)' : 'rgba(20, 27, 45, 0.88)';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = isSilver ? 'rgba(245, 158, 11, 0.35)' : 'rgba(99, 102, 241, 0.32)';
+  ctx.stroke();
+
+  // Top Pill Badge & Date
+  drawRoundRect(ctx, 56, 54, isSilver ? 260 : 290, 34, 17);
+  ctx.fillStyle = isSilver ? 'rgba(245, 158, 11, 0.16)' : 'rgba(99, 102, 241, 0.18)';
+  ctx.fill();
+  ctx.font = '700 13px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = isSilver ? '#b45309' : '#818cf8';
+  ctx.fillText(isSilver ? '☀️ SOME GOOD NEWS • DAILY AUDIT' : '🌍 NO GOOD NEWS • PESSIMISM AUDIT', 74, 76);
+
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const countStr = document.getElementById('pulse-article-count')?.innerText || 'Global RSS Audit';
+  ctx.font = '600 14px "JetBrains Mono", monospace';
+  ctx.fillStyle = isSilver ? '#64748b' : '#94a3b8';
+  const metaRight = `${dateStr} • ${countStr}`;
+  ctx.fillText(metaRight, W - 56 - ctx.measureText(metaRight).width, 76);
+
+  // Main Title & Score Badge
+  const scoreText = document.getElementById('global-mood-score')?.innerText || '-0.25';
+  const headingText = isSilver ? "Today's Constructive News Signal" : (document.getElementById('pulse-timeframe-heading')?.innerText || "Today's Global News Vibe:");
+  ctx.font = '800 36px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = isSilver ? '#0f172a' : '#f8fafc';
+  ctx.fillText(headingText, 56, 138);
+
+  const headWidth = ctx.measureText(headingText).width;
+  const scoreVal = parseFloat(scoreText) || -0.25;
+  const isNeg = !isSilver && scoreVal < -0.1;
+  drawRoundRect(ctx, 56 + headWidth + 18, 102, 116, 46, 12);
+  ctx.fillStyle = isNeg ? 'rgba(239, 68, 68, 0.18)' : 'rgba(16, 185, 129, 0.18)';
+  ctx.fill();
+  ctx.strokeStyle = isNeg ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.font = '700 26px "JetBrains Mono", monospace';
+  ctx.fillStyle = isNeg ? '#f87171' : '#10b981';
+  const sText = isSilver ? 'POSITIVE' : scoreText;
+  if (isSilver) ctx.font = '700 17px "JetBrains Mono", monospace';
+  const sw = ctx.measureText(sText).width;
+  ctx.fillText(sText, 56 + headWidth + 18 + (116 - sw) / 2, isSilver ? 131 : 134);
+
+  // Editorial Lead Summary
+  const rawLead = (document.getElementById('daily-editorial-summary')?.innerText || '').replace(/\s+/g, ' ').trim();
+  ctx.font = '500 22px Georgia, "Newsreader", serif';
+  ctx.fillStyle = isSilver ? '#334155' : '#cbd5e1';
+  const lines = wrapCanvasText(ctx, rawLead, W - 112, 4);
+  lines.forEach((line, idx) => {
+    ctx.fillText(line, 56, 195 + idx * 34);
+  });
+
+  // Topic Vibes Row (7 Square Tiles)
+  const chipEls = Array.from(document.querySelectorAll('#pulse-category-chips .beat-chip'));
+  if (chipEls.length > 0) {
+    const gap = 12;
+    const totalW = W - 112;
+    const tileW = (totalW - gap * (chipEls.length - 1)) / chipEls.length;
+    const tileY = 348;
+    const tileH = 82;
+
+    chipEls.forEach((el, idx) => {
+      const tx = 56 + idx * (tileW + gap);
+      drawRoundRect(ctx, tx, tileY, tileW, tileH, 10);
+      ctx.fillStyle = isSilver ? '#ffffff' : 'rgba(30, 41, 59, 0.78)';
+      ctx.fill();
+      ctx.strokeStyle = isSilver ? 'rgba(203, 213, 225, 0.8)' : 'rgba(51, 65, 85, 0.8)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      const name = el.querySelector('.beat-chip-name')?.innerText || '';
+      const icon = el.querySelector('.beat-chip-icon')?.innerText || '';
+      const val = el.querySelector('.beat-chip-val')?.innerText || '';
+      const delta = el.querySelector('.beat-chip-delta')?.innerText || '';
+
+      ctx.font = '700 14px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillStyle = isSilver ? '#1e293b' : '#f1f5f9';
+      ctx.fillText(`${icon} ${name}`, tx + 12, tileY + 28);
+
+      const vNum = parseFloat(val) || 0;
+      ctx.font = '700 15px "JetBrains Mono", monospace';
+      ctx.fillStyle = vNum < -0.15 ? '#f87171' : (vNum > 0.15 ? '#34d399' : '#94a3b8');
+      ctx.fillText(val, tx + 12, tileY + 58);
+
+      ctx.font = '600 11px "JetBrains Mono", monospace';
+      ctx.fillStyle = isSilver ? '#64748b' : '#94a3b8';
+      ctx.fillText(delta.replace(' vs 24h', ''), tx + 68, tileY + 57);
+    });
+  }
+
+  // Bottom Signal Strip (Most Alarmist | Most Composed | Biggest Clash)
+  const sigY = 456;
+  const sigH = 88;
+  const sigW = (W - 112 - 28) / 3;
+  const signals = [
+    {
+      label: 'MOST ALARMIST OUTLET',
+      name: document.getElementById('pulse-alarmist-name')?.innerText || 'N/A',
+      score: document.getElementById('pulse-alarmist-score')?.innerText || '',
+      color: '#f87171'
+    },
+    {
+      label: 'MOST COMPOSED OUTLET',
+      name: document.getElementById('pulse-uplifting-name')?.innerText || 'N/A',
+      score: document.getElementById('pulse-uplifting-score')?.innerText || '',
+      color: '#34d399'
+    },
+    {
+      label: 'BIGGEST FRAMING CLASH',
+      name: document.getElementById('pulse-polarization-name')?.innerText || 'Cross-Outlet',
+      score: document.getElementById('pulse-polarization-score')?.innerText || '',
+      color: '#fbbf24'
+    }
+  ];
+
+  signals.forEach((sig, i) => {
+    const sx = 56 + i * (sigW + 14);
+    drawRoundRect(ctx, sx, sigY, sigW, sigH, 12);
+    ctx.fillStyle = isSilver ? '#ffffff' : 'rgba(15, 23, 42, 0.85)';
+    ctx.fill();
+    ctx.strokeStyle = isSilver ? 'rgba(203, 213, 225, 0.9)' : 'rgba(51, 65, 85, 0.85)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = '700 11px "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillStyle = isSilver ? '#64748b' : '#94a3b8';
+    ctx.fillText(sig.label, sx + 16, sigY + 28);
+
+    ctx.font = '700 18px "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillStyle = isSilver ? '#0f172a' : '#f8fafc';
+    let displayName = sig.name;
+    while (ctx.measureText(displayName).width > sigW - 110 && displayName.length > 5) {
+      displayName = displayName.slice(0, -1).trim() + '…';
+    }
+    ctx.fillText(displayName, sx + 16, sigY + 60);
+
+    ctx.font = '700 15px "JetBrains Mono", monospace';
+    ctx.fillStyle = sig.color;
+    const scW = ctx.measureText(sig.score).width;
+    ctx.fillText(sig.score, sx + sigW - 16 - scW, sigY + 60);
+  });
+
+  // Footer Watermark
+  ctx.font = '600 13px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = isSilver ? '#64748b' : '#64748b';
+  ctx.fillText('Autonomous Global News Sentiment Audit • Powered by Gemini AI', 56, 582);
+
+  const urlLabel = window.location.host ? `${window.location.host}${window.location.pathname}` : 'caiolaborda.github.io/vibe-o-meter';
+  ctx.font = '600 13px "JetBrains Mono", monospace';
+  ctx.fillStyle = isSilver ? '#b45309' : '#818cf8';
+  ctx.fillText(urlLabel, W - 56 - ctx.measureText(urlLabel).width, 582);
+
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const daySlug = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `daily-vibe-audit-${daySlug}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    showShareToast('Downloaded Daily Vibe Card PNG!');
+  }, 'image/png');
+};
+
 

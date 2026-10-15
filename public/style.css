@@ -4770,6 +4770,376 @@ select option {
   color: var(--accent-color);
 }
 
+/* ==========================================================================
+   SHARE AUDIT BUTTON, POPOVER MENU & TOAST
+   ========================================================================== */
+
+.pulse-meta-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.share-vibe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.34rem 0.72rem;
+  border-radius: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.share-vibe-btn i,
+.share-vibe-btn svg {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-color);
+}
+
+.share-vibe-btn:hover {
+  border-color: var(--accent-color);
+  background: var(--bg-card);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.15);
+}
+
+.silver-share-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #78350f;
+}
+
+.silver-share-btn i,
+.silver-share-btn svg {
+  color: #d97706;
+}
+
+.silver-share-btn:hover {
+  border-color: #d97706;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.2);
+}
+
+.share-vibe-popover {
+  position: fixed;
+  z-index: 9999;
+  width: 285px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(99, 102, 241, 0.15);
+  padding: 0.65rem;
+  backdrop-filter: blur(14px);
+  animation: fadeIn 0.16s ease-out;
+}
+
+.share-vibe-popover.hidden {
+  display: none !important;
+}
+
+.share-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.share-popover-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.2rem;
+}
+
+.share-popover-close:hover {
+  color: var(--text-primary);
+}
+
+.share-popover-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.share-action-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-main);
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+}
+
+.share-action-item:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.share-action-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--accent-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.share-action-icon i,
+.share-action-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.share-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.share-action-text strong {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.share-action-text span {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.share-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: #10b981;
+  color: #fff;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.55rem 1.15rem;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.share-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.share-toast.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   STICKY FIRST COLUMN FOR TOPIC HEATMAP & MOBILE UX OVERHAUL
+   ========================================================================== */
+
+.heatmap-header-cell:first-child,
+.heatmap-row-label {
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  background: var(--bg-card);
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: 0.75rem 0.65rem 2.5rem;
+  }
+
+  /* Compact Masthead & Edition Switcher on Mobile */
+  .app-masthead-central {
+    padding: 0.65rem 0.4rem 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .edition-toggle-wrap-large {
+    padding: 0.25rem;
+    gap: 0.25rem;
+    max-width: 100%;
+  }
+
+  .edition-toggle-wrap-large .edition-pill-btn {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.84rem;
+    gap: 0.4rem;
+  }
+
+  .edition-toggle-wrap-large .edition-pill-btn svg,
+  .edition-toggle-wrap-large .edition-pill-btn i {
+    width: 16px;
+    height: 16px;
+  }
+
+  .edition-subtitle-central {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    padding: 0 0.25rem;
+  }
+
+  /* Sleek Single-Row Swipeable Sticky Nav Bar on Mobile */
+  .quick-nav-bar {
+    top: 4px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.4rem 0.45rem;
+    gap: 0.35rem;
+    border-radius: 12px;
+  }
+
+  .quick-nav-links {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.3rem;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .quick-nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-pill-btn {
+    flex-shrink: 0;
+    padding: 0.38rem 0.68rem;
+    font-size: 0.74rem;
+    gap: 0.32rem;
+    white-space: nowrap;
+  }
+
+  .nav-pill-btn i,
+  .nav-pill-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .quick-nav-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.35rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    padding-top: 0.3rem;
+  }
+
+  /* Smooth Horizontal Snap-Scroll Strip for the 7 Topic Vibe Tiles on Mobile */
+  .pulse-topics-bar {
+    margin: 0.1rem -0.25rem 0.95rem -0.25rem;
+    padding: 0 0.25rem;
+  }
+
+  .pulse-topic-chips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.45rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .pulse-topic-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .beat-chip {
+    flex: 0 0 132px;
+    scroll-snap-align: start;
+    padding: 0.5rem 0.6rem;
+  }
+
+  /* Hero Header & Controls on Mobile */
+  .pulse-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+
+  .pulse-meta-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Silver Edition Control Bar on Mobile */
+  .silver-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .silver-controls-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Sticky First Column Shadow on Topic Heatmap */
+  .heatmap-header-cell:first-child,
+  .heatmap-row-label {
+    box-shadow: 3px 0 8px rgba(0, 0, 0, 0.18);
+    padding-right: 0.4rem;
+  }
+
+  /* Deep-Dive & Cluster Filter Bars on Mobile */
+  .feed-controls-toolbar,
+  .clusters-filter-bar {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem !important;
+  }
+
+  .feed-controls-toolbar .search-box,
+  .clusters-filter-bar .search-box {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+
 
 
 
