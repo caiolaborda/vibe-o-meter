@@ -27,6 +27,8 @@ let state = {
   },
   edition: 'doom', // 'doom' (No Good News) or 'silver' (Some Good News)
   silverTopic: 'all',
+  silverViewMode: 'antidote', // 'antidote' (5-Story Antidote Deck) or 'grid' (All Good News Grid)
+  silverDeckIndex: 0,
   headlinesLimit: 20,
   sharedStoryClusters: [],
   clusterSearch: '',
@@ -69,62 +71,289 @@ function getSourceFlagHTML(sourceId, extraClass = '') {
 }
 window.getSourceFlagHTML = getSourceFlagHTML;
 
-// High-Res Editorial Photography Fallbacks for constructive news cards
+// Semantic Keyword-Matched Editorial Photography Pools (prevents generic topic fallback repetition)
+const SEMANTIC_KEYWORD_PHOTOS = [
+  {
+    regex: /\b(cancer|immunotherapy|tumor|oncology|chemo|leukemia|biopsy|remission)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1579154204601-01588f351e67?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(glp-1|schizophrenia|brain|alzheimer|dementia|mental|psychiatric|neurolog|cognitive|drug|pill|pharmaceut|medicine|vaccine)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1576086213369-97a306d36557?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(baby|babies|premature|infant|newborn|maternal|mother|neonatal|pediatric|child)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(shipwreck|underwater|ocean|marine|coral|reef|diving|sea|maritime|whale|dolphin|coast)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(neanderthal|archaeolog|ancient|fossil|cave|excavat|skeleton|artifact|roman|egypt|tomb|ruin|bronze age)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1564399580075-5dfe19c205f3?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1599930113854-d6d7fd521f10?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(frog|amphibian|wildlife|endangered|zoo|species|biodiversity|conservation|tiger|bird|panda|turtle|forest|rainforest)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1559253664-ca249d4608c6?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(space|nasa|artemis|moon|lunar|mars|rocket|telescope|galaxy|astronomy|satellite|orbit|asteroid)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517976487468-f20514c44525?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(solar|wind|turbine|renewable|clean energy|battery|grid|emissions|geothermal|ev\b|electric vehicle)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1509391366360-2e959784a276?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(workweek|working week|shorter work|hospitality|jobs|hiring|workers|employment|career|neet|wage)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(social security|pension|retirement|seniors|elderly|cost-of-living|cola|stipend|relief|household|consumer)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1516733968668-dbdce39c4651?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(harvard|university|college|campus|endowment|scholarship|student|school|education)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(f1\b|formula 1|pit stop|motorsport|racing|grand prix|ferrari|mclaren)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1541447271487-09612b3f49f7?w=1200&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    regex: /\b(capoeira|dance|music|festival|art|museum|cultural|theater|orchestra|cinema)\b/i,
+    photos: [
+      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1200&auto=format&fit=crop&q=80'
+    ]
+  }
+];
+
+// High-Res Editorial Photography Fallbacks by Topic (expanded & diverse, zero recognizable politicians)
 const EDITORIAL_TOPIC_PHOTOS = {
   science: [
-    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1518152006812-edab29b069ac?w=1200&auto=format&fit=crop&q=80'
   ],
   climate: [
     'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&auto=format&fit=crop&q=80'
   ],
   health: [
     'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1200&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&auto=format&fit=crop&q=80'
   ],
   technology: [
     'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&auto=format&fit=crop&q=80'
   ],
   business: [
     'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop&q=80'
   ],
   world: [
-    'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=1200&auto=format&fit=crop&q=80'
   ],
   politics: [
-    'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=1200&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1555848962-6e79363ec58f?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1575320181282-9afab399332c?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1541872705-1f73c6400ec9?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200&auto=format&fit=crop&q=80'
   ],
   sports: [
-    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=1200&auto=format&fit=crop&q=80'
   ],
   entertainment: [
-    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&auto=format&fit=crop&q=80'
   ],
   other: [
-    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1200&auto=format&fit=crop&q=80'
   ]
 };
 
+let usedSilverFallbackImages = new Set();
+
+function isValidEditorialImage(url) {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) return false;
+  const u = url.toLowerCase();
+  return !(
+    u.includes('googleusercontent.com') ||
+    u.includes('news.google.com') ||
+    u.includes('gstatic.com') ||
+    u.includes('bbc_news_logo') ||
+    u.includes('default-share') ||
+    u.includes('feedburner') ||
+    u.includes('beacon') ||
+    u.includes('1x1') ||
+    u.includes('pixel') ||
+    u.includes('favicon')
+  );
+}
+
 function getStoryImage(art) {
-  if (art.imageUrl && typeof art.imageUrl === 'string' && art.imageUrl.startsWith('http')) {
+  if (art && isValidEditorialImage(art.imageUrl)) {
     return art.imageUrl;
   }
-  const cat = (art.category || 'other').toLowerCase();
-  const pool = EDITORIAL_TOPIC_PHOTOS[cat] || EDITORIAL_TOPIC_PHOTOS.other;
-  let hash = 0;
-  const str = art.title || '';
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash + str.charCodeAt(i)) % pool.length;
+  const text = `${art?.title || ''} ${art?.description || ''} ${art?.summary || ''}`;
+  let pool = null;
+  for (const rule of SEMANTIC_KEYWORD_PHOTOS) {
+    if (rule.regex.test(text)) {
+      pool = rule.photos;
+      break;
+    }
   }
-  return pool[hash];
+  if (!pool) {
+    const cat = (art?.category || 'other').toLowerCase();
+    pool = EDITORIAL_TOPIC_PHOTOS[cat] || EDITORIAL_TOPIC_PHOTOS.other;
+  }
+
+  let hash = 0;
+  const str = art?.title || 'story';
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  }
+
+  for (let offset = 0; offset < pool.length; offset++) {
+    const candidate = pool[(hash + offset) % pool.length];
+    if (!usedSilverFallbackImages.has(candidate)) {
+      usedSilverFallbackImages.add(candidate);
+      return candidate;
+    }
+  }
+
+  // If all photos in this specific pool were used on screen, pick an unused photo from any pool
+  const allFallbacks = Object.values(EDITORIAL_TOPIC_PHOTOS).flat();
+  for (let offset = 0; offset < allFallbacks.length; offset++) {
+    const candidate = allFallbacks[(hash + offset) % allFallbacks.length];
+    if (!usedSilverFallbackImages.has(candidate)) {
+      usedSilverFallbackImages.add(candidate);
+      return candidate;
+    }
+  }
+
+  return pool[hash % pool.length];
+}
+
+function cleanDisplayHeadline(title) {
+  return (title || '')
+    .replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com|Bloomberg|BBC|The Guardian|Sky News|Al Jazeera|NPR|CNBC).*$/i, '')
+    .trim();
+}
+
+function getCleanSilverSummary(rawDesc, cleanTitle, artOrItem) {
+  let cleanDesc = (rawDesc || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s*[-–—|]?\s*(Bloomberg\.com|Reuters|AP News|CNN)\s*$/i, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Detect if RSS description is just repeating the headline (common in Google News RSS feeds)
+  const normDesc = cleanDesc.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normTitle = (cleanTitle || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const isDuplicateOfTitle = normTitle.length > 15 && (
+    normDesc === normTitle ||
+    normDesc.startsWith(normTitle.slice(0, Math.min(35, normTitle.length))) ||
+    normTitle.startsWith(normDesc.slice(0, Math.min(35, normDesc.length)))
+  );
+
+  if (!cleanDesc || cleanDesc.length < 20 || isDuplicateOfTitle) {
+    const rawExp = artOrItem?.explanationGemini || artOrItem?.explanation || artOrItem?.leadArticle?.explanationGemini || '';
+    if (rawExp && !rawExp.includes('Analyzed locally') && !rawExp.includes('Pending evaluation')) {
+      const humanizedExp = rawExp
+        .replace(/Event\s*Base\s*[+-]?\d+(\.\d+)?\s*\(([^)]+)\)[,.]?\s*/i, '$2. ')
+        .replace(/Framing\s*(Modifier)?\s*[+-]?\d+(\.\d+)?\s*\(([^)]+)\)[,.]?\s*/i, '')
+        .replace(/Framing\s*[+-]?\d+(\.\d+)?[,.]?\s*/i, '')
+        .trim();
+      if (humanizedExp.length > 18) {
+        return humanizedExp.charAt(0).toUpperCase() + humanizedExp.slice(1);
+      }
+    }
+    if (artOrItem?.isCluster && artOrItem?.articles?.length > 1) {
+      const names = artOrItem.articles.slice(0, 3).map(a => a.sourceName).join(', ');
+      return `Verified constructive breakthrough reported across ${artOrItem.articles.length} global newsrooms including ${names}.`;
+    }
+    return `Verified constructive reporting from ${artOrItem?.sourceName || 'international press'}. Follow the link below for the full dispatch.`;
+  }
+
+  return cleanDesc;
 }
 
 function findRelatedCoverage(art) {
@@ -178,38 +407,81 @@ document.addEventListener('click', () => {
   });
 });
 
-function attachSwipeListeners(el) {
-  if (!el) return;
+// Interactive Tinder-Style Touch & Pointer Drag Swipe Physics for Antidote Deck
+function attachAntidoteSwipeCard(cardEl, totalDeckSteps) {
+  if (!cardEl) return;
   let startX = 0;
   let startY = 0;
-  let startTime = 0;
+  let currentX = 0;
+  let isDragging = false;
+  let isHorizontalSwipe = null;
 
-  el.addEventListener('touchstart', (e) => {
-    if (e.touches && e.touches[0]) {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      startTime = Date.now();
+  const onStart = (clientX, clientY, target) => {
+    if (target && target.closest('a, button, .silver-consensus-hover-wrap')) return;
+    startX = clientX;
+    startY = clientY;
+    currentX = 0;
+    isDragging = true;
+    isHorizontalSwipe = null;
+    cardEl.style.transition = 'none';
+  };
+
+  const onMove = (clientX, clientY, e) => {
+    if (!isDragging) return;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+
+    if (isHorizontalSwipe === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+      isHorizontalSwipe = Math.abs(dx) > Math.abs(dy) * 1.15;
     }
+    if (!isHorizontalSwipe) return;
+    if (e && e.cancelable) e.preventDefault();
+
+    currentX = dx;
+    const rot = Math.max(-10, Math.min(10, dx * 0.045));
+    cardEl.style.transform = `translate3d(${dx}px, ${Math.abs(dx) * 0.03}px, 0) rotate(${rot}deg)`;
+
+    const badgeNext = cardEl.querySelector('.swipe-stamp-next');
+    const badgePrev = cardEl.querySelector('.swipe-stamp-prev');
+    if (badgeNext) badgeNext.style.opacity = dx < -25 ? Math.min(1, (-dx - 25) / 70) : 0;
+    if (badgePrev) badgePrev.style.opacity = dx > 25 ? Math.min(1, (dx - 25) / 70) : 0;
+  };
+
+  const onEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    const badgeNext = cardEl.querySelector('.swipe-stamp-next');
+    const badgePrev = cardEl.querySelector('.swipe-stamp-prev');
+    if (badgeNext) badgeNext.style.opacity = 0;
+    if (badgePrev) badgePrev.style.opacity = 0;
+
+    cardEl.style.transition = 'transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease';
+    if (currentX < -65 && state.silverDeckIndex < totalDeckSteps - 1) {
+      cardEl.style.transform = 'translate3d(-115%, 20px, 0) rotate(-12deg)';
+      cardEl.style.opacity = '0';
+      setTimeout(() => navigateSilverDeck(1), 170);
+    } else if (currentX > 65 && state.silverDeckIndex > 0) {
+      cardEl.style.transform = 'translate3d(115%, 20px, 0) rotate(12deg)';
+      cardEl.style.opacity = '0';
+      setTimeout(() => navigateSilverDeck(-1), 170);
+    } else {
+      cardEl.style.transform = '';
+    }
+    currentX = 0;
+  };
+
+  cardEl.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches[0]) onStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
   }, { passive: true });
 
-  el.addEventListener('touchend', (e) => {
-    if (e.changedTouches && e.changedTouches[0]) {
-      const diffX = e.changedTouches[0].clientX - startX;
-      const diffY = e.changedTouches[0].clientY - startY;
-      const duration = Date.now() - startTime;
-      
-      if (Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY) * 1.5 && duration < 600) {
-        if (diffX < 0) {
-          navigateSilverDeck(1);
-        } else {
-          navigateSilverDeck(-1);
-        }
-      }
-    }
-  }, { passive: true });
+  cardEl.addEventListener('touchmove', (e) => {
+    if (e.touches && e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY, e);
+  }, { passive: false });
+
+  cardEl.addEventListener('touchend', onEnd, { passive: true });
 }
 
-function createSilverCardHTML(art, idx, related, isSpotlight) {
+function createSilverCardHTML(art, idx, related, isDeckCard) {
   let rankBadgeHTML = '';
   if (idx === 0) {
     rankBadgeHTML = `<span class="silver-rank-pill rank-gold"><i data-lucide="crown" style="width:12px;height:12px;"></i> #1 TOP BREAKTHROUGH</span>`;
@@ -230,19 +502,8 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
     minute: '2-digit'
   });
 
-  let cleanDesc = (art.description || '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  if (!cleanDesc || cleanDesc.length < 15) {
-    cleanDesc = `Full reporting and editorial coverage from ${art.sourceName}. Follow the link below for the complete dispatch.`;
-  }
-
+  const cleanTitle = cleanDisplayHeadline(art.title);
+  const cleanDesc = getCleanSilverSummary(art.description, cleanTitle, art);
   const heroImgUrl = getStoryImage(art);
   const storyUrl = art.url || art.link || '#';
 
@@ -251,7 +512,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
   if (related && related.length > 0) {
     const rowsHTML = related.map(r => {
       const meta = SOURCE_META[r.sourceId] || { color: '#3b82f6' };
-      const cleanHeadline = (r.title || '').replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com).*$/i, '').trim();
+      const cleanHeadline = cleanDisplayHeadline(r.title);
       return `
         <a href="${r.link}" target="_blank" rel="noopener noreferrer" class="silver-cluster-outlet-row" title="${cleanHeadline.replace(/"/g, '&quot;')}">
           <span class="cluster-row-source" style="border-left: 3px solid ${meta.color};">
@@ -288,10 +549,28 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
     `;
   }
 
+  const deckStampsHTML = isDeckCard ? `
+    <div class="swipe-stamp swipe-stamp-next">NEXT ✨</div>
+    <div class="swipe-stamp swipe-stamp-prev">← BACK</div>
+  ` : '';
+
+  const deckNavRightHTML = isDeckCard ? `
+    <div class="antidote-card-nav-btns">
+      <button type="button" class="antidote-nav-pill prev" onclick="navigateSilverDeck(-1)" ${idx === 0 ? 'disabled' : ''} title="Previous breakthrough">
+        <i data-lucide="arrow-left" style="width:15px;height:15px;"></i>
+      </button>
+      <button type="button" class="antidote-nav-pill next" onclick="navigateSilverDeck(1)" title="Next breakthrough">
+        <span>${idx === 4 ? 'Finish Antidote ☀️' : 'Next'}</span>
+        <i data-lucide="arrow-right" style="width:15px;height:15px;"></i>
+      </button>
+    </div>
+  ` : '';
+
   return `
     <div class="silver-media-hero">
-      <img src="${heroImgUrl}" alt="${art.title.replace(/"/g, '&quot;')}" class="silver-hero-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'" />
+      <img src="${heroImgUrl}" alt="${cleanTitle.replace(/"/g, '&quot;')}" class="silver-hero-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'" />
       <div class="silver-media-overlay"></div>
+      ${deckStampsHTML}
       <div class="silver-media-badges">
         ${rankBadgeHTML}
         <span class="silver-score-badge">
@@ -314,12 +593,12 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
       </div>
 
       <h2 class="silver-story-title">
-        <a href="${storyUrl}" target="_blank" rel="noopener noreferrer">${art.title}</a>
+        <a href="${storyUrl}" target="_blank" rel="noopener noreferrer">${cleanTitle}</a>
       </h2>
 
       <p class="silver-story-desc">${cleanDesc}</p>
 
-      <div class="silver-story-footer">
+      <div class="silver-story-footer ${isDeckCard ? 'is-deck-footer' : ''}">
         <div class="silver-footer-actions">
           <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${storyUrl}', this)" title="Copy link to clipboard">
             <i data-lucide="link" style="width:13px;height:13px;"></i>
@@ -330,6 +609,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
             <i data-lucide="external-link" style="width:12px;height:12px;"></i>
           </a>
         </div>
+        ${deckNavRightHTML}
       </div>
     </div>
   `;
@@ -421,7 +701,7 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
           pubDate: leadArt.pubDate,
           sentiment: avgScore,
           maxSentiment: dedupedCov[0].sentiment,
-          leadArticle: rawCov.find(x => x.imageUrl) || leadArt,
+          leadArticle: rawCov.find(x => isValidEditorialImage(x.imageUrl)) || leadArt,
           articles: dedupedCov
         });
       } else {
@@ -460,16 +740,17 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
     if (dedupedOutlets.length >= 2) {
       dedupedOutlets.sort((x, y) => y.sentiment - x.sentiment);
       const avgScore = Number((dedupedOutlets.reduce((s, x) => s + x.sentiment, 0) / dedupedOutlets.length).toFixed(2));
-      const cleanLeadTitle = a.title.replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com|BBC|The Guardian|Sky News).*$/i, '').trim();
+      const cleanLeadTitle = cleanDisplayHeadline(a.title);
+      const bestSummaryArt = groupArts.find(x => x.description && x.description.length > 40 && !x.description.includes(x.title.slice(0, 25))) || a;
       feedItems.push({
         isCluster: true,
         title: cleanLeadTitle,
-        summary: a.description || '',
+        summary: bestSummaryArt.description || a.description || '',
         category: a.category || 'world',
         pubDate: a.pubDate,
         sentiment: avgScore,
         maxSentiment: dedupedOutlets[0].sentiment,
-        leadArticle: groupArts.find(x => x.imageUrl) || a,
+        leadArticle: groupArts.find(x => isValidEditorialImage(x.imageUrl)) || a,
         articles: dedupedOutlets
       });
     } else {
@@ -485,7 +766,7 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
   return feedItems;
 }
 
-function createSilverClusterCardHTML(item, idx) {
+function createSilverClusterCardHTML(item, idx, isDeckCard) {
   let rankBadgeHTML = '';
   if (idx === 0) {
     rankBadgeHTML = `<span class="silver-rank-pill rank-gold"><i data-lucide="crown" style="width:12px;height:12px;"></i> #1 TOP BREAKTHROUGH</span>`;
@@ -498,7 +779,8 @@ function createSilverClusterCardHTML(item, idx) {
   }
 
   const leadArt = item.leadArticle || item.articles[0];
-  const heroImgUrl = getStoryImage(leadArt);
+  const cleanTitle = cleanDisplayHeadline(item.title || leadArt.title);
+  const heroImgUrl = getStoryImage({ ...leadArt, title: cleanTitle, summary: item.summary });
   const leadUrl = leadArt.url || leadArt.link || '#';
   const dateObj = new Date(item.pubDate || leadArt.pubDate);
   const dateFormatted = dateObj.toLocaleDateString(undefined, {
@@ -508,22 +790,11 @@ function createSilverClusterCardHTML(item, idx) {
     minute: '2-digit'
   });
 
-  let cleanDesc = (item.summary || leadArt.description || '')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  if (!cleanDesc || cleanDesc.length < 15) {
-    cleanDesc = `Confirmed constructive story reported across ${item.articles.length} international newsrooms.`;
-  }
+  const cleanDesc = getCleanSilverSummary(item.summary || leadArt.description, cleanTitle, item);
 
   const outletRowsHTML = item.articles.map(m => {
     const meta = SOURCE_META[m.sourceId] || { color: '#3b82f6' };
-    const cleanHeadline = (m.title || '').replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com).*$/i, '').trim();
+    const cleanHeadline = cleanDisplayHeadline(m.title);
     const url = m.url || m.link || '#';
     return `
       <a href="${url}" target="_blank" rel="noopener noreferrer" class="silver-cluster-outlet-row" title="${cleanHeadline.replace(/"/g, '&quot;')}">
@@ -542,10 +813,28 @@ function createSilverClusterCardHTML(item, idx) {
     return `<span class="silver-cluster-dot" style="background:${meta.color}" title="${m.sourceName}"></span>`;
   }).join('');
 
+  const deckStampsHTML = isDeckCard ? `
+    <div class="swipe-stamp swipe-stamp-next">NEXT ✨</div>
+    <div class="swipe-stamp swipe-stamp-prev">← BACK</div>
+  ` : '';
+
+  const deckNavRightHTML = isDeckCard ? `
+    <div class="antidote-card-nav-btns">
+      <button type="button" class="antidote-nav-pill prev" onclick="navigateSilverDeck(-1)" ${idx === 0 ? 'disabled' : ''} title="Previous breakthrough">
+        <i data-lucide="arrow-left" style="width:15px;height:15px;"></i>
+      </button>
+      <button type="button" class="antidote-nav-pill next" onclick="navigateSilverDeck(1)" title="Next breakthrough">
+        <span>${idx === 4 ? 'Finish Antidote ☀️' : 'Next'}</span>
+        <i data-lucide="arrow-right" style="width:15px;height:15px;"></i>
+      </button>
+    </div>
+  ` : '';
+
   return `
     <div class="silver-media-hero">
-      <img src="${heroImgUrl}" alt="${item.title.replace(/"/g, '&quot;')}" class="silver-hero-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'" />
+      <img src="${heroImgUrl}" alt="${cleanTitle.replace(/"/g, '&quot;')}" class="silver-hero-image" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&auto=format&fit=crop&q=80'" />
       <div class="silver-media-overlay"></div>
+      ${deckStampsHTML}
       <div class="silver-media-badges">
         <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
           ${rankBadgeHTML}
@@ -586,12 +875,12 @@ function createSilverClusterCardHTML(item, idx) {
       </div>
 
       <h2 class="silver-story-title">
-        <a href="${leadUrl}" target="_blank" rel="noopener noreferrer">${item.title}</a>
+        <a href="${leadUrl}" target="_blank" rel="noopener noreferrer">${cleanTitle}</a>
       </h2>
 
       <p class="silver-story-desc">${cleanDesc}</p>
 
-      <div class="silver-story-footer">
+      <div class="silver-story-footer ${isDeckCard ? 'is-deck-footer' : ''}">
         <div class="silver-footer-actions">
           <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${leadUrl}', this)" title="Copy link to clipboard">
             <i data-lucide="link" style="width:13px;height:13px;"></i>
@@ -602,6 +891,7 @@ function createSilverClusterCardHTML(item, idx) {
             <i data-lucide="external-link" style="width:12px;height:12px;"></i>
           </a>
         </div>
+        ${deckNavRightHTML}
       </div>
     </div>
   `;
@@ -1822,9 +2112,45 @@ function switchEdition(edition) {
 }
 
 // Global navigation helpers for Silver Edition
+window.setSilverViewMode = function(mode) {
+  state.silverViewMode = mode === 'grid' ? 'grid' : 'antidote';
+  if (state.silverViewMode === 'antidote' && state.silverDeckIndex > 5) {
+    state.silverDeckIndex = 0;
+  }
+  renderSilverEdition();
+};
+
+window.navigateSilverDeck = function(delta) {
+  const maxStep = state.silverAntidoteCount || 5;
+  const nextIdx = Math.max(0, Math.min(maxStep, (state.silverDeckIndex || 0) + delta));
+  if (nextIdx !== state.silverDeckIndex) {
+    state.silverDeckIndex = nextIdx;
+    renderSilverEdition();
+  }
+};
+
+window.jumpSilverDeck = function(idx) {
+  state.silverDeckIndex = Math.max(0, idx);
+  renderSilverEdition();
+};
+
+// Keyboard arrow navigation for Daily 5 Antidote Deck
+document.addEventListener('keydown', (e) => {
+  if (state.edition !== 'silver' || state.silverViewMode !== 'antidote') return;
+  if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+  if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    window.navigateSilverDeck(1);
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    window.navigateSilverDeck(-1);
+  }
+});
+
 window.setSilverTimeframe = function(val) {
   state.filters.time = val;
   state.silverLimit = 24;
+  state.silverDeckIndex = 0;
   const silverSelect = document.getElementById('silver-timeframe-select');
   if (silverSelect) silverSelect.value = val;
   if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
@@ -1835,6 +2161,7 @@ window.setSilverTimeframe = function(val) {
 window.setSilverTopic = function(val) {
   state.silverTopic = val;
   state.silverLimit = 24;
+  state.silverDeckIndex = 0;
   const topicSelect = document.getElementById('silver-topic-select');
   if (topicSelect) topicSelect.value = val;
   renderSilverEdition();
@@ -1854,10 +2181,12 @@ window.copyStoryLink = function(url, btn) {
   }
 };
 
-// Render Dedicated "Some Good News" View (Broadsheet Magazine Grid with Topic & Timeframe Filters)
+// Render Dedicated "Some Good News" View (Daily 5 Antidote Swipe Deck + Full Broadsheet Grid)
 function renderSilverEdition() {
   const silverSection = document.getElementById('silver-edition-section');
   if (!silverSection) return;
+
+  usedSilverFallbackImages.clear();
 
   const silverTimeSelect = document.getElementById('silver-timeframe-select');
   if (silverTimeSelect && state.filters.time) {
@@ -1930,6 +2259,15 @@ function renderSilverEdition() {
   uniqueArticles.sort((a, b) => b.sentiment - a.sentiment);
   const feedItems = groupSilverArticlesIntoFeedItems(uniqueArticles);
 
+  // Sync top mode buttons & count label
+  const btnAntidote = document.getElementById('silver-mode-antidote');
+  const btnGrid = document.getElementById('silver-mode-grid');
+  const gridCountLabel = document.getElementById('silver-grid-count-label');
+  const activeMode = state.silverViewMode || 'antidote';
+  if (btnAntidote) btnAntidote.classList.toggle('active', activeMode === 'antidote');
+  if (btnGrid) btnGrid.classList.toggle('active', activeMode === 'grid');
+  if (gridCountLabel) gridCountLabel.innerText = `All Good News (${feedItems.length})`;
+
   // 4. Update Summary Stats Pills
   const topScore = uniqueArticles.length > 0 ? uniqueArticles[0].sentiment : 0;
   if (statCount) statCount.innerText = `${feedItems.length} Stor${feedItems.length === 1 ? 'y' : 'ies'}`;
@@ -1937,8 +2275,7 @@ function renderSilverEdition() {
 
   // Timeframe label for contextual messaging
   let timeframeLabel = 'Past 24 Hours';
-  if (state.filters.time === '3h') timeframeLabel = 'Past 3 Hours';
-  else if (state.filters.time === '6h') timeframeLabel = 'Past 6 Hours';
+  if (state.filters.time === '6h') timeframeLabel = 'Past 6 Hours';
   else if (state.filters.time === '12h') timeframeLabel = 'Past 12 Hours';
   else if (state.filters.time === '3d') timeframeLabel = 'Past 3 Days';
   else if (state.filters.time === '7d') timeframeLabel = 'Past 7 Days';
@@ -1947,7 +2284,7 @@ function renderSilverEdition() {
 
   if (feedItems.length === 0) {
     container.innerHTML = `
-      <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 18px; width: 100%;">
+      <div class="card" style="text-align: center; padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 22px; width: 100%;">
         <div style="font-size: 2.8rem; margin-bottom: 0.75rem;">⛅</div>
         <h3 style="font-size: 1.45rem; font-family: var(--font-serif); margin-bottom: 0.5rem; color: var(--text-primary);">A Drought of Optimism Across Global News</h3>
         <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto 1.5rem; line-height: 1.6;">
@@ -1964,7 +2301,144 @@ function renderSilverEdition() {
     return;
   }
 
-  // 5. Render directly in BroadSheet Grid (sliced to initial batch for instant 60fps switching)
+  // MODE A: DAILY 5 ANTIDOTE (TINDER-STYLE INTERACTIVE STACKED CARD DECK)
+  if (activeMode === 'antidote') {
+    const antidoteItems = feedItems.slice(0, 5);
+    state.silverAntidoteCount = antidoteItems.length;
+    const currentIdx = Math.max(0, Math.min(antidoteItems.length, state.silverDeckIndex || 0));
+    state.silverDeckIndex = currentIdx;
+    const isComplete = currentIdx >= antidoteItems.length;
+
+    const progressPillsHTML = antidoteItems.map((it, i) => {
+      const stateClass = i === currentIdx ? 'active' : (i < currentIdx ? 'visited' : '');
+      return `
+        <button type="button" class="antidote-step-bubble ${stateClass}" onclick="jumpSilverDeck(${i})" title="Breakthrough #${i + 1}">
+          <span>#${i + 1}</span>
+        </button>
+      `;
+    }).join('') + `
+      <button type="button" class="antidote-step-bubble finish-bubble ${isComplete ? 'active' : ''}" onclick="jumpSilverDeck(${antidoteItems.length})" title="Antidote Complete">
+        <span>☀️ Done</span>
+      </button>
+    `;
+
+    const stageWrap = document.createElement('div');
+    stageWrap.className = 'silver-antidote-stage';
+
+    let deckCardsHTML = '';
+    if (isComplete) {
+      const recapRowsHTML = antidoteItems.map((it, i) => {
+        const title = cleanDisplayHeadline(it.title || it.leadArticle?.title);
+        const url = it.isCluster ? (it.leadArticle?.url || it.leadArticle?.link || '#') : (it.url || it.link || '#');
+        const badge = it.isCluster ? `${it.articles.length} Outlets` : (it.sourceName || 'Global Press');
+        return `
+          <a href="${url}" target="_blank" rel="noopener noreferrer" class="antidote-recap-row">
+            <span class="recap-rank">#${i + 1}</span>
+            <span class="recap-title">${title}</span>
+            <span class="recap-meta">${badge} • +${it.sentiment.toFixed(2)}</span>
+            <i data-lucide="external-link" style="width:13px;height:13px;flex-shrink:0;opacity:0.65;"></i>
+          </a>
+        `;
+      }).join('');
+
+      deckCardsHTML = `
+        <div class="silver-story-card antidote-deck-card antidote-completion-card is-active">
+          <div class="antidote-sun-orb">☀️</div>
+          <span class="antidote-complete-pill">DAILY ANTIDOTE COMPLETE</span>
+          <h2 class="antidote-complete-title">You're Caught Up on Human Progress.</h2>
+          <p class="antidote-complete-desc">
+            You just absorbed the <strong>${antidoteItems.length} highest-impact breakthroughs</strong> from ${timeframeLabel}. Step away from the doomscroll and enjoy your day—or explore all <strong>${feedItems.length} constructive stories</strong> in the full dataset.
+          </p>
+          <div class="antidote-recap-list">
+            ${recapRowsHTML}
+          </div>
+          <div class="antidote-complete-actions">
+            <button type="button" class="antidote-cta-primary" onclick="setSilverViewMode('grid')">
+              <i data-lucide="layout-grid" style="width:16px;height:16px;"></i>
+              <span>Browse All ${feedItems.length} Positive Stories</span>
+            </button>
+            <button type="button" class="antidote-cta-secondary" onclick="jumpSilverDeck(0)">
+              <i data-lucide="rotate-ccw" style="width:15px;height:15px;"></i>
+              <span>Replay Top ${antidoteItems.length}</span>
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      // Render background preview cards (next + third) for tactile physical stack depth
+      for (let offset = Math.min(2, antidoteItems.length - 1 - currentIdx); offset >= 1; offset--) {
+        const bgItem = antidoteItems[currentIdx + offset];
+        const depthClass = offset === 1 ? 'is-next' : 'is-third';
+        const bgHTML = bgItem.isCluster
+          ? createSilverClusterCardHTML(bgItem, currentIdx + offset, false)
+          : createSilverCardHTML(bgItem, currentIdx + offset, findRelatedCoverage(bgItem, uniqueArticles), false);
+        deckCardsHTML += `
+          <div class="silver-story-card antidote-deck-card ${bgItem.isCluster ? 'silver-cluster-card' : ''} ${depthClass}" aria-hidden="true">
+            ${bgHTML}
+          </div>
+        `;
+      }
+
+      // Render active foreground card
+      const activeItem = antidoteItems[currentIdx];
+      const activeHTML = activeItem.isCluster
+        ? createSilverClusterCardHTML(activeItem, currentIdx, true)
+        : createSilverCardHTML(activeItem, currentIdx, findRelatedCoverage(activeItem, uniqueArticles), true);
+      deckCardsHTML += `
+        <div class="silver-story-card antidote-deck-card ${activeItem.isCluster ? 'silver-cluster-card' : ''} is-active" id="active-antidote-card">
+          ${activeHTML}
+        </div>
+      `;
+    }
+
+    stageWrap.innerHTML = `
+      <div class="antidote-progress-header">
+        <div class="antidote-bubbles-row">
+          ${progressPillsHTML}
+        </div>
+        <div class="antidote-hint-pill">
+          <i data-lucide="move-horizontal" style="width:13px;height:13px;"></i>
+          <span>${isComplete ? 'Ritual Complete ☀️' : `Story ${currentIdx + 1} of ${antidoteItems.length} • Swipe or use ← →`}</span>
+        </div>
+      </div>
+
+      <div class="antidote-deck-viewport">
+        <button type="button" class="antidote-side-arrow prev" onclick="navigateSilverDeck(-1)" ${currentIdx === 0 ? 'disabled' : ''} aria-label="Previous story">
+          <i data-lucide="chevron-left"></i>
+        </button>
+
+        <div class="antidote-stack-frame">
+          ${deckCardsHTML}
+        </div>
+
+        <button type="button" class="antidote-side-arrow next" onclick="navigateSilverDeck(1)" ${isComplete ? 'disabled' : ''} aria-label="Next story">
+          <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="antidote-dataset-bridge">
+        <span>Showing Top ${antidoteItems.length} breakthroughs for <strong>${timeframeLabel}</strong></span>
+        <button type="button" class="antidote-bridge-btn" onclick="setSilverViewMode('grid')">
+          <i data-lucide="layout-grid" style="width:14px;height:14px;"></i>
+          <span>Explore All ${feedItems.length} Constructive Stories →</span>
+        </button>
+      </div>
+    `;
+
+    container.appendChild(stageWrap);
+
+    const activeCardEl = document.getElementById('active-antidote-card');
+    if (activeCardEl) {
+      attachAntidoteSwipeCard(activeCardEl, antidoteItems.length + 1);
+    }
+
+    if (window.lucide && lucide.createIcons) {
+      lucide.createIcons();
+    }
+    return;
+  }
+
+  // MODE B: FULL BROADSHEET GRID (WITH 5-STORY ANTIDOTE CHECKPOINT BANNER)
   state.silverLimit = state.silverLimit || 24;
   const displayedItems = feedItems.slice(0, state.silverLimit);
 
@@ -1975,13 +2449,33 @@ function renderSilverEdition() {
     const card = document.createElement('div');
     if (item.isCluster) {
       card.className = 'silver-story-card silver-card-grid-item silver-cluster-card';
-      card.innerHTML = createSilverClusterCardHTML(item, idx);
+      card.innerHTML = createSilverClusterCardHTML(item, idx, false);
     } else {
       card.className = 'silver-story-card silver-card-grid-item';
       const related = findRelatedCoverage(item, uniqueArticles);
       card.innerHTML = createSilverCardHTML(item, idx, related, false);
     }
     gridEl.appendChild(card);
+
+    // Insert the 5-Story Daily Antidote Checkpoint Banner right after Story #5
+    if (idx === 4 && displayedItems.length > 5) {
+      const checkpoint = document.createElement('div');
+      checkpoint.className = 'silver-antidote-grid-checkpoint';
+      checkpoint.innerHTML = `
+        <div class="checkpoint-left">
+          <span class="checkpoint-sun">☀️</span>
+          <div>
+            <strong>5-Story Daily Antidote Complete</strong>
+            <p>You've read the top 5 highest-impact breakthroughs for ${timeframeLabel}. Pause here with a clear head—or keep scrolling to explore ${feedItems.length - 5} more positive stories below.</p>
+          </div>
+        </div>
+        <button type="button" class="antidote-bridge-btn" onclick="setSilverViewMode('antidote')">
+          <i data-lucide="sun" style="width:14px;height:14px;"></i>
+          <span>Switch to Swipe Deck</span>
+        </button>
+      `;
+      gridEl.appendChild(checkpoint);
+    }
   });
 
   container.appendChild(gridEl);

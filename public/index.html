@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=4.1">
+  <link rel="stylesheet" href="style.css?v=4.2">
 </head>
 <body data-edition="doom">
 
@@ -55,10 +55,16 @@
       <!-- Sunlit Quick Controls Bar -->
       <div class="silver-controls-bar">
         <div class="silver-controls-left">
-          <span class="silver-sun-pill">
-            <i data-lucide="sun"></i>
-            <span>Some Good News</span>
-          </span>
+          <div class="silver-mode-switcher" role="tablist" aria-label="Some Good News Display Mode">
+            <button type="button" id="silver-mode-antidote" class="silver-mode-btn active" onclick="setSilverViewMode('antidote')" title="Swipe through the top 5 breakthroughs">
+              <i data-lucide="sun"></i>
+              <span>Daily 5 Antidote</span>
+            </button>
+            <button type="button" id="silver-mode-grid" class="silver-mode-btn" onclick="setSilverViewMode('grid')" title="Browse the full constructive news dataset">
+              <i data-lucide="layout-grid"></i>
+              <span id="silver-grid-count-label">All Good News</span>
+            </button>
+          </div>
         </div>
         
         <div class="silver-controls-right">
@@ -67,12 +73,12 @@
             <i data-lucide="filter" class="quick-time-icon"></i>
             <select id="silver-topic-select" class="quick-time-select silver-time-select" aria-label="Select topic for good news">
               <option value="all" selected>All Topics</option>
-              <option value="science">🔬 Science & Space</option>
-              <option value="climate">🌱 Nature & Climate</option>
-              <option value="health">🩺 Health & Medicine</option>
-              <option value="business">📈 Business & Economy</option>
-              <option value="culture">🎨 Culture & Arts</option>
-              <option value="world">🌐 World & Society</option>
+              <option value="science">🔬 Science &amp; Space</option>
+              <option value="climate">🌱 Nature &amp; Climate</option>
+              <option value="health">🩺 Health &amp; Medicine</option>
+              <option value="business">📈 Business &amp; Economy</option>
+              <option value="culture">🎨 Culture &amp; Arts</option>
+              <option value="world">🌐 World &amp; Society</option>
               <option value="politics">🏛️ Politics</option>
               <option value="sports">🏅 Sports</option>
             </select>
@@ -100,7 +106,7 @@
         </div>
       </div>
 
-      <!-- Good News Stories Grid (Directly below the bar) -->
+      <!-- Good News Stories Container (Renders Daily 5 Antidote Deck or Full Broadsheet Grid) -->
       <div class="silver-stories-container" id="silver-stories-container">
         <!-- Rendered dynamically in app.js -->
       </div>
@@ -986,6 +992,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=4.1"></script>
+  <script src="app.js?v=4.2"></script>
 </body>
 </html>

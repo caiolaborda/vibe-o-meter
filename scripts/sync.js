@@ -126,16 +126,33 @@ function extractBestDescription(item) {
 }
 
 // Extract highest-quality editorial image URL from RSS media tags
+function isRealEditorialImageUrl(url) {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) return false;
+  const u = url.toLowerCase();
+  return !(
+    u.includes('googleusercontent.com') ||
+    u.includes('news.google.com') ||
+    u.includes('gstatic.com') ||
+    u.includes('bbc_news_logo') ||
+    u.includes('default-share') ||
+    u.includes('feedburner') ||
+    u.includes('beacon') ||
+    u.includes('1x1') ||
+    u.includes('pixel') ||
+    u.includes('favicon')
+  );
+}
+
 function extractImageUrl(item) {
   if (!item) return null;
   // 1. Enclosure
-  if (item.enclosure && item.enclosure.url && (!item.enclosure.type || item.enclosure.type.startsWith('image/'))) {
+  if (item.enclosure && isRealEditorialImageUrl(item.enclosure.url) && (!item.enclosure.type || item.enclosure.type.startsWith('image/'))) {
     return item.enclosure.url;
   }
   // 2. Media Content (handle single object or array, pick largest/highest resolution)
   if (item.mediaContent) {
     const list = Array.isArray(item.mediaContent) ? item.mediaContent : [item.mediaContent];
-    const valid = list.filter(m => m && (m.$?.url || m.url));
+    const valid = list.filter(m => m && isRealEditorialImageUrl(m.$?.url || m.url));
     if (valid.length > 0) {
       const best = valid.sort((a, b) => {
         const wa = parseInt(a.$?.width || a.width || 0);
@@ -148,7 +165,7 @@ function extractImageUrl(item) {
   // 3. Media Thumbnail
   if (item.mediaThumbnail) {
     const list = Array.isArray(item.mediaThumbnail) ? item.mediaThumbnail : [item.mediaThumbnail];
-    const valid = list.filter(m => m && (m.$?.url || m.url));
+    const valid = list.filter(m => m && isRealEditorialImageUrl(m.$?.url || m.url));
     if (valid.length > 0) {
       const best = valid.sort((a, b) => {
         const wa = parseInt(a.$?.width || a.width || 0);
@@ -162,11 +179,8 @@ function extractImageUrl(item) {
   for (const field of [item.contentEncoded, item.content, item.description]) {
     if (typeof field === 'string' && field.includes('<img')) {
       const match = field.match(/<img[^>]+src=["']([^"']+)["']/i);
-      if (match && match[1]) {
-        const url = match[1];
-        if (!url.includes('feedburner') && !url.includes('beacon') && !url.includes('1x1') && !url.includes('pixel')) {
-          return url;
-        }
+      if (match && match[1] && isRealEditorialImageUrl(match[1])) {
+        return match[1];
       }
     }
   }
