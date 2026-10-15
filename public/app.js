@@ -2257,6 +2257,18 @@ window.copyStoryLink = function(url, btn) {
   }
 };
 
+// Helper: detect multi-part background series, mixed-caveat economic profiles, or non-breakthrough features
+function isBackgroundSeriesOrMixedFeature(item) {
+  const text = `${item.title || ''} ${item.summary || ''} ${item.description || ''} ${item.leadArticle?.description || ''}`.toLowerCase();
+  if (/\b(part of our series|in our series|final part of|first part of|second part of|third part of|cost of living|help or hinder|opinion:|letters:|briefing:|podcast:|newsletter|crossword|quiz)\b/i.test(text)) {
+    return true;
+  }
+  if (/\b(killed by a|murdered|slain|massacre)\b/i.test(text)) {
+    return true;
+  }
+  return false;
+}
+
 // Render Dedicated "Some Good News" View (Daily 5 Antidote Swipe Deck + Full Broadsheet Grid)
 function renderSilverEdition() {
   const silverSection = document.getElementById('silver-edition-section');
@@ -2266,8 +2278,13 @@ function renderSilverEdition() {
 
   const activeMode = state.silverViewMode || 'antidote';
   silverSection.setAttribute('data-silver-mode', activeMode);
+  document.body.setAttribute('data-silver-mode', activeMode);
 
-  // Only show Topic + Timeframe filter dropdowns when viewing All Good News ('grid')
+  // Only show the wide top .silver-controls-bar (with Topic + Timeframe filters) when viewing All Good News ('grid')
+  const controlsBar = silverSection.querySelector('.silver-controls-bar');
+  if (controlsBar) {
+    controlsBar.style.display = activeMode === 'grid' ? 'flex' : 'none';
+  }
   const controlsRight = silverSection.querySelector('.silver-controls-right');
   if (controlsRight) {
     controlsRight.style.display = activeMode === 'grid' ? 'flex' : 'none';
@@ -2342,17 +2359,33 @@ function renderSilverEdition() {
     uniqueArticles.push(art);
   }
 
-  // 3. Sort descending by highest positive sentiment score and group multi-outlet clusters
-  uniqueArticles.sort((a, b) => b.sentiment - a.sentiment);
+  // 3. Sort descending by highest positive sentiment score (down-weighting background series essays) and group clusters
+  uniqueArticles.sort((a, b) => {
+    const scoreA = a.sentiment - (isBackgroundSeriesOrMixedFeature(a) ? 0.22 : 0);
+    const scoreB = b.sentiment - (isBackgroundSeriesOrMixedFeature(b) ? 0.22 : 0);
+    return scoreB - scoreA;
+  });
   const feedItems = groupSilverArticlesIntoFeedItems(uniqueArticles);
+  feedItems.sort((a, b) => {
+    const rankA = a.sentiment - (isBackgroundSeriesOrMixedFeature(a) ? 0.22 : 0);
+    const rankB = b.sentiment - (isBackgroundSeriesOrMixedFeature(b) ? 0.22 : 0);
+    return (rankB - rankA) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment));
+  });
 
-  // Sync mode buttons & count label
+  // Sync both desktop & mobile mode buttons & count labels
   const btnAntidote = document.getElementById('silver-mode-antidote');
   const btnGrid = document.getElementById('silver-mode-grid');
   const gridCountLabel = document.getElementById('silver-grid-count-label');
+  const mobBtnAntidote = document.getElementById('silver-mobile-btn-antidote');
+  const mobBtnGrid = document.getElementById('silver-mobile-btn-grid');
+  const mobGridCount = document.getElementById('silver-mobile-grid-count');
+
   if (btnAntidote) btnAntidote.classList.toggle('active', activeMode === 'antidote');
   if (btnGrid) btnGrid.classList.toggle('active', activeMode === 'grid');
   if (gridCountLabel) gridCountLabel.innerText = `All Good News (${feedItems.length})`;
+  if (mobBtnAntidote) mobBtnAntidote.classList.toggle('active', activeMode === 'antidote');
+  if (mobBtnGrid) mobBtnGrid.classList.toggle('active', activeMode === 'grid');
+  if (mobGridCount) mobGridCount.innerText = `All Good News (${feedItems.length})`;
 
   // 4. Update Summary Stats Pills
   const topScore = uniqueArticles.length > 0 ? uniqueArticles[0].sentiment : 0;
@@ -2389,7 +2422,8 @@ function renderSilverEdition() {
 
   // MODE A: DAILY 5 ANTIDOTE (PRE-RENDERED STACKED CARD DECK FOR INSTANT ZERO-GLITCH SWITCHING)
   if (activeMode === 'antidote') {
-    const antidoteItems = feedItems.slice(0, 5);
+    const pureBreakthroughs = feedItems.filter(it => !isBackgroundSeriesOrMixedFeature(it));
+    const antidoteItems = (pureBreakthroughs.length >= 5 ? pureBreakthroughs : feedItems).slice(0, 5);
     state.silverAntidoteCount = antidoteItems.length;
     const currentIdx = Math.max(0, Math.min(antidoteItems.length, state.silverDeckIndex || 0));
     state.silverDeckIndex = currentIdx;
@@ -2469,10 +2503,10 @@ function renderSilverEdition() {
         <div class="antidote-bubbles-row">
           ${progressPillsHTML}
         </div>
-        <div class="antidote-hint-pill">
-          <i data-lucide="move-horizontal" style="width:13px;height:13px;"></i>
-          <span>${isComplete ? 'Ritual Complete ☀️' : `Story ${currentIdx + 1} of ${antidoteItems.length} • Swipe or use ← →`}</span>
-        </div>
+        <button type="button" class="antidote-desktop-grid-switch" onclick="setSilverViewMode('grid')" title="Browse and filter the full constructive news dataset">
+          <i data-lucide="layout-grid" style="width:13px;height:13px;"></i>
+          <span>All Good News (${feedItems.length}) →</span>
+        </button>
       </div>
 
       <div class="antidote-deck-viewport">
@@ -2486,14 +2520,6 @@ function renderSilverEdition() {
 
         <button type="button" class="antidote-side-arrow next" onclick="navigateSilverDeck(1)" ${isComplete ? 'disabled' : ''} aria-label="Next story">
           <i data-lucide="chevron-right"></i>
-        </button>
-      </div>
-
-      <div class="antidote-dataset-bridge">
-        <span>Showing Top ${antidoteItems.length} breakthroughs for <strong>${timeframeLabel}</strong></span>
-        <button type="button" class="antidote-bridge-btn" onclick="setSilverViewMode('grid')">
-          <i data-lucide="layout-grid" style="width:14px;height:14px;"></i>
-          <span>Explore All ${feedItems.length} Constructive Stories →</span>
         </button>
       </div>
     `;

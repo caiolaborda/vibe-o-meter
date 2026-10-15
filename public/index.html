@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=4.3">
+  <link rel="stylesheet" href="style.css?v=4.4">
 </head>
 <body data-edition="doom">
 
@@ -965,6 +965,18 @@
 
   </div>
 
+  <!-- MOBILE BOTTOM DOCK FOR SOME GOOD NEWS (Direct child of body so it is never clipped) -->
+  <div id="silver-mobile-dock" class="silver-mobile-dock" role="tablist" aria-label="Some Good News Mobile Mode Switcher">
+    <button type="button" id="silver-mobile-btn-antidote" class="silver-mode-btn active" onclick="setSilverViewMode('antidote')">
+      <i data-lucide="sun"></i>
+      <span>Daily 5 Antidote</span>
+    </button>
+    <button type="button" id="silver-mobile-btn-grid" class="silver-mode-btn" onclick="setSilverViewMode('grid')">
+      <i data-lucide="layout-grid"></i>
+      <span id="silver-mobile-grid-count">All Good News</span>
+    </button>
+  </div>
+
   <!-- SHARE POPOVER MENU -->
   <div id="share-vibe-popover" class="share-vibe-popover hidden" role="dialog" aria-label="Share options">
     <div class="share-popover-header">
@@ -992,6 +1004,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=4.3"></script>
+  <script src="app.js?v=4.4"></script>
 </body>
 </html>

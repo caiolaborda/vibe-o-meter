@@ -334,7 +334,9 @@ Compare the headline's language against a plain, neutral wire-service statement 
 CRITICAL CONSISTENCY RULES:
 1. Cross-Outlet Parity within Batch: If multiple articles in this batch cover the SAME underlying event, they MUST share the exact same EVENT BASE, differing ONLY by their Editorial Framing Modifier (-0.15 to +0.15). If two headlines state the same fact in plain language, give them virtually identical scores.
 2. Counterfactual Harm & Criminal Trials: Criminal convictions, guilty pleas, prison sentences, regulatory fines, or lawsuits for violent crimes, fraud, or disasters are reactions to underlying harm. Grade them in the negative range (-0.20 to -0.55) reflecting the crime/harm—NEVER score a criminal conviction or sentencing as positive "good news" (+). Only overturning a wrongful conviction or freeing a hostage/prisoner of conscience is positive.
-3. Explainers & Q&As ("What is X?", "Why Y matters"): Grade explainers on the Event Base of the real-world situation they are explaining (modulated by their calm informational framing), not as 0.00 dictionary definitions.
+3. Explainers, Multi-Part Series & Mixed-Outlook Profiles:
+   - Grade explainers ("What is X?", "Why Y matters") on the Event Base of the real-world situation they are explaining.
+   - Multi-part background series ("In the final part of our series...", "Part 1 of..."), retrospective historical profiles, and mixed-caveat economic essays (where growth or wage gains are paired with rising cost-of-living, inflation, or military spending anxieties) are NOT breaking positive breakthroughs: cap them between +0.05 and +0.25 (NEVER above +0.28). Reserve +0.35 to +1.00 strictly for concrete, timely news events, scientific/medical breakthroughs, treaties, and verified outcomes.
 4. Continuous Precision & Valid JSON: Use precise 2-decimal floats across the full spectrum (do not cluster on .15, .35, .42, or .45). Never prepend '+' to positive numbers in JSON.
 
 Return a JSON array of objects with:
@@ -510,15 +512,14 @@ const CLUSTER_STOP_WORDS = new Set([
   'without', 'work', 'works', 'world', 'would', 'year', 'years', 'found', 'thought'
 ]);
 
-// Cross-Outlet Story Clustering (Method A: Single End-of-Sync Aggregation Pass)
+// Cross-Outlet Story Clustering (Method A: Fast, Fresh Single-Pass Aggregation)
 async function clusterCrossOutletStories(finalSources, apiKey) {
   if (!apiKey) return [];
   
-  // Flatten recent headlines from all sources: include all articles from the past 36h (up to 80 per outlet),
-  // falling back to up to 18 articles within the past 5 days for lower-frequency feeds.
+  // Focus on fresh headlines from the past 30h (up to 32 per outlet, ~420 total) so Gemini responds in <12s without truncation
   const candidates = [];
-  const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
-  const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
+  const thirtyHoursAgo = Date.now() - (30 * 60 * 60 * 1000);
+  const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
 
   Object.entries(finalSources).forEach(([sourceId, src]) => {
     const articles = src.articles || [];
@@ -527,11 +528,11 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
       const art = articles[i];
       if (!art || !art.title || art.title.trim().length <= 10) continue;
       const t = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
-      if (!isNaN(t) && t < fiveDaysAgo) continue;
+      if (!isNaN(t) && t < threeDaysAgo) continue;
 
-      const isRecent36h = !isNaN(t) && t >= thirtySixHoursAgo;
-      if (addedForSource >= 80) break;
-      if (!isRecent36h && addedForSource >= 18) continue;
+      const isRecent30h = !isNaN(t) && t >= thirtyHoursAgo;
+      if (addedForSource >= 32) break;
+      if (!isRecent30h && addedForSource >= 10) continue;
 
       candidates.push({
         sourceId,
@@ -547,7 +548,7 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
 
   if (candidates.length < 6) return [];
 
-  // Pass compact indexed single-line headline list so Gemini scans 800+ headlines with high recall
+  // Pass compact indexed single-line headline list so Gemini scans fresh headlines with high recall
   const promptLines = candidates.map((c, idx) => `[${idx}] ${c.sourceId}: ${c.title}`).join('\n');
   const prompt = `You are a senior news editor analyzing recent headlines across global newsrooms.
 Identify real-world events, developments, and discoveries that are being covered by 2 or more DIFFERENT news outlets.
@@ -556,7 +557,7 @@ Group them into story clusters.
 Rules:
 - A cluster MUST include headlines from at least 2 distinct outlets reporting on the SAME underlying event, development, or discovery.
 - Group ALL matching headlines for the event across all outlets (scan the entire list carefully so every outlet covering that story is included in "ids", including spelling variations like Turkey/Turkiye).
-- Provide a concise neutral story title (3-6 words, e.g. "Ancient Shipwreck Found Off Turkey", "UK Early Prisoner Release", "Boeing Machinist Strike", "Federal Reserve Rate Cut").
+- Provide a concise neutral story title (3-6 words, e.g. "Ancient Shipwreck Found Off Turkey", "Brazil Approves Shorter Workweek", "Boeing Machinist Strike", "Federal Reserve Rate Cut").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how the outlets are reporting it.
 - Provide the list of matching headline IDs.
 - Return ONLY a JSON array. If no shared stories exist, return [].
@@ -586,7 +587,7 @@ Return JSON array in format:
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
-          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 8192, responseMimeType: 'application/json' }
         });
         const generatePromise = model.generateContent(prompt);
         const timeoutPromise = new Promise((_, reject) =>
@@ -667,6 +668,7 @@ Return JSON array in format:
         const scores = matchingArticles.map(m => m.sentiment);
         const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
         const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
+        const newestMs = matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : 0;
         
         formattedClusters.push({
           story: cl.story,
@@ -674,6 +676,7 @@ Return JSON array in format:
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
           outletCount: uniqueSources.size,
+          newestMs,
           coverage: matchingArticles.map(m => ({
             sourceId: m.sourceId,
             sourceName: m.sourceName,
@@ -685,7 +688,18 @@ Return JSON array in format:
         });
       }
     });
-    formattedClusters.sort((a, b) => (b.outletCount * (b.sentimentSpread + 0.1)) - (a.outletCount * (a.sentimentSpread + 0.1)));
+    // Weight recent 24h stories higher so fresh breaking stories rank above multi-day stale stories
+    const nowMs = Date.now();
+    formattedClusters.sort((a, b) => {
+      const ageHoursA = a.newestMs ? Math.max(0, (nowMs - a.newestMs) / 3600000) : 48;
+      const ageHoursB = b.newestMs ? Math.max(0, (nowMs - b.newestMs) / 3600000) : 48;
+      const recencyBoostA = ageHoursA <= 24 ? 1.35 : 0.75;
+      const recencyBoostB = ageHoursB <= 24 ? 1.35 : 0.75;
+      const scoreA = a.outletCount * (a.sentimentSpread + 0.15) * recencyBoostA;
+      const scoreB = b.outletCount * (b.sentimentSpread + 0.15) * recencyBoostB;
+      return scoreB - scoreA;
+    });
+    formattedClusters.forEach(c => delete c.newestMs);
     return formattedClusters;
   }
   return [];
