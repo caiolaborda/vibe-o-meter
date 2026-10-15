@@ -1,12 +1,12 @@
 {
-  "lastUpdated": "2026-10-15T21:35:42.452Z",
+  "lastUpdated": "2026-10-15T21:54:37.735Z",
   "lastClusteredAt": "2026-10-15T21:34:01.294Z",
-  "analyzerUsed": "Gemini (gemini-3.5-flash)",
+  "analyzerUsed": "Gemini (gemini-3.8-flash)",
   "editorialSummaryDate": "2026-10-15",
   "editorialSummary": "Across the last 24 hours, global headlines delivered another masterclass in calm. Between a [papal cancer scare](https://www.bbc.co.uk/news/articles/c678p0ld7z8lo?at_medium=RSS&at_campaign=rss), [throttled military satellites](https://www.france24.com/en/video/20261014-ukraine-accuses-spacex-of-crippling-military-missions-as-ties-with-us-worsen) in Ukraine, and [strikes on oil targets](https://www.nytimes.com/2026/10/14/world/middleeast/houthi-airport-attack-victims-saudi-arabia.html), the planet proved once again that dread never takes sick leave.",
   "globalStats": {
     "globalSentiment": -0.238,
-    "totalArticles": 4317,
+    "totalArticles": 4324,
     "mostNegativeOutlet": {
       "id": "spiegel",
       "name": "Spiegel International",
@@ -19,14 +19,14 @@
     },
     "categoryAverages": {
       "politics": -0.221,
-      "business": -0.128,
-      "entertainment": -0.04,
-      "other": -0.363,
-      "climate": -0.245,
       "world": -0.556,
-      "health": -0.217,
-      "science": 0.218,
-      "sports": -0.008,
+      "business": -0.128,
+      "entertainment": -0.039,
+      "other": -0.363,
+      "climate": -0.244,
+      "health": -0.213,
+      "science": 0.217,
+      "sports": -0.009,
       "technology": -0.108,
       "lifestyle": 0.12,
       "culture": 0.2
@@ -1640,19 +1640,30 @@
       "distribution": {
         "positive": 53,
         "neutral": 84,
-        "negative": 209
+        "negative": 210
       },
       "articles": [
         {
           "sourceId": "bbc",
-          "title": "Letters with 'suspicious substances' sent to US election offices",
+          "title": "Letters with 'suspicious substances' sent to US senators and election offices",
           "description": "A number of states have confirmed they were targeted by the mailings, including Oklahoma, Ohio and Louisiana.",
           "link": "https://www.bbc.co.uk/news/articles/cmq8n513x523o?at_medium=RSS&at_campaign=rss",
           "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/9974/live/7783af20-c8c4-11f1-95b2-9f12d414946d.jpg",
-          "pubDate": "Thu, 15 Oct 2026 20:52:13 GMT",
+          "pubDate": "Thu, 15 Oct 2026 21:42:26 GMT",
           "sentiment": -0.44,
           "category": "politics",
           "explanation": "Threatening mailings with suspicious substances sent to election offices disrupt democratic operations, reported with slight alarm."
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Bus hits train stopped on French side of Channel Tunnel, with 19 injured",
+          "description": "Two people were severely injured and evacuated by helicopter but no one's life appeared to be in danger, officials said.",
+          "link": "https://www.bbc.co.uk/news/articles/c6wyrnmgzn01o?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/c978/live/dfe9a6d0-c8df-11f1-9a39-31b474234113.png",
+          "pubDate": "Thu, 15 Oct 2026 21:12:14 GMT",
+          "sentiment": -0.38,
+          "category": "world",
+          "explanation": "A localized transportation accident causing multiple injuries has an inherently negative impact, reported here with direct, factual framing."
         },
         {
           "sourceId": "bbc",
@@ -5218,13 +5229,24 @@
     },
     "nyt": {
       "name": "The New York Times",
-      "averageSentiment": -0.274,
+      "averageSentiment": -0.273,
       "distribution": {
-        "positive": 34,
+        "positive": 35,
         "neutral": 79,
-        "negative": 216
+        "negative": 218
       },
       "articles": [
+        {
+          "sourceId": "nyt",
+          "title": "Trump’s Attacks on Voting Raise Fears He Will Try to Challenge Midterm Results",
+          "description": "Election officials say they worry the administration could use its own unsubstantiated claims to contest the vote in November.",
+          "link": "https://www.nytimes.com/2026/10/15/us/politics/trumps-attacks-voting-midterms.html",
+          "imageUrl": "https://static01.nyt.com/images/2026/10/15/multimedia/15dc-trump-midterms-mqfb/15dc-trump-midterms-mqfb-mediumSquareAt3X.jpg",
+          "pubDate": "Thu, 15 Oct 2026 21:37:34 +0000",
+          "sentiment": -0.45,
+          "category": "politics",
+          "explanation": "Political attacks on voting systems threaten institutional democratic norms, reported with cautionary framing."
+        },
         {
           "sourceId": "nyt",
           "title": "Senators Demand Investigation Into Ukraine Satellite Disruption",
@@ -5238,6 +5260,17 @@
         },
         {
           "sourceId": "nyt",
+          "title": "ICE Agents Who Rammed a Worker in Houston Were Chasing a Dead Man, Family Says",
+          "description": "An ICE operation in Houston left a Mexican man struck and injured by an S.U.V., but a bulletin of the target shows a man who died in 2017, his daughter said.",
+          "link": "https://www.nytimes.com/2026/10/15/us/ice-pursuit-houston-dead-man.html",
+          "imageUrl": "https://static01.nyt.com/images/2026/10/15/multimedia/15nat-immig-dead-man-1-bzjf/15nat-immig-dead-man-1-bzjf-mediumSquareAt3X.jpg",
+          "pubDate": "Thu, 15 Oct 2026 21:12:21 +0000",
+          "sentiment": -0.49,
+          "category": "politics",
+          "explanation": "Law enforcement injuring an innocent worker during a mistaken operation represents serious institutional failure and physical harm."
+        },
+        {
+          "sourceId": "nyt",
           "title": "Trump Administration Sues California Over Voter Rolls",
           "description": "The lawsuit seeks to temporarily block the state from counting mail ballots of voters it claims are likely noncitizens, opening a new front in the administration’s legal fights with election officials.",
           "link": "https://www.nytimes.com/2026/10/15/us/politics/trump-administration-california-voter-rolls.html",
@@ -5246,6 +5279,16 @@
           "sentiment": -0.22,
           "category": "politics",
           "explanation": "Federal lawsuit against California voter rolls represents institutional and partisan tension, framed matter-of-factly."
+        },
+        {
+          "sourceId": "nyt",
+          "title": "More Trump Allies Aided Pro-Russian Balkan Government",
+          "description": "The daughter of the president’s chief of staff joined an American businessman in Republika Srpska as he explored a gas pipeline. And six current and former campaign advisers recently traveled there for an election.",
+          "link": "https://www.nytimes.com/2026/10/15/us/politics/trump-russia-srpska-elections-wiles.html",
+          "pubDate": "Thu, 15 Oct 2026 20:53:09 +0000",
+          "sentiment": -0.31,
+          "category": "politics",
+          "explanation": "Reports of political allies aiding a pro-Russian foreign government carry negative geopolitical and ethical valence, presented neutrally."
         },
         {
           "sourceId": "nyt",
@@ -5268,17 +5311,6 @@
           "sentiment": -0.74,
           "category": "world",
           "explanation": "Resuming attacks on oil refineries amidst geopolitical friction underscores ongoing military conflict."
-        },
-        {
-          "sourceId": "nyt",
-          "title": "Trump’s Attacks on Voting Raise Fears He Will Try to Challenge Midterm Results",
-          "description": "Election officials say they worry the administration could use its own unsubstantiated claims to contest the vote in November.",
-          "link": "https://www.nytimes.com/2026/10/15/us/politics/trumps-attacks-voting-midterms.html",
-          "imageUrl": "https://static01.nyt.com/images/2026/10/15/multimedia/15dc-trump-midterms-mqfb/15dc-trump-midterms-mqfb-mediumSquareAt3X.jpg",
-          "pubDate": "Thu, 15 Oct 2026 19:53:48 +0000",
-          "sentiment": -0.45,
-          "category": "politics",
-          "explanation": "Political attacks on voting systems threaten institutional democratic norms, reported with cautionary framing."
         },
         {
           "sourceId": "nyt",
@@ -5453,6 +5485,17 @@
           "sentiment": -0.55,
           "category": "politics",
           "explanation": "An opinion piece strongly condemning an administration deal to import Russian fuel, utilizing heavily critical and moralizing editorial language."
+        },
+        {
+          "sourceId": "nyt",
+          "title": "New Guidelines Strongly Support Hormone Therapy for Common Menopause Symptoms",
+          "description": "The American College of Obstetricians and Gynecologists said the benefits of the treatment outweigh the harms for many women.",
+          "link": "https://www.nytimes.com/2026/10/15/well/live/menopause-hormone-therapy-acog.html",
+          "imageUrl": "https://static01.nyt.com/images/2026/10/15/well/15WELL-ACOG-MENOPAUSE/15WELL-ACOG-MENOPAUSE-mediumSquareAt3X.jpg",
+          "pubDate": "Thu, 15 Oct 2026 15:00:05 +0000",
+          "sentiment": 0.44,
+          "category": "health",
+          "explanation": "Major medical guidelines endorsing hormone therapy offer tangible relief and guidance to millions of women, reported factually."
         },
         {
           "sourceId": "nyt",
@@ -8610,9 +8653,9 @@
     },
     "cnn": {
       "name": "CNN",
-      "averageSentiment": -0.303,
+      "averageSentiment": -0.3,
       "distribution": {
-        "positive": 14,
+        "positive": 15,
         "neutral": 49,
         "negative": 119
       },
@@ -8626,6 +8669,16 @@
           "sentiment": -0.68,
           "category": "other",
           "explanation": "An active shooter situation at an elementary school poses acute deadly harm to children, reported plainly."
+        },
+        {
+          "sourceId": "cnn",
+          "title": "RIBA International Winner: Factory championing women workers named world’s best new building - CNN",
+          "description": "RIBA International Winner: Factory championing women workers named world’s best new building CNN",
+          "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOTFpBU3owcC1QWGxXRDE1cThtcmJsTWxQQnlzcTBNOGhTTkQ4U0pmcjRVRElPRDlkdDktN20zeXljYzlTTVVjMFhTQkc4Rzg5c1RQYkg2ejc1dVk0YlVzU3A2VURMWHZxcVFjNm13R1E3NExtajVHVERQZDFhVTU1XzVwT2k3SFk?oc=5",
+          "pubDate": "Thu, 15 Oct 2026 19:01:28 GMT",
+          "sentiment": 0.26,
+          "category": "entertainment",
+          "explanation": "An architectural award recognizing social progress represents a positive cultural achievement, framed enthusiastically."
         },
         {
           "sourceId": "cnn",
@@ -10452,11 +10505,11 @@
       "articles": [
         {
           "sourceId": "guardian",
-          "title": "Nineteen injured in minibus accident on Eurotunnel loading platform",
+          "title": "Nineteen injured in collision between minibus and train on Eurotunnel loading platform",
           "description": "Five people seriously hurt after incident involving vehicle carrying HGV drivers in Calais, say French authorities Nineteen people have been injured after a minibus was involved in an accident at the loading platform of the Eurotunnel near Calais, French authorities have said. Five people were severely injured though no one’s life appeared to be in danger, the local prefect said in a statement. Continue reading...",
           "link": "https://www.theguardian.com/world/2026/oct/15/nineteen-injured-minibus-collision-eurotunnel-calais",
           "imageUrl": "https://i.guim.co.uk/img/media/7715f031fd74fbce55ce038b27a38d9da8b70dd7/840_10_3714_2972/master/3714.jpg?width=700&quality=85&auto=format&fit=max&s=7afbabe83bf38ce9b6c5e301ae0452b0",
-          "pubDate": "Thu, 15 Oct 2026 20:36:09 GMT",
+          "pubDate": "Thu, 15 Oct 2026 21:38:25 GMT",
           "sentiment": -0.4,
           "category": "world",
           "explanation": "A transit accident resulting in 19 injuries with several severe cases carries notable physical harm, reported neutrally."
@@ -15036,13 +15089,35 @@
     },
     "fox": {
       "name": "Fox News",
-      "averageSentiment": -0.194,
+      "averageSentiment": -0.195,
       "distribution": {
-        "positive": 53,
+        "positive": 52,
         "neutral": 177,
-        "negative": 270
+        "negative": 271
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "Jerry Seinfeld turns tables on radical anti-Israel agitators after chaotic Chicago stunt backfires",
+          "description": "Comedian Jerry Seinfeld turned the tables on anti-Israel hecklers who attempted to derail his Chicago performance last Friday, mocking the protesters as security removed them from the venue.Viral video from the confrontation shows activists shouting at Seinfeld at the Chicago Theatre, accusing Israel of committing \"genocide\" in Gaza and alleging that American taxpayer dollars are funding the deaths of thousands of civilians.\"Twenty-two thousan...",
+          "link": "https://www.foxnews.com/media/jerry-seinfeld-turns-tables-radical-anti-israel-agitators-chaotic-chicago-stunt-backfires",
+          "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/09/931/523/jerry-seinfeld-comedy-fox-news-2.png?ve=1&tl=1",
+          "pubDate": "Sat, 17 Oct 2026 06:00:48 -0400",
+          "sentiment": -0.21,
+          "category": "entertainment",
+          "explanation": "An event involving public protest and confrontation carries negative social friction, amplified by highly charged, partisan framing."
+        },
+        {
+          "sourceId": "fox",
+          "title": "Soccer coach with unreal eye discipline goes viral for locked in interview with busty reporter",
+          "description": "If this soccer coach doesn’t deserve a lifetime contract, I don't know what you need to do to earn one. His eye discipline during this interview is as impressive as you're going to find.Coach of the Czech National Football League FK Viagem Ústí nad Labem, David Oulehla, was given the nearly impossible task of remaining locked while the talented reporter Sabina Jaksova interviewed him following a loss.I can't tell you what either of them are sa...",
+          "link": "https://www.foxnews.com/outkick-sports/soccer-coach-unreal-eye-discipline-goes-viral-locked-interview-busty-reporter",
+          "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/10/931/523/czech-republic-national-football-team-gdansk.jpg?ve=1&tl=1",
+          "pubDate": "Thu, 15 Oct 2026 17:43:10 -0400",
+          "sentiment": 0.02,
+          "category": "entertainment",
+          "explanation": "A viral internet moment of minor cultural amusement holds negligible real-world consequence, presented with sensationalized tabloid framing."
+        },
         {
           "sourceId": "fox",
           "title": "'SNL' cast member Michael Che shrugs off Shane Gillis' monologue joke saying, 'that's comedy'",
@@ -20268,38 +20343,28 @@
           "sentiment": -0.05,
           "category": "entertainment",
           "explanation": "Minor social media controversy where an athlete draws mixed public reactions."
-        },
-        {
-          "sourceId": "fox",
-          "title": "1,740-year-old Roman coin bearing emperor's name found as England rail dig reveals clues",
-          "description": "",
-          "link": "https://www.foxnews.com/travel/1740-year-old-roman-coin-bearing-emperors-name-found-england-rail-dig-reveals-clues",
-          "pubDate": "Fri, 17 Jul 2026 08:00:45 -0400",
-          "sentiment": 0.35,
-          "category": "science",
-          "explanation": "An exciting historical and archaeological discovery made during a railway excavation."
-        },
-        {
-          "sourceId": "fox",
-          "title": "Every controversy surrounding Christopher Nolan's 'The Odyssey' from casting to costumes",
-          "description": "",
-          "link": "https://www.foxnews.com/entertainment/every-controversy-surrounding-christopher-nolans-odyssey-casting-costumes",
-          "pubDate": "Fri, 17 Jul 2026 08:00:30 -0400",
-          "sentiment": -0.12,
-          "category": "entertainment",
-          "explanation": "Discussion of various production controversies surrounding an anticipated film project."
         }
       ]
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.346,
+      "averageSentiment": -0.348,
       "distribution": {
-        "positive": 61,
+        "positive": 60,
         "neutral": 80,
-        "negative": 359
+        "negative": 360
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Several people dead or missing after Istanbul floods",
+          "description": "Three people have died and several are reported missing after torrential rain triggered severe flooding across Istanbul",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/10/15/several-people-dead-or-missing-after-istanbul-floods?traffic_source=rss",
+          "pubDate": "Thu, 15 Oct 2026 21:15:46 +0000",
+          "sentiment": -0.58,
+          "category": "climate",
+          "explanation": "Fatal flash floods resulting in deaths and missing people carry severe negative human impact, delivered matter-of-factly."
+        },
         {
           "sourceId": "aljazeera",
           "title": "Israeli ‘ad’ firm helped infect spyware into Al Jazeera devices",
@@ -25300,16 +25365,6 @@
           "sentiment": 0.02,
           "category": "politics",
           "explanation": "Standard executive nomination and upcoming parliamentary votes for leadership represent routine political processes."
-        },
-        {
-          "sourceId": "aljazeera",
-          "title": "Norway’s Waerenskjold wins fastest Tour de France stage in history",
-          "description": "At an average speed of 50.91kph, Soren Waerenskjold's sprint was the fastest road stage in the 113 editions of the Tour.",
-          "link": "https://www.aljazeera.com/sports/2026/7/15/norways-waerenskjold-wins-fastest-tour-de-france-stage-in-history?traffic_source=rss",
-          "pubDate": "Wed, 15 Jul 2026 16:46:51 +0000",
-          "sentiment": 0.28,
-          "category": "sports",
-          "explanation": "Setting a historic speed record in a major cycling stage is a notable athletic achievement."
         }
       ]
     },
@@ -25737,11 +25792,11 @@
           "title": "One way to protect coral reefs? Bring back seabirds",
           "description": "Coral reefs are facing increasing threats around the globe. But on a remote Pacific island, scientists have found that reefs can get help from a surprising ally: seabirds.(Image credit: Claire Harbage)",
           "link": "https://www.npr.org/2026/10/13/nx-s1-5901320/coral-reefs-palmyra-atoll-birds-restoration",
+          "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/3000x1688+0+313/resize/1400/quality/85/format/jpeg/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F6d%2F2f%2F30744d4d4596978ebb8523f3e468%2F20260509-dsc7811.jpg",
           "pubDate": "Tue, 13 Oct 2026 05:00:00 -0400",
           "sentiment": 0.42,
           "category": "climate",
-          "explanation": "Scientific evidence that seabird restoration aids coral reef health offers a constructive, nature-based conservation solution.",
-          "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/3000x1688+0+313/resize/1400/quality/85/format/jpeg/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F6d%2F2f%2F30744d4d4596978ebb8523f3e468%2F20260509-dsc7811.jpg"
+          "explanation": "Scientific evidence that seabird restoration aids coral reef health offers a constructive, nature-based conservation solution."
         },
         {
           "sourceId": "npr",
@@ -26508,6 +26563,16 @@
       "articles": [
         {
           "sourceId": "cnbc",
+          "title": "Trump says 'if Ken Paxton loses' Texas Senate race, blame Cornyn and Karl Rove",
+          "description": "Polls show GOP Attorney General Ken Paxton trailing Democratic Rep. James Talarico in the Texas Senate race.",
+          "link": "https://www.cnbc.com/2026/10/15/trump-paxton-texas-talarico.html",
+          "pubDate": "Thu, 15 Oct 2026 21:42:14 GMT",
+          "sentiment": -0.22,
+          "category": "politics",
+          "explanation": "Internal political blame-shifting over a Senate race reflects routine partisan friction with minor negative framing."
+        },
+        {
+          "sourceId": "cnbc",
           "title": "CoreWeave credit default swaps hit distress levels as investors sour on AI debt",
           "description": "Signs of distressed deepened in CoreWeave on Thursday.",
           "link": "https://www.cnbc.com/2026/10/15/coreweave-credit-default-swaps-hit-distress-levels-as-investors-sour-on-ai-debt.html",
@@ -26515,16 +26580,6 @@
           "sentiment": -0.28,
           "category": "business",
           "explanation": "Credit default swaps hitting distress levels indicates notable localized corporate debt risk, reported objectively."
-        },
-        {
-          "sourceId": "cnbc",
-          "title": "Trump says 'if Ken Paxton loses' Texas Senate race, blame Cornyn and Karl Rove",
-          "description": "Polls show GOP Attorney General Ken Paxton trailing Democratic Rep. James Talarico in the Texas Senate race.",
-          "link": "https://www.cnbc.com/2026/10/15/trump-paxton-texas-talarico.html",
-          "pubDate": "Thu, 15 Oct 2026 21:28:51 GMT",
-          "sentiment": -0.22,
-          "category": "politics",
-          "explanation": "Internal political blame-shifting over a Senate race reflects routine partisan friction with minor negative framing."
         },
         {
           "sourceId": "cnbc",
@@ -28947,11 +29002,11 @@
           "title": "Fighter jet maker Saab smashes expectations as CEO urges procurement rethink",
           "description": "",
           "link": "https://www.cnbc.com/2026/07/17/saab-stock-earnings-q2-report-defense-sales-orders.html",
+          "imageUrl": "https://image.cnbcfm.com/api/v1/image/108173735-1752823087382-gettyimages-2208693337-AFP_39MG7P9.jpeg?v=1752823333&amp;w=1920&amp;h=1080",
           "pubDate": "Fri, 17 Jul 2026 10:06:55 GMT",
           "sentiment": 0.42,
           "category": "business",
-          "explanation": "Surpassing financial expectations significantly reflects strong corporate and economic health.",
-          "imageUrl": "https://image.cnbcfm.com/api/v1/image/108173735-1752823087382-gettyimages-2208693337-AFP_39MG7P9.jpeg?v=1752823333&amp;w=1920&amp;h=1080"
+          "explanation": "Surpassing financial expectations significantly reflects strong corporate and economic health."
         },
         {
           "sourceId": "cnbc",
@@ -29530,11 +29585,11 @@
           "title": "‘Arsenal of democracy’: Jamie Dimon announces $24 million effort to boost American shipbuilding",
           "description": "JPMorgan Chase CEO Jamie Dimon unveiled a $24 million package to bolster American shipbuilding, funding a new submarine facility at the Philadelphia Navy Yard.",
           "link": "https://www.cnbc.com/2026/07/15/jamie-dimon-jpmorgan-chase-defense.html",
+          "imageUrl": "https://image.cnbcfm.com/api/v1/image/108214915-17610711142025-10-21t151421z_358950546_rc2fghavfya6_rtrmadp_0_jpmorgan-new-york.jpeg?v=1771966417&amp;w=1920&amp;h=1080",
           "pubDate": "Wed, 15 Jul 2026 13:45:27 GMT",
           "sentiment": 0.42,
           "category": "business",
-          "explanation": "A substantial capital investment initiative supporting domestic industrial capacity and infrastructure.",
-          "imageUrl": "https://image.cnbcfm.com/api/v1/image/108214915-17610711142025-10-21t151421z_358950546_rc2fghavfya6_rtrmadp_0_jpmorgan-new-york.jpeg?v=1771966417&amp;w=1920&amp;h=1080"
+          "explanation": "A substantial capital investment initiative supporting domestic industrial capacity and infrastructure."
         },
         {
           "sourceId": "cnbc",
@@ -31320,13 +31375,23 @@
     },
     "reuters": {
       "name": "Reuters",
-      "averageSentiment": -0.225,
+      "averageSentiment": -0.224,
       "distribution": {
         "positive": 76,
-        "neutral": 125,
-        "negative": 299
+        "neutral": 126,
+        "negative": 298
       },
       "articles": [
+        {
+          "sourceId": "reuters",
+          "title": "Volvo Cars expands automated driving partnership with Nvidia - Reuters",
+          "description": "Volvo Cars expands automated driving partnership with Nvidia Reuters",
+          "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOLWtIdFNOaHNvOGk3ZDB4eHM3LWhYaWhNX3hDdE16S3RIMW1PanNrX0RDdWthRDV1ZGxaUVlQQXRuN2RsZ3Z2WkMzUWx5amJSdDdiOEFqaEo1Z3JsV0s0UkttS3I3dTJWYUtzR3hlRjl2WmM2enZkNGM3bGwtYzVyVWdGNFZOUzFuYW5MSFpiOUlxQmNKTlBfTVdZRUlaUU1nVC1rRVBUY2RoSUh4NV90WDF6Zjc5MlpneTZVWFB5RmFNZkFG?oc=5",
+          "pubDate": "Thu, 15 Oct 2026 21:27:43 GMT",
+          "sentiment": 0.15,
+          "category": "technology",
+          "explanation": "This article reports on a corporate partnership expansion for automated driving technology."
+        },
         {
           "sourceId": "reuters",
           "title": "EXCLUSIVE: Investors temper Anthropic IPO valuation expectations over revenue growth slowdown, sources say - Reuters",
@@ -31336,16 +31401,6 @@
           "sentiment": -0.18,
           "category": "business",
           "explanation": "Slowing revenue growth affecting valuation expectations is a routine negative business development reported matter-of-factly."
-        },
-        {
-          "sourceId": "reuters",
-          "title": "Volvo Cars expands automated driving partnership with Nvidia - Reuters",
-          "description": "Volvo Cars expands automated driving partnership with Nvidia Reuters",
-          "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOLWtIdFNOaHNvOGk3ZDB4eHM3LWhYaWhNX3hDdE16S3RIMW1PanNrX0RDdWthRDV1ZGxaUVlQQXRuN2RsZ3Z2WkMzUWx5amJSdDdiOEFqaEo1Z3JsV0s0UkttS3I3dTJWYUtzR3hlRjl2WmM2enZkNGM3bGwtYzVyVWdGNFZOUzFuYW5MSFpiOUlxQmNKTlBfTVdZRUlaUU1nVC1rRVBUY2RoSUh4NV90WDF6Zjc5MlpneTZVWFB5RmFNZkFG?oc=5",
-          "pubDate": "Thu, 15 Oct 2026 21:06:47 GMT",
-          "sentiment": 0.15,
-          "category": "technology",
-          "explanation": "This article reports on a corporate partnership expansion for automated driving technology."
         },
         {
           "sourceId": "reuters",
@@ -31396,6 +31451,16 @@
           "sentiment": -0.38,
           "category": "world",
           "explanation": "Direct wire reporting of a vehicular collision causing 19 injuries conveys the physical harm without sensationalism."
+        },
+        {
+          "sourceId": "reuters",
+          "title": "KFC signs Coca-Cola on as new beverage partner, ditching PepsiCo - Reuters",
+          "description": "KFC signs Coca-Cola on as new beverage partner, ditching PepsiCo Reuters",
+          "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxPY3pOZ1RpY0NtVzh0UHZZMDN5OTlBQjB2VHRYeE9CYUN2cGZwZERiNnduY2dmaUVqN0dyMUI5eGxRQ0JCVkJuRUJ3RWZrNnlfalVtQUhBdFVxZllvS3dWMVp3TVVuN3FFX28xQ2U3a3RPUmlFZ0p5Z2hXSDUybnFYcFJDUHlDMGV6WDVTQ3pXTGtHYXQyZ2VWTklCbjBQMTdtSTlHZ2pFRGFiQTN4amc?oc=5",
+          "pubDate": "Thu, 15 Oct 2026 19:39:53 GMT",
+          "sentiment": 0.04,
+          "category": "business",
+          "explanation": "A routine corporate partnership swap between fast food and beverage giants represents standard business news with neutral impact."
         },
         {
           "sourceId": "reuters",
@@ -35156,11 +35221,11 @@
           "title": "EXCLUSIVE: ShinyHunters hacker in FBI data theft detained in Jordan, cooperating with bureau, sources say - Reuters",
           "description": "EXCLUSIVE: ShinyHunters hacker in FBI data theft detained in Jordan, cooperating with bureau, sources say Reuters",
           "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNNXNlVHhZWTVReFNDOHNlRXNkaW5fZ0N5dm1rNkhuelNRVGZJU2NvWFFtNjk5b29WU1lweFpudnAwa2lJdV9mT0VEbGNKWklHR2ZrcGh2b1Z1eWhSU24tdGR3YXpxWWZ4alhrSDQweW91dlpFeGxncHc1QVZHaWpfTXJtRnRjMzZxdVRta0w4MWNaYWdLdE1iYlZDN0dENHF5ZkxaX2g0WG82UWpmVmxQbXpaUTFmbUpYNy1QVw?oc=5",
+          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300",
           "pubDate": "Sun, 04 Oct 2026 07:00:00 GMT",
           "sentiment": 0.42,
           "category": "technology",
-          "explanation": "The detention and cooperation of a major cybercrime suspect represents a constructive victory for law enforcement and justice.",
-          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+          "explanation": "The detention and cooperation of a major cybercrime suspect represents a constructive victory for law enforcement and justice."
         },
         {
           "sourceId": "reuters",
@@ -36325,16 +36390,6 @@
           "sentiment": -0.04,
           "category": "politics",
           "explanation": "Routine governmental reshuffling during wartime represents procedural political administration."
-        },
-        {
-          "sourceId": "reuters",
-          "title": "Canadian wildfire smoke chokes Toronto, threatens US cities - Reuters",
-          "description": "Canadian wildfire smoke chokes Toronto, threatens US cities Reuters",
-          "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOTzJJYm1wY0tiXzZPNGRRXzk4WVNDWDNnUklvSG5SRXAtMXhxcGRjZWtsUV9MZ1BXY09VMjZESVBjUDMtWlhab09yaU1yeTJaQXdWZHdhaXBRWWJsRnVrRS1NbzdZdmljMXBRQnVxVm41U0phQVJ5Vzl0ZWZWemlYeTBKNk5EMnlwOWk3ZC1taHdjcHU4aG11QkVUS3dpUElIbXdfMjVMOVM5VVJXSzJLb2V3QlB5emJOeXVJQkNZZw?oc=5",
-          "pubDate": "Wed, 15 Jul 2026 19:39:44 GMT",
-          "sentiment": -0.62,
-          "category": "climate",
-          "explanation": "Severe wildfire smoke causing major urban air pollution presents immediate environmental and public health hazards."
         }
       ]
     },
@@ -36455,7 +36510,8 @@
           "pubDate": "Wed, 14 Oct 2026 19:58:00 GMT",
           "sentiment": 0.42,
           "category": "business",
-          "explanation": "Social Security cost-of-living increase offers multi-year financial relief to tens of millions of beneficiaries, framed constructively."
+          "explanation": "Social Security cost-of-living increase offers multi-year financial relief to tens of millions of beneficiaries, framed constructively.",
+          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
         },
         {
           "sourceId": "ap",
@@ -37648,7 +37704,8 @@
           "pubDate": "Tue, 14 Jul 2026 23:12:13 GMT",
           "sentiment": 0.42,
           "category": "world",
-          "explanation": "The removal of a historic regional border fence signifies substantial diplomatic progress and improved freedom of movement."
+          "explanation": "The removal of a historic regional border fence signifies substantial diplomatic progress and improved freedom of movement.",
+          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
         },
         {
           "sourceId": "ap",
@@ -37918,9 +37975,19 @@
       "distribution": {
         "positive": 91,
         "neutral": 133,
-        "negative": 225
+        "negative": 227
       },
       "articles": [
+        {
+          "sourceId": "bloomberg",
+          "title": "Nscale’s AI Buildout Hit by Fire, Delays and Angry Workers Ahead of IPO - Bloomberg.com",
+          "description": "Nscale’s AI Buildout Hit by Fire, Delays and Angry Workers Ahead of IPO Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPMnpyNVg3ZjVJQjNZUDJaSTliUGt1ZWlEb1ZnWE12M1lpYVVOaVFGSUtkME5RUFotV1I3Zm5TQkRUUENSUG5KZmlfaFl3b1BZV3BBS3N2aEpLa1RiWm5zQ0dSRnM2Q25MVVhYYWt6UTNPREJHZEdzbmNBWjE0Z2hHUnIybk4tOFd4QzVSb0VFeXF6NUU2d2RFazd0T0RVd1lUYXFDVE5zV0s2NUN4VF92QjE0OA?oc=5",
+          "pubDate": "Thu, 15 Oct 2026 21:00:02 GMT",
+          "sentiment": -0.27,
+          "category": "business",
+          "explanation": "A series of workplace fires, delays, and labor unrest ahead of an IPO represents significant corporate distress, framed critically."
+        },
         {
           "sourceId": "bloomberg",
           "title": "Musk Comments Sow Confusion Over Ukraine Starshield Disruption - Bloomberg.com",
@@ -37940,6 +38007,16 @@
           "sentiment": 0.06,
           "category": "business",
           "explanation": "A corporate beverage supply agreement switch represents routine status-quo commercial news."
+        },
+        {
+          "sourceId": "bloomberg",
+          "title": "Trump Administration Sues California Over Voter Citizenship List - Bloomberg.com",
+          "description": "Trump Administration Sues California Over Voter Citizenship List Bloomberg.com",
+          "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxNVUJ4cU1JQjJzY2pLcmJmWnFBSy1HTVJEMHdQUl9yVFJkbGFJWVV3dElyb3RkM0NXYXZ6OHZTYVdqS3ptVXpjSktMbzZrM2xLWGgtV3hrQmpHM0wxU05sMDBpSDZmZ05wNkVWYV9hZDIxNjFGdVZHVTN5ZE51M3ZqeDZKQ1c0MDJpaVR1eEZuSXptTzgweTE5dVVoc09sN1NrMllXX3l6X3J1NkdRRkp6MXhsbWpZUQ?oc=5",
+          "pubDate": "Thu, 15 Oct 2026 19:17:19 GMT",
+          "sentiment": -0.23,
+          "category": "politics",
+          "explanation": "A federal lawsuit against a state over voter registration records represents institutional friction, framed in neutral wire style."
         },
         {
           "sourceId": "bloomberg",
@@ -38104,10 +38181,10 @@
         },
         {
           "sourceId": "bloomberg",
-          "title": "Trump Rejects Hegseth’s Bid to Livestream Firing Squad Execution - Bloomberg.com",
+          "title": "Trump Rejects Hegseth’s Bid to Stream Firing Squad Execution - Bloomberg.com",
           "description": "Trump Rejects Hegseth’s Bid to Livestream Firing Squad Execution Bloomberg.com",
           "link": "https://news.google.com/rss/articles/CBMitgFBVV95cUxPUkc1MkZkVlBqWUp1WmxpT3E3V1VyeFNhWVdTdzFNUWg5T0QtSjZFaXZLY2NfcFIyTmFpcXBEN0VJOGRVT1B1c3RKVUxEdWlRVWdqU040SkZqSHJ0TTlQM05GUkhJRUdic2RhZjRpYXZud2pnOEo3bF9RRVU5MnRIWU56WUZIQnNqc0xfYUpwNEw1NHUyX1hOOVF4OUp2d3hhMkpuRDloRUlSYUliQUZGd0JtMGM3Zw?oc=5",
-          "pubDate": "Thu, 15 Oct 2026 14:13:32 GMT",
+          "pubDate": "Thu, 15 Oct 2026 14:28:21 GMT",
           "sentiment": -0.22,
           "category": "politics",
           "explanation": "The formal rejection of a proposal to publicly broadcast a military execution by firing squad prevents an unprecedented public spectacle."
@@ -39487,11 +39564,11 @@
           "title": "Argentina Posts Second Straight Month of Inflation Below 2% - Bloomberg.com",
           "description": "Argentina Posts Second Straight Month of Inflation Below 2% Bloomberg.com",
           "link": "https://news.google.com/rss/articles/CBMirgFBVV95cUxQeHpwZjJrSlpnS2FJTWctNkxVS25aemVTekJOQmd4VUpTOTdjU0ZROUF0QTlrRThlaEItTGNXTGcta0FmLTFHZzZuUXhQNHV1Nm13LW1tYnVWSlVSbWNUdG0ta1FOWTJ3dVZuemNoN1M2aDh3b2k4eThKZVUwVGt3a0pVS2diaC0tN0g2aGxxcnRVWHVMOXVpZFRGVU96YzFVVWNpSmc1amZVdllvVVE?oc=5",
+          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300",
           "pubDate": "Tue, 13 Oct 2026 19:14:17 GMT",
           "sentiment": 0.44,
           "category": "business",
-          "explanation": "Consecutive months of sharply lower inflation in Argentina represent meaningful, sustained macroeconomic relief for the public.",
-          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+          "explanation": "Consecutive months of sharply lower inflation in Argentina represent meaningful, sustained macroeconomic relief for the public."
         },
         {
           "sourceId": "bloomberg",
@@ -41313,7 +41390,8 @@
           "pubDate": "Fri, 17 Jul 2026 14:16:59 GMT",
           "sentiment": 0.42,
           "category": "business",
-          "explanation": "A substantial one-time bonus for employees reflects positive economic success driven by high technology demand."
+          "explanation": "A substantial one-time bonus for employees reflects positive economic success driven by high technology demand.",
+          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
         },
         {
           "sourceId": "bloomberg",
@@ -41533,7 +41611,8 @@
           "pubDate": "Fri, 17 Jul 2026 06:00:00 GMT",
           "sentiment": 0.42,
           "category": "technology",
-          "explanation": "Achieving milestone sales of $1 billion indicates significant business and technological growth."
+          "explanation": "Achieving milestone sales of $1 billion indicates significant business and technological growth.",
+          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
         },
         {
           "sourceId": "bloomberg",
@@ -42374,7 +42453,8 @@
           "pubDate": "Wed, 15 Jul 2026 09:03:40 GMT",
           "sentiment": 0.42,
           "category": "business",
-          "explanation": "A major chip equipment supplier raising its financial outlook and capacity due to strong demand signifies substantial industry growth."
+          "explanation": "A major chip equipment supplier raising its financial outlook and capacity due to strong demand signifies substantial industry growth.",
+          "imageUrl": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
         },
         {
           "sourceId": "bloomberg",
