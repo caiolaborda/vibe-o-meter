@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=3.9">
+  <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body data-edition="doom">
 
@@ -752,345 +752,197 @@
 
   <!-- TAB 4: METHODOLOGY -->
   <main id="tab-panel-methodology" class="tab-panel hidden">
-    <!-- HOW SENTIMENT WORKS / METHODOLOGY & PHILOSOPHY -->
     <section class="methodology-section" id="methodology-section">
       <div class="section-header-row">
         <div>
           <h2 class="section-title flex-center">
-            <i data-lucide="help-circle"></i>
-            Methodology, Philosophy &amp; Scientific Calibration
+            <i data-lucide="compass"></i>
+            Methodology &amp; Calibration
           </h2>
-          <p class="section-desc">The journey of No Good News: why commercial news operates as an existential threat monitor, why RSS feeds provide the purest lens, and how AI evaluates real-world human progress.</p>
+          <p class="section-desc" style="font-size: 1.05rem; max-width: 780px;">How we audit 17 global newsrooms every day, separate real-world impact from headline spin, and surface genuine human progress.</p>
         </div>
       </div>
 
       <div class="collapsible-content" id="methodology-wrapper">
         <div class="methodology-container card">
 
-          <!-- 1. THE JOURNEY & THE BIG QUESTION -->
-          <div class="methodology-story-banner" style="margin-bottom: 2rem;">
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-              <span style="font-size: 1.4rem;">🧭</span>
-              <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0; font-family: var(--font-serif);">
-                The Core Premise: Is the World Ending, or Is the Media Selling Panic?
-              </h3>
+          <!-- 1. THE PREMISE -->
+          <div class="methodology-story-banner">
+            <div class="methodology-banner-title">
+              <span style="font-size: 1.6rem;">🧭</span>
+              <h3>Why Two Editions? ("No Good News" vs. "Some Good News")</h3>
             </div>
             <p class="methodology-story-p">
-              <strong>No Good News</strong> was built to answer a very simple, visceral question: <em>"Why does opening any major news website immediately trigger feelings of existential exhaustion?"</em>
+              Commercial media operates as a <strong>24-hour threat-surveillance engine</strong>. Because human attention is evolutionarily wired to fixate on danger, news desks disproportionately amplify conflict, crisis, and outrage—leaving readers with the false impression that nothing constructive is happening on Earth.
             </p>
             <p class="methodology-story-p">
-              We started with a hypothesis: commercial media operates primarily as a <strong>24-hour threat-surveillance machine</strong>. Bad news gets published because humans are biologically wired to click on danger signals. But to test that empirically without human editorial bias or preconceived expectations, we needed an autonomous audit engine capable of reading the global news stream every day, scoring emotional valence objectively across all categories, and measuring the true prevalence and tone of constructive breakthroughs and good news against the prevailing tide of alarmism.
+              <strong>No Good News</strong> audits this structural negativity across <strong>17 major international outlets</strong> using their raw, un-personalized RSS feeds. <strong>Some Good News</strong> uses that exact same dataset to rescue the verified scientific, medical, environmental, and humanitarian breakthroughs that get buried beneath the daily panic.
             </p>
           </div>
 
-          <!-- 2. WHY RSS FEEDS? (ACCESSIBILITY, OPENNESS & EDITORIAL INTENT) -->
-          <div style="background: var(--bg-card); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--card-shadow);">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem;">
+          <!-- 2. THE 2-STEP GEMINI SCORING FORMULA -->
+          <div class="methodology-formula-box">
+            <div class="methodology-formula-header">
               <h4 class="methodology-subheading" style="margin: 0;">
-                <i data-lucide="rss" style="color: #f97316;"></i> The Unfiltered Source: Why RSS Feeds Instead of Social Algorithms?
+                <i data-lucide="cpu"></i> The 2-Step Gemini Evaluation Formula
               </h4>
-              <span class="badge neu" style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;">Open &amp; Un-Personalized</span>
+              <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700;">Continuous Scale: -1.00 to +1.00</span>
             </div>
-            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
-              <strong>1. Universal Openness &amp; Free Accessibility:</strong> RSS (Really Simple Syndication) is a decentralized, open web standard. Because RSS feeds are freely available without proprietary developer barriers, rate-limit paywalls, or closed API gates, our data collection pipeline is transparent, reproducible, and verifiable by any independent observer.
+            <p class="methodology-lead-text">
+              Simple keyword dictionaries fail at journalism because words like <em>"strike"</em> or <em>"crash"</em> appear in routine reporting. Instead, every headline and lead summary is evaluated by <strong>Gemini 3.8 Flash</strong> by summing two distinct components:
             </p>
-            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
-              <strong>2. True Editorial Priority:</strong> An RSS feed is not a random data dump; it represents an active curation choice. When the news desks of <em>The New York Times</em>, <em>BBC News</em>, <em>Reuters</em>, <em>CNN</em>, or <em>The Guardian</em> syndicate an article to their primary edition, their editors are declaring: <em>"This is what our senior journalists deem the most urgent, consequential, and important developments on Earth right now."</em>
-            </p>
-            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin: 0;">
-              <strong>3. Zero Algorithmic Distortion:</strong> Unlike social networks (X, TikTok, Facebook) whose black-box recommendation algorithms deliberately maximize individual outrage to inflate time on screen, raw RSS feeds broadcast the exact same chronological baseline to every reader without personalization or engagement manipulation.
-            </p>
+
+            <div class="formula-equation-pill">
+              <span class="eq-part eq-total">Final Score (-1.00 to +1.00)</span>
+              <span class="eq-op">=</span>
+              <span class="eq-part eq-base">Event Base (-0.85 to +0.85)</span>
+              <span class="eq-op">+</span>
+              <span class="eq-part eq-frame">Editorial Framing (-0.15 to +0.15)</span>
+            </div>
+
+            <div class="methodology-intro-grid">
+              <div class="methodology-intro-card">
+                <div class="intro-icon-box pos">
+                  <i data-lucide="globe"></i>
+                </div>
+                <div class="intro-content">
+                  <h3>Step 1: Event Base (-0.85 to +0.85)</h3>
+                  <p>Measures the inherent real-world impact of the event strictly by <strong>how many lives it affects and how lasting the consequence is</strong>—never by topic labels:</p>
+                  <ul class="methodology-bullet-list">
+                    <li><strong>Civilizational / Mass-Scale (&pm;0.65 to &pm;0.85):</strong> Active warfare or mass casualties vs. historic peace accords, disease eradication, or foundational scientific breakthroughs.</li>
+                    <li><strong>Societal / Multi-Year (&pm;0.35 to &pm;0.60):</strong> Severe disasters or institutional breakdown vs. national cost-of-living relief, binding treaties, coral/species recovery, or major archaeological discoveries.</li>
+                    <li><strong>Organizational / Transitory (&pm;0.10 to &pm;0.30):</strong> Routine partisan friction or stock dips vs. single-company quarterly revenue beats, IPOs, or sports wins (capped below <code>+0.28</code> so corporate profits never outrank human breakthroughs).</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="methodology-intro-card">
+                <div class="intro-icon-box neg">
+                  <i data-lucide="sliders"></i>
+                </div>
+                <div class="intro-content">
+                  <h3>Step 2: Editorial Framing (-0.15 to +0.15)</h3>
+                  <p>Measures how a specific newsroom chose to phrase the headline compared to a neutral wire-service statement of the same fact:</p>
+                  <ul class="methodology-bullet-list">
+                    <li><strong>Alarmist / Conflict-Amplifying (-0.15 to -0.05):</strong> Loaded conflict verbs (<em>"slams"</em>, <em>"chaos"</em>, <em>"betrayed"</em>, <em>"crisis"</em>) or worst-case speculation.</li>
+                    <li><strong>Matter-of-Fact / Wire Baseline (0.00):</strong> Direct, unembellished reporting of the event.</li>
+                    <li><strong>Constructive / Composed (+0.05 to +0.15):</strong> Highlights verified resilience, cooperation, de-escalation, or solutions.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- 3. DICTIONARY COUNTERS VS AI CONTEXTUAL VALENCE -->
-          <div class="methodology-intro-grid" style="margin-bottom: 2rem;">
-            <div class="methodology-intro-card">
-              <div class="intro-icon-box neg">
-                <i data-lucide="x-circle"></i>
-              </div>
-              <div class="intro-content">
-                <h3>The Flaw with Keyword Dictionaries</h3>
-                <p>Traditional sentiment lexicons like VADER or AFINN count negative words in isolation. In journalism, words like <em>"strike"</em>, <em>"defense"</em>, <em>"crash"</em>, or <em>"investigation"</em> are routine factual reporting. A space rocket test "crashing" into the ocean is neutral science, but keyword counters score it as a disaster.</p>
-              </div>
-            </div>
-
-            <div class="methodology-intro-card">
-              <div class="intro-icon-box pos">
-                <i data-lucide="brain"></i>
-              </div>
-              <div class="intro-content">
-                <h3>The Gemini Semantic Engine</h3>
-                <p>Our autonomous engine evaluates full journalistic tone, geopolitical weight, and systemic outcome on a continuous <strong>-1.00 (Severe Crisis)</strong> to <strong>+1.00 (Inspiring Breakthrough)</strong> spectrum. It recognizes that hostage releases are positive even in wartime, and democratic elections are neutral governance.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- 4. THE COUNTERFACTUAL PRINCIPLE: HARM VS MITIGATION -->
-          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem;">
-            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem;">
-              <span style="font-size: 1.3rem;">⚖️</span>
-              <h4 class="methodology-subheading" style="margin: 0;">
-                The Counterfactual First Principle: Solving the "Harm vs. Mitigation" Dilemma
-              </h4>
-            </div>
-            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
-              During calibration, we encountered a classic paradox: <em>When a regulator fines a company £6 million for deceptive sales, or injured workers receive a legal settlement for toxic exposure, is that good news or bad news?</em>
-            </p>
-            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
-              A naive model sees "payout" or "remedy" and marks it as positive justice. But we anchor the AI with the <strong>Counterfactual World State Test</strong>:
-            </p>
-            <blockquote style="border-left: 3px solid var(--accent-color); padding-left: 1rem; margin: 0.75rem 0; font-size: 0.88rem; line-height: 1.6; color: var(--text-primary); font-style: italic; background: rgba(99, 102, 241, 0.05); padding-top: 0.5rem; padding-bottom: 0.5rem; border-radius: 0 8px 8px 0;">
-              "Ask: If this whole situation never occurred, would the world be better or worse? An aspirin is a remedy for a headache, but a headache is still unpleasant. Regulatory fines, legal payouts, and emergency prison decanting are reactions to underlying harm, negligence, or systemic failure. They are scored as sober or mildly negative (-0.15 to -0.35) because they reflect the damage that necessitated them."
-            </blockquote>
-          </div>
-
-          <!-- 5. THE 6 ARCHETYPES OF GENUINE GOOD NEWS -->
-          <div style="margin-bottom: 2rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.5rem;">
-              <h4 class="methodology-subheading" style="margin: 0;">
-                <i data-lucide="sun" style="color: #f59e0b;"></i> Where Hope Actually Lives: The 6 Archetypes of Genuine Good News
-              </h4>
-              <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700;">Impact-Calibrated: +0.10 to +1.00</span>
-            </div>
-            <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 1rem;">
-              Commercial news operates as a 24-hour threat-surveillance system. But genuine good news <strong>does</strong> exist across global headlines, and it almost always falls into one of these 6 Archetypes of human flourishing. <strong>Crucially, there are no topic ceilings or category caps</strong>: any story across <em>any</em> archetype—whether an epochal peace treaty, systemic poverty eradication, a landmark clean energy transition, or a disease cure—can reach the highest tiers (up to <code>+1.00</code>). Valence reflects the <em>magnitude and scale of real-world human consequence</em>, with small incremental steps scoring <code>+0.10 to +0.25</code> and transformative milestones reaching <code>+0.70 to +1.00</code> across every topic:
-            </p>
-
+          <!-- 3. THREE CORE CALIBRATION GUARDRAILS -->
+          <div>
+            <h4 class="methodology-subheading"><i data-lucide="shield-check"></i> Three Calibration Guardrails</h4>
             <div class="archetypes-grid">
               <div class="archetype-card">
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
-                    <span class="archetype-icon">🚀</span>
-                    <span class="archetype-name">Space &amp; Scientific Discovery</span>
+                    <span class="archetype-icon">🔗</span>
+                    <span class="archetype-name">Cross-Outlet Batch Parity</span>
                   </div>
-                  <span class="archetype-score-badge">Knowledge Frontier</span>
                 </div>
-                <p class="archetype-examples">James Webb deep-field astrophysics, fusion net-gain milestones, quantum computing breakthroughs, and planetary exploration expanding human horizons.</p>
+                <p class="archetype-examples">Headlines from all 17 outlets are interleaved into shared context batches. When 6 outlets cover the same event, they receive the exact same <strong>Event Base</strong> and diverge solely by each editor's <strong>Framing Modifier</strong>.</p>
               </div>
 
               <div class="archetype-card">
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
-                    <span class="archetype-icon">🏥</span>
-                    <span class="archetype-name">Medical &amp; Public Health Eradication</span>
+                    <span class="archetype-icon">⚖️</span>
+                    <span class="archetype-name">Counterfactual Harm Rule</span>
                   </div>
-                  <span class="archetype-score-badge">Life &amp; Health</span>
                 </div>
-                <p class="archetype-examples">Targeted leukemia immunotherapies, global malaria vaccine rollouts, infectious disease eradication, and life-saving organ transplantation breakthroughs.</p>
+                <p class="archetype-examples">Criminal convictions, prison sentences, and corporate fines are reactions to underlying harm. An aspirin treats a headache, but the headache is still bad—so crime trials and penalties stay negative (<code>-0.20</code> to <code>-0.55</code>), never false "good news."</p>
               </div>
 
               <div class="archetype-card">
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
-                    <span class="archetype-icon">🕊️</span>
-                    <span class="archetype-name">Reconciliation &amp; Hostage Freedom</span>
+                    <span class="archetype-icon">📡</span>
+                    <span class="archetype-name">Unfiltered RSS Baseline</span>
                   </div>
-                  <span class="archetype-score-badge">Peace &amp; Liberty</span>
                 </div>
-                <p class="archetype-examples">Diplomatic hostage releases, long-sought family reunifications, peace accords, and demilitarization treaties halting civilian suffering.</p>
-              </div>
-
-              <div class="archetype-card">
-                <div class="archetype-header">
-                  <div class="archetype-title-wrap">
-                    <span class="archetype-icon">🌱</span>
-                    <span class="archetype-name">Nature, Wildlife &amp; Climate</span>
-                  </div>
-                  <span class="archetype-score-badge">Biosphere &amp; Renewal</span>
-                </div>
-                <p class="archetype-examples">Endangered species population rebounds, renewable energy records outpacing fossil fuels, ocean conservation treaties, and river rewilding.</p>
-              </div>
-
-              <div class="archetype-card">
-                <div class="archetype-header">
-                  <div class="archetype-title-wrap">
-                    <span class="archetype-icon">📈</span>
-                    <span class="archetype-name">Direct Citizen Economic Relief</span>
-                  </div>
-                  <span class="archetype-score-badge">Living Standards &amp; Security</span>
-                </div>
-                <p class="archetype-examples">Central bank rate cuts lowering mortgages, real wage gains outpacing inflation, child poverty reduction milestones, and broad cost-of-living relief.</p>
-              </div>
-
-              <div class="archetype-card">
-                <div class="archetype-header">
-                  <div class="archetype-title-wrap">
-                    <span class="archetype-icon">🤝</span>
-                    <span class="archetype-name">Altruism &amp; Cultural Triumphs</span>
-                  </div>
-                  <span class="archetype-score-badge">Solidarity &amp; Human Spirit</span>
-                </div>
-                <p class="archetype-examples">Heroic citizen rescues, grassroots mutual aid campaigns, inspiring sportsmanship, and record-shattering Paralympic triumphs.</p>
+                <p class="archetype-examples">Instead of scraping personalized social feeds (X, TikTok) that optimize for individual outrage, we ingest each newsroom's primary RSS feed—capturing their true front-page editorial priority.</p>
               </div>
             </div>
           </div>
 
-          <!-- 6. 5 VALENCE BANDS STRIP -->
+          <!-- 4. THE 5 VALENCE BANDS -->
           <div class="valence-bands-container">
-            <h4 class="methodology-subheading"><i data-lucide="sliders"></i> The 5 Semantic Valence Bands</h4>
+            <h4 class="methodology-subheading"><i data-lucide="sliders"></i> The 5 Sentiment Spectrum Bands</h4>
             <div class="valence-bands-grid">
               <div class="valence-band-card band-crisis">
                 <div class="band-tag">-1.00 to -0.45</div>
-                <div class="band-title">Severe Crisis / Doom</div>
-                <p class="band-desc">Armed conflict, mass casualties, infrastructure destruction, catastrophic natural disasters.</p>
+                <div class="band-title">Severe Crisis</div>
+                <p class="band-desc">Armed conflict, mass casualties, disasters, systemic institutional collapse.</p>
               </div>
               <div class="valence-band-card band-gloomy">
                 <div class="band-tag">-0.45 to -0.15</div>
                 <div class="band-title">Leaning Gloomy</div>
-                <p class="band-desc">Inflation pressure, political gridlock, regulatory scrutiny, diplomatic tensions, layoffs.</p>
+                <p class="band-desc">Economic strain, political conflict, criminal trials, layoffs, diplomatic friction.</p>
               </div>
               <div class="valence-band-card band-neutral">
                 <div class="band-tag">-0.15 to +0.15</div>
-                <div class="band-title">Objective / Balanced</div>
-                <p class="band-desc">Standard parliamentary votes, routine data releases, election dates, factual reporting.</p>
+                <div class="band-title">Neutral / Procedural</div>
+                <p class="band-desc">Scheduled hearings, routine governance, standard weather or market updates.</p>
               </div>
               <div class="valence-band-card band-positive">
                 <div class="band-tag">+0.15 to +0.45</div>
-                <div class="band-title">Leaning Positive</div>
-                <p class="band-desc">Steady economic stabilization, diplomatic dialogue, infrastructure progress, routine sporting/cultural honors.</p>
+                <div class="band-title">Constructive</div>
+                <p class="band-desc">Diplomatic progress, civic improvements, cultural milestones, corporate growth.</p>
               </div>
               <div class="valence-band-card band-inspiring">
                 <div class="band-tag">+0.45 to +1.00</div>
-                <div class="band-title">Transformative / Breakthrough</div>
-                <p class="band-desc">High-consequence breakthroughs across any topic: peace treaties, disease cures, poverty reductions, clean energy abundance, heroic rescues.</p>
+                <div class="band-title">Major Breakthrough</div>
+                <p class="band-desc">Peace accords, medical cures, clean energy records, major scientific discoveries.</p>
               </div>
             </div>
           </div>
 
-          <!-- 7. REAL-WORLD CASE STUDIES -->
-          <div class="case-studies-container" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.75rem;">
-            <h4 class="methodology-subheading"><i data-lucide="file-check"></i> Real-World Evaluation Case Studies</h4>
-            <div class="case-studies-grid">
-              
-              <div class="case-study-card">
-                <div class="case-study-header">
-                  <span class="case-badge cat-world">World</span>
-                  <span class="case-score neg">-0.85</span>
-                </div>
-                <h5 class="case-headline">"Russian missile strikes damage thermal power plants across central Ukraine"</h5>
-                <p class="case-reasoning"><strong>AI Evaluation:</strong> Severe armed conflict targeting civilian critical infrastructure with direct humanitarian harm and widespread freezing hazard during winter.</p>
-              </div>
-
-              <div class="case-study-card">
-                <div class="case-study-header">
-                  <span class="case-badge cat-politics">Politics</span>
-                  <span class="case-score neu">0.00</span>
-                </div>
-                <h5 class="case-headline">"Congressional committee advances bipartisan transportation appropriations bill"</h5>
-                <p class="case-reasoning"><strong>AI Evaluation:</strong> Standard democratic process and regular legislative governance. Purely informational; neither an economic disaster nor a societal celebration.</p>
-              </div>
-
-              <div class="case-study-card">
-                <div class="case-study-header">
-                  <span class="case-badge cat-science">Science</span>
-                  <span class="case-score pos">+0.82</span>
-                </div>
-                <h5 class="case-headline">"Clinical trial demonstrates 90% complete remission in targeted leukemia therapy"</h5>
-                <p class="case-reasoning"><strong>AI Evaluation:</strong> Significant medical breakthrough directly saving human lives and advancing cancer therapeutics. High optimism with transformative public health impact.</p>
-              </div>
-
-              <div class="case-study-card">
-                <div class="case-study-header">
-                  <span class="case-badge cat-world">World</span>
-                  <span class="case-score pos">+0.54</span>
-                </div>
-                <h5 class="case-headline">"Hostages reunited with families following fragile humanitarian ceasefire"</h5>
-                <p class="case-reasoning"><strong>AI Evaluation:</strong> Deep humanitarian relief and family reunification. While the war context is grim, the specific development represents genuine positive relief and hope.</p>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- THE SCIENTIFIC CONTROL GROUP: THE GOOD NEWS NETWORK BENCHMARK -->
-          <div class="control-benchmark-section" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.75rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
-              <h4 class="methodology-subheading" style="margin-bottom: 0;">
-                <i data-lucide="microscope" style="color: #10b981;"></i> The Scientific Control Experiment: <em>The Good News Network</em> Benchmark
-              </h4>
-              <span class="badge pos" style="background: rgba(16, 185, 129, 0.12); color: #059669; font-weight: 700; font-size: 0.75rem; padding: 0.35rem 0.75rem; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3); display: flex; align-items: center; gap: 0.35rem;">
-                <i data-lucide="shield-check" style="width:13px;height:13px;"></i> Empirical Model Calibration
-              </span>
-            </div>
-
-            <div class="control-benchmark-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(248, 250, 252, 0.95) 100%); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 16px rgba(0,0,0,0.02);">
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.5rem; align-items: center;">
+          <!-- 5. SCIENTIFIC CONTROL BENCHMARK & OPEN SOURCE -->
+          <div class="control-benchmark-section">
+            <div class="control-benchmark-card">
+              <div class="control-benchmark-grid">
                 <div>
-                  <h5 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-serif);">
-                    <span>🧠 Why Is Mainstream News So Depressing? (The Savannah Primate Theory)</span>
-                  </h5>
-                  <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                    Readers often ask: <em>"Is this AI engine rigged to be cynical? Why is the global media vibe almost persistently negative (-0.21)?"</em>
+                  <h4 class="methodology-subheading" style="margin-bottom: 0.65rem;">
+                    <i data-lucide="microscope" style="color: #10b981;"></i> Control Experiment: Is the AI Cynical, or Is the News?
+                  </h4>
+                  <p class="methodology-story-p" style="margin-bottom: 0.75rem;">
+                    To verify that our grading engine isn't biased toward negativity, we ran the exact same Gemini rubric against a control feed from <strong>The Good News Network (GNN)</strong>.
                   </p>
-                  <p style="font-size: 0.88rem; line-height: 1.65; color: var(--text-secondary);">
-                    The answer is rooted in evolutionary biology. Humans evolved as social primates where failing to notice an approaching predator was fatal, whereas ignoring a peaceful sunrise carried zero Darwinian cost. Commercial news corporations systematically exploit this <strong>negativity bias</strong> 24 hours a day—amplifying doom, conflict, and threat signals because existential panic triggers dopamine-fueled clicks and outrage retention.
+                  <p class="methodology-story-p">
+                    While the 17 mainstream newsrooms average <strong>-0.21</strong>, the control feed scored <strong>+0.73</strong>—proving the model responds symmetrically when fed constructive journalism.
                   </p>
                 </div>
 
-                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.85rem; box-shadow: var(--card-shadow);">
-                  <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.06em;">
-                    Empirical Calibration Comparison
-                  </div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0.85rem; background: rgba(239, 68, 68, 0.06); border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                <div class="control-comparison-box">
+                  <div class="control-row neg">
                     <div>
-                      <div style="font-size: 0.85rem; font-weight: 700; color: #dc2626;">Mainstream News (17 Global Outlets)</div>
-                      <div style="font-size: 0.7rem; color: var(--text-muted);">Threat-monitoring, geopolitics, crime, inflation</div>
+                      <div class="control-row-title">Mainstream News (17 Global Outlets)</div>
+                      <div class="control-row-sub">Geopolitics, conflict, crime, partisan friction</div>
                     </div>
-                    <strong style="font-size: 1.15rem; font-family: var(--font-mono); color: #dc2626; font-weight: 800;">-0.21</strong>
+                    <strong>-0.21</strong>
                   </div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 0.85rem; background: rgba(16, 185, 129, 0.08); border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                  <div class="control-row pos">
                     <div>
-                      <div style="font-size: 0.85rem; font-weight: 700; color: #059669;">Control: The Good News Network (GNN)</div>
-                      <div style="font-size: 0.7rem; color: var(--text-muted);">Altruism, recovery, human compassion, science</div>
+                      <div class="control-row-title">Control: The Good News Network</div>
+                      <div class="control-row-sub">Science, health, conservation, civic relief</div>
                     </div>
-                    <strong style="font-size: 1.15rem; font-family: var(--font-mono); color: #059669; font-weight: 800;">+0.73</strong>
-                  </div>
-                  <div style="font-size: 0.72rem; color: var(--text-muted); font-style: italic; line-height: 1.4;">
-                    *When evaluated on identical Gemini 3.8 Flash prompts, GNN scores dramatically positive (+0.73), mathematically proving the model responds symmetrically to genuinely constructive journalism.
+                    <strong>+0.73</strong>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- GNN Live Control Headlines Table -->
-            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem;">
-              <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
-                <i data-lucide="check-circle-2" style="width: 15px; height: 15px; color: #10b981;"></i>
-                Sample Empirical Evaluations from The Good News Network Control Sample
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
-                  <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"Elderly Theater Worker Surprised by $146,000 for Her Retirement Crowdfunded by Young Moviegoer"</span>
-                  <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.95</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
-                  <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"Barbie Honors Serena Williams with New Signature Doll to Serve Inspiration to Next Generation"</span>
-                  <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.80</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
-                  <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"Montana High School Softball Player Discovered Long-Lost Sister on Opposing Team"</span>
-                  <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.75</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 0.6rem 0.85rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); gap: 1rem;">
-                  <span style="font-weight: 500; color: var(--text-primary); line-height: 1.4;">"‘Like Caring for a Pet’ – The Community App That Alerts Neighbors When Street Trees Need Water"</span>
-                  <span class="badge pos" style="font-family: var(--font-mono); font-weight: 800; font-size: 0.82rem; padding: 0.2rem 0.6rem; background: rgba(34, 197, 94, 0.15); color: #16a34a; flex-shrink: 0; border-radius: 6px;">+0.65</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- OPEN SOURCE & REPOSITORY -->
-          <div class="methodology-github-section" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.75rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem 1.5rem;">
+            <div class="methodology-github-bar">
               <div>
-                <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
-                  <i data-lucide="github" style="width: 18px; height: 18px;"></i> Open Source &amp; Research Data
-                </h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
-                  Explore the autonomous daily scraping pipeline, sentiment evaluation prompts, and dataset history on GitHub.
-                </p>
+                <h4><i data-lucide="github" style="width: 20px; height: 20px;"></i> Open Source Pipeline &amp; Dataset</h4>
+                <p>Inspect the live RSS ingestion script, Gemini evaluation prompts, and historical dataset on GitHub.</p>
               </div>
-              <a href="https://github.com/caiol/Vibe-O-Meter-of-News-Sources" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.85rem; padding: 0.5rem 1rem; text-decoration: none; border-radius: 8px;">
-                <i data-lucide="github" style="width: 16px; height: 16px;"></i> View Repository
+              <a href="https://github.com/caiolaborda/vibe-o-meter" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.95rem; padding: 0.6rem 1.15rem; text-decoration: none; border-radius: 10px;">
+                <i data-lucide="github" style="width: 17px; height: 17px;"></i> View Repository
               </a>
             </div>
           </div>
@@ -1134,6 +986,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=4.0"></script>
+  <script src="app.js?v=4.1"></script>
 </body>
 </html>

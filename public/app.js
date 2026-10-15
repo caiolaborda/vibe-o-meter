@@ -172,6 +172,12 @@ window.toggleSilverCoverageDrawer = function(btn, event) {
   btn.classList.toggle('active', isOpen);
 };
 
+document.addEventListener('click', () => {
+  document.querySelectorAll('.silver-consensus-hover-wrap.open').forEach(el => {
+    el.classList.remove('open');
+  });
+});
+
 function attachSwipeListeners(el) {
   if (!el) return;
   let startX = 0;
@@ -240,8 +246,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
   const heroImgUrl = getStoryImage(art);
   const storyUrl = art.url || art.link || '#';
 
-  let drawerHTML = '';
-  let footerLeftHTML = `<span class="silver-origin-label">Published by ${art.sourceName}</span>`;
+  let relatedHoverChipHTML = '';
 
   if (related && related.length > 0) {
     const rowsHTML = related.map(r => {
@@ -259,24 +264,27 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
       `;
     }).join('');
 
-    drawerHTML = `
-      <div class="silver-coverage-drawer">
-        <div class="silver-drawer-header">
-          <span><i data-lucide="layers" style="width:12px;height:12px;"></i> Related Outlet Coverage (${related.length})</span>
-          <button type="button" class="silver-drawer-close" onclick="toggleSilverCoverageDrawer(this, event)" aria-label="Close">×</button>
-        </div>
-        <div class="silver-cluster-rows">
-          ${rowsHTML}
+    const relDotsHTML = related.slice(0, 5).map(r => {
+      const meta = SOURCE_META[r.sourceId] || { color: '#10b981' };
+      return `<span class="silver-cluster-dot" style="background:${meta.color}" title="${r.sourceName}"></span>`;
+    }).join('');
+
+    relatedHoverChipHTML = `
+      <div class="silver-consensus-hover-wrap" tabindex="0" onclick="this.classList.toggle('open'); event.stopPropagation();">
+        <span class="silver-consensus-tag">
+          ${relDotsHTML}
+          <span>+${related.length} Outlet${related.length === 1 ? '' : 's'}</span>
+          <i data-lucide="chevron-down" class="consensus-hover-chevron" style="width:11px;height:11px;"></i>
+        </span>
+        <div class="silver-hover-coverage-menu" onclick="event.stopPropagation();">
+          <div class="silver-drawer-header">
+            <span><i data-lucide="layers" style="width:12px;height:12px;"></i> Related Outlet Coverage (${related.length})</span>
+          </div>
+          <div class="silver-cluster-rows">
+            ${rowsHTML}
+          </div>
         </div>
       </div>
-    `;
-
-    footerLeftHTML = `
-      <button type="button" class="silver-coverage-toggle-btn" onclick="toggleSilverCoverageDrawer(this, event)">
-        <i data-lucide="layers" style="width:12px;height:12px;"></i>
-        <span>+${related.length} Related Outlet${related.length === 1 ? '' : 's'}</span>
-        <i data-lucide="chevron-up" class="drawer-chevron" style="width:12px;height:12px;"></i>
-      </button>
     `;
   }
 
@@ -296,6 +304,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
       <div class="silver-story-meta-bar">
         <div class="silver-story-meta-left">
           <span class="source-badge" style="background-color: ${brandMeta.color}">${getSourceFlagHTML(art.sourceId)} ${art.sourceName}</span>
+          ${relatedHoverChipHTML}
           <span class="cat-badge ${art.category || 'other'}">${art.category === 'climate' ? '🌱 Nature & Climate' : (art.category || 'other')}</span>
         </div>
         <div class="silver-story-meta-right">
@@ -310,12 +319,7 @@ function createSilverCardHTML(art, idx, related, isSpotlight) {
 
       <p class="silver-story-desc">${cleanDesc}</p>
 
-      ${drawerHTML}
-
       <div class="silver-story-footer">
-        <div class="silver-footer-left">
-          ${footerLeftHTML}
-        </div>
         <div class="silver-footer-actions">
           <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${storyUrl}', this)" title="Copy link to clipboard">
             <i data-lucide="link" style="width:13px;height:13px;"></i>
@@ -558,10 +562,21 @@ function createSilverClusterCardHTML(item, idx) {
     <div class="silver-card-body">
       <div class="silver-story-meta-bar">
         <div class="silver-story-meta-left">
-          <span class="silver-consensus-tag">
-            ${outletDotsHTML}
-            <span>Cross-Outlet Story</span>
-          </span>
+          <div class="silver-consensus-hover-wrap" tabindex="0" onclick="this.classList.toggle('open'); event.stopPropagation();">
+            <span class="silver-consensus-tag">
+              ${outletDotsHTML}
+              <span>Cross-Outlet Story</span>
+              <i data-lucide="chevron-down" class="consensus-hover-chevron" style="width:11px;height:11px;"></i>
+            </span>
+            <div class="silver-hover-coverage-menu" onclick="event.stopPropagation();">
+              <div class="silver-drawer-header">
+                <span><i data-lucide="newspaper" style="width:12px;height:12px;"></i> ${item.articles.length} Newsrooms (Peak +${item.maxSentiment.toFixed(2)})</span>
+              </div>
+              <div class="silver-cluster-rows">
+                ${outletRowsHTML}
+              </div>
+            </div>
+          </div>
           <span class="cat-badge ${item.category || 'other'}">${item.category === 'climate' ? '🌱 Nature & Climate' : (item.category || 'other')}</span>
         </div>
         <div class="silver-story-meta-right">
@@ -576,24 +591,7 @@ function createSilverClusterCardHTML(item, idx) {
 
       <p class="silver-story-desc">${cleanDesc}</p>
 
-      <div class="silver-coverage-drawer">
-        <div class="silver-drawer-header">
-          <span><i data-lucide="newspaper" style="width:12px;height:12px;"></i> Aggregated Coverage (${item.articles.length} Newsrooms)</span>
-          <button type="button" class="silver-drawer-close" onclick="toggleSilverCoverageDrawer(this, event)" aria-label="Close">×</button>
-        </div>
-        <div class="silver-cluster-rows">
-          ${outletRowsHTML}
-        </div>
-      </div>
-
       <div class="silver-story-footer">
-        <div class="silver-footer-left">
-          <button type="button" class="silver-coverage-toggle-btn" onclick="toggleSilverCoverageDrawer(this, event)">
-            ${outletDotsHTML}
-            <span>${item.articles.length} Newsrooms (+${item.maxSentiment.toFixed(2)} Peak)</span>
-            <i data-lucide="chevron-up" class="drawer-chevron" style="width:12px;height:12px;"></i>
-          </button>
-        </div>
         <div class="silver-footer-actions">
           <button type="button" class="btn btn-secondary btn-sm silver-copy-btn" onclick="copyStoryLink('${leadUrl}', this)" title="Copy link to clipboard">
             <i data-lucide="link" style="width:13px;height:13px;"></i>
