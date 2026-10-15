@@ -1120,7 +1120,7 @@ async function main() {
       const status = execSync('git status --porcelain', { encoding: 'utf8' });
       if (status.includes('data/')) {
         console.log('[Git] Committing fresh vibe data...');
-        execSync('git commit -m "chore(data): on-demand vibe sync [skip ci]"', { stdio: 'inherit' });
+        execSync('git commit -m "chore(data): on-demand vibe sync"', { stdio: 'inherit' });
         console.log('[Git] Pushing to origin/main...');
         execSync('git push origin main', { stdio: 'inherit' });
         console.log('🚀 Pushed successfully to GitHub! Live site is deploying updated data.');
