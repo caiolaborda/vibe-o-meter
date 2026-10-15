@@ -1556,13 +1556,16 @@ async function fetchData() {
   try {
     let data = null;
 
-    // 1. Try local Express API first if available
-    try {
-      const res = await fetch('/api/data');
-      if (res.ok) {
-        data = await res.json();
-      }
-    } catch (_) {}
+    // 1. Try local Express API first ONLY when running locally (avoids 404 in console on GitHub Pages)
+    const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (isLocalHost) {
+      try {
+        const res = await fetch('/api/data');
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (_) {}
+    }
 
     // 2. If running statically (GitHub Pages / Cloudflare / Netlify), load baked data.json
     if (!data || !data.sources || Object.keys(data.sources).length === 0) {

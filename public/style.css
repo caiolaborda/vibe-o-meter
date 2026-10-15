@@ -742,7 +742,7 @@ body[data-edition="silver"] .summary-story-link:hover {
 .silver-edition-section {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.9rem;
   animation: fadeIn 0.3s ease;
 }
 
@@ -752,14 +752,15 @@ body[data-edition="silver"] .summary-story-link:hover {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 0.45rem 0.85rem;
-  background: rgba(255, 253, 245, 0.92);
+  gap: 0.65rem;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255, 253, 245, 0.94);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
+  border-radius: 14px;
+  margin-bottom: 0;
+  box-sizing: border-box;
   position: sticky;
   top: 10px;
   z-index: 90;
@@ -6249,15 +6250,20 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 
 /* Mobile Optimizations: Screen-Fitted Cards + Clean Progress Bar Beneath Card */
 @media (max-width: 768px) {
-  /* Compact mobile container & masthead in Antidote mode so 100% of card + beneath 1-5 Done bar fit on screen */
-  body[data-edition="silver"][data-silver-mode="antidote"] .app-container {
-    padding: 0.55rem 0.75rem 1.25rem !important;
-    gap: 0.4rem !important;
+  /* Compact mobile container & masthead in both Antidote and Grid modes so there is no dead space */
+  body[data-edition="silver"] .app-container {
+    padding: 0.55rem 0.75rem 1.5rem !important;
+    gap: 0.5rem !important;
+  }
+
+  body[data-edition="silver"] .app-masthead-central {
+    padding-bottom: 0.35rem !important;
+    margin-bottom: 0 !important;
+    gap: 0.25rem !important;
   }
 
   body[data-edition="silver"][data-silver-mode="antidote"] .app-masthead-central {
     padding-bottom: 0.15rem !important;
-    margin-bottom: 0 !important;
     border-bottom: none !important;
     gap: 0.15rem !important;
   }
@@ -6268,23 +6274,67 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
     display: none !important;
   }
 
+  .silver-edition-section {
+    gap: 0.6rem !important;
+  }
+
+  .silver-controls-bar {
+    padding: 0.48rem !important;
+    gap: 0.42rem !important;
+    margin-bottom: 0 !important;
+    border-radius: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   #silver-edition-section[data-silver-mode="grid"] .silver-controls-left {
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   #silver-edition-section[data-silver-mode="grid"] .silver-mode-switcher {
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 4px;
+    padding: 4px;
   }
 
   #silver-edition-section[data-silver-mode="grid"] .silver-mode-btn {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     justify-content: center;
+    padding: 0.44rem 0.35rem;
+    font-size: 0.76rem;
+    gap: 0.28rem;
   }
 
   #silver-edition-section[data-silver-mode="grid"] .silver-controls-right {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.4rem;
     width: 100%;
-    justify-content: space-between;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  #silver-edition-section[data-silver-mode="grid"] .silver-timeframe-wrap {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0.34rem 0.55rem;
+  }
+
+  #silver-edition-section[data-silver-mode="grid"] .silver-time-select {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.76rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .antidote-side-arrow,
