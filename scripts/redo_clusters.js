@@ -15,26 +15,34 @@ async function main() {
   const data = JSON.parse(fs.readFileSync(targetDataFile, 'utf8'));
   const finalSources = data.sources || {};
 
-  // Flatten recent headlines from all sources within past 5 days
+  // Flatten recent headlines from all sources: include all articles from the past 36h (up to 35 per outlet),
+  // falling back to up to 18 articles within the past 5 days for lower-frequency feeds.
   const candidates = [];
+  const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
   const fiveDaysAgo = Date.now() - (5 * 24 * 60 * 60 * 1000);
   Object.entries(finalSources).forEach(([sourceId, src]) => {
-    (src.articles || []).slice(0, 15).forEach(art => {
-      if (art && art.title && art.title.trim().length > 10) {
-        if (art.pubDate) {
-          const t = new Date(art.pubDate).getTime();
-          if (!isNaN(t) && t < fiveDaysAgo) return;
-        }
-        candidates.push({
-          sourceId,
-          sourceName: src.name,
-          title: art.title.trim(),
-          sentiment: typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0),
-          link: art.link || '',
-          pubDate: art.pubDate || ''
-        });
-      }
-    });
+    const articles = src.articles || [];
+    let addedForSource = 0;
+    for (let i = 0; i < articles.length; i++) {
+      const art = articles[i];
+      if (!art || !art.title || art.title.trim().length <= 10) continue;
+      const t = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
+      if (!isNaN(t) && t < fiveDaysAgo) continue;
+
+      const isRecent36h = !isNaN(t) && t >= thirtySixHoursAgo;
+      if (addedForSource >= 35) break;
+      if (!isRecent36h && addedForSource >= 18) continue;
+
+      candidates.push({
+        sourceId,
+        sourceName: src.name,
+        title: art.title.trim(),
+        sentiment: typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0),
+        link: art.link || '',
+        pubDate: art.pubDate || ''
+      });
+      addedForSource++;
+    }
   });
 
   console.log(`Gathered ${candidates.length} candidate headlines across ${Object.keys(finalSources).length} sources.`);
@@ -44,15 +52,15 @@ async function main() {
   }
 
   const promptData = candidates.map((c, idx) => ({ id: idx, source: c.sourceId, title: c.title }));
-  const prompt = `You are an elite wire news editor analyzing recent headlines across global newsrooms.
-Identify genuine, major real-world news events and developments being covered by 2 or more DIFFERENT news outlets.
+  const prompt = `You are a senior news editor analyzing recent headlines across global newsrooms.
+Identify genuine, major real-world news events, developments, and discoveries being covered by 2 or more DIFFERENT news outlets.
 Group them into story clusters.
 
 Rules:
-- A cluster MUST include headlines from at least 2 distinct outlets reporting on the SAME underlying event or topic.
-- Group all matching headlines for the event across all outlets (do not limit to 2 if 4 or 6 outlets cover it).
-- Provide a concise neutral story title (3-6 words, e.g. "Wayfair Misleading Sales Fines", "UK Early Prisoner Release", "Boeing Machinist Strike", "Federal Reserve Rate Cut").
-- Provide a concise 2-sentence editorial summary explaining the core real-world event and how the desks are reporting it.
+- A cluster MUST include headlines from at least 2 distinct outlets reporting on the SAME underlying event, development, or discovery.
+- Group ALL matching headlines for the event across all outlets (do not limit to 2 if 4 or 6 outlets cover it).
+- Provide a concise neutral story title (3-6 words, e.g. "Ancient Shipwreck Found Off Turkey", "UK Early Prisoner Release", "Boeing Machinist Strike", "Federal Reserve Rate Cut").
+- Provide a concise 2-sentence editorial summary explaining the core real-world event and how the outlets are reporting it.
 - Provide the list of matching headline IDs.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
@@ -64,21 +72,42 @@ Return JSON array in format:
   { "story": "Topic Title", "summary": "Two-sentence editorial summary of the event.", "ids": [0, 4, 12] }
 ]`;
 
-  console.log('Calling Gemini 2.5 Flash for clustering...');
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
-    generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-  });
+  const modelsToTry = [
+    process.env.GEMINI_MODEL,
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-3.8-flash',
+    'gemini-2.5-flash'
+  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
-  const resp = await model.generateContent(prompt);
-  let text = resp.response.text().trim();
-  if (text.startsWith('```json')) text = text.substring(7);
-  else if (text.startsWith('```')) text = text.substring(3);
-  if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-
-  const rawClusters = JSON.parse(text.trim());
-  console.log(`Gemini returned ${rawClusters.length} raw clusters.`);
+  let rawClusters = null;
+  for (const modelName of modelsToTry) {
+    try {
+      console.log(`Calling ${modelName} for clustering...`);
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+      });
+      const resp = await model.generateContent(prompt);
+      let text = resp.response.text().trim();
+      if (text.startsWith('```json')) text = text.substring(7);
+      else if (text.startsWith('```')) text = text.substring(3);
+      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+      const parsed = JSON.parse(text.trim());
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        rawClusters = parsed;
+        console.log(`${modelName} returned ${rawClusters.length} raw clusters.`);
+        break;
+      }
+    } catch (err) {
+      console.warn(`Clustering attempt with ${modelName} failed: ${err.message}`);
+    }
+  }
+  if (!rawClusters) {
+    console.error('All models failed clustering');
+    process.exit(1);
+  }
 
   const formattedClusters = [];
   rawClusters.forEach(cl => {

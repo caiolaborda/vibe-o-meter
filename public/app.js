@@ -130,14 +130,19 @@ function getStoryImage(art) {
 function findRelatedCoverage(art, allArticles) {
   const related = [];
   const currentTitle = (art.title || '').toLowerCase().trim();
+  const currentClean = cleanHeadlineTitle(art.title);
+  const currentUrl = canonicalUrl(art.link || art.url);
 
-  // 1. From sharedStoryClusters
-  const clusters = (state.vibeData && state.vibeData.sharedStoryClusters) || [];
+  // 1. From AI-generated sharedStoryClusters
+  const clusters = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
   for (const c of clusters) {
-    const isMatch = (c.coverage || []).some(m => 
-      (m.title || '').toLowerCase().includes(currentTitle.slice(0, 30)) ||
-      currentTitle.includes((m.title || '').toLowerCase().slice(0, 30))
-    );
+    const isMatch = (c.coverage || []).some(m => {
+      if (currentUrl && m.link && canonicalUrl(m.link) === currentUrl) return true;
+      if (currentClean && m.title && cleanHeadlineTitle(m.title) === currentClean) return true;
+      const mTitle = (m.title || '').toLowerCase().trim();
+      return (mTitle.length >= 15 && currentTitle.includes(mTitle.slice(0, 30))) ||
+             (currentTitle.length >= 15 && mTitle.includes(currentTitle.slice(0, 30)));
+    });
     if (isMatch) {
       (c.coverage || []).forEach(m => {
         if (m.sourceId !== art.sourceId && !related.some(r => r.sourceId === m.sourceId)) {
@@ -150,24 +155,24 @@ function findRelatedCoverage(art, allArticles) {
           });
         }
       });
-      if (related.length > 0) return related.slice(0, 3);
+      break;
     }
   }
 
-  // 2. Keyword/Topic Cross-Outlet Matching (Target top 40 candidate pool for performance)
-  if (allArticles && allArticles.length > 0) {
-    const stopWords = new Set(['about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second', 'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over']);
+  // 2. Supplement with Keyword/Topic Cross-Outlet Matching across full candidate pool
+  if (allArticles && allArticles.length > 0 && related.length < 4) {
+    const stopWords = new Set(['about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second', 'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over', 'under', 'while', 'where', 'these', 'those', 'found', 'says', 'amid']);
     const words = currentTitle
       .replace(/[^a-z0-9\s]/g, ' ')
       .split(/\s+/)
-      .filter(w => w.length >= 5 && !stopWords.has(w));
+      .filter(w => w.length >= 4 && !stopWords.has(w));
       
     if (words.length > 0) {
-      const candidates = allArticles.slice(0, 40);
-      for (const other of candidates) {
+      for (const other of allArticles) {
         if (other.sourceId !== art.sourceId && !related.some(r => r.sourceId === other.sourceId)) {
           const otherTitle = (other.title || '').toLowerCase();
-          const matchCount = words.filter(w => otherTitle.includes(w)).length;
+          const otherWords = new Set(otherTitle.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/));
+          const matchCount = words.filter(w => otherWords.has(w) || (w.length >= 5 && otherTitle.includes(w))).length;
           if (matchCount >= 2 || (words.length === 1 && matchCount === 1 && other.category === art.category)) {
             related.push({
               sourceId: other.sourceId,
@@ -176,14 +181,14 @@ function findRelatedCoverage(art, allArticles) {
               sentiment: other.sentiment,
               link: other.url || other.link
             });
-            if (related.length >= 3) break;
+            if (related.length >= 4) break;
           }
         }
       }
     }
   }
 
-  return related.slice(0, 3);
+  return related.slice(0, 4);
 }
 
 function attachSwipeListeners(el) {
@@ -1758,7 +1763,7 @@ function renderSilverEdition() {
   displayedArticles.forEach((art, idx) => {
     const card = document.createElement('div');
     card.className = 'silver-story-card silver-card-grid-item';
-    const related = findRelatedCoverage(art, displayedArticles);
+    const related = findRelatedCoverage(art, uniqueArticles);
     card.innerHTML = createSilverCardHTML(art, idx, related, false);
     gridEl.appendChild(card);
   });
