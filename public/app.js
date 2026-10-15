@@ -5036,7 +5036,7 @@ function renderDailyPulse() {
     };
   }
 
-  // Topic Vibes Chips (renamed from Beat)
+  // Topic Vibes Tiles (unboxed 7-column grid with vs prev 24h delta)
   const chipsContainer = document.getElementById('pulse-category-chips');
   if (chipsContainer) {
     const mainCategories = ['world', 'politics', 'business', 'technology', 'science', 'climate', 'health'];
@@ -5050,6 +5050,43 @@ function renderDailyPulse() {
       health: '🏥'
     };
 
+    // Compute previous 24h (24h-48h ago) and older baseline per category for delta comparison
+    const nowMs = Date.now();
+    const h24Ms = 24 * 60 * 60 * 1000;
+    const h48Ms = 48 * 60 * 60 * 1000;
+    const prev24Stats = {};
+    const olderStats = {};
+
+    Object.values(state.sources || {}).forEach(src => {
+      (src.articles || []).forEach(art => {
+        let cat = art.categoryLocal || art.category || 'other';
+        let s = art.sentiment;
+        if (state.sentimentMode === 'gemini') {
+          if (art.categoryGemini) cat = art.categoryGemini;
+          if (typeof art.sentimentGemini === 'number') s = art.sentimentGemini;
+        } else if (state.sentimentMode === 'vader' && typeof art.sentimentVADER === 'number') {
+          s = art.sentimentVADER;
+        } else if (state.sentimentMode === 'afinn' && typeof art.sentimentAFINN === 'number') {
+          s = art.sentimentAFINN;
+        } else if (state.sentimentMode === 'local' && typeof art.sentimentLocal === 'number') {
+          s = art.sentimentLocal;
+        }
+        if (typeof s !== 'number' || isNaN(s)) return;
+
+        const ageMs = nowMs - new Date(art.pubDate).getTime();
+        if (ageMs > h24Ms && ageMs <= h48Ms) {
+          if (!prev24Stats[cat]) prev24Stats[cat] = { total: 0, count: 0 };
+          prev24Stats[cat].total += s;
+          prev24Stats[cat].count++;
+        }
+        if (ageMs > h24Ms) {
+          if (!olderStats[cat]) olderStats[cat] = { total: 0, count: 0 };
+          olderStats[cat].total += s;
+          olderStats[cat].count++;
+        }
+      });
+    });
+
     chipsContainer.innerHTML = '';
     mainCategories.forEach(cat => {
       const data = catStats[cat];
@@ -5057,11 +5094,36 @@ function renderDailyPulse() {
         const avg = Number((data.total / data.count).toFixed(2));
         const valClass = avg < -0.15 ? 'neg' : (avg > 0.15 ? 'pos' : 'neu');
         const isActive = state.filters.category === cat;
+
+        // Calculate delta vs previous 24h (fallback to older baseline if <2 articles in 24h-48h window)
+        const p24 = prev24Stats[cat];
+        const old = olderStats[cat];
+        const refBucket = (p24 && p24.count >= 2) ? p24 : ((old && old.count >= 1) ? old : p24);
+        let deltaHtml = `<span class="beat-chip-delta neu" title="No prior 24h baseline">— vs 24h</span>`;
+        if (refBucket && refBucket.count > 0) {
+          const prevAvg = refBucket.total / refBucket.count;
+          const delta = Number((avg - prevAvg).toFixed(2));
+          const deltaSign = delta > 0 ? '+' : '';
+          const arrow = delta >= 0.02 ? '▲' : (delta <= -0.02 ? '▼' : '●');
+          const deltaClass = delta >= 0.02 ? 'pos' : (delta <= -0.02 ? 'neg' : 'neu');
+          deltaHtml = `<span class="beat-chip-delta ${deltaClass}" title="Previous 24h avg: ${prevAvg >= 0 ? '+' : ''}${prevAvg.toFixed(2)}">${arrow} ${deltaSign}${delta.toFixed(2)} <span class="delta-sub">vs 24h</span></span>`;
+        }
+
         const chip = document.createElement('button');
         chip.className = `beat-chip ${isActive ? 'active' : ''}`;
         chip.setAttribute('data-cat', cat);
         chip.setAttribute('title', isActive ? 'Click to clear topic filter' : `Filter entire dashboard to ${cat} news`);
-        chip.innerHTML = `<span>${catIcons[cat] || '📰'} ${cat === 'climate' ? 'Climate' : (cat.charAt(0).toUpperCase() + cat.slice(1))}</span> <span class="beat-chip-val ${valClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>`;
+        const labelText = cat === 'climate' ? 'Climate' : (cat.charAt(0).toUpperCase() + cat.slice(1));
+        chip.innerHTML = `
+          <div class="beat-chip-top">
+            <span class="beat-chip-icon">${catIcons[cat] || '📰'}</span>
+            <span class="beat-chip-name">${labelText}</span>
+          </div>
+          <div class="beat-chip-bottom">
+            <span class="beat-chip-val ${valClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>
+            ${deltaHtml}
+          </div>
+        `;
         chip.onclick = () => {
           if (state.filters.category === cat) {
             state.filters.category = 'all';

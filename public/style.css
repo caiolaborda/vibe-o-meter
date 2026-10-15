@@ -3281,29 +3281,21 @@ body:not([data-edition="silver"]) .clear-btn {
   text-overflow: ellipsis;
 }
 
-/* 2. Topic Vibes Bar (Clean Centered 1-Row Bar sitting directly beneath title) */
+/* 2. Topic Vibes Tiles (Unboxed 7-Column Row of Square-ish Stat Cards) */
 .pulse-topics-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.85rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  margin: 0 0 1.1rem 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.pulse-topics-bar::-webkit-scrollbar {
-  display: none;
+  display: block;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  margin: 0.15rem 0 1.15rem 0;
+  overflow: visible;
 }
 
 .pulse-topic-chips {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.55rem;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.6rem;
   width: 100%;
 }
 
@@ -3360,21 +3352,53 @@ body:not([data-edition="silver"]) .clear-btn {
 }
 
 .beat-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.42rem;
+  background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 20px;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.82rem;
-  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  font-family: var(--font-main);
   cursor: pointer;
   transition: all var(--transition-fast);
   color: var(--text-primary);
-  box-shadow: 0 1px 2px rgba(20, 21, 24, 0.03);
-  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  text-align: left;
+  min-width: 0;
+}
+
+.beat-chip-top {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.beat-chip-icon {
+  font-size: 0.92rem;
+  line-height: 1;
   flex-shrink: 0;
+}
+
+.beat-chip-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.beat-chip-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  width: 100%;
 }
 
 /* Integrated Sentiment Spectrum inside Hero Pulse Card */
@@ -3391,20 +3415,39 @@ body:not([data-edition="silver"]) .clear-btn {
 
 .beat-chip:hover {
   border-color: var(--accent-color);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.08);
+  background: var(--bg-card);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.14);
 }
 
 .beat-chip-val {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.7rem;
-  padding: 0.08rem 0.35rem;
+  font-size: 0.74rem;
+  padding: 0.12rem 0.38rem;
   border-radius: 6px;
+  flex-shrink: 0;
 }
 .beat-chip-val.neg { background: var(--neg-bg); color: var(--neg-color); }
 .beat-chip-val.pos { background: var(--pos-bg); color: var(--pos-color); }
 .beat-chip-val.neu { background: var(--neu-bg); color: var(--neu-color); }
+
+.beat-chip-delta {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+.beat-chip-delta.pos { color: var(--pos-color); }
+.beat-chip-delta.neg { color: var(--neg-color); }
+.beat-chip-delta.neu { color: var(--text-muted); }
+.beat-chip-delta .delta-sub {
+  font-family: var(--font-main);
+  font-weight: 500;
+  opacity: 0.78;
+  font-size: 0.6rem;
+}
 
 /* --- TOPIC HEATMAP MATRIX --- */
 .heatmap-container {
@@ -3841,12 +3884,18 @@ select option {
   .pulse-signal-card {
     padding: 0.85rem 1rem;
   }
-  .pulse-topics-bar {
+  .pulse-topic-chips {
+    grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
     gap: 0.5rem;
   }
   .beat-chip {
-    padding: 0.25rem 0.6rem;
-    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+  }
+}
+
+@media (max-width: 1080px) and (min-width: 769px) {
+  .pulse-topic-chips {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -3881,15 +3930,14 @@ select option {
 }
 
 .beat-chip.active {
-  background: var(--accent-color);
-  color: #fff;
+  background: var(--bg-card);
   border-color: var(--accent-color);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 0 1px var(--accent-color), 0 6px 14px rgba(59, 130, 246, 0.18);
+  transform: translateY(-2px);
 }
 
-.beat-chip.active .beat-chip-val {
-  background: rgba(255, 255, 255, 0.25);
-  color: #fff;
+.beat-chip.active .beat-chip-name {
+  color: var(--accent-color);
 }
 
 /* --- OUTLET REGION & TREND STYLES --- */
