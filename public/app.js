@@ -161,17 +161,23 @@ function findRelatedCoverage(art, allArticles) {
 
   // 2. Supplement with Keyword/Topic Cross-Outlet Matching across full candidate pool
   if (allArticles && allArticles.length > 0 && related.length < 4) {
-    const stopWords = new Set(['about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second', 'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over', 'under', 'while', 'where', 'these', 'those', 'found', 'says', 'amid']);
-    const words = currentTitle
+    const stopWords = new Set(['about', 'their', 'there', 'which', 'would', 'could', 'after', 'before', 'first', 'second', 'today', 'years', 'state', 'major', 'report', 'world', 'news', 'more', 'over', 'under', 'while', 'where', 'these', 'those', 'found', 'says', 'amid', 'thought']);
+    const normalizeWords = (str) => (str || '')
+      .toLowerCase()
+      .replace(/türkiye|turkiye|turkish/g, 'turkey')
+      .replace(/britain|british|\buk\b/g, 'uk')
+      .replace(/united states|\bu\.s\.\b|\busa\b|american/g, 'usa')
       .replace(/[^a-z0-9\s]/g, ' ')
       .split(/\s+/)
       .filter(w => w.length >= 4 && !stopWords.has(w));
+
+    const words = normalizeWords(currentTitle);
       
     if (words.length > 0) {
       for (const other of allArticles) {
         if (other.sourceId !== art.sourceId && !related.some(r => r.sourceId === other.sourceId)) {
           const otherTitle = (other.title || '').toLowerCase();
-          const otherWords = new Set(otherTitle.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/));
+          const otherWords = new Set(normalizeWords(otherTitle));
           const matchCount = words.filter(w => otherWords.has(w) || (w.length >= 5 && otherTitle.includes(w))).length;
           if (matchCount >= 2 || (words.length === 1 && matchCount === 1 && other.category === art.category)) {
             related.push({

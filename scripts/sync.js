@@ -273,15 +273,14 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel) {
   const modelsToTry = [
     requestedModel,
     process.env.GEMINI_MODEL,
-    'gemini-3.5-flash',
-    'gemini-3.5-flash-lite',
     'gemini-3.8-flash',
-    'gemini-2.5-flash'
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   // Interleave across outlets so simultaneous coverage of the same story sits in the same context window
   const orderedHeadlines = interleaveByOutlet(headlines);
-  const BATCH_SIZE = 75;
+  const BATCH_SIZE = 45;
   const allResults = [];
   let modelUsed = modelsToTry[0];
 
@@ -338,9 +337,10 @@ Return ONLY valid JSON.`;
     let batchSuccess = false;
     for (const modelName of modelsToTry) {
       if (batchSuccess) break;
-      for (let attempt = 1; attempt <= 2; attempt++) {
+      const maxAttempts = modelName.includes('lite') ? 2 : 3;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-          console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} (attempt ${attempt}/2)...`);
+          console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} (attempt ${attempt}/${maxAttempts})...`);
           const model = genAI.getGenerativeModel({
             model: modelName,
             generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
@@ -348,7 +348,7 @@ Return ONLY valid JSON.`;
 
           const generatePromise = model.generateContent(prompt);
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Gemini API call timed out after 45s')), 45000)
+            setTimeout(() => reject(new Error('Gemini API call timed out after 90s')), 90000)
           );
           const response = await Promise.race([generatePromise, timeoutPromise]);
           let text = response.response.text().trim();
@@ -377,9 +377,9 @@ Return ONLY valid JSON.`;
           }
         } catch (err) {
           const isDemandSpike = err.message && (err.message.includes('503') || err.message.includes('429') || err.message.includes('high demand') || err.message.includes('timed out'));
-          console.warn(`[Gemini] Model ${modelName} attempt ${attempt} warning:`, err.message || err);
-          if (attempt < 2) {
-            const waitMs = isDemandSpike ? 3500 : 1500;
+          console.warn(`[Gemini] Model ${modelName} attempt ${attempt}/${maxAttempts} warning:`, err.message || err);
+          if (attempt < maxAttempts) {
+            const waitMs = isDemandSpike ? (attempt === 1 ? 5000 : 12000) : 2500;
             await new Promise(r => setTimeout(r, waitMs));
           }
         }
@@ -391,7 +391,7 @@ Return ONLY valid JSON.`;
     }
 
     if (i + BATCH_SIZE < orderedHeadlines.length) {
-      await new Promise(r => setTimeout(r, 1200));
+      await new Promise(r => setTimeout(r, 1500));
     }
   }
 
@@ -466,11 +466,41 @@ Return ONLY valid JSON array.`;
   return { results, modelUsed: modelName };
 }
 
+// Normalize common geopolitical/spelling variants for cross-outlet entity matching
+function normalizeClusterTokens(text) {
+  return (text || '')
+    .toLowerCase()
+    .replace(/türkiye|turkiye|turkish/g, 'turkey')
+    .replace(/britain|british|\buk\b/g, 'uk')
+    .replace(/united states|\bu\.s\.\b|\busa\b|american/g, 'usa')
+    .replace(/zelenskyy/g, 'zelensky')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 4 && !CLUSTER_STOP_WORDS.has(w));
+}
+
+const CLUSTER_STOP_WORDS = new Set([
+  'about', 'after', 'again', 'against', 'amid', 'among', 'around', 'back', 'before', 'behind',
+  'between', 'beyond', 'both', 'calls', 'claim', 'claims', 'could', 'dead', 'despite', 'down',
+  'First', 'first', 'five', 'four', 'from', 'good', 'have', 'high', 'home', 'into', 'just',
+  'know', 'last', 'late', 'latest', 'lead', 'left', 'life', 'like', 'live', 'lives', 'long',
+  'look', 'made', 'make', 'makes', 'many', 'more', 'most', 'much', 'must', 'near', 'need',
+  'news', 'next', 'nine', 'only', 'open', 'other', 'over', 'part', 'past', 'plan', 'plans',
+  'play', 'post', 'push', 'report', 'reports', 'right', 'rise', 'rule', 'rules', 'said',
+  'says', 'second', 'seen', 'seek', 'seeks', 'seven', 'show', 'shows', 'side', 'since',
+  'some', 'soon', 'state', 'states', 'still', 'stop', 'take', 'takes', 'talk', 'talks',
+  'team', 'tell', 'tells', 'than', 'that', 'their', 'them', 'then', 'there', 'these', 'they',
+  'this', 'those', 'three', 'time', 'times', 'today', 'amid', 'told', 'took', 'turn', 'turns',
+  'under', 'until', 'upon', 'used', 'very', 'vote', 'want', 'wants', 'warn', 'warns', 'week',
+  'weeks', 'well', 'were', 'what', 'when', 'where', 'which', 'while', 'will', 'with', 'within',
+  'without', 'work', 'works', 'world', 'would', 'year', 'years', 'found', 'thought'
+]);
+
 // Cross-Outlet Story Clustering (Method A: Single End-of-Sync Aggregation Pass)
 async function clusterCrossOutletStories(finalSources, apiKey) {
   if (!apiKey) return [];
   
-  // Flatten recent headlines from all sources: include all articles from the past 36h (up to 35 per outlet),
+  // Flatten recent headlines from all sources: include all articles from the past 36h (up to 80 per outlet),
   // falling back to up to 18 articles within the past 5 days for lower-frequency feeds.
   const candidates = [];
   const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
@@ -486,7 +516,7 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
       if (!isNaN(t) && t < fiveDaysAgo) continue;
 
       const isRecent36h = !isNaN(t) && t >= thirtySixHoursAgo;
-      if (addedForSource >= 35) break;
+      if (addedForSource >= 80) break;
       if (!isRecent36h && addedForSource >= 18) continue;
 
       candidates.push({
@@ -503,22 +533,22 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
 
   if (candidates.length < 6) return [];
 
-  // Pass compact indexed headline list
-  const promptData = candidates.map((c, idx) => ({ id: idx, source: c.sourceId, title: c.title }));
+  // Pass compact indexed single-line headline list so Gemini scans 800+ headlines with high recall
+  const promptLines = candidates.map((c, idx) => `[${idx}] ${c.sourceId}: ${c.title}`).join('\n');
   const prompt = `You are a senior news editor analyzing recent headlines across global newsrooms.
 Identify real-world events, developments, and discoveries that are being covered by 2 or more DIFFERENT news outlets.
 Group them into story clusters.
 
 Rules:
 - A cluster MUST include headlines from at least 2 distinct outlets reporting on the SAME underlying event, development, or discovery.
-- Group ALL matching headlines for the event across all outlets (do not stop at 2 if 4 or 6 outlets cover it).
+- Group ALL matching headlines for the event across all outlets (scan the entire list carefully so every outlet covering that story is included in "ids", including spelling variations like Turkey/Turkiye).
 - Provide a concise neutral story title (3-6 words, e.g. "Ancient Shipwreck Found Off Turkey", "UK Early Prisoner Release", "Boeing Machinist Strike", "Federal Reserve Rate Cut").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how the outlets are reporting it.
 - Provide the list of matching headline IDs.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
 Headlines:
-${JSON.stringify(promptData, null, 2)}
+${promptLines}
 
 Return JSON array in format:
 [
@@ -529,40 +559,82 @@ Return JSON array in format:
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     process.env.GEMINI_MODEL,
-    'gemini-3.5-flash',
-    'gemini-3.5-flash-lite',
     'gemini-3.8-flash',
-    'gemini-2.5-flash'
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   let clusters = null;
   for (const modelName of modelsToTry) {
-    try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-      });
-      const resp = await model.generateContent(prompt);
-      let text = resp.response.text().trim();
-      if (text.startsWith('```json')) text = text.substring(7);
-      else if (text.startsWith('```')) text = text.substring(3);
-      if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-      const parsed = JSON.parse(tryRepairJsonArray(text.trim()));
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        clusters = parsed;
-        console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName}.`);
-        break;
+    if (clusters) break;
+    const maxAttempts = modelName.includes('lite') ? 1 : 2;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+        });
+        const generatePromise = model.generateContent(prompt);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Clustering call timed out after 90s')), 90000)
+        );
+        const resp = await Promise.race([generatePromise, timeoutPromise]);
+        let text = resp.response.text().trim();
+        if (text.startsWith('```json')) text = text.substring(7);
+        else if (text.startsWith('```')) text = text.substring(3);
+        if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+        const parsed = JSON.parse(tryRepairJsonArray(text.trim()));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          clusters = parsed;
+          console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName}.`);
+          break;
+        }
+      } catch (err) {
+        console.warn(`[Sync] Clustering attempt ${attempt}/${maxAttempts} with ${modelName} failed: ${err.message}`);
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, 5000));
+        }
       }
-    } catch (err) {
-      console.warn(`[Sync] Clustering attempt with ${modelName} failed: ${err.message}`);
     }
   }
 
   if (Array.isArray(clusters)) {
     const formattedClusters = [];
+    const candidateTokens = candidates.map(c => new Set(normalizeClusterTokens(c.title)));
+
     clusters.forEach(cl => {
       if (!cl.ids || cl.ids.length < 2) return;
-      const rawMatching = cl.ids.map(id => candidates[id]).filter(Boolean);
+      const idSet = new Set(cl.ids);
+      const initialMatching = cl.ids.map(id => candidates[id]).filter(Boolean);
+      if (initialMatching.length < 2) return;
+
+      // Build core token frequency across the cluster's matched headlines + story title
+      const tokenCounts = {};
+      initialMatching.forEach(m => {
+        normalizeClusterTokens(m.title).forEach(tok => {
+          tokenCounts[tok] = (tokenCounts[tok] || 0) + 1;
+        });
+      });
+      const storyTokens = new Set(normalizeClusterTokens(cl.story));
+      // Core tokens: appear in >=2 cluster headlines (or >=1 if also in story title)
+      const coreTokens = new Set(
+        Object.keys(tokenCounts).filter(tok => tokenCounts[tok] >= 2 || (tokenCounts[tok] >= 1 && storyTokens.has(tok)))
+      );
+
+      // Sibling completion sweep: attach any missed candidate from another outlet that shares >= 3 core tokens
+      if (coreTokens.size >= 3) {
+        candidates.forEach((cand, idx) => {
+          if (idSet.has(idx)) return;
+          const toks = candidateTokens[idx];
+          let sharedCore = 0;
+          coreTokens.forEach(ct => { if (toks.has(ct)) sharedCore++; });
+          if (sharedCore >= 3) {
+            idSet.add(idx);
+          }
+        });
+      }
+
+      const rawMatching = Array.from(idSet).map(id => candidates[id]).filter(Boolean);
       rawMatching.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
       const seenCovUrls = new Set();
       const seenCovTitles = new Set();
