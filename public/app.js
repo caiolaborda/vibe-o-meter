@@ -1371,83 +1371,15 @@ function getResolvedSources() {
         }
       }
 
-      // Resolve active values based on toggle mode
-      let score = 0;
-      let explanation = 'No reasoning available.';
-      let category = art.categoryLocal || art.category || 'other';
-      
-      if (state.sentimentMode === 'afinn') {
-        score = art.sentimentAFINN !== undefined && art.sentimentAFINN !== null 
-          ? art.sentimentAFINN 
-          : (art.sentiment || 0);
-        explanation = `Analyzed locally using AFINN-111 vocabulary model. Normalized score: ${score.toFixed(2)}.`;
-      } else if (state.sentimentMode === 'vader') {
-        score = art.sentimentVADER !== undefined && art.sentimentVADER !== null 
-          ? art.sentimentVADER 
-          : (art.sentiment || 0);
-        explanation = `Analyzed locally using VADER social intensity compound score. Raw compound score: ${score.toFixed(2)}.`;
-      } else if (state.sentimentMode === 'local') {
-        score = art.sentimentLocal !== undefined && art.sentimentLocal !== null 
-          ? art.sentimentLocal 
-          : (art.sentiment || 0);
-        explanation = art.explanationLocal || art.explanation || 'Analyzed locally using averaged VADER and AFINN-111.';
-      } else if (state.sentimentMode === 'gemini') {
-        const hasGemini = typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'));
-        if (hasGemini) {
-          score = art.sentimentGemini;
-          explanation = art.explanationGemini || `Analyzed using Google Gemini. Score: ${score.toFixed(2)}.`;
-          category = art.categoryGemini || category;
-        } else {
-          score = null;
-          explanation = 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).';
-          category = art.categoryGemini || category || 'other';
-        }
-      } else if (state.sentimentMode === 'openrouter') {
-        if (art.sentimentOpenRouter !== undefined && art.sentimentOpenRouter !== null) {
-          score = art.sentimentOpenRouter;
-          explanation = art.explanationOpenRouter || `Analyzed using OpenRouter (${art.openRouterModelUsed || 'Llama'}). Score: ${score.toFixed(2)}.`;
-          category = art.categoryOpenRouter || category;
-        } else {
-          score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
-          explanation = art.explanation || art.explanationLocal || 'Fallback local analysis.';
-        }
-      } else if (state.sentimentMode === 'groq') {
-        if (art.sentimentGroq !== undefined && art.sentimentGroq !== null) {
-          score = art.sentimentGroq;
-          explanation = art.explanationGroq || `Analyzed using Groq (${art.groqModelUsed || 'Llama'}). Score: ${score.toFixed(2)}.`;
-          category = art.categoryGroq || category;
-        } else {
-          score = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentLocal || 0);
-          explanation = art.explanation || art.explanationLocal || 'Fallback local analysis.';
-        }
-      } else if (state.sentimentMode === 'global') {
-        const afinn = art.sentimentAFINN !== undefined && art.sentimentAFINN !== null 
-          ? art.sentimentAFINN 
-          : (art.sentiment || 0);
-        const vader = art.sentimentVADER !== undefined && art.sentimentVADER !== null 
-          ? art.sentimentVADER 
-          : (art.sentiment || 0);
-        const gemini = art.sentimentGemini;
-        const openRouter = art.sentimentOpenRouter;
-        const groq = art.sentimentGroq;
-        
-        const scores = [afinn, vader];
-        const names = ['VADER', 'AFINN'];
-        if (gemini !== undefined && gemini !== null) {
-          scores.push(gemini);
-          names.push('Gemini');
-        }
-        if (openRouter !== undefined && openRouter !== null) {
-          scores.push(openRouter);
-          names.push(`OpenRouter (${art.openRouterModelUsed ? art.openRouterModelUsed.split('/').pop().replace(':free','') : 'Llama'})`);
-        }
-        if (groq !== undefined && groq !== null) {
-          scores.push(groq);
-          names.push(`Groq (${art.groqModelUsed ? art.groqModelUsed.replace('llama-','') : 'Llama'})`);
-        }
-        
-        score = Number((scores.reduce((sum, s) => sum + s, 0) / scores.length).toFixed(3));
-        explanation = `Global average of ${scores.length} models: ${names.join(', ')}. Calculated score: ${score.toFixed(2)}.`;
+      // Resolve active values (Gemini AI exclusively)
+      let score = null;
+      let explanation = 'Pending evaluation by Gemini AI (queued for subsequent sync cycle).';
+      let category = art.categoryGemini || art.category || 'other';
+
+      const hasGemini = typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'));
+      if (hasGemini) {
+        score = art.sentimentGemini;
+        explanation = art.explanationGemini || `Analyzed using Google Gemini. Score: ${score.toFixed(2)}.`;
       }
       
       if (score !== null && score !== undefined) {
@@ -5059,19 +4991,10 @@ function renderDailyPulse() {
 
     Object.values(state.sources || {}).forEach(src => {
       (src.articles || []).forEach(art => {
-        let cat = art.categoryLocal || art.category || 'other';
-        let s = art.sentiment;
-        if (state.sentimentMode === 'gemini') {
-          if (art.categoryGemini) cat = art.categoryGemini;
-          if (typeof art.sentimentGemini === 'number') s = art.sentimentGemini;
-        } else if (state.sentimentMode === 'vader' && typeof art.sentimentVADER === 'number') {
-          s = art.sentimentVADER;
-        } else if (state.sentimentMode === 'afinn' && typeof art.sentimentAFINN === 'number') {
-          s = art.sentimentAFINN;
-        } else if (state.sentimentMode === 'local' && typeof art.sentimentLocal === 'number') {
-          s = art.sentimentLocal;
-        }
-        if (typeof s !== 'number' || isNaN(s)) return;
+        const hasGemini = typeof art.sentimentGemini === 'number' && (!art.explanationGemini || !art.explanationGemini.includes('locally'));
+        if (!hasGemini) return;
+        const cat = art.categoryGemini || art.category || 'other';
+        const s = art.sentimentGemini;
 
         const ageMs = nowMs - new Date(art.pubDate).getTime();
         if (ageMs > h24Ms && ageMs <= h48Ms) {
