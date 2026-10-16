@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=5.0">
+  <link rel="stylesheet" href="style.css?v=5.1">
 </head>
 <body data-edition="silver" data-silver-mode="antidote">
 
@@ -183,25 +183,11 @@
           </div>
         </div>
 
-        <!-- 2. Daily Editorial Briefing (Editorial Serif Narrative Lead with Mobile Progressive Disclosure) -->
+        <!-- 2. Daily Editorial Briefing (Full Editorial Serif Narrative Lead) -->
         <div class="hero-editorial-lead-wrap" id="hero-editorial-lead-wrap">
           <p id="daily-editorial-summary" class="hero-editorial-lead">
             Loading today's briefing...
           </p>
-          <button type="button" id="editorial-expand-btn" class="editorial-expand-btn" onclick="toggleEditorialBriefing()" aria-expanded="false">
-            <span id="editorial-expand-text">Read full briefing</span>
-            <i data-lucide="chevron-down" id="editorial-expand-icon" style="width:14px;height:14px;"></i>
-          </button>
-        </div>
-
-        <!-- Horizontal Spacer / Divider -->
-        <div class="pulse-hero-divider"></div>
-
-        <!-- 3. Topic Vibes Bar (Interactive Global Topic Filter - Filters Hero Score & Story Clusters below) -->
-        <div class="pulse-topics-bar">
-          <div class="pulse-topic-chips" id="pulse-category-chips">
-            <!-- Dynamically populated chips in app.js -->
-          </div>
         </div>
 
       </div>
@@ -381,21 +367,28 @@
       </section>
     </main>
 
-    <!-- TAB 3: NEWSROOMS (Unified Outlet Spectrum, 17-Outlet Leaderboard, Head-to-Head Arena & Headline Wire) -->
+    <!-- TAB 3: NEWSROOMS (Unified Outlet Spectrum, Topic Vibes, 17-Outlet Leaderboard, Head-to-Head Arena & Headline Wire) -->
     <main id="tab-panel-deepdives" class="tab-panel hidden">
-      <!-- 1. MEDIA SENTIMENT SPECTRUM & KEY OUTLET SIGNALS -->
+      <!-- 1. MEDIA SENTIMENT SPECTRUM, TOPIC VIBES & KEY OUTLET SIGNALS -->
       <section class="newsrooms-spectrum-section" id="newsrooms-spectrum-section" style="margin-bottom: 2rem;">
         <div class="section-header-row">
           <div>
             <h2 class="section-title flex-center">
               <i data-lucide="compass"></i>
-              Media Sentiment Spectrum &amp; Key Signals
+              Media Sentiment Spectrum &amp; Topic Beats
             </h2>
-            <p class="section-desc">Where all 17 international newsrooms sit on the Alarmist (-1.0) to Constructive (+1.0) spectrum right now. Click any outlet marker or signal card to inspect its coverage.</p>
+            <p class="section-desc">Where all 17 international newsrooms sit on the Alarmist (-1.0) to Constructive (+1.0) spectrum right now. Filter by topic beat or click any outlet marker to inspect its coverage.</p>
           </div>
         </div>
 
         <div class="card newsrooms-spectrum-card" style="padding: 1.35rem 1.5rem;">
+          <!-- Topic Vibes Bar (Interactive Topic Filter across Newsrooms & Spectrum) -->
+          <div class="pulse-topics-bar newsrooms-topics-bar">
+            <div class="pulse-topic-chips" id="pulse-category-chips">
+              <!-- Dynamically populated chips in app.js -->
+            </div>
+          </div>
+
           <!-- The 3 Key Signals Horizontal Strip -->
           <div class="pulse-signals-strip" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 1.25rem;">
             <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
@@ -991,6 +984,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=5.0"></script>
+  <script src="app.js?v=5.1"></script>
 </body>
 </html>

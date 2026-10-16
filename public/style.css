@@ -6534,15 +6534,55 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 }
 
 /* ==========================================================================
-   FIRST-PRINCIPLES 4-PILLAR NO GOOD NEWS ARCHITECTURE & PROGRESSIVE DISCOVERY
+   FIRST-PRINCIPLES 4-PILLAR NO GOOD NEWS ARCHITECTURE & DAILY 5 STACK PEEK
    ========================================================================== */
 
-/* Desktop: Always show full editorial summary, hide mobile expand button */
-.editorial-expand-btn {
-  display: none;
+/* 1. Smaller, Subtler "Last Updated" Text on Desktop & Mobile */
+.masthead-status-row {
+  margin-top: -0.15rem !important;
 }
 
-/* Newsrooms Tab: Unified Spectrum + 3 Key Outlet Signals Card */
+#last-updated-text,
+.header-status-text {
+  font-size: 0.68rem !important;
+  opacity: 0.62 !important;
+  letter-spacing: 0.02em;
+}
+
+/* 2. Daily 5 Antidote: Visible Stacked Card Edges at Bottom (transform-origin: center bottom) */
+.antidote-stack-frame {
+  margin-bottom: 24px !important;
+}
+
+.antidote-deck-card {
+  transform-origin: center bottom !important;
+}
+
+.antidote-deck-card.is-next {
+  z-index: 2;
+  transform-origin: center bottom !important;
+  transform: translateY(11px) scale(0.955) !important;
+  background: #fffbeb !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 10px 24px -6px rgba(180, 83, 9, 0.16) !important;
+}
+
+.antidote-deck-card.is-third {
+  z-index: 1;
+  transform-origin: center bottom !important;
+  transform: translateY(21px) scale(0.91) !important;
+  background: #fef3c7 !important;
+  border: 1.5px solid rgba(245, 158, 11, 0.38) !important;
+  box-shadow: 0 8px 18px -6px rgba(180, 83, 9, 0.12) !important;
+}
+
+/* 3. Newsrooms Tab: Unified Topic Vibes + 3 Key Signals + Sentiment Spectrum Card */
+.newsrooms-topics-bar {
+  margin-bottom: 1.15rem !important;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
 .newsrooms-spectrum-card .pulse-signals-strip {
   margin-top: 0;
   padding-top: 0;
@@ -6550,70 +6590,164 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   margin-bottom: 1.25rem;
 }
 
+/* 4. Daily Briefing Hero Card: Full Editorial Summary Always Visible & Un-Cramped */
+.hero-editorial-lead-wrap {
+  padding: 0.35rem 0 0.1rem 0 !important;
+}
+
+.hero-editorial-lead {
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  overflow: visible !important;
+}
+
 @media (max-width: 768px) {
-  /* 1. 4-Pillar Navigation Bar: Clean 2x2 or single-scroll row with zero dead space */
+  /* Smaller Last Updated text on mobile */
+  #last-updated-text,
+  .header-status-text {
+    font-size: 0.6rem !important;
+    opacity: 0.58 !important;
+  }
+
+  /* Hide Copyright Footer on Mobile so Daily 5 Card & Step Bar Sit Cleanly at Bottom */
+  .app-footer {
+    display: none !important;
+  }
+
+  body[data-edition="silver"] .app-container {
+    padding-bottom: 0.45rem !important;
+  }
+
+  /* Maximise Daily 5 Card Height on Mobile with Visible Stack Edges + Bottom 1-5 Bar */
+  .antidote-stack-frame {
+    margin-bottom: 22px !important;
+  }
+
+  .antidote-deck-card {
+    height: calc(100dvh - 166px) !important;
+    min-height: 390px !important;
+    max-height: 640px !important;
+    border-radius: 22px !important;
+  }
+
+  .antidote-deck-card.is-next {
+    transform: translateY(10px) scale(0.952) !important;
+  }
+
+  .antidote-deck-card.is-third {
+    transform: translateY(19px) scale(0.905) !important;
+  }
+
+  /* Un-Cramped No Good News Spacing & Navigation on Mobile */
+  body[data-edition="doom"] .app-container {
+    gap: 0.85rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .quick-nav-bar {
+    padding: 0.5rem 0.55rem !important;
+    gap: 0.42rem !important;
+  }
+
   .quick-nav-links {
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 0.3rem !important;
+    gap: 0.28rem !important;
     width: 100% !important;
   }
 
+  /* Hide decorative nav icons on narrow mobile so the 4 tab titles have room to breathe */
+  .quick-nav-links .nav-pill-btn i,
+  .quick-nav-links .nav-pill-btn svg {
+    display: none !important;
+  }
+
   .quick-nav-links .nav-pill-btn {
-    padding: 0.42rem 0.35rem !important;
-    font-size: 0.72rem !important;
+    padding: 0.44rem 0.25rem !important;
+    font-size: 0.74rem !important;
     justify-content: center !important;
-    gap: 0.25rem !important;
+    text-align: center !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
 
-  .quick-nav-links .nav-pill-btn i,
-  .quick-nav-links .nav-pill-btn svg {
-    width: 13px !important;
-    height: 13px !important;
-    flex-shrink: 0 !important;
+  /* Breatheable Hero Verdict Card on Mobile (Score + Full Editorial Summary) */
+  .pulse-hero-card {
+    padding: 1.15rem 1.1rem !important;
+    border-radius: 18px !important;
   }
 
-  /* 2. Progressive Disclosure for Editorial Summary on Mobile */
-  .hero-editorial-lead-wrap {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.45rem;
+  .pulse-top-bar {
+    gap: 0.5rem !important;
+    padding: 0 0 0.65rem 0 !important;
   }
 
-  .hero-editorial-lead-wrap:not(.is-expanded) .hero-editorial-lead {
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .hero-editorial-lead {
+    font-size: 1.03rem !important;
+    line-height: 1.56 !important;
   }
 
-  .editorial-expand-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    background: rgba(37, 99, 235, 0.08);
-    color: var(--accent-color);
-    border: 1px solid rgba(37, 99, 235, 0.22);
-    border-radius: 999px;
-    padding: 0.26rem 0.75rem;
-    font-family: var(--font-sans);
-    font-size: 0.74rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.16s ease;
-    align-self: flex-start;
+  /* Clean 2-Column Topic Vibes Grid on Newsrooms Mobile (No cut-off horizontal scroll!) */
+  .newsrooms-topics-bar {
+    margin: 0 0 1rem 0 !important;
+    padding: 0 0 0.95rem 0 !important;
   }
 
-  .editorial-expand-btn:hover {
-    background: rgba(37, 99, 235, 0.14);
+  .pulse-topic-chips {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.42rem !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
   }
 
-  /* 3. Compact Story Clusters Controls Bar on Mobile */
+  .beat-chip {
+    flex: unset !important;
+    width: 100% !important;
+    padding: 0.45rem 0.6rem !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.35rem !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Span the 7th topic chip across both columns on mobile so the grid is symmetrical */
+  .beat-chip:last-child:nth-child(odd) {
+    grid-column: 1 / -1 !important;
+  }
+
+  .beat-chip-top {
+    margin-bottom: 0 !important;
+    gap: 0.3rem !important;
+  }
+
+  .beat-chip-name {
+    font-size: 0.76rem !important;
+  }
+
+  .beat-chip-bottom {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+  }
+
+  .beat-chip-val {
+    font-size: 0.76rem !important;
+    padding: 0.1rem 0.35rem !important;
+  }
+
+  .beat-chip-delta {
+    font-size: 0.64rem !important;
+  }
+
+  .beat-chip-delta .delta-sub {
+    display: none !important;
+  }
+
+  /* Compact Story Clusters Controls Bar on Mobile */
   .clusters-controls-bar.card {
     padding: 0.75rem 0.85rem !important;
     margin-bottom: 0.85rem !important;
@@ -6660,10 +6794,11 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
     padding: 0.25rem 0.6rem !important;
   }
 
-  /* 4. Newsrooms Spectrum Card on Mobile */
+  /* Newsrooms Spectrum Card on Mobile */
   .newsrooms-spectrum-card {
     padding: 0.95rem 0.85rem !important;
   }
 }
+
 
 
