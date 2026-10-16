@@ -59,7 +59,12 @@ const SOURCE_META = {
   dw: { name: 'DW News', initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
   wsj: { name: 'The Wall Street Journal', initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
   france24: { name: 'France 24', initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
-  politico: { name: 'Politico', initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' }
+  politico: { name: 'Politico', initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
+  ft: { name: 'Financial Times', initials: 'FT', color: '#d97706', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  euronews: { name: 'Euronews', initials: 'EUR', color: '#2563eb', region: 'EU', regionName: 'Europe', countryCode: 'eu', flag: '🇪🇺' },
+  cbc: { name: 'CBC News', initials: 'CBC', color: '#dc2626', region: 'CA', regionName: 'Canada', countryCode: 'ca', flag: '🇨🇦' },
+  abcau: { name: 'ABC News Australia', initials: 'ABC', color: '#0d9488', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
+  scmp: { name: 'South China Morning Post', initials: 'SCM', color: '#4f46e5', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'hk', flag: '🇭🇰' }
 };
 
 // Cross-platform flag renderer (renders crisp FlagCDN images on Windows & mobile)
@@ -881,9 +886,14 @@ const SOURCE_FEEDS = {
   ap: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en',
   bloomberg: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en',
   dw: 'https://rss.dw.com/rdf/rss-en-all',
-  wsj: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml',
+  wsj: 'https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en',
   france24: 'https://www.france24.com/en/rss',
-  politico: 'https://rss.politico.com/politics-news.xml'
+  politico: 'https://rss.politico.com/politics-news.xml',
+  ft: 'https://www.ft.com/world?format=rss',
+  euronews: 'https://www.euronews.com/rss?level=theme&name=news',
+  cbc: 'https://www.cbc.ca/webfeed/rss/rss-topstories',
+  abcau: 'https://www.abc.net.au/news/feed/51120/rss.xml',
+  scmp: 'https://www.scmp.com/rss/91/feed'
 };
 
 // DOM Elements
@@ -4255,9 +4265,20 @@ function renderSentimentTimeline() {
   let points = [];
   const sourceIds = Object.keys(resolvedSources);
 
-  if (cutoff > 0 && timeframe !== 'all') {
-    // Generate 16 to 22 time buckets based on window
-    const numBuckets = (timeframe === '3h' || timeframe === '6h') ? 14 : ((timeframe === '12h' || timeframe === '24h') ? 18 : 22);
+  if ( timeframe === 'all' ) {
+    // For "All Time", anchor to the start of the continuous active monitoring history (Oct 12 onward, or earliest article within 30d)
+    // so a 3-month offline gap from July test snapshots doesn't compress all recent lines and dots to the far edges
+    const recentSeries = rawSeries.filter(s => new Date(s.timestamp).getTime() >= (now - 30 * 86400 * 1000));
+    if (recentSeries.length >= 2) {
+      cutoff = new Date(recentSeries[0].timestamp).getTime() - 6 * 3600 * 1000;
+    } else {
+      cutoff = now - 7 * 86400 * 1000;
+    }
+  }
+
+  if (cutoff > 0) {
+    // Generate 16 to 24 time buckets based on window so lines and article dots share the exact same linear time X-axis
+    const numBuckets = (timeframe === '3h' || timeframe === '6h') ? 14 : ((timeframe === '12h' || timeframe === '24h') ? 18 : 24);
     const bucketDuration = (now - cutoff) / numBuckets;
 
     // Collect all scored articles across all sources
@@ -4274,12 +4295,15 @@ function renderSentimentTimeline() {
       });
     });
 
-    // Check if snapshots exist in cutoff window
-    const matchingSnapshots = rawSeries.filter(s => new Date(s.timestamp).getTime() >= cutoff);
-
+    // Initialize baseline averages from earliest articles in window
     let lastKnownAverages = {};
     sourceIds.forEach(id => {
-      lastKnownAverages[id] = resolvedSources[id]?.averageSentiment ?? 0;
+      const sArts = allWindowArticles.filter(a => a.sId === id);
+      if (sArts.length > 0) {
+        lastKnownAverages[id] = Number((sArts.reduce((acc, a) => acc + a.score, 0) / sArts.length).toFixed(3));
+      } else {
+        lastKnownAverages[id] = resolvedSources[id]?.averageSentiment ?? 0;
+      }
     });
 
     for (let i = 0; i < numBuckets; i++) {
@@ -4287,28 +4311,19 @@ function renderSentimentTimeline() {
       const bEnd = bStart + bucketDuration;
       const timestamp = new Date(bEnd).toISOString();
 
-      // Check if a snapshot lands in this bucket
-      const snapInBucket = matchingSnapshots.find(s => {
-        const st = new Date(s.timestamp).getTime();
-        return st >= bStart && st < bEnd;
-      });
-
       const bucketAverages = {};
       const bucketArticles = allWindowArticles.filter(a => a.time >= bStart && a.time < bEnd);
 
       sourceIds.forEach(sId => {
-        if (snapInBucket && typeof snapInBucket.averages?.[sId] === 'number') {
-          bucketAverages[sId] = snapInBucket.averages[sId];
-          lastKnownAverages[sId] = snapInBucket.averages[sId];
+        const sArts = bucketArticles.filter(a => a.sId === sId);
+        if (sArts.length > 0) {
+          const avg = sArts.reduce((acc, a) => acc + a.score, 0) / sArts.length;
+          // Smoothly blend bucket average with previous state (70% new / 30% carry) for organic trajectory lines
+          const blended = 0.7 * avg + 0.3 * (lastKnownAverages[sId] ?? avg);
+          bucketAverages[sId] = Number(blended.toFixed(3));
+          lastKnownAverages[sId] = bucketAverages[sId];
         } else {
-          const sArts = bucketArticles.filter(a => a.sId === sId);
-          if (sArts.length > 0) {
-            const avg = sArts.reduce((acc, a) => acc + a.score, 0) / sArts.length;
-            bucketAverages[sId] = Number(avg.toFixed(3));
-            lastKnownAverages[sId] = bucketAverages[sId];
-          } else {
-            bucketAverages[sId] = lastKnownAverages[sId];
-          }
+          bucketAverages[sId] = lastKnownAverages[sId];
         }
       });
 
@@ -4334,27 +4349,6 @@ function renderSentimentTimeline() {
         score: Number(score.toFixed(3))
       });
     }
-  } else {
-    // All time: use raw series snapshots
-    let series = [...rawSeries];
-    if (series.length < 2) {
-      series = rawSeries.slice(-10);
-    }
-    points = series.map((s, idx) => {
-      let score = null;
-      if (selectedSource) {
-        if (typeof s.averages?.[selectedSource] === 'number') score = s.averages[selectedSource];
-      } else {
-        const avgs = Object.values(s.averages || {});
-        score = avgs.length > 0 ? (avgs.reduce((a, b) => a + b, 0) / avgs.length) : null;
-      }
-      return {
-        index: idx,
-        timestamp: s.timestamp,
-        averages: s.averages || {},
-        score: score !== null ? Number(score.toFixed(3)) : null
-      };
-    }).filter(p => p.score !== null);
   }
 
   // Calculate current window average and vs Historical delta

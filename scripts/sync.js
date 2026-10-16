@@ -57,7 +57,12 @@ const NEWS_SOURCES = [
   { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
   { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en' },
   { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
-  { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' }
+  { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' },
+  { id: 'ft', name: 'Financial Times', feedUrl: 'https://www.ft.com/world?format=rss' },
+  { id: 'euronews', name: 'Euronews', feedUrl: 'https://www.euronews.com/rss?level=theme&name=news' },
+  { id: 'cbc', name: 'CBC News', feedUrl: 'https://www.cbc.ca/webfeed/rss/rss-topstories' },
+  { id: 'abcau', name: 'ABC News Australia', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
+  { id: 'scmp', name: 'South China Morning Post', feedUrl: 'https://www.scmp.com/rss/91/feed' }
 ];
 
 const MAX_ARTICLES_PER_SOURCE = 500;
@@ -90,7 +95,7 @@ function cleanHeadlineTitle(title) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal).*$/i, '')
+    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|abc news|scmp|south china morning post).*$/i, '')
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
     .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
     .replace(/[\u2013\u2014-]/g, ' ')
@@ -545,7 +550,8 @@ Return ONLY valid JSON array.`;
 async function clusterCrossOutletStories(finalSources, apiKey) {
   if (!apiKey) return [];
   
-  // Gather fresh headlines from the past 36h (up to 28 per outlet) with short lead snippets for semantic disambiguation
+  // Gather fresh headlines from the past 36h (up to 28 per outlet) PLUS all constructive 72h stories (sentiment >= 0.14)
+  // so both breaking stories and multi-day Some Good News breakthroughs get clustered by AI
   const candidates = [];
   const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
   const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
@@ -559,20 +565,25 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
       const t = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
       if (!isNaN(t) && t < threeDaysAgo) continue;
 
+      const score = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0);
       const isRecent36h = !isNaN(t) && t >= thirtySixHoursAgo;
-      if (addedForSource >= 28) break;
-      if (!isRecent36h && addedForSource >= 8) continue;
+      const isConstructive72h = score >= 0.14;
+
+      if (!isConstructive72h) {
+        if (addedForSource >= 28) continue;
+        if (!isRecent36h && addedForSource >= 8) continue;
+        addedForSource++;
+      }
 
       candidates.push({
         sourceId,
         sourceName: src.name,
         title: art.title.trim(),
         description: (art.description || '').slice(0, 130).trim(),
-        sentiment: typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0),
+        sentiment: score,
         link: art.link || '',
         pubDate: art.pubDate || ''
       });
-      addedForSource++;
     }
   });
 
