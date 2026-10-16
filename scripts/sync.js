@@ -55,7 +55,7 @@ const NEWS_SOURCES = [
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
-  { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://feeds.a.dj.com/rss/RSSWorldNews.xml' },
+  { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en' },
   { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
   { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' }
 ];
@@ -90,7 +90,7 @@ function cleanHeadlineTitle(title) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj).*$/i, '')
+    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal).*$/i, '')
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
     .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
     .replace(/[\u2013\u2014-]/g, ' ')
@@ -98,6 +98,25 @@ function cleanHeadlineTitle(title) {
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
+}
+
+// Helper to check if an article's RSS description is missing, echoed from the headline, or contains grading jargon
+function needsCleanEditorialSummary(desc, title) {
+  const cleanD = sanitizeText(desc || '')
+    .replace(/\s*[-–—|]?\s*(Bloomberg\.com|Bloomberg|Reuters|AP News|Associated Press|CNN|The Wall Street Journal|WSJ)\s*$/i, '')
+    .trim();
+  if (!cleanD || cleanD.length < 35) return true;
+  if (/\[Event Base:/i.test(cleanD) || /^Event base\b/i.test(cleanD) || /\bframing\s*\([+-]?\d/i.test(cleanD)) return true;
+  const normD = cleanD.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normT = cleanHeadlineTitle(title || '').replace(/[^a-z0-9]/g, '');
+  if (normT.length > 12 && (
+    normD === normT ||
+    normD.startsWith(normT.slice(0, Math.min(32, normT.length))) ||
+    normT.startsWith(normD.slice(0, Math.min(32, normD.length)))
+  )) {
+    return true;
+  }
+  return false;
 }
 
 // Extract richest lead paragraph from multiple RSS/Atom summary tags
@@ -317,20 +336,20 @@ function computeFourFactorScore(match) {
 }
 
 // Structured Gemini sentiment analysis with cross-outlet batching & 4-Factor First-Principles Formula
-async function analyzeWithGemini(headlines, apiKey, requestedModel) {
+async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchSize) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     requestedModel,
     process.env.GEMINI_MODEL,
-    'gemini-2.5-flash',
     'gemini-3.8-flash',
+    'gemini-2.5-flash',
     'gemini-3.5-flash',
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   // Interleave across outlets so simultaneous coverage of the same story sits in the same context window
   const orderedHeadlines = interleaveByOutlet(headlines);
-  const BATCH_SIZE = 45;
+  const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || 120;
   const allResults = [];
   let modelUsed = modelsToTry[0];
 
@@ -340,7 +359,7 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel) {
       index,
       outlet: item.sourceId,
       headline: item.title,
-      description: item.description || ''
+      description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || '')
     }));
 
     const prompt = `You are an impartial, senior media analyst evaluating global news dispatches from first principles.
@@ -376,7 +395,8 @@ Return ONLY a JSON array of objects with:
 - permanence: integer 0 to 100
 - framing: integer -100 to 100
 - category: strictly one of 'world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports', 'other'
-- explanation: concise 1-sentence rationale noting both real-world impact and headline framing
+- explanation: concise 1-sentence analytical note on real-world impact and headline framing
+- summary: ONLY IF polarity >= 10 AND input description is empty (""), write a clean, engaging 2-sentence journalistic summary of the story/breakthrough for readers (do NOT mention scores, polarity, or framing in summary; omit field otherwise)
 
 Articles:
 ${JSON.stringify(promptData, null, 2)}
@@ -392,12 +412,12 @@ Return ONLY valid JSON.`;
           console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} (attempt ${attempt}/${maxAttempts})...`);
           const model = genAI.getGenerativeModel({
             model: modelName,
-            generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+            generationConfig: { temperature: 0.1, maxOutputTokens: 16384, responseMimeType: 'application/json' }
           });
 
           const generatePromise = model.generateContent(prompt);
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Gemini API call timed out after 90s')), 90000)
+            setTimeout(() => reject(new Error('Gemini API call timed out after 120s')), 120000)
           );
           const response = await Promise.race([generatePromise, timeoutPromise]);
           let text = response.response.text().trim();
@@ -413,6 +433,7 @@ Return ONLY valid JSON.`;
               const calc = computeFourFactorScore(match);
               const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
               const rawExp = (match.explanation || `Analyzed via Gemini (${modelName}).`).replace(/\s*\[Event Base:.*$/, '');
+              const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
               allResults.push({
                 sourceId: item.sourceId,
                 title: item.title,
@@ -421,7 +442,8 @@ Return ONLY valid JSON.`;
                 eventBase: calc.eventBase,
                 framingMod: calc.framingMod,
                 category: match.category || 'other',
-                explanation: rawExp + expSuffix
+                explanation: rawExp + expSuffix,
+                ...(cleanSummary ? { summary: cleanSummary } : {})
               });
             });
             modelUsed = modelName;
@@ -444,7 +466,7 @@ Return ONLY valid JSON.`;
     }
 
     if (i + BATCH_SIZE < orderedHeadlines.length) {
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 800));
     }
   }
 
@@ -685,24 +707,26 @@ Return JSON array in format:
   return [];
 }
 
-// Enrich top constructive/positive articles with Open Graph images if missing in RSS
+// Enrich top constructive/positive articles with Open Graph images and descriptions if missing in RSS
 async function enrichTopPositiveArticleImages(finalSources) {
   const allPositive = [];
   Object.values(finalSources).forEach(src => {
     (src.articles || []).forEach(art => {
       const score = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0);
-      if (score >= 0.15 && !art.imageUrl && art.link && art.link.startsWith('http')) {
-        allPositive.push({ art, score });
+      const needsImg = !art.imageUrl;
+      const needsDesc = needsCleanEditorialSummary(art.description, art.title);
+      if (score >= 0.15 && (needsImg || needsDesc) && art.link && art.link.startsWith('http')) {
+        allPositive.push({ art, score, needsImg, needsDesc });
       }
     });
   });
 
   allPositive.sort((a, b) => b.score - a.score);
-  const candidates = allPositive.slice(0, 15);
+  const candidates = allPositive.slice(0, 20);
   if (candidates.length === 0) return;
 
-  console.log(`[Image Enrichment] Checking OG images for ${candidates.length} top constructive articles...`);
-  await Promise.all(candidates.map(async ({ art }) => {
+  console.log(`[Image/Meta Enrichment] Checking OG metadata for ${candidates.length} top constructive articles...`);
+  await Promise.all(candidates.map(async ({ art, needsImg, needsDesc }) => {
     try {
       const res = await fetch(art.link, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
@@ -710,11 +734,25 @@ async function enrichTopPositiveArticleImages(finalSources) {
       });
       if (!res.ok) return;
       const html = await res.text();
-      const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
-                    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-      if (match && match[1] && match[1].startsWith('http')) {
-        art.imageUrl = match[1];
-        console.log(`  -> Attached OG image for: "${art.title.slice(0, 45)}..."`);
+      if (needsImg) {
+        const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        if (match && match[1] && isRealEditorialImageUrl(match[1])) {
+          art.imageUrl = match[1];
+          console.log(`  -> Attached OG image for: "${art.title.slice(0, 45)}..."`);
+        }
+      }
+      if (needsDesc) {
+        const descMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i) ||
+                          html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i) ||
+                          html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+        if (descMatch && descMatch[1]) {
+          const cleanMetaDesc = sanitizeText(descMatch[1]);
+          if (!needsCleanEditorialSummary(cleanMetaDesc, art.title)) {
+            art.description = cleanMetaDesc.length > 450 ? cleanMetaDesc.substring(0, 447) + '...' : cleanMetaDesc;
+            console.log(`  -> Attached OG description for: "${art.title.slice(0, 45)}..."`);
+          }
+        }
       }
     } catch (e) {
       // Non-blocking timeout / fetch error
@@ -768,7 +806,7 @@ async function main() {
 
   const geminiKey = process.env.GEMINI_API_KEY || config.apiKey;
   const geminiPaidKey = process.env.GEMINI_PAID_API_KEY || config.paidApiKey || geminiKey;
-  const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
   // Build lookup of already analyzed articles
   const existingMap = new Map();
@@ -846,17 +884,20 @@ async function main() {
   }
 
   // Pull in backlogged pending articles from historical cache if any exist
-  // Or if --recalc-24h is passed, re-queue articles from the past 24 hours that haven't been evaluated with the 4-Factor model yet
+  // Supports --recalc-24h (past 24 hours) or --recalc-all (entire archive missing 4-Factor eventBase OR positive articles missing clean descriptions)
   const recalc24h = process.argv.includes('--recalc-24h');
+  const recalcAll = process.argv.includes('--recalc-all');
   const h24CutoffMs = Date.now() - (24 * 60 * 60 * 1000);
-  const maxBacklog = recalc24h ? 850 : (process.argv.includes('--backlog') ? 120 : 40);
+  const maxBacklog = recalcAll ? 10000 : (recalc24h ? 850 : (process.argv.includes('--backlog') ? 120 : 40));
   let backlogAdded = 0;
   const unanalyzedKeys = new Set(unanalyzedArticles.map(a => `${a.sourceId}_${a.title.trim().toLowerCase()}`));
   for (const [key, article] of existingMap.entries()) {
     if (backlogAdded >= maxBacklog) break;
     const pubMs = article.pubDate ? new Date(article.pubDate).getTime() : 0;
-    const needsRecalc24h = recalc24h && pubMs >= h24CutoffMs && typeof article.eventBase !== 'number';
-    if (!hasValidGeminiScore(article) || needsRecalc24h) {
+    const missing4Factor = typeof article.eventBase !== 'number';
+    const positiveNeedsSummary = (article.sentiment >= 0.10) && needsCleanEditorialSummary(article.description, article.title);
+    const needsRecalc = (recalcAll && (missing4Factor || positiveNeedsSummary)) || (recalc24h && pubMs >= h24CutoffMs && (missing4Factor || positiveNeedsSummary));
+    if (!hasValidGeminiScore(article) || needsRecalc) {
       const dedupeKey = `${article.sourceId}_${(article.title || '').trim().toLowerCase()}`;
       if (!unanalyzedKeys.has(dedupeKey)) {
         unanalyzedArticles.push(article);
@@ -866,7 +907,7 @@ async function main() {
     }
   }
 
-  console.log(`[Queue] Found ${unanalyzedArticles.length} articles requiring Gemini sentiment analysis (${backlogAdded} pulled from historical/24h cache).`);
+  console.log(`[Queue] Found ${unanalyzedArticles.length} articles requiring Gemini sentiment analysis (${backlogAdded} pulled from historical cache).`);
 
   // 2. Perform Gemini AI Analysis
   let activeAnalyzerLabel = currentCache.analyzerUsed || 'Gemini';
@@ -874,10 +915,10 @@ async function main() {
   let aiSuccess = false;
 
   if (unanalyzedArticles.length > 0) {
-    if (geminiKey) {
+    if (geminiPaidKey) {
       try {
         console.log(`[AI] Processing ${unanalyzedArticles.length} articles with Gemini (${geminiModel})...`);
-        const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiKey, geminiModel);
+        const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiPaidKey, geminiModel);
         
         const articleMap = new Map();
         unanalyzedArticles.forEach(a => articleMap.set(`${a.sourceId}_${a.title.trim().toLowerCase()}`, a));
@@ -891,6 +932,9 @@ async function main() {
             if (typeof res.framingMod === 'number') target.framingMod = res.framingMod;
             target.explanation = res.explanation;
             target.category = res.category;
+            if (res.summary && needsCleanEditorialSummary(target.description, target.title)) {
+              target.description = res.summary;
+            }
             newlyAnalyzedCount++;
           }
         });

@@ -312,7 +312,7 @@ function getStoryImage(art) {
 
 function cleanDisplayHeadline(title) {
   return (title || '')
-    .replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Bloomberg\.com|Bloomberg|BBC|The Guardian|Sky News|Al Jazeera|NPR|CNBC).*$/i, '')
+    .replace(/\s*[-–—|]\s*(Reuters|CNN|AP News|Associated Press|Bloomberg\.com|Bloomberg|BBC|The Guardian|Sky News|Al Jazeera|NPR|CNBC|The Wall Street Journal|WSJ).*$/i, '')
     .trim();
 }
 
@@ -323,11 +323,12 @@ function getCleanSilverSummary(rawDesc, cleanTitle, artOrItem) {
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/\s*[-–—|]?\s*(Bloomberg\.com|Reuters|AP News|CNN)\s*$/i, '')
+    .replace(/\s*\[Event Base:[^\]]*\]/gi, '')
+    .replace(/\s*[-–—|]?\s*(Bloomberg\.com|Bloomberg|Reuters|AP News|Associated Press|CNN|The Wall Street Journal|WSJ)\s*$/i, '')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Detect if RSS description is just repeating the headline (common in Google News RSS feeds)
+  // Detect if RSS description is just repeating the headline (common in Google News RSS feeds) or contains raw grading jargon
   const normDesc = cleanDesc.toLowerCase().replace(/[^a-z0-9]/g, '');
   const normTitle = (cleanTitle || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const isDuplicateOfTitle = normTitle.length > 15 && (
@@ -335,14 +336,20 @@ function getCleanSilverSummary(rawDesc, cleanTitle, artOrItem) {
     normDesc.startsWith(normTitle.slice(0, Math.min(35, normTitle.length))) ||
     normTitle.startsWith(normDesc.slice(0, Math.min(35, normDesc.length)))
   );
+  const hasGradingJargon = /^Event base\b/i.test(cleanDesc) || /\bframing\s*\([+-]?\d/i.test(cleanDesc);
 
-  if (!cleanDesc || cleanDesc.length < 20 || isDuplicateOfTitle) {
-    const rawExp = artOrItem?.explanationGemini || artOrItem?.explanation || artOrItem?.leadArticle?.explanationGemini || '';
+  if (!cleanDesc || cleanDesc.length < 20 || isDuplicateOfTitle || hasGradingJargon) {
+    const rawExp = artOrItem?.explanationGemini || artOrItem?.explanation || artOrItem?.leadArticle?.explanationGemini || artOrItem?.leadArticle?.explanation || '';
     if (rawExp && !rawExp.includes('Analyzed locally') && !rawExp.includes('Pending evaluation')) {
       const humanizedExp = rawExp
+        .replace(/\s*\[Event Base:[^\]]*\]/gi, '')
+        .replace(/^Event\s*base\s*(highlights|reflects|captures|notes|is|scores|Driven by)?\s*/i, '')
         .replace(/Event\s*Base\s*[+-]?\d+(\.\d+)?\s*\(([^)]+)\)[,.]?\s*/i, '$2. ')
+        .replace(/[,;.]?\s*(with|and|while|paired with)?\s*(neutral|positive|constructive|composed|factual|measured|proportional|sensationalist|negative|wire|straightforward)?\s*(editorial\s*)?(framing|headline\s*framing|tone|reporting)[^.]*(\.)?/gi, '.')
         .replace(/Framing\s*(Modifier)?\s*[+-]?\d+(\.\d+)?\s*\(([^)]+)\)[,.]?\s*/i, '')
         .replace(/Framing\s*[+-]?\d+(\.\d+)?[,.]?\s*/i, '')
+        .replace(/\s*\([+-]?\d+\.\d+\)/g, '')
+        .replace(/\.\s*\./g, '.')
         .trim();
       if (humanizedExp.length > 18) {
         return humanizedExp.charAt(0).toUpperCase() + humanizedExp.slice(1);
@@ -655,10 +662,9 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
   const feedItems = [];
   const clusters = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
 
-  // 1. Group via AI-generated sharedStoryClusters first
+  // 1. Group strictly via AI-verified sharedStoryClusters (using the AI cluster title & summary)
   clusters.forEach(cl => {
     const matched = [];
-    const clTokens = new Set(normalizeSilverTokens(cl.story + ' ' + (cl.coverage || []).map(c => c.title).join(' ')));
     uniqueArticles.forEach((a, idx) => {
       if (used.has(idx)) return;
       const aClean = cleanHeadlineTitle(a.title);
@@ -667,9 +673,7 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
         (aUrl && c.link && canonicalUrl(c.link) === aUrl) ||
         (aClean && c.title && cleanHeadlineTitle(c.title) === aClean)
       );
-      const toksA = normalizeSilverTokens(a.title);
-      const sharedCl = toksA.filter(t => clTokens.has(t));
-      if (inCl || sharedCl.length >= 3) {
+      if (inCl) {
         matched.push({ a, idx });
       }
     });
@@ -713,55 +717,14 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
     }
   });
 
-  // 2. Group remaining multi-outlet duplicate stories by normalized entity/keyword overlap
+  // 2. Add remaining unclustered positive articles as individual stories (no hardcoded keyword guessing)
   uniqueArticles.forEach((a, idx) => {
     if (used.has(idx)) return;
     used.add(idx);
-    const toksA = new Set(normalizeSilverTokens(a.title));
-    const groupArts = [a];
-
-    uniqueArticles.forEach((b, jdx) => {
-      if (used.has(jdx)) return;
-      const toksB = normalizeSilverTokens(b.title);
-      const shared = toksB.filter(t => toksA.has(t));
-      const timeDiffH = Math.abs(new Date(a.pubDate) - new Date(b.pubDate)) / 3600000;
-      if (shared.length >= 3 || (shared.length >= 2 && timeDiffH <= 48 && shared.some(w => w.length >= 6))) {
-        used.add(jdx);
-        groupArts.push(b);
-      }
+    feedItems.push({
+      isCluster: false,
+      ...a
     });
-
-    const seenS = new Set();
-    const dedupedOutlets = [];
-    groupArts.forEach(g => {
-      if (!seenS.has(g.sourceId)) {
-        seenS.add(g.sourceId);
-        dedupedOutlets.push(g);
-      }
-    });
-
-    if (dedupedOutlets.length >= 2) {
-      dedupedOutlets.sort((x, y) => y.sentiment - x.sentiment);
-      const avgScore = Number((dedupedOutlets.reduce((s, x) => s + x.sentiment, 0) / dedupedOutlets.length).toFixed(2));
-      const cleanLeadTitle = cleanDisplayHeadline(a.title);
-      const bestSummaryArt = groupArts.find(x => x.description && x.description.length > 40 && !x.description.includes(x.title.slice(0, 25))) || a;
-      feedItems.push({
-        isCluster: true,
-        title: cleanLeadTitle,
-        summary: bestSummaryArt.description || a.description || '',
-        category: a.category || 'world',
-        pubDate: a.pubDate,
-        sentiment: avgScore,
-        maxSentiment: dedupedOutlets[0].sentiment,
-        leadArticle: groupArts.find(x => isValidEditorialImage(x.imageUrl)) || a,
-        articles: dedupedOutlets
-      });
-    } else {
-      feedItems.push({
-        isCluster: false,
-        ...a
-      });
-    }
   });
 
   // Sort feed items descending by sentiment score (breaking ties with maxSentiment)

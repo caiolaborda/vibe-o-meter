@@ -69,31 +69,46 @@ async function generateDailyBriefing(options = {}) {
   const mostAlarmistToday = rankedOutlets24[0] || { name: 'Breaking News Outlets', avg: -0.4 };
   const mostCalmToday = rankedOutlets24[rankedOutlets24.length - 1] || { name: 'Public Broadcasters', avg: 0 };
 
-  const sortedArticles = [...articles24].sort((a, b) => a.score - b.score);
-  const sampleHeadlines = [
-    ...sortedArticles.slice(0, 4),
-    ...sortedArticles.slice(Math.max(0, Math.floor(sortedArticles.length / 2) - 2), Math.floor(sortedArticles.length / 2) + 2),
-    ...sortedArticles.slice(-4).reverse()
-  ].filter((a, i, arr) => a && arr.findIndex(x => x.title === a.title) === i)
-   .map(a => `- [${a.outlet}] "${a.title}" | URL: ${a.url}`).join('\n');
+  // Build diverse topic buckets so the model sees the full zoomed-out panorama of human civilization today
+  // (1. Major Geopolitical/Political clusters, 2. Corporate/Economic shenanigans, 3. Culture/Tech/Media, 4. Pure Science/Nature breakthroughs)
+  const rawTragedyRegex = /\b(mass shooting|elementary school|killed|dead|deaths|murdered|massacre|rape|sexual assault|child abuse|suicide|funeral|grief|mourning|casualties)\b/i;
 
-  // Extract dominant cross-outlet story clusters (events reported by 2+ independent desks)
-  const sharedClusters = data.sharedStoryClusters || [];
-  const topClustersContext = sharedClusters.slice(0, 5).map(c => {
-    const mainArt = c.coverage?.[0] || {};
-    const link = mainArt.link || '';
-    return `- Cluster "${c.story}" (${c.coverage?.length || 0} desks): ${c.summary || ''} | URL: ${link}`;
-  }).join('\n');
+  const topClusterLines = (data.sharedStoryClusters || [])
+    .filter(c => !rawTragedyRegex.test(c.story + ' ' + (c.summary || '')))
+    .slice(0, 6)
+    .map(c => {
+      const mainArt = c.coverage?.[0] || {};
+      const link = mainArt.link || '';
+      return `- [MAJOR CLUSTER - ${c.coverage?.length || 2} desks] "${c.story}": ${c.summary || ''} | URL: ${link}`;
+    }).join('\n');
+
+  const pickBucket = (cats, filterFn, limit = 3) =>
+    articles24
+      .filter(a => cats.includes(a.category) && !rawTragedyRegex.test(a.title) && filterFn(a))
+      .sort((a, b) => Math.abs(b.framingMod || b.score) - Math.abs(a.framingMod || a.score))
+      .slice(0, limit);
+
+  const corpBusiness = pickBucket(['business'], a => a.score < 0, 3);
+  const cultureTech = pickBucket(['entertainment', 'technology', 'sports', 'other'], a => a.score < 0.15, 3);
+  const scienceNature = articles24
+    .filter(a => ['science', 'climate', 'health'].includes(a.category) && a.score >= 0.25)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+
+  const sampleHeadlines = [
+    ...corpBusiness.map(a => `- [CORPORATE / ECONOMY - ${a.outlet}] "${a.title}" | URL: ${a.url}`),
+    ...cultureTech.map(a => `- [CULTURE / TECH - ${a.outlet}] "${a.title}" | URL: ${a.url}`),
+    ...scienceNature.map(a => `- [SCIENCE / BREAKTHROUGH - ${a.outlet}] "${a.title}" | URL: ${a.url}`)
+  ].join('\n');
 
   let briefingText = '';
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_PAID_API_KEY || process.env.GEMINI_API_KEY;
   const modelsToTry = [
     process.env.GEMINI_MODEL,
     'gemini-3.8-flash',
-    'gemini-3.7-flash',
-    'gemini-3.6-flash',
-    'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite'
+    'gemini-2.5-flash',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   if (apiKey) {
@@ -102,47 +117,52 @@ async function generateDailyBriefing(options = {}) {
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
-          generationConfig: { temperature: 0.8 }
+          generationConfig: { temperature: 0.85, responseMimeType: 'application/json' }
         });
 
-        const prompt = `You are a razor-sharp, deadpan news satirist writing the daily front-page mood kicker for "There's No Such Thing As Good News" (an autonomous daily audit of media pessimism).
+        const prompt = `You are a dry, effortlessly witty editorial columnist (think Charlie Brooker, Douglas Adams, Weekend Update) writing the daily 2-sentence front-page mood kicker for "There's No Such Thing As Good News".
 
-IMPORTANT MEDIA SCOPE:
-These are the world's premier international news outlets, broadsheets, and major broadcast networks (BBC, Reuters, Associated Press, Bloomberg, The New York Times, CNN, etc.). NEVER refer to this reporting as "local news" — treat this as the collective output of the global media apparatus.
+WHY MOST AI SATIRE FAILS (AND HOW TO AVOID IT):
+- Bad AI satire tries too hard: it writes clunky, disconnected one-liners about individual politicians ("As the Pope proved Catholic guilt knows no sick leave, Trump bravely defended fossil fuels..."). That reads like forced, try-hard dad jokes.
+- Great satire zooms out to look at the entire human species from 30,000 feet: it weaves 3 or 4 wildly different spheres of today's news (high-stakes statecraft, corporate/economic mischief, trivial cultural drama, and a genuine scientific/astronomical breakthrough) into a SINGLE, seamless observation that lands on an understated, devastating final button.
 
-YOUR GOAL:
-Scan today's headlines and write a crisp, cynical, 1-to-3 sentence observation capturing the day's collective news vibe.
+GOLD-STANDARD BENCHMARK (Study why this rhythm and perspective works so well, without copying its exact opener every day):
+"Nothing says civilization is peaking quite like the Justice Department having to officially cancel the [execution livestream](url) while Brussels busies itself [raiding European automakers](url) and British broadcasters agonize over [the end of Saturday Night Takeaway](url). At this rate, the astronomers marveling at a [newly discovered green star](url) are mostly just looking for somewhere to relocate."
 
-THE VIBE WE WANT:
-- Lean, punchy, and fast-paced (aim for ~35 to 55 words max).
-- Deadpan, wry, and observational—like a sharp newsroom veteran summing up the global news cycle with an effortless shrug and a smirk.
-- FIXED TIMEFRAME ANCHOR: Naturally anchor your observation in the fixed 24-hour global news cycle by opening with phrases like "Over the past 24 hours...", "Today across global headlines...", "Across the last 24 hours...", or "In today's global news cycle...". This clearly signals to the reader that this is an autonomous 24-hour audit of global news.
-- NO RIGID FORMULA OR FIXED SENTENCE BLUEPRINT. React organically to whatever absurdities, panics, or contrasts actually stand out across today's stories.
-- Avoid purple prose, convoluted run-ons, or forced metaphors. Keep it natural, rhythmic, and memorable.
+Notice why that works:
+1. Sentence 1 sweeps effortlessly across 3 different scales of human absurdity (dystopian statecraft + corporate scandal + trivial cultural angst) in one smooth breath.
+2. Sentence 2 pivots to a real scientific/medical/astronomical story from today and uses it as a dry, deadpan punchline about the state of humanity.
+3. No forced adjectives ("furiously", "bravely", "generously"), no hacky stand-up puns, just bone-dry observational elevation.
 
-HYPERLINKING REQUIREMENT:
-You MUST weave 2 to 4 interactive markdown links [topical phrase](url) directly into your observation using the exact URLs provided in the stories/clusters below (e.g. "...between [papal health scares](url) and [smoking oil infrastructure](url)..."). Only hyperlink concise, natural phrases (2-4 words).
+YOUR TASK:
+Generate 3 distinct candidate drafts in JSON format, each using a different natural opening hook and angle, then select the single sharpest, most effortless winner ("best_index": 0, 1, or 2):
+- Draft 0: A zoomed-out "state of human civilization" sweep contrasting political/corporate/cultural absurdity with a scientific or medical breakthrough button.
+- Draft 1: A dry "priorities of the global press" observation contrasting what newsrooms are panicking over today vs. the quiet researchers/explorers actually advancing the species.
+- Draft 2: An ironic juxtaposition of elite/institutional chaos vs. a surprising bright spot from today's stories.
 
-TONE INSPIRATION (aim for this cadence and economy of language, but do NOT copy its words):
-"Across the last 24 hours, another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver."
+STRICT RULES FOR EVERY DRAFT:
+- Strictly 2 sentences, 38 to 56 words total.
+- Weave 3 to 4 interactive markdown links [concise 2-4 word phrase](url) naturally into the text using ONLY the exact URLs provided below.
+- NEVER use the words "wire", "wires", "beat", or "local news", and never include numeric scores.
 
-STRICT RULES:
-- FORBIDDEN WORDS: Strictly NEVER use the words "wire", "wires", or "beat". Use natural terms like "news", "headlines", "outlets", "newsrooms", or "stories".
-- NO ARBITRARY NUMBERS, DECIMALS, OR PERCENTAGES (no "-0.21", "197 articles", "+0.45", etc.). Natural time references like "today" or "the last 24 hours" are encouraged.
-- NEVER refer to this as "local news" or "regional news".
-- KEEP IT TIGHT (strictly under 60 words total).
-- Output ONLY the raw paragraph text with embedded markdown links. No quotation marks around the entire response, no markdown headers, no bullet points.
+TODAY'S PANORAMA OF STORIES & URLS:
+${topClusterLines}
+${sampleHeadlines}
 
-TODAY'S GLOBAL HEADLINES CONTEXT (Use these exact URLs for markdown links):
-- Outlets leading the panic: ${mostAlarmistToday.name}
-- Outlets holding composure: ${mostCalmToday.name}
-- Major cross-outlet story clusters (what multiple newsrooms are covering right now):
-${topClustersContext || '- Major diplomatic friction, volatile market shifts, and ongoing conflicts'}
-- Representative stories across global headlines:
-${sampleHeadlines || '- War strikes, political clashes, economic jitters, and scientific breakthroughs'}`;
+Return ONLY valid JSON in this exact format:
+{
+  "drafts": ["draft 0 markdown string", "draft 1 markdown string", "draft 2 markdown string"],
+  "best_index": 0
+}`;
 
         const res = await model.generateContent(prompt);
-        const text = res.response.text().trim().replace(/^["']|["']$/g, '');
+        let raw = res.response.text().trim();
+        if (raw.startsWith('```json')) raw = raw.substring(7);
+        else if (raw.startsWith('```')) raw = raw.substring(3);
+        if (raw.endsWith('```')) raw = raw.substring(0, raw.length - 3);
+        const parsed = JSON.parse(raw.trim());
+        const chosen = (parsed.drafts && parsed.drafts[parsed.best_index ?? 0]) || (parsed.drafts && parsed.drafts[0]) || '';
+        const text = chosen.trim().replace(/^["']|["']$/g, '');
         if (text && text.length > 20) {
           briefingText = text;
           console.log(`[Briefing] Generated via Gemini (${modelName}):`, briefingText);
@@ -154,10 +174,10 @@ ${sampleHeadlines || '- War strikes, political clashes, economic jitters, and sc
     }
   }
 
-  // Witty deterministic fallback (Option 3 Micro-Dispatch) if AI call fails or key is missing
+  // Witty deterministic fallback if AI call fails or key is missing
   if (!briefingText) {
-    briefingText = "Across the last 24 hours of global news: another banner day for collective dread. Politicians traded fresh hostility, markets flinched on cue, and deep-space science once again stepped up as humanity's designated driver.";
-    console.log('[Briefing] Generated via deterministic Micro-Dispatch fallback:', briefingText);
+    briefingText = "Nothing says civilization is peaking quite like politicians treating daily governance as performance art while financial desks hyperventilate over every basis point. At this rate, the deep-space astronomers discovering new stars are mostly just scouting real estate for the rest of us.";
+    console.log('[Briefing] Generated via deterministic fallback:', briefingText);
   }
 
   // Update in-memory data
