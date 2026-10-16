@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=5.3">
+  <link rel="stylesheet" href="style.css?v=5.4">
 </head>
 <body data-edition="silver" data-silver-mode="antidote">
 
@@ -144,14 +144,14 @@
         </div>
 
         <!-- 3. Topic Vibes Bar (Interactive Topic Filter inside Hero Container above Menu) -->
-        <div class="pulse-topics-bar hero-topics-bar" style="margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <div class="pulse-topics-bar hero-topics-bar" style="margin: 1rem 0 0 0; padding: 1rem 0 0 0; border-top: 1px solid var(--border-color);">
           <div class="pulse-topic-chips" id="pulse-category-chips">
             <!-- Dynamically populated chips in app.js -->
           </div>
         </div>
 
         <!-- 4. The 3 Key Signals Horizontal Strip (Most Alarmist / Most Uplifting / Biggest Outlet Clash) -->
-        <div class="pulse-signals-strip hero-signals-strip" style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid var(--border-color);">
+        <div class="pulse-signals-strip hero-signals-strip" style="margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--border-color);">
           <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
             <div class="signal-header">
               <span class="signal-label neg">
@@ -210,7 +210,7 @@
     <nav class="quick-nav-bar hidden" id="quick-nav-bar">
       <div class="quick-nav-links" role="tablist" aria-label="No Good News Navigation">
         <button class="nav-pill-btn active" data-tab="pulse" id="tab-btn-pulse">
-          <i data-lucide="sparkles"></i><span>Daily Briefing</span>
+          <i data-lucide="layers"></i><span>Top Stories</span>
         </button>
         <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
           <i data-lucide="compass"></i><span>Newsrooms</span>
@@ -244,8 +244,19 @@
             <option value="health">🏥 Health &amp; Medicine</option>
           </select>
         </div>
-        <!-- Timeframe Selector -->
-        <div class="quick-timeframe-wrap" title="Filter dashboard data by timeframe">
+        <!-- Top Stories Sort Selector (Shown when on Top Stories tab instead of Timeframe) -->
+        <div class="quick-timeframe-wrap quick-sort-wrap" id="quick-sort-wrap" title="Sort developing story clusters">
+          <i data-lucide="arrow-up-down" class="quick-time-icon"></i>
+          <select id="clusters-sort-select" class="quick-time-select" aria-label="Sort top stories">
+            <option value="outlets" selected>Most Covered</option>
+            <option value="latest">Most Recent</option>
+            <option value="pessimistic">Most Negative</option>
+            <option value="optimistic">Most Constructive</option>
+            <option value="spread">Highest Spread</option>
+          </select>
+        </div>
+        <!-- Timeframe Selector (Shown on Newsrooms, Trends & Methodology tabs) -->
+        <div class="quick-timeframe-wrap" id="quick-timeframe-wrap" style="display: none;" title="Filter dashboard data by timeframe">
           <i data-lucide="clock" class="quick-time-icon"></i>
           <select id="quick-timeframe-select" class="quick-time-select" aria-label="Select timeframe">
             <option value="6h">Past 6 Hours</option>
@@ -260,31 +271,11 @@
       </div>
     </nav>
 
-    <!-- TAB 1: DAILY BRIEFING (Top Story Clusters & Progressive Bridge) -->
+    <!-- TAB 1: TOP STORIES (Developing Story Clusters & Progressive Bridge) -->
     <main id="tab-panel-pulse" class="tab-panel hidden">
-      <!-- TOP STORY CLUSTERS (Unified full-featured experience right below the Menu Bar) -->
+      <!-- TOP STORY CLUSTERS (Directly below the Menu Bar) -->
       <section class="clusters-section" id="clusters-section">
         <div class="collapsible-content" id="clusters-wrapper">
-          <!-- Top Stories Header & Controls Bar -->
-          <div class="clusters-controls-bar card">
-            <div class="clusters-bar-title">
-              <i data-lucide="layers"></i>
-              <h2 id="clusters-bar-heading">Most Covered Stories</h2>
-            </div>
-            <div class="clusters-filter-group">
-              <div class="clusters-sort-filter">
-                <label for="clusters-sort-select"><i data-lucide="arrow-up-down"></i> Sort By:</label>
-                <select id="clusters-sort-select" class="select-input">
-                  <option value="outlets" selected>Most Outlets Covering</option>
-                  <option value="latest">Most Recent Coverage</option>
-                  <option value="pessimistic">Most Negative Tone</option>
-                  <option value="optimistic">Most Constructive Tone</option>
-                  <option value="spread">Highest Sentiment Spread</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
           <!-- Clusters Dynamic Container -->
           <div id="clusters-container" class="clusters-container">
             <!-- Populated dynamically in app.js -->
@@ -330,10 +321,7 @@
       <section class="timeline-section" id="timeline-section">
         <div class="section-header-row">
           <div>
-            <h2 class="section-title flex-center">
-              <i data-lucide="trending-up"></i>
-              Global Sentiment Timeline
-            </h2>
+            <h2 class="section-title">Global Sentiment Timeline</h2>
             <p class="section-desc">Historical trajectory of media optimism vs. pessimism over time, synthesized across all outlets.</p>
           </div>
           <div class="timeline-legend" id="timeline-legend">
@@ -379,10 +367,7 @@
       <section class="heatmap-section" id="heatmap-section" style="margin-top: 2rem;">
         <div class="section-header-row">
           <div>
-            <h2 class="section-title flex-center">
-              <i data-lucide="layout-grid"></i>
-              Topic × Outlet Sentiment Heatmap
-            </h2>
+            <h2 class="section-title">Topic × Outlet Sentiment Heatmap</h2>
             <p class="section-desc">Average sentiment across every topic and newsroom. Click any cell to jump directly into filtered headlines.</p>
           </div>
           <div class="section-header-actions flex-center">
@@ -407,16 +392,6 @@
     <main id="tab-panel-deepdives" class="tab-panel hidden">
       <!-- 1. UNIFIED NEWSROOM LEADERBOARD & SENTIMENT SPECTRUM -->
       <section class="newsrooms-spectrum-section" id="newsrooms-spectrum-section" style="margin-bottom: 1.5rem;">
-        <div class="section-header-row">
-          <div>
-            <h2 class="section-title flex-center">
-              <i data-lucide="compass"></i>
-              Newsroom Leaderboard &amp; Sentiment Spectrum
-            </h2>
-            <p class="section-desc">All 17 international newsrooms ranked from most alarmist to most constructive for the selected timeframe, alongside the live sentiment spectrum.</p>
-          </div>
-        </div>
-
         <div class="card newsrooms-spectrum-card" style="padding: 1.25rem 1.4rem;">
           <!-- Region Filter Pills (Filters BOTH the Outlet Leaderboard AND the Spectrum Track below) -->
           <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
@@ -429,24 +404,8 @@
             <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.2rem;">🌐</span> Global Agencies (<span data-region-count="GLOBAL">2</span>)</button>
           </div>
 
-          <!-- 1. Integrated Compact Outlet Leaderboard Matrix (Worst to Best, then Unranked) -->
+          <!-- 1. Integrated Compact Outlet Leaderboard Matrix (Worst #17 to Best #1, then Unranked) -->
           <div class="integrated-leaderboard-block" id="comparison-section" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 1.25rem;">
-            <div class="integrated-leaderboard-header">
-              <div class="integrated-leaderboard-title">
-                <i data-lucide="columns-3" style="width:15px;height:15px;color:var(--accent-color);"></i>
-                <span>Outlets Leaderboard (Worst &rarr; Best)</span>
-                <span id="sources-carousel-count" class="leaderboard-count-pill">17 Outlets</span>
-              </div>
-              <div class="sources-carousel-controls" style="display: flex; gap: 0.4rem; align-items: center;">
-                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
-                  <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
-                </button>
-                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
-                  <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
-                </button>
-              </div>
-            </div>
-
             <div id="sources-grid" class="sources-grid sources-sidescroll compact-leaderboard-grid">
               <!-- Compact news source cards injected dynamically -->
               <div class="loading-state">
@@ -727,10 +686,7 @@
     <section class="methodology-section" id="methodology-section">
       <div class="section-header-row">
         <div>
-          <h2 class="section-title flex-center">
-            <i data-lucide="compass"></i>
-            Methodology &amp; Calibration
-          </h2>
+          <h2 class="section-title">Methodology &amp; Calibration</h2>
           <p class="section-desc" style="font-size: 1.05rem; max-width: 780px;">How we audit 17 global newsrooms every day, separate real-world impact from headline spin, and surface genuine human progress.</p>
         </div>
       </div>
@@ -958,6 +914,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=5.3"></script>
+  <script src="app.js?v=5.4"></script>
 </body>
 </html>

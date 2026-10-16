@@ -6752,8 +6752,8 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
     gap: 4px !important;
     padding: 4px !important;
     border-radius: 999px !important;
-    background: rgba(15, 23, 42, 0.58) !important;
-    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
@@ -7257,3 +7257,24 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
     gap: 0.55rem;
   }
 }
+
+/* Fix symmetrical vertical spacing between Topic Grid, divider line, and 3 Signal Boxes in Hero Vibe Card */
+.hero-topics-bar,
+.pulse-topics-bar.hero-topics-bar {
+  margin: 0.85rem 0 0 0 !important;
+  padding: 0.85rem 0 0 0 !important;
+  border-top: 1px solid var(--border-color);
+}
+
+.hero-signals-strip,
+.pulse-signals-strip.hero-signals-strip {
+  margin: 0.85rem 0 0 0 !important;
+  padding: 0.85rem 0 0 0 !important;
+  border-top: 1px solid var(--border-color);
+}
+
+#comparison-section.integrated-leaderboard-block {
+  margin-top: 1rem !important;
+  padding-top: 1rem !important;
+}
+

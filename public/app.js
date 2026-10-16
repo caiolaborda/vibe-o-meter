@@ -1849,6 +1849,19 @@ function switchTab(tabId) {
     }
   });
 
+  // Toggle Sort By vs Timeframe in the floating menu bar based on whether Top Stories ('pulse') is active
+  const quickSortWrap = document.getElementById('quick-sort-wrap');
+  const quickTimeframeWrap = document.getElementById('quick-timeframe-wrap');
+  if (quickSortWrap && quickTimeframeWrap) {
+    if (tabId === 'pulse') {
+      quickSortWrap.style.display = 'inline-flex';
+      quickTimeframeWrap.style.display = 'none';
+    } else {
+      quickSortWrap.style.display = 'none';
+      quickTimeframeWrap.style.display = 'inline-flex';
+    }
+  }
+
   // Keep hero landing section ("Today's Global News Vibe" + Summary) visible above the menu bar in No Good News
   const heroSection = document.getElementById('pulse-section');
   if (heroSection) {
@@ -3390,12 +3403,14 @@ function renderComparisonMatrix() {
     return;
   }
 
+  const totalRanked = sortedIds.filter(id => outletMetrics[id].scoredCount > 0 && typeof outletMetrics[id].avg === 'number').length;
   let currentRank = 0;
   sortedIds.forEach((id) => {
     const mData = outletMetrics[id];
     const source = mData.source;
     const isUnranked = mData.scoredCount === 0 || typeof mData.avg !== 'number';
     if (!isUnranked) currentRank++;
+    const displayRank = !isUnranked ? (totalRanked - currentRank + 1) : 0;
     const avg = !isUnranked ? mData.avg : 0;
     const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global News', flag: '🌐' };
     
@@ -3441,7 +3456,7 @@ function renderComparisonMatrix() {
     card.innerHTML = `
       <div class="source-card-header compact-header">
         <div class="source-meta">
-          <span class="leaderboard-rank-num">${isUnranked ? '—' : `#${currentRank}`}</span>
+          <span class="leaderboard-rank-num">${isUnranked ? '—' : `#${displayRank}`}</span>
           <div class="source-icon compact-icon ${id}" style="background-color: ${meta.color}; color: #fff; ${isUnranked ? 'opacity:0.55;' : ''}">
             ${meta.initials}
             ${isSelected ? '<span class="source-icon-check">✓</span>' : ''}
