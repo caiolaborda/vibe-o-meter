@@ -419,7 +419,8 @@ function attachAntidoteSwipeCard(cardEl, totalDeckSteps) {
 
   const onStart = (clientX, clientY, target) => {
     if (!cardEl.classList.contains('is-active')) return;
-    if (target && target.closest('a, button, .silver-consensus-hover-wrap')) return;
+    const elTarget = target && target.nodeType === 1 ? target : (target && target.parentElement);
+    if (elTarget && elTarget.closest('a, button, .silver-consensus-hover-wrap')) return;
     startX = clientX;
     startY = clientY;
     currentX = 0;
@@ -1950,24 +1951,34 @@ function runWithViewLoader(label, workFn) {
 // 24-Hour / New-Day Cache Reset for Some Good News Daily 5 Antidote
 const ANTIDOTE_STORAGE_KEY = 'vibe_daily_antidote_state_v1';
 const ANTIDOTE_RESET_WINDOW_MS = 24 * 60 * 60 * 1000;
+let hasHydratedAntidoteState = false;
 
 function getLocalDayKey(ts = Date.now()) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function loadAntidoteProgress() {
+function readAntidoteStorageRaw() {
   try {
     const raw = localStorage.getItem(ANTIDOTE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function loadAntidoteProgress() {
+  try {
     const now = Date.now();
     const todayKey = getLocalDayKey(now);
-    if (!raw) {
+    const parsed = readAntidoteStorageRaw();
+    if (!parsed) {
       const initial = { deckIndex: 0, cycleStartMs: now, dayKey: todayKey };
       localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(initial));
       state.silverDeckIndex = 0;
+      hasHydratedAntidoteState = true;
       return initial;
     }
-    const parsed = JSON.parse(raw);
     const cycleStartMs = Number(parsed?.cycleStartMs) || 0;
     const elapsed = now - cycleStartMs;
     const isNewDay = parsed?.dayKey && parsed.dayKey !== todayKey;
@@ -1976,11 +1987,16 @@ function loadAntidoteProgress() {
       const fresh = { deckIndex: 0, cycleStartMs: now, dayKey: todayKey };
       localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(fresh));
       state.silverDeckIndex = 0;
+      hasHydratedAntidoteState = true;
       return fresh;
     }
-    const savedIdx = typeof parsed.deckIndex === 'number' ? Math.max(0, Math.min(5, parsed.deckIndex)) : 0;
-    state.silverDeckIndex = savedIdx;
-    return { deckIndex: savedIdx, cycleStartMs, dayKey: parsed.dayKey || todayKey };
+    // Only hydrate state.silverDeckIndex from storage once on initial boot so live clicks are never clobbered
+    if (!hasHydratedAntidoteState) {
+      const savedIdx = typeof parsed.deckIndex === 'number' ? Math.max(0, Math.min(5, parsed.deckIndex)) : 0;
+      state.silverDeckIndex = savedIdx;
+      hasHydratedAntidoteState = true;
+    }
+    return { deckIndex: state.silverDeckIndex || 0, cycleStartMs, dayKey: parsed.dayKey || todayKey };
   } catch (e) {
     return { deckIndex: state.silverDeckIndex || 0, cycleStartMs: Date.now(), dayKey: getLocalDayKey() };
   }
@@ -1988,11 +2004,14 @@ function loadAntidoteProgress() {
 
 function saveAntidoteProgress(deckIndex) {
   try {
-    const current = loadAntidoteProgress();
+    const cleanIdx = Math.max(0, Math.min(5, Number(deckIndex) || 0));
+    state.silverDeckIndex = cleanIdx;
+    hasHydratedAntidoteState = true;
+    const existing = readAntidoteStorageRaw();
     const updated = {
-      deckIndex: Math.max(0, Math.min(5, Number(deckIndex) || 0)),
-      cycleStartMs: current.cycleStartMs || Date.now(),
-      dayKey: current.dayKey || getLocalDayKey()
+      deckIndex: cleanIdx,
+      cycleStartMs: Number(existing?.cycleStartMs) || Date.now(),
+      dayKey: existing?.dayKey || getLocalDayKey()
     };
     localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(updated));
   } catch (e) {
@@ -2011,8 +2030,9 @@ function getHoursUntilNextAntidote() {
         if (diffHrs >= 1 && diffHrs <= 4) return diffHrs;
       }
     }
-    const current = loadAntidoteProgress();
-    const remainingMs = Math.max(0, (current.cycleStartMs + ANTIDOTE_RESET_WINDOW_MS) - Date.now());
+    const existing = readAntidoteStorageRaw();
+    const cycleStartMs = Number(existing?.cycleStartMs) || Date.now();
+    const remainingMs = Math.max(0, (cycleStartMs + ANTIDOTE_RESET_WINDOW_MS) - Date.now());
     return Math.max(1, Math.min(24, Math.ceil(remainingMs / (60 * 60 * 1000))));
   } catch (e) {
     return 4;
@@ -2248,12 +2268,8 @@ window.setSilverViewMode = function(mode) {
   // Update active button states and render synchronously in the same frame
   const btnAntidote = document.getElementById('silver-mode-antidote');
   const btnGrid = document.getElementById('silver-mode-grid');
-  const mobBtnAntidote = document.getElementById('silver-mobile-btn-antidote');
-  const mobBtnGrid = document.getElementById('silver-mobile-btn-grid');
   if (btnAntidote) btnAntidote.classList.toggle('active', nextMode === 'antidote');
   if (btnGrid) btnGrid.classList.toggle('active', nextMode === 'grid');
-  if (mobBtnAntidote) mobBtnAntidote.classList.toggle('active', nextMode === 'antidote');
-  if (mobBtnGrid) mobBtnGrid.classList.toggle('active', nextMode === 'grid');
 
   renderSilverEdition();
 };
@@ -2364,7 +2380,6 @@ document.addEventListener('keydown', (e) => {
 window.setSilverTimeframe = function(val) {
   state.silverTime = val;
   state.silverLimit = 24;
-  state.silverDeckIndex = 0;
   const silverSelect = document.getElementById('silver-timeframe-select');
   if (silverSelect) silverSelect.value = val;
   if (val === 'all' || val === '30d') {
@@ -2381,7 +2396,6 @@ window.setSilverTimeframe = function(val) {
 window.setSilverTopic = function(val) {
   state.silverTopic = val;
   state.silverLimit = 24;
-  state.silverDeckIndex = 0;
   const topicSelect = document.getElementById('silver-topic-select');
   if (topicSelect) topicSelect.value = val;
   renderSilverEdition();
@@ -2456,9 +2470,9 @@ function renderSilverEdition() {
   if (!container) return;
   container.innerHTML = '';
 
-  // 1. Gather all positive articles using Some Good News's decoupled timeframe (state.silverTime)
-  // In Daily 5 Antidote mode, always pull from the past 24h across all topics (or state.silverTime if user explicitly expanded)
-  const effectiveTime = activeMode === 'antidote' ? (activeSilverTime === '24h' ? '24h' : activeSilverTime) : activeSilverTime;
+  // 1. Gather all positive articles:
+  // Daily 5 Antidote ('antidote') is ALWAYS locked to '24h' and 'all' topics so it never changes when All Good News filters are adjusted
+  const effectiveTime = activeMode === 'antidote' ? '24h' : activeSilverTime;
   const silverSources = getResolvedSources(effectiveTime);
 
   const positiveArticles = [];
@@ -2524,20 +2538,14 @@ function renderSilverEdition() {
     return (rankB - rankA) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment));
   });
 
-  // Sync both desktop & mobile mode buttons & count labels
+  // Sync mode buttons & count labels
   const btnAntidote = document.getElementById('silver-mode-antidote');
   const btnGrid = document.getElementById('silver-mode-grid');
   const gridCountLabel = document.getElementById('silver-grid-count-label');
-  const mobBtnAntidote = document.getElementById('silver-mobile-btn-antidote');
-  const mobBtnGrid = document.getElementById('silver-mobile-btn-grid');
-  const mobGridCount = document.getElementById('silver-mobile-grid-count');
 
   if (btnAntidote) btnAntidote.classList.toggle('active', activeMode === 'antidote');
   if (btnGrid) btnGrid.classList.toggle('active', activeMode === 'grid');
   if (gridCountLabel) gridCountLabel.innerText = `All Good News (${feedItems.length})`;
-  if (mobBtnAntidote) mobBtnAntidote.classList.toggle('active', activeMode === 'antidote');
-  if (mobBtnGrid) mobBtnGrid.classList.toggle('active', activeMode === 'grid');
-  if (mobGridCount) mobGridCount.innerText = `All Good News (${feedItems.length})`;
 
   // 4. Update Summary Stats Pills
   const topScore = uniqueArticles.length > 0 ? uniqueArticles[0].sentiment : 0;
@@ -2631,7 +2639,6 @@ function renderSilverEdition() {
       <div class="silver-story-card antidote-deck-card antidote-completion-card is-hidden" data-deck-idx="${antidoteItems.length}">
         <div class="antidote-completion-header">
           <div class="antidote-sun-orb">☀️</div>
-          <span class="antidote-complete-pill">DAILY ANTIDOTE COMPLETE • CHECK BACK IN ${hoursText.toUpperCase()}</span>
           <h2 class="antidote-complete-title">You're Caught Up on Human Progress.</h2>
           <p class="antidote-complete-desc">
             You've read today's <strong>${antidoteItems.length} highest-impact breakthroughs</strong>. Check back in <strong>${hoursText}</strong> for a fresh set of good news — or explore <a href="javascript:void(0)" onclick="setSilverViewMode('grid')" style="color:#b45309;font-weight:700;text-decoration:underline;text-underline-offset:3px;">All Good News (${feedItems.length})</a> right now.
