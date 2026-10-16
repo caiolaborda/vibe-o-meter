@@ -6591,6 +6591,10 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 }
 
 /* 4. Daily Briefing Hero Card: Full Editorial Summary Always Visible & Un-Cramped */
+.pulse-hero-section {
+  margin-bottom: 0.25rem;
+}
+
 .hero-editorial-lead-wrap {
   padding: 0.35rem 0 0.1rem 0 !important;
 }
@@ -6599,6 +6603,54 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   display: block !important;
   -webkit-line-clamp: unset !important;
   overflow: visible !important;
+}
+
+.pulse-mobile-share-row {
+  display: none;
+}
+
+/* 5. Streamlined Top Stories Controls Bar (Title on Left, Filters on Right) */
+.clusters-controls-bar.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.clusters-bar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.clusters-bar-title i,
+.clusters-bar-title svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-color);
+  flex-shrink: 0;
+}
+
+.clusters-bar-title h2 {
+  margin: 0;
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+}
+
+.clusters-controls-bar .clusters-filter-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  flex: 0 1 auto;
+  margin-left: auto;
 }
 
 @media (max-width: 768px) {
@@ -6640,130 +6692,222 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 
   /* Un-Cramped No Good News Spacing & Navigation on Mobile */
   body[data-edition="doom"] .app-container {
-    gap: 0.85rem !important;
+    gap: 0.75rem !important;
     padding-bottom: 1.5rem !important;
   }
 
-  .quick-nav-bar {
-    padding: 0.5rem 0.55rem !important;
-    gap: 0.42rem !important;
-  }
-
-  .quick-nav-links {
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 0.28rem !important;
-    width: 100% !important;
-  }
-
-  /* Hide decorative nav icons on narrow mobile so the 4 tab titles have room to breathe */
-  .quick-nav-links .nav-pill-btn i,
-  .quick-nav-links .nav-pill-btn svg {
-    display: none !important;
-  }
-
-  .quick-nav-links .nav-pill-btn {
-    padding: 0.44rem 0.25rem !important;
-    font-size: 0.74rem !important;
-    justify-content: center !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  /* Breatheable Hero Verdict Card on Mobile (Score + Full Editorial Summary) */
+  /* Breatheable Hero Verdict Card on Mobile (Above Menu Bar, Share at Bottom) */
   .pulse-hero-card {
-    padding: 1.15rem 1.1rem !important;
+    padding: 1.1rem 1.05rem 0.95rem !important;
     border-radius: 18px !important;
   }
 
   .pulse-top-bar {
-    gap: 0.5rem !important;
-    padding: 0 0 0.65rem 0 !important;
+    gap: 0.35rem !important;
+    padding: 0 0 0.55rem 0 !important;
+  }
+
+  .desktop-only-share {
+    display: none !important;
+  }
+
+  .pulse-mobile-share-row {
+    display: flex !important;
+    justify-content: flex-end;
+    margin-top: 0.65rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    width: 100%;
+  }
+
+  .pulse-mobile-share-row .mobile-only-share {
+    width: 100%;
+    justify-content: center;
+    padding: 0.48rem 0.9rem;
+    font-size: 0.78rem;
+    border-radius: 12px;
   }
 
   .hero-editorial-lead {
-    font-size: 1.03rem !important;
-    line-height: 1.56 !important;
+    font-size: 1.02rem !important;
+    line-height: 1.55 !important;
   }
 
-  /* Clean 2-Column Topic Vibes Grid on Newsrooms Mobile (No cut-off horizontal scroll!) */
+  /* Floating No Good News Menu Bar on Mobile — Adapted from All Good News Floating Bar */
+  .quick-nav-bar {
+    padding: 0.48rem !important;
+    gap: 0.42rem !important;
+    border-radius: 16px !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .quick-nav-links {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 4px !important;
+    padding: 4px !important;
+    border-radius: 999px !important;
+    background: rgba(15, 23, 42, 0.58) !important;
+    border: 1px solid rgba(148, 163, 184, 0.16) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .quick-nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .quick-nav-links .nav-pill-btn {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.32rem !important;
+    padding: 0.44rem 0.78rem !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .quick-nav-links .nav-pill-btn i,
+  .quick-nav-links .nav-pill-btn svg {
+    display: inline-block !important;
+    width: 13px !important;
+    height: 13px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .quick-nav-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 0.4rem !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+  }
+
+  #quick-source-indicator,
+  #quick-category-indicator {
+    grid-column: 1 / -1 !important;
+    justify-content: space-between;
+  }
+
+  .quick-nav-actions .quick-timeframe-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    padding: 0.34rem 0.55rem !important;
+    justify-content: flex-start !important;
+  }
+
+  .quick-nav-actions .quick-time-select {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 0.76rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Uniform 2-Line Topic Vibe Boxes on Mobile (Full Category Names Visible, No Odd Stretched Row) */
   .newsrooms-topics-bar {
     margin: 0 0 1rem 0 !important;
     padding: 0 0 0.95rem 0 !important;
   }
 
   .pulse-topic-chips {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
     gap: 0.42rem !important;
     overflow: visible !important;
     padding-bottom: 0 !important;
   }
 
   .beat-chip {
-    flex: unset !important;
-    width: 100% !important;
-    padding: 0.45rem 0.6rem !important;
+    flex: 1 1 calc(33.333% - 0.42rem) !important;
+    min-width: 102px !important;
+    max-width: calc(50% - 0.21rem) !important;
+    width: auto !important;
+    padding: 0.48rem 0.55rem !important;
     display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
     justify-content: space-between !important;
-    gap: 0.35rem !important;
+    gap: 0.3rem !important;
     box-sizing: border-box !important;
   }
 
-  /* Span the 7th topic chip across both columns on mobile so the grid is symmetrical */
   .beat-chip:last-child:nth-child(odd) {
-    grid-column: 1 / -1 !important;
+    grid-column: unset !important;
   }
 
   .beat-chip-top {
+    width: 100% !important;
     margin-bottom: 0 !important;
-    gap: 0.3rem !important;
+    gap: 0.28rem !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
   .beat-chip-name {
-    font-size: 0.76rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
   }
 
   .beat-chip-bottom {
+    width: 100% !important;
     display: flex !important;
     align-items: center !important;
-    gap: 0.3rem !important;
+    justify-content: space-between !important;
+    gap: 0.25rem !important;
   }
 
   .beat-chip-val {
-    font-size: 0.76rem !important;
-    padding: 0.1rem 0.35rem !important;
+    font-size: 0.72rem !important;
+    padding: 0.08rem 0.32rem !important;
   }
 
   .beat-chip-delta {
-    font-size: 0.64rem !important;
+    font-size: 0.62rem !important;
   }
 
   .beat-chip-delta .delta-sub {
     display: none !important;
   }
 
-  /* Compact Story Clusters Controls Bar on Mobile */
+  /* Compact Top Stories Controls Bar on Mobile */
   .clusters-controls-bar.card {
     padding: 0.75rem 0.85rem !important;
     margin-bottom: 0.85rem !important;
     gap: 0.55rem !important;
   }
 
-  .clusters-filter-group {
+  .clusters-bar-title {
+    width: 100%;
+  }
+
+  .clusters-bar-title h2 {
+    font-size: 1.08rem;
+  }
+
+  .clusters-controls-bar .clusters-filter-group {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 0.45rem !important;
     width: 100% !important;
-  }
-
-  .clusters-search-box {
-    grid-column: 1 / -1 !important;
-    width: 100% !important;
+    margin-left: 0 !important;
   }
 
   .clusters-topic-filter,
@@ -6787,18 +6931,12 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
     padding: 0.38rem 0.5rem !important;
   }
 
-  .clusters-stats-pill {
-    width: 100%;
-    text-align: center;
-    font-size: 0.72rem !important;
-    padding: 0.25rem 0.6rem !important;
-  }
-
   /* Newsrooms Spectrum Card on Mobile */
   .newsrooms-spectrum-card {
     padding: 0.95rem 0.85rem !important;
   }
 }
+
 
 
 

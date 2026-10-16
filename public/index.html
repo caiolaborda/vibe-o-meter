@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=5.1">
+  <link rel="stylesheet" href="style.css?v=5.2">
 </head>
 <body data-edition="silver" data-silver-mode="antidote">
 
@@ -115,9 +115,48 @@
       </div>
     </section>
 
-    <!-- STICKY DASHBOARD TABS & QUICK CONTROLS (Positioned at top of all tabs) -->
+    <!-- HERO: GLOBAL NEWS VIBE LANDING (First thing below masthead break line) -->
+    <section class="pulse-hero-section hidden" id="pulse-section">
+      <div class="pulse-hero-card card">
+        
+        <!-- Big Clean Hero Banner with Integrated Meta -->
+        <div class="pulse-top-bar">
+          <div class="pulse-main-banner">
+            <h1 class="pulse-banner-title">
+              <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
+              <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
+            </h1>
+          </div>
+          <div class="pulse-meta-info">
+            <span id="pulse-article-count" class="pulse-count-text">197 Headlines Analyzed</span>
+            <button type="button" class="share-vibe-btn desktop-only-share" onclick="toggleSharePopover(event)" title="Share today's audit or download a Daily Vibe Card">
+              <i data-lucide="share-2"></i>
+              <span>Share Audit</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Daily Editorial Briefing (Full Editorial Serif Narrative Lead) -->
+        <div class="hero-editorial-lead-wrap" id="hero-editorial-lead-wrap">
+          <p id="daily-editorial-summary" class="hero-editorial-lead">
+            Loading today's briefing...
+          </p>
+        </div>
+
+        <!-- Mobile Bottom Share Audit Row -->
+        <div class="pulse-mobile-share-row">
+          <button type="button" class="share-vibe-btn mobile-only-share" onclick="toggleSharePopover(event)" title="Share today's audit or download a Daily Vibe Card">
+            <i data-lucide="share-2"></i>
+            <span>Share Audit</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- STICKY DASHBOARD TABS & QUICK CONTROLS (Directly below Hero Vibe Card) -->
     <nav class="quick-nav-bar hidden" id="quick-nav-bar">
-      <div class="quick-nav-links">
+      <div class="quick-nav-links" role="tablist" aria-label="No Good News Navigation">
         <button class="nav-pill-btn active" data-tab="pulse" id="tab-btn-pulse">
           <i data-lucide="sparkles"></i><span>Daily Briefing</span>
         </button>
@@ -146,6 +185,20 @@
           <strong id="quick-category-name">World</strong>
           <button id="quick-category-clear-btn" class="quick-clear-btn" aria-label="Clear topic filter">&times;</button>
         </div>
+        <!-- Topic Filter Selector (Matches Some Good News floating menu bar) -->
+        <div class="quick-timeframe-wrap quick-topic-wrap" title="Filter dashboard data by topic">
+          <i data-lucide="filter" class="quick-time-icon"></i>
+          <select id="quick-topic-select" class="quick-time-select" aria-label="Select topic">
+            <option value="all" selected>All Topics</option>
+            <option value="world">🌍 World Affairs</option>
+            <option value="politics">🗳️ Politics</option>
+            <option value="business">📈 Business &amp; Markets</option>
+            <option value="technology">⚡ Technology</option>
+            <option value="science">🚀 Science &amp; Space</option>
+            <option value="climate">🌱 Nature &amp; Climate</option>
+            <option value="health">🏥 Health &amp; Medicine</option>
+          </select>
+        </div>
         <!-- Timeframe Selector -->
         <div class="quick-timeframe-wrap" title="Filter dashboard data by timeframe">
           <i data-lucide="clock" class="quick-time-icon"></i>
@@ -162,61 +215,20 @@
       </div>
     </nav>
 
-    <!-- HERO: GLOBAL NEWS VIBE LANDING (Focal point on Daily Briefing) -->
-    <section class="pulse-hero-section hidden" id="pulse-section">
-      <div class="pulse-hero-card card">
-        
-        <!-- Big Clean Hero Banner with Integrated Meta -->
-        <div class="pulse-top-bar">
-          <div class="pulse-main-banner">
-            <h1 class="pulse-banner-title">
-              <span id="pulse-timeframe-heading">Today's Global News Vibe:</span>
-              <span id="global-mood-score" class="pulse-hero-score neg">-0.21</span>
-            </h1>
-          </div>
-          <div class="pulse-meta-info">
-            <span id="pulse-article-count" class="pulse-count-text">197 Headlines Analyzed</span>
-            <button type="button" class="share-vibe-btn" onclick="toggleSharePopover(event)" title="Share today's audit or download a Daily Vibe Card">
-              <i data-lucide="share-2"></i>
-              <span>Share Audit</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 2. Daily Editorial Briefing (Full Editorial Serif Narrative Lead) -->
-        <div class="hero-editorial-lead-wrap" id="hero-editorial-lead-wrap">
-          <p id="daily-editorial-summary" class="hero-editorial-lead">
-            Loading today's briefing...
-          </p>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- TAB 1: DAILY BRIEFING (Developing Story Clusters & Progressive Bridge) -->
+    <!-- TAB 1: DAILY BRIEFING (Top Story Clusters & Progressive Bridge) -->
     <main id="tab-panel-pulse" class="tab-panel hidden">
-      <!-- DEVELOPING STORY CLUSTERS (Unified full-featured experience right below the Hero Summary) -->
+      <!-- TOP STORY CLUSTERS (Unified full-featured experience right below the Menu Bar) -->
       <section class="clusters-section" id="clusters-section">
-        <div class="section-header-row">
-          <div>
-            <h2 class="section-title flex-center">
-              <i data-lucide="layers"></i>
-              Developing Story Clusters
-            </h2>
-            <p class="section-desc">The major events dominating global headlines right now. Compare how different newsrooms frame the exact same story—or tap any card to inspect every outlet's headline.</p>
-          </div>
-        </div>
-
         <div class="collapsible-content" id="clusters-wrapper">
-          <!-- Clusters Controls Bar -->
+          <!-- Top Stories Header & Controls Bar -->
           <div class="clusters-controls-bar card">
+            <div class="clusters-bar-title">
+              <i data-lucide="layers"></i>
+              <h2>Top Stories</h2>
+            </div>
             <div class="clusters-filter-group">
-              <div class="clusters-search-box">
-                <i data-lucide="search"></i>
-                <input type="text" id="clusters-search-input" placeholder="Search developing stories or outlets..." aria-label="Search clusters" />
-              </div>
               <div class="clusters-topic-filter">
-                <label for="clusters-topic-select"><i data-lucide="layers"></i> Topic:</label>
+                <label for="clusters-topic-select"><i data-lucide="filter"></i> Topic:</label>
                 <select id="clusters-topic-select" class="select-input">
                   <option value="all" selected>All Topics</option>
                   <option value="world">World Affairs</option>
@@ -237,9 +249,6 @@
                   <option value="optimistic">Most Constructive Tone</option>
                 </select>
               </div>
-            </div>
-            <div class="clusters-stats-pill">
-              <span id="clusters-count-badge">0 Clusters Identified</span>
             </div>
           </div>
 
@@ -984,6 +993,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=5.1"></script>
+  <script src="app.js?v=5.2"></script>
 </body>
 </html>

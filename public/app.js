@@ -984,6 +984,7 @@ const elements = {
   clearFilterBtn: document.getElementById('clear-filter-btn'),
   
   // Quick Nav Sticky Controls
+  quickTopicSelect: document.getElementById('quick-topic-select'),
   quickTimeframeSelect: document.getElementById('quick-timeframe-select'),
   quickSourceIndicator: document.getElementById('quick-source-indicator'),
   quickSourceName: document.getElementById('quick-source-name'),
@@ -1217,6 +1218,22 @@ function setupEventListeners() {
       runWithViewLoader(val === 'all' ? 'Loading All-Time Archive...' : 'Updating Timeframe...', () => {
         updateAppUI();
       });
+    });
+  }
+
+  if (elements.quickTopicSelect) {
+    elements.quickTopicSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      state.filters.category = val;
+      state.clusterTopic = val;
+      state.clustersLimit = 8;
+      state.headlinesLimit = 20;
+      if (elements.filterCategory) elements.filterCategory.value = val;
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = val;
+      if (elements.clustersTopicSelect) elements.clustersTopicSelect.value = val;
+      updateTopicPillsActive(val);
+      updateFilterIndicator();
+      updateAppUI();
     });
   }
 
@@ -1831,10 +1848,10 @@ function switchTab(tabId) {
     }
   });
 
-  // Toggle hero landing section visibility (only displayed on Daily Briefing, hidden on other tabs)
+  // Keep hero landing section ("Today's Global News Vibe" + Summary) visible above the menu bar in No Good News
   const heroSection = document.getElementById('pulse-section');
   if (heroSection) {
-    if (tabId === 'pulse') {
+    if (state.edition === 'doom') {
       heroSection.classList.remove('hidden');
       heroSection.style.display = '';
     } else {
@@ -1849,17 +1866,16 @@ function switchTab(tabId) {
   }
 
   // Trigger specialized view renders if needed
+  renderDailyPulse();
   if (tabId === 'trends') {
     renderSentimentTimeline();
     renderHeatmapMatrix();
   } else if (tabId === 'deepdives') {
-    renderDailyPulse();
     renderSpectrum();
     renderComparisonMatrix();
     renderHeadToHead();
     renderHeadlines();
   } else if (tabId === 'pulse') {
-    renderDailyPulse();
     renderStoryClusters();
   }
 
@@ -2205,15 +2221,14 @@ function updateAppUI() {
   // Setup selectors
   populateFilterOptions();
   
-  // Render views for currently active tab only to eliminate latency
+  // Render top Hero Vibe + Summary and active tab views
+  renderDailyPulse();
   if (state.activeTab === 'pulse') {
-    renderDailyPulse();
     renderStoryClusters();
   } else if (state.activeTab === 'trends') {
     renderSentimentTimeline();
     renderHeatmapMatrix();
   } else if (state.activeTab === 'deepdives') {
-    renderDailyPulse();
     renderSpectrum();
     renderComparisonMatrix();
     renderHeadToHead();
@@ -6358,6 +6373,13 @@ function updateTopicPillsActive(topic) {
     const chipCat = chip.getAttribute('data-cat');
     chip.classList.toggle('active', chipCat === topic);
   });
+
+  if (elements.quickTopicSelect && elements.quickTopicSelect.value !== topic) {
+    elements.quickTopicSelect.value = topic || 'all';
+  }
+  if (elements.clustersTopicSelect && elements.clustersTopicSelect.value !== topic) {
+    elements.clustersTopicSelect.value = topic || 'all';
+  }
 }
 
 // --- URL STATE SYNC (DEEP LINKING) ---
