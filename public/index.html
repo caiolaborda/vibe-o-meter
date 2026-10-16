@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=4.9">
+  <link rel="stylesheet" href="style.css?v=5.0">
 </head>
 <body data-edition="silver" data-silver-mode="antidote">
 
@@ -119,16 +119,13 @@
     <nav class="quick-nav-bar hidden" id="quick-nav-bar">
       <div class="quick-nav-links">
         <button class="nav-pill-btn active" data-tab="pulse" id="tab-btn-pulse">
-          <i data-lucide="sparkles"></i><span>Daily Pulse</span>
+          <i data-lucide="sparkles"></i><span>Daily Briefing</span>
+        </button>
+        <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
+          <i data-lucide="compass"></i><span>Newsrooms</span>
         </button>
         <button class="nav-pill-btn" data-tab="trends" id="tab-btn-trends">
           <i data-lucide="line-chart"></i><span>Macro Trends</span>
-        </button>
-        <button class="nav-pill-btn" data-tab="compare" id="tab-btn-compare">
-          <i data-lucide="layers"></i><span>Top Stories</span>
-        </button>
-        <button class="nav-pill-btn" data-tab="deepdives" id="tab-btn-deepdives">
-          <i data-lucide="compass"></i><span>Outlet Deep Dives</span>
         </button>
         <button class="nav-pill-btn" data-tab="methodology" id="tab-btn-methodology">
           <i data-lucide="help-circle"></i><span>Methodology</span>
@@ -165,7 +162,7 @@
       </div>
     </nav>
 
-    <!-- HERO: GLOBAL NEWS VIBE LANDING (Prominent landing feature on Daily Pulse) -->
+    <!-- HERO: GLOBAL NEWS VIBE LANDING (Focal point on Daily Briefing) -->
     <section class="pulse-hero-section hidden" id="pulse-section">
       <div class="pulse-hero-card card">
         
@@ -186,478 +183,477 @@
           </div>
         </div>
 
-        <!-- 2. Daily Editorial Briefing (Editorial Serif Narrative Lead) -->
-        <div class="hero-editorial-lead-wrap">
+        <!-- 2. Daily Editorial Briefing (Editorial Serif Narrative Lead with Mobile Progressive Disclosure) -->
+        <div class="hero-editorial-lead-wrap" id="hero-editorial-lead-wrap">
           <p id="daily-editorial-summary" class="hero-editorial-lead">
             Loading today's briefing...
           </p>
+          <button type="button" id="editorial-expand-btn" class="editorial-expand-btn" onclick="toggleEditorialBriefing()" aria-expanded="false">
+            <span id="editorial-expand-text">Read full briefing</span>
+            <i data-lucide="chevron-down" id="editorial-expand-icon" style="width:14px;height:14px;"></i>
+          </button>
         </div>
 
         <!-- Horizontal Spacer / Divider -->
         <div class="pulse-hero-divider"></div>
 
-        <!-- 3. Topic Vibes Bar (Interactive Global Topic Filter - Clean Centered Row) -->
+        <!-- 3. Topic Vibes Bar (Interactive Global Topic Filter - Filters Hero Score & Story Clusters below) -->
         <div class="pulse-topics-bar">
           <div class="pulse-topic-chips" id="pulse-category-chips">
             <!-- Dynamically populated chips in app.js -->
           </div>
         </div>
 
-        <!-- 4. The 3 Key Signals Horizontal Strip -->
-        <div class="pulse-signals-strip">
-          <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
-            <div class="signal-header">
-              <span class="signal-label neg">
-                <i data-lucide="arrow-down-right"></i>
-                <span>Most Alarmist Outlet</span>
-              </span>
-              <span id="pulse-alarmist-score" class="signal-score badge neg">-0.47</span>
-            </div>
-            <div class="signal-body">
-              <strong id="pulse-alarmist-name" class="signal-name">Sky News</strong>
-              <span id="pulse-alarmist-sub" class="signal-sub">Most pessimistic tone today</span>
-            </div>
-          </div>
-
-          <div class="pulse-signal-card" id="signal-uplifting-card" title="Click to filter headlines by most uplifting outlet">
-            <div class="signal-header">
-              <span class="signal-label pos">
-                <i data-lucide="arrow-up-right"></i>
-                <span>Most Uplifting Outlet</span>
-              </span>
-              <span id="pulse-uplifting-score" class="signal-score badge pos">-0.07</span>
-            </div>
-            <div class="signal-body">
-              <strong id="pulse-uplifting-name" class="signal-name">CNBC News</strong>
-              <span id="pulse-uplifting-sub" class="signal-sub">Holding relative composure</span>
-            </div>
-          </div>
-
-          <div class="pulse-signal-card" id="signal-polarization-card" title="Two outlets with the largest divergence on the same topic — click to compare head-to-head">
-            <div class="signal-header">
-              <span class="signal-label warn">
-                <i data-lucide="split"></i>
-                <span>Biggest Outlet Clash</span>
-              </span>
-              <span id="pulse-polarization-score" class="signal-score badge warn">1.08 Spread</span>
-            </div>
-            <div class="signal-body">
-              <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
-              <span id="pulse-polarization-sub" class="signal-sub">Topic: Business</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 5. Sentiment Spectrum (Integrated directly inside Hero Pulse container) -->
-        <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper">
-          <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.2rem; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.75rem;">
-            <!-- Scale Labels -->
-            <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
-              <span class="label-neg"><i data-lucide="frown"></i> Alarmist (-1.0)</span>
-              <span class="label-neu">Neutral (0.0)</span>
-              <span class="label-pos">Optimistic (+1.0) <i data-lucide="smile"></i></span>
-            </div>
-
-            <!-- View Toggle Switcher -->
-            <div class="spectrum-view-toggle toggle-container" style="display: flex; background: var(--bg-secondary); padding: 2px; border-radius: 8px; border: 1px solid var(--border-color);">
-              <button id="view-toggle-averages" class="btn btn-sm toggle-tab active" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: var(--accent-color); color: #fff; box-shadow: 0 2px 6px rgba(99,102,241,0.25);">
-                <i data-lucide="line-chart" style="width:12px;height:12px;"></i> Averages Track
-              </button>
-              <button id="view-toggle-distribution" class="btn btn-sm toggle-tab" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: transparent; color: var(--text-secondary);">
-                <i data-lucide="layout-grid" style="width:12px;height:12px;"></i> Article Lanes (Beeswarm)
-              </button>
-            </div>
-          </div>
-          
-          <!-- View A: Old Averages View Container (Single Track) -->
-          <div id="averages-view-container" class="spectrum-track-container">
-            <div class="spectrum-track"></div>
-            <div class="spectrum-ticks">
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-            <!-- Outlet Markers will be injected here dynamically -->
-            <div id="spectrum-markers-container" class="markers-container"></div>
-          </div>
-
-          <!-- View B: New Distribution View Container (Lanes) -->
-          <div id="distribution-view-container" style="display: none; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
-            <div id="spectrum-lanes-container" style="display: flex; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
-              <!-- Injected dynamically in JS -->
-            </div>
-          </div>
-
-          <!-- Shared Tooltip for lanes -->
-          <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
-          
-          <div class="spectrum-legend">
-            <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to inspect its coverage spotlight.</p>
-          </div>
-        </div>
-
-        <!-- Conditional Outlet Spotlight (Opens beneath the sentiment spectrum on Pulse when an outlet is selected) -->
-        <div id="pulse-spotlight-banner" class="spotlight-banner-unified" style="display: none; margin-top: 1.25rem;">
-          <!-- Content will be injected dynamically -->
-        </div>
-
       </div>
     </section>
 
-    <!-- TAB 1: DAILY PULSE (Headline Stream) -->
+    <!-- TAB 1: DAILY BRIEFING (Developing Story Clusters & Progressive Bridge) -->
     <main id="tab-panel-pulse" class="tab-panel hidden">
-      <!-- HEADLINES EXPLORER (MERGED INTO A SINGLE UNIFIED BOX) -->
-    <!-- TOP DEVELOPING STORIES (LAST 24 HOURS) -->
-    <section class="top-stories-section" id="top-stories-section">
-      <div class="top-stories-box card">
-        <!-- Header Row inside the box -->
-        <div class="top-stories-header">
-          <div class="top-stories-title-wrap">
-            <div class="flex-center" style="gap: 0.6rem; flex-wrap: wrap;">
-              <i data-lucide="layers" style="color: var(--accent-color); width: 22px; height: 22px;"></i>
-              <h2 class="section-title" style="margin: 0; font-size: 1.35rem;">Top Developing Stories</h2>
+      <!-- DEVELOPING STORY CLUSTERS (Unified full-featured experience right below the Hero Summary) -->
+      <section class="clusters-section" id="clusters-section">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title flex-center">
+              <i data-lucide="layers"></i>
+              Developing Story Clusters
+            </h2>
+            <p class="section-desc">The major events dominating global headlines right now. Compare how different newsrooms frame the exact same story—or tap any card to inspect every outlet's headline.</p>
+          </div>
+        </div>
+
+        <div class="collapsible-content" id="clusters-wrapper">
+          <!-- Clusters Controls Bar -->
+          <div class="clusters-controls-bar card">
+            <div class="clusters-filter-group">
+              <div class="clusters-search-box">
+                <i data-lucide="search"></i>
+                <input type="text" id="clusters-search-input" placeholder="Search developing stories or outlets..." aria-label="Search clusters" />
+              </div>
+              <div class="clusters-topic-filter">
+                <label for="clusters-topic-select"><i data-lucide="layers"></i> Topic:</label>
+                <select id="clusters-topic-select" class="select-input">
+                  <option value="all" selected>All Topics</option>
+                  <option value="world">World Affairs</option>
+                  <option value="politics">Politics</option>
+                  <option value="business">Business &amp; Markets</option>
+                  <option value="technology">Technology</option>
+                  <option value="science">Science &amp; Space</option>
+                  <option value="health">Health &amp; Medicine</option>
+                  <option value="climate">Nature &amp; Climate</option>
+                </select>
+              </div>
+              <div class="clusters-sort-filter">
+                <label for="clusters-sort-select"><i data-lucide="arrow-up-down"></i> Sort By:</label>
+                <select id="clusters-sort-select" class="select-input">
+                  <option value="outlets" selected>Most Outlets Covering</option>
+                  <option value="spread">Highest Sentiment Spread</option>
+                  <option value="pessimistic">Most Negative Tone</option>
+                  <option value="optimistic">Most Constructive Tone</option>
+                </select>
+              </div>
             </div>
-            <p class="section-desc" style="margin: 0.35rem 0 0 0;">
-              The defining news events dominating international headlines right now. Compare how different newsrooms report the exact same story.
+            <div class="clusters-stats-pill">
+              <span id="clusters-count-badge">0 Clusters Identified</span>
+            </div>
+          </div>
+
+          <!-- Active Topic Filter Indicator for Story Clusters -->
+          <div id="pulse-cluster-topic-indicator" class="filter-indicator" style="display: none; margin: 0 0 1rem 0;">
+            Showing developing stories in: <strong id="pulse-cluster-topic-name">World</strong>
+            <button class="clear-btn" onclick="clearPulseClusterTopic()">&times; Show All Topics</button>
+          </div>
+
+          <!-- Clusters Dynamic Container -->
+          <div id="clusters-container" class="clusters-container">
+            <!-- Populated dynamically in app.js -->
+          </div>
+
+          <!-- Progressive Pagination for Developing Story Clusters -->
+          <div id="clusters-pagination-wrap" class="headlines-pagination-wrap" style="display: none; padding: 1.25rem 0 0.25rem 0; text-align: center;">
+            <button type="button" id="clusters-show-more-btn" class="btn btn-secondary" onclick="showMoreStoryClusters()" style="font-weight: 700; padding: 0.65rem 1.5rem; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.45rem;">
+              <span id="clusters-show-more-text">Show More Developing Stories</span>
+              <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+            </button>
+          </div>
+
+          <!-- Progressive Discovery Bridge to Newsrooms & Raw Headline Wire -->
+          <div class="top-stories-footer-banner card" style="margin-top: 1.5rem; border-radius: 14px;">
+            <div class="footer-banner-text">
+              <div class="footer-banner-title">
+                <i data-lucide="compass" style="width: 18px; height: 18px; color: var(--accent-color);"></i>
+                <strong>Want to audit individual newsrooms or browse the live chronological wire?</strong>
+              </div>
+              <p class="footer-banner-sub">
+                Explore how all 17 international outlets rank on the sentiment spectrum, compare two desks head-to-head, or search 900+ raw headlines.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm flex-center" onclick="switchTab('deepdives')" style="gap: 0.45rem; white-space: nowrap; padding: 0.6rem 1.15rem; font-weight: 700;">
+                <i data-lucide="compass" style="width: 15px; height: 15px;"></i>
+                <span>Audit 17 Newsrooms</span>
+              </button>
+              <button class="btn btn-primary btn-sm flex-center" onclick="goToDeepDiveFeed()" style="gap: 0.45rem; white-space: nowrap; padding: 0.6rem 1.15rem; font-weight: 700;">
+                <span>Browse Raw Headlines Wire</span>
+                <i data-lucide="arrow-right" style="width: 15px; height: 15px;"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 2: MACRO TRENDS (Timeline first, Heatmap second) -->
+    <main id="tab-panel-trends" class="tab-panel hidden">
+      <!-- 1. GLOBAL NEWS VIBE TIMELINE & TOPIC DYNAMICS -->
+      <section class="timeline-section" id="timeline-section">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title flex-center">
+              <i data-lucide="trending-up"></i>
+              Global Sentiment Timeline
+            </h2>
+            <p class="section-desc">Historical trajectory of media optimism vs. pessimism over time, synthesized across all outlets.</p>
+          </div>
+          <div class="timeline-legend" id="timeline-legend">
+            <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:3.5px; border-radius:2px; background:var(--accent-color);"></span> Global Average</span>
+            <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:2px; border-radius:2px; background:#ec4899;"></span> All Outlets</span>
+            <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:1.5px; border-top:1.5px dashed var(--accent-color);"></span> vs Historical Baseline</span>
+          </div>
+        </div>
+
+        <div class="timeline-card card">
+          <div class="timeline-header-row">
+            <!-- Clear Active Filters Indicator Bar for Timeline (Outlet, Timeframe, Topic) -->
+            <div class="timeline-active-filters-wrap" id="timeline-active-filters-wrap">
+              <!-- Dynamically populated in app.js -->
+            </div>
+          </div>
+
+          <!-- SVG Timeline Chart Container -->
+          <div class="timeline-chart-wrap" id="timeline-chart-wrap">
+            <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 1060 360">
+              <!-- Dynamically rendered in app.js -->
+            </svg>
+            <div id="timeline-tooltip-box" class="timeline-tooltip-box"></div>
+          </div>
+
+          <!-- Topic Dynamics Breakdown -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+            <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.4rem;">
+              <i data-lucide="layers" style="width:15px;height:15px;color:var(--accent-color);"></i>
+              Topic Sentiment Dynamics in Current Window
+            </h4>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">
+              Relative sentiment score across key news topics. Click any topic to focus the timeline trajectory above.
             </p>
+            <div class="topic-trajectories-grid" id="topic-trajectories-grid">
+              <!-- Dynamically rendered in app.js -->
+            </div>
           </div>
-          <div class="top-stories-actions">
-            <button class="btn btn-outline btn-sm" onclick="switchTab('compare')" style="gap: 0.45rem; display: inline-flex; align-items: center; white-space: nowrap;">
-              <span>View All Story Clusters</span>
-              <i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i>
+        </div>
+      </section>
+
+      <!-- 2. INTERACTIVE TOPIC SENTIMENT HEATMAP -->
+      <section class="heatmap-section" id="heatmap-section" style="margin-top: 2rem;">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title flex-center">
+              <i data-lucide="layout-grid"></i>
+              Topic × Outlet Sentiment Heatmap
+            </h2>
+            <p class="section-desc">Average sentiment across every topic and newsroom. Click any cell to jump directly into filtered headlines.</p>
+          </div>
+          <div class="section-header-actions flex-center">
+            <div class="heatmap-legend-strip flex-center" style="gap: 0.75rem; font-size: 0.75rem; font-weight: 600;">
+              <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#ef4444;"></span> Negative (&lt; -0.15)</span>
+              <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#94a3b8;"></span> Neutral</span>
+              <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#22c55e;"></span> Positive (&gt; +0.15)</span>
+            </div>
+          </div>
+        </div>
+        <div class="collapsible-content" id="heatmap-wrapper">
+          <div class="card heatmap-container">
+            <div id="heatmap-grid" class="heatmap-table">
+              <!-- Dynamically populated in app.js -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- TAB 3: NEWSROOMS (Unified Outlet Spectrum, 17-Outlet Leaderboard, Head-to-Head Arena & Headline Wire) -->
+    <main id="tab-panel-deepdives" class="tab-panel hidden">
+      <!-- 1. MEDIA SENTIMENT SPECTRUM & KEY OUTLET SIGNALS -->
+      <section class="newsrooms-spectrum-section" id="newsrooms-spectrum-section" style="margin-bottom: 2rem;">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title flex-center">
+              <i data-lucide="compass"></i>
+              Media Sentiment Spectrum &amp; Key Signals
+            </h2>
+            <p class="section-desc">Where all 17 international newsrooms sit on the Alarmist (-1.0) to Constructive (+1.0) spectrum right now. Click any outlet marker or signal card to inspect its coverage.</p>
+          </div>
+        </div>
+
+        <div class="card newsrooms-spectrum-card" style="padding: 1.35rem 1.5rem;">
+          <!-- The 3 Key Signals Horizontal Strip -->
+          <div class="pulse-signals-strip" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 1.25rem;">
+            <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
+              <div class="signal-header">
+                <span class="signal-label neg">
+                  <i data-lucide="arrow-down-right"></i>
+                  <span>Most Alarmist Outlet</span>
+                </span>
+                <span id="pulse-alarmist-score" class="signal-score badge neg">-0.47</span>
+              </div>
+              <div class="signal-body">
+                <strong id="pulse-alarmist-name" class="signal-name">Sky News</strong>
+                <span id="pulse-alarmist-sub" class="signal-sub">Most pessimistic tone today</span>
+              </div>
+            </div>
+
+            <div class="pulse-signal-card" id="signal-uplifting-card" title="Click to filter headlines by most uplifting outlet">
+              <div class="signal-header">
+                <span class="signal-label pos">
+                  <i data-lucide="arrow-up-right"></i>
+                  <span>Most Uplifting Outlet</span>
+                </span>
+                <span id="pulse-uplifting-score" class="signal-score badge pos">-0.07</span>
+              </div>
+              <div class="signal-body">
+                <strong id="pulse-uplifting-name" class="signal-name">CNBC News</strong>
+                <span id="pulse-uplifting-sub" class="signal-sub">Holding relative composure</span>
+              </div>
+            </div>
+
+            <div class="pulse-signal-card" id="signal-polarization-card" title="Two outlets with the largest divergence on the same topic — click to compare head-to-head below">
+              <div class="signal-header">
+                <span class="signal-label warn">
+                  <i data-lucide="split"></i>
+                  <span>Biggest Outlet Clash</span>
+                </span>
+                <span id="pulse-polarization-score" class="signal-score badge warn">1.08 Spread</span>
+              </div>
+              <div class="signal-body">
+                <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
+                <span id="pulse-polarization-sub" class="signal-sub">Topic: Business</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sentiment Spectrum Track & Beeswarm Distribution Lanes -->
+          <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.2rem; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.75rem;">
+              <!-- Scale Labels -->
+              <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
+                <span class="label-neg"><i data-lucide="frown"></i> Alarmist (-1.0)</span>
+                <span class="label-neu">Neutral (0.0)</span>
+                <span class="label-pos">Optimistic (+1.0) <i data-lucide="smile"></i></span>
+              </div>
+
+              <!-- View Toggle Switcher -->
+              <div class="spectrum-view-toggle toggle-container" style="display: flex; background: var(--bg-secondary); padding: 2px; border-radius: 8px; border: 1px solid var(--border-color);">
+                <button id="view-toggle-averages" class="btn btn-sm toggle-tab active" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: var(--accent-color); color: #fff; box-shadow: 0 2px 6px rgba(99,102,241,0.25);">
+                  <i data-lucide="line-chart" style="width:12px;height:12px;"></i> Averages Track
+                </button>
+                <button id="view-toggle-distribution" class="btn btn-sm toggle-tab" style="padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; background: transparent; color: var(--text-secondary);">
+                  <i data-lucide="layout-grid" style="width:12px;height:12px;"></i> Article Lanes (Beeswarm)
+                </button>
+              </div>
+            </div>
+            
+            <!-- View A: Averages View Container (Single Track) -->
+            <div id="averages-view-container" class="spectrum-track-container">
+              <div class="spectrum-track"></div>
+              <div class="spectrum-ticks">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <!-- Outlet Markers will be injected here dynamically -->
+              <div id="spectrum-markers-container" class="markers-container"></div>
+            </div>
+
+            <!-- View B: Distribution View Container (Lanes) -->
+            <div id="distribution-view-container" style="display: none; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
+              <div id="spectrum-lanes-container" style="display: flex; flex-direction: column; gap: 1.25rem; width: 100%; overflow: visible; position: relative;">
+                <!-- Injected dynamically in JS -->
+              </div>
+            </div>
+
+            <!-- Shared Tooltip for lanes -->
+            <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
+            
+            <div class="spectrum-legend">
+              <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to inspect its coverage spotlight and filter headlines below.</p>
+            </div>
+          </div>
+
+          <!-- Conditional Outlet Spotlight (Opens beneath the sentiment spectrum when an outlet is selected) -->
+          <div id="pulse-spotlight-banner" class="spotlight-banner-unified" style="display: none; margin-top: 1.25rem;">
+            <!-- Content will be injected dynamically -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. NEWS SOURCES COMPARISON CARDS -->
+      <section class="comparison-section" id="comparison-section">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title flex-center">
+              <i data-lucide="columns-3"></i>
+              17-Outlet Leaderboard Matrix
+            </h2>
+            <p class="section-desc">At-a-glance editorial tone, article distribution, and trend sparklines across all audited newsrooms.</p>
+          </div>
+        </div>
+        <div class="collapsible-content" id="sources-wrapper">
+          <!-- Region Filter Pills & Carousel Controls -->
+          <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.35rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
+            <button class="region-pill active" data-region="all">All Outlets (17)</button>
+            <button class="region-pill" data-region="US"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="US"> United States (8)</button>
+            <button class="region-pill" data-region="UK"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (3)</button>
+            <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/de.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (3)</button>
+            <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (1)</button>
+            <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.25rem;">🌐</span> Global Agencies (2)</button>
+            
+            <div class="sources-carousel-controls" style="margin-left: auto; display: flex; gap: 0.4rem; align-items: center;">
+              <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
+                <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
+              </button>
+              <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
+                <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="sources-grid" class="sources-grid sources-sidescroll">
+            <!-- News source cards will be injected here dynamically -->
+            <div class="loading-state">
+              <i data-lucide="loader-2" class="spin"></i>
+              <span>Loading comparison data...</span>
+            </div>
+          </div>
+          <div class="sources-show-more-row" id="sources-show-more-row" style="display: none; text-align: center; margin-top: 1.25rem;">
+            <button id="toggle-all-outlets-btn" class="btn btn-secondary flex-center" style="margin: 0 auto; gap: 0.4rem; padding: 0.5rem 1.2rem; font-weight: 600;">
+              <i data-lucide="chevrons-down" id="toggle-outlets-icon"></i>
+              <span id="toggle-outlets-text">Show All 17 Outlets</span>
             </button>
           </div>
         </div>
+      </section>
 
-        <!-- Active Topic Filter Indicator for Pulse Top Stories -->
-        <div id="pulse-cluster-topic-indicator" class="filter-indicator" style="display: none; margin: 1rem 1.5rem 0 1.5rem;">
-          Showing stories filtered by topic: <strong id="pulse-cluster-topic-name">World</strong>
-          <button class="clear-btn" onclick="clearPulseClusterTopic()">&times; Show All Topics</button>
-        </div>
-
-        <!-- Top 6 Stories Grid Container -->
-        <div id="pulse-top-stories-container" class="pulse-top-stories-grid">
-          <!-- Populated dynamically in app.js with top 6 story clusters -->
-        </div>
-
-        <!-- Footer Jump Banner to Deep Dive Feed -->
-        <div class="top-stories-footer-banner">
-          <div class="footer-banner-text">
-            <div class="footer-banner-title">
-              <i data-lucide="newspaper" style="width: 18px; height: 18px; color: var(--accent-color);"></i>
-              <strong>Looking for the full chronological news feed?</strong>
-            </div>
-            <p class="footer-banner-sub">
-              Browse, search, and filter all 900+ raw headlines across all 17 global outlets in Outlets Deep Dive.
-            </p>
-          </div>
-          <button class="btn btn-primary btn-sm flex-center" onclick="goToDeepDiveFeed()" style="gap: 0.5rem; white-space: nowrap; padding: 0.6rem 1.25rem; font-weight: 700;">
-            <span>Browse Full Headlines Feed</span>
-            <i data-lucide="arrow-down-right" style="width: 15px; height: 15px;"></i>
-          </button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- TAB 2: TRENDS & DEEP DIVE -->
-  <main id="tab-panel-trends" class="tab-panel hidden">
-    
-    <!-- 1. INTERACTIVE TOPIC SENTIMENT HEATMAP -->
-    <section class="heatmap-section" id="heatmap-section">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-title flex-center">
-            <i data-lucide="layout-grid"></i>
-            Topic Sentiment Heatmap
-          </h2>
-          <p class="section-desc">Average sentiment by news topic. Click any cell to jump directly into filtered headlines.</p>
-        </div>
-        <div class="section-header-actions flex-center">
-          <div class="heatmap-legend-strip flex-center" style="gap: 0.75rem; font-size: 0.75rem; font-weight: 600;">
-            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#ef4444;"></span> Negative (&lt; -0.15)</span>
-            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#94a3b8;"></span> Neutral</span>
-            <span class="flex-center" style="gap: 0.3rem;"><span class="legend-color-box" style="background:#22c55e;"></span> Positive (&gt; +0.15)</span>
+      <!-- 3. HEAD-TO-HEAD OUTLET COMPARE -->
+      <section class="head-to-head-section" id="h2h-section" style="margin-top: 2rem;">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-title flex-center">
+              <i data-lucide="swords"></i>
+              Head-to-Head Outlet Arena
+            </h2>
+            <p class="section-desc">Select any two newsrooms to compare how they frame stories side-by-side, filtered by topic and timeframe.</p>
           </div>
         </div>
-      </div>
-      <div class="collapsible-content" id="heatmap-wrapper">
-        <div class="card heatmap-container">
-          <div id="heatmap-grid" class="heatmap-table">
-            <!-- Dynamically populated in app.js -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. GLOBAL NEWS VIBE TIMELINE & TOPIC DYNAMICS -->
-    <section class="timeline-section" id="timeline-section">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-title flex-center">
-            <i data-lucide="trending-up"></i>
-            Global Sentiment Timeline
-          </h2>
-          <p class="section-desc">Historical trajectory of media optimism vs. pessimism over time, synthesized across all outlets.</p>
-        </div>
-        <div class="timeline-legend" id="timeline-legend">
-          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:3.5px; border-radius:2px; background:var(--accent-color);"></span> Global Average</span>
-          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:2px; border-radius:2px; background:#ec4899;"></span> All Outlets</span>
-          <span class="flex-center" style="gap:0.35rem;"><span style="width:14px; height:1.5px; border-top:1.5px dashed var(--accent-color);"></span> vs Historical Baseline</span>
-        </div>
-      </div>
-
-      <div class="timeline-card card">
-        <div class="timeline-header-row">
-          <!-- Clear Active Filters Indicator Bar for Timeline (Outlet, Timeframe, Topic) -->
-          <div class="timeline-active-filters-wrap" id="timeline-active-filters-wrap">
-            <!-- Dynamically populated in app.js -->
-          </div>
-        </div>
-
-        <!-- SVG Timeline Chart Container -->
-        <div class="timeline-chart-wrap" id="timeline-chart-wrap">
-          <svg class="timeline-chart-svg" id="timeline-chart-svg" viewBox="0 0 1060 360">
-            <!-- Dynamically rendered in app.js -->
-          </svg>
-          <div id="timeline-tooltip-box" class="timeline-tooltip-box"></div>
-        </div>
-
-        <!-- Topic Dynamics Breakdown -->
-        <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
-          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; display:flex; align-items:center; gap:0.4rem;">
-            <i data-lucide="layers" style="width:15px;height:15px;color:var(--accent-color);"></i>
-            Topic Sentiment Dynamics in Current Window
-          </h4>
-          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.75rem;">
-            Relative sentiment score across key news topics. Click any topic to focus the timeline trajectory above.
-          </p>
-          <div class="topic-trajectories-grid" id="topic-trajectories-grid">
-            <!-- Dynamically rendered in app.js -->
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- TAB 3: TOP STORIES (STORY CLUSTERS & HEAD-TO-HEAD) -->
-  <main id="tab-panel-compare" class="tab-panel hidden">
-    <!-- 1. CROSS-OUTLET STORY CLUSTERS -->
-    <section class="clusters-section" id="clusters-section">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-title flex-center">
-            <i data-lucide="layers"></i>
-            Top Stories: Cross-Outlet Perspectives
-          </h2>
-          <p class="section-desc">Comparing how different newsrooms report the exact same news events in real time. Observe diverging sentiment, editorial angle, and headline framing.</p>
-        </div>
-      </div>
-
-      <div class="collapsible-content" id="clusters-wrapper">
-        <!-- Clusters Controls Bar -->
-        <div class="clusters-controls-bar card">
-          <div class="clusters-filter-group">
-            <div class="clusters-search-box">
-              <i data-lucide="search"></i>
-              <input type="text" id="clusters-search-input" placeholder="Search clusters by keyword or event..." aria-label="Search clusters" />
-            </div>
-            <div class="clusters-topic-filter">
-              <label for="clusters-topic-select"><i data-lucide="layers"></i> Topic:</label>
-              <select id="clusters-topic-select" class="select-input">
-                <option value="all" selected>All Topics</option>
-                <option value="world">World Affairs</option>
-                <option value="politics">Politics</option>
-                <option value="business">Business & Markets</option>
-                <option value="technology">Technology</option>
-                <option value="science">Science & Space</option>
-                <option value="health">Health & Medicine</option>
-                <option value="climate">Nature & Climate</option>
-              </select>
-            </div>
-            <div class="clusters-sort-filter">
-              <label for="clusters-sort-select"><i data-lucide="arrow-up-down"></i> Sort By:</label>
-              <select id="clusters-sort-select" class="select-input">
-                <option value="spread" selected>Highest Sentiment Spread</option>
-                <option value="outlets">Most Outlets Covering</option>
-                <option value="pessimistic">Most Negative Tone</option>
-                <option value="optimistic">Most Constructive Tone</option>
-              </select>
-            </div>
-          </div>
-          <div class="clusters-stats-pill">
-            <span id="clusters-count-badge">0 Clusters Identified</span>
-          </div>
-        </div>
-
-        <!-- Clusters Dynamic Container -->
-        <div id="clusters-container" class="clusters-container">
-          <!-- Populated dynamically in app.js -->
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. HEAD-TO-HEAD OUTLET COMPARE -->
-    <section class="head-to-head-section" id="h2h-section" style="margin-top: 2rem;">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-title flex-center">
-            <i data-lucide="swords"></i>
-            Head-to-Head Compare
-          </h2>
-          <p class="section-desc">Select two outlets to compare how they cover stories side-by-side, filtered by topic and date range.</p>
-        </div>
-      </div>
-      
-      <div class="collapsible-content" id="h2h-content-wrapper">
-        <div class="h2h-container card">
-          <!-- H2H Filter Controls Bar: Topic & Timeframe -->
-          <div class="h2h-controls-bar">
-            <div class="h2h-control-item">
-              <label for="h2h-topic-select"><i data-lucide="layers"></i> Compare by Topic:</label>
-              <select id="h2h-topic-select" class="select-input">
-                <option value="all" selected>All Topics (Overall)</option>
-                <option value="world">World Affairs</option>
-                <option value="politics">Politics</option>
-                <option value="business">Business & Markets</option>
-                <option value="technology">Technology</option>
-                <option value="science">Science & Space</option>
-                <option value="health">Health & Medicine</option>
-                <option value="climate">Nature & Climate</option>
-              </select>
-            </div>
-
-            <div class="h2h-control-item">
-              <label for="h2h-timeframe-select"><i data-lucide="clock"></i> Timeframe:</label>
-              <select id="h2h-timeframe-select" class="select-input">
-                <option value="6h">Past 6 Hours</option>
-                <option value="12h">Past 12 Hours</option>
-                <option value="24h" selected>Past 24 Hours</option>
-                <option value="3d">Past 3 Days</option>
-                <option value="7d">Past 7 Days</option>
-                <option value="30d">Past 30 Days</option>
-                <option value="all">All Time</option>
-              </select>
-            </div>
-
-            <div class="h2h-spread-pill" id="h2h-spread-pill">
-              <span>Tone Divergence:</span>
-              <strong id="h2h-spread-value">0.00 Spread</strong>
-            </div>
-          </div>
-
-          <div class="h2h-selectors">
-            <div class="selector-group">
-              <label for="h2h-source-a">Source A</label>
-              <select id="h2h-source-a" class="select-input"></select>
-            </div>
-            <div class="h2h-vs-badge">VS</div>
-            <div class="selector-group">
-              <label for="h2h-source-b">Source B</label>
-              <select id="h2h-source-b" class="select-input"></select>
-            </div>
-          </div>
-
-          <div class="h2h-comparison-grid">
-            <!-- Source A column -->
-            <div class="h2h-column" id="h2h-col-a">
-              <div class="h2h-header-summary">
-                <h3 class="source-title-a">-</h3>
-                <div class="h2h-score-badge score-a">-</div>
+        
+        <div class="collapsible-content" id="h2h-content-wrapper">
+          <div class="h2h-container card">
+            <!-- H2H Filter Controls Bar: Topic & Timeframe -->
+            <div class="h2h-controls-bar">
+              <div class="h2h-control-item">
+                <label for="h2h-topic-select"><i data-lucide="layers"></i> Compare by Topic:</label>
+                <select id="h2h-topic-select" class="select-input">
+                  <option value="all" selected>All Topics (Overall)</option>
+                  <option value="world">World Affairs</option>
+                  <option value="politics">Politics</option>
+                  <option value="business">Business &amp; Markets</option>
+                  <option value="technology">Technology</option>
+                  <option value="science">Science &amp; Space</option>
+                  <option value="health">Health &amp; Medicine</option>
+                  <option value="climate">Nature &amp; Climate</option>
+                </select>
               </div>
-              
-              <div class="h2h-extreme-card extreme-neg">
-                <div class="extreme-label"><i data-lucide="trending-down"></i> Most Negative Headline</div>
-                <p class="extreme-headline" id="h2h-neg-a">No articles found</p>
-                <div class="extreme-meta" id="h2h-neg-meta-a">-</div>
+
+              <div class="h2h-control-item">
+                <label for="h2h-timeframe-select"><i data-lucide="clock"></i> Timeframe:</label>
+                <select id="h2h-timeframe-select" class="select-input">
+                  <option value="6h">Past 6 Hours</option>
+                  <option value="12h">Past 12 Hours</option>
+                  <option value="24h" selected>Past 24 Hours</option>
+                  <option value="3d">Past 3 Days</option>
+                  <option value="7d">Past 7 Days</option>
+                  <option value="30d">Past 30 Days</option>
+                  <option value="all">All Time</option>
+                </select>
               </div>
-              
-              <div class="h2h-extreme-card extreme-pos">
-                <div class="extreme-label"><i data-lucide="trending-up"></i> Most Positive Headline</div>
-                <p class="extreme-headline" id="h2h-pos-a">No articles found</p>
-                <div class="extreme-meta" id="h2h-pos-meta-a">-</div>
+
+              <div class="h2h-spread-pill" id="h2h-spread-pill">
+                <span>Tone Divergence:</span>
+                <strong id="h2h-spread-value">0.00 Spread</strong>
               </div>
             </div>
 
-            <!-- Source B column -->
-            <div class="h2h-column" id="h2h-col-b">
-              <div class="h2h-header-summary">
-                <h3 class="source-title-b">-</h3>
-                <div class="h2h-score-badge score-b">-</div>
+            <div class="h2h-selectors">
+              <div class="selector-group">
+                <label for="h2h-source-a">Source A</label>
+                <select id="h2h-source-a" class="select-input"></select>
               </div>
-              
-              <div class="h2h-extreme-card extreme-neg">
-                <div class="extreme-label"><i data-lucide="trending-down"></i> Most Negative Headline</div>
-                <p class="extreme-headline" id="h2h-neg-b">No articles found</p>
-                <div class="extreme-meta" id="h2h-neg-meta-b">-</div>
+              <div class="h2h-vs-badge">VS</div>
+              <div class="selector-group">
+                <label for="h2h-source-b">Source B</label>
+                <select id="h2h-source-b" class="select-input"></select>
               </div>
-              
-              <div class="h2h-extreme-card extreme-pos">
-                <div class="extreme-label"><i data-lucide="trending-up"></i> Most Positive Headline</div>
-                <p class="extreme-headline" id="h2h-pos-b">No articles found</p>
-                <div class="extreme-meta" id="h2h-pos-meta-b">-</div>
+            </div>
+
+            <div class="h2h-comparison-grid">
+              <!-- Source A column -->
+              <div class="h2h-column" id="h2h-col-a">
+                <div class="h2h-header-summary">
+                  <h3 class="source-title-a">-</h3>
+                  <div class="h2h-score-badge score-a">-</div>
+                </div>
+                
+                <div class="h2h-extreme-card extreme-neg">
+                  <div class="extreme-label"><i data-lucide="trending-down"></i> Most Negative Headline</div>
+                  <p class="extreme-headline" id="h2h-neg-a">No articles found</p>
+                  <div class="extreme-meta" id="h2h-neg-meta-a">-</div>
+                </div>
+                
+                <div class="h2h-extreme-card extreme-pos">
+                  <div class="extreme-label"><i data-lucide="trending-up"></i> Most Positive Headline</div>
+                  <p class="extreme-headline" id="h2h-pos-a">No articles found</p>
+                  <div class="extreme-meta" id="h2h-pos-meta-a">-</div>
+                </div>
+              </div>
+
+              <!-- Source B column -->
+              <div class="h2h-column" id="h2h-col-b">
+                <div class="h2h-header-summary">
+                  <h3 class="source-title-b">-</h3>
+                  <div class="h2h-score-badge score-b">-</div>
+                </div>
+                
+                <div class="h2h-extreme-card extreme-neg">
+                  <div class="extreme-label"><i data-lucide="trending-down"></i> Most Negative Headline</div>
+                  <p class="extreme-headline" id="h2h-neg-b">No articles found</p>
+                  <div class="extreme-meta" id="h2h-neg-meta-b">-</div>
+                </div>
+                
+                <div class="h2h-extreme-card extreme-pos">
+                  <div class="extreme-label"><i data-lucide="trending-up"></i> Most Positive Headline</div>
+                  <p class="extreme-headline" id="h2h-pos-b">No articles found</p>
+                  <div class="extreme-meta" id="h2h-pos-meta-b">-</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
 
-  <!-- TAB 4: OUTLET DEEP DIVES -->
-  <main id="tab-panel-deepdives" class="tab-panel hidden">
-    <!-- NEWS SOURCES COMPARISON CARDS -->
-    <section class="comparison-section" id="comparison-section">
-      <div class="section-header-row">
-        <div>
-          <h2 class="section-title flex-center">
-            <i data-lucide="columns-3"></i>
-            Outlet Comparison Cards
-          </h2>
-          <p class="section-desc">At-a-glance editorial tone, article distribution, and trend sparklines across outlets.</p>
-        </div>
-      </div>
-      <div class="collapsible-content" id="sources-wrapper">
-        <!-- Region Filter Pills & Carousel Controls -->
-        <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center;">
-          <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.35rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
-          <button class="region-pill active" data-region="all">All Outlets (13)</button>
-          <button class="region-pill" data-region="US"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="US"> United States (7)</button>
-          <button class="region-pill" data-region="UK"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (3)</button>
-          <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/de.png" class="flag-icon-img" width="16" height="12" alt="DE"> Europe (1)</button>
-          <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (1)</button>
-          <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.25rem;">🌐</span> Global Agencies (2)</button>
-          
-          <div class="sources-carousel-controls" style="margin-left: auto; display: flex; gap: 0.4rem; align-items: center;">
-            <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
-              <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
-            </button>
-            <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
-              <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
-            </button>
-          </div>
-        </div>
-
-        <div id="sources-grid" class="sources-grid sources-sidescroll">
-          <!-- News source cards will be injected here dynamically -->
-          <div class="loading-state">
-            <i data-lucide="loader-2" class="spin"></i>
-            <span>Loading comparison data...</span>
-          </div>
-        </div>
-        <div class="sources-show-more-row" id="sources-show-more-row" style="display: none; text-align: center; margin-top: 1.25rem;">
-          <button id="toggle-all-outlets-btn" class="btn btn-secondary flex-center" style="margin: 0 auto; gap: 0.4rem; padding: 0.5rem 1.2rem; font-weight: 600;">
-            <i data-lucide="chevrons-down" id="toggle-outlets-icon"></i>
-            <span id="toggle-outlets-text">Show All 13 Outlets</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- OUTLET DEEP DIVE HEADLINE FEED WITH CONTROLS -->
-    <section class="headlines-section" id="deepdive-feed-section" style="margin-top: 1.5rem;">
+      <!-- 4. OUTLET DEEP DIVE HEADLINE FEED WITH CONTROLS -->
+      <section class="headlines-section" id="deepdive-feed-section" style="margin-top: 2rem;">
       <div class="headlines-unified-box card" id="deepdive-headlines-box">
         <!-- Header Row inside the box -->
         <div class="headlines-box-header">
@@ -995,6 +991,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=4.9"></script>
+  <script src="app.js?v=5.0"></script>
 </body>
 </html>

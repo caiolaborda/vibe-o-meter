@@ -34,7 +34,8 @@ let state = {
   sharedStoryClusters: [],
   clusterSearch: '',
   clusterTopic: 'all',
-  clusterSort: 'spread',
+  clusterSort: 'outlets',
+  clustersLimit: 8,
   h2hTopic: 'all'
 };
 
@@ -1236,9 +1237,12 @@ function setupEventListeners() {
   if (elements.quickCategoryClearBtn) {
     elements.quickCategoryClearBtn.addEventListener('click', () => {
       state.filters.category = 'all';
+      state.clusterTopic = 'all';
+      state.clustersLimit = 8;
       state.headlinesLimit = 20;
       if (elements.filterCategory) elements.filterCategory.value = 'all';
       if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
+      if (elements.clustersTopicSelect) elements.clustersTopicSelect.value = 'all';
       updateTopicPillsActive('all');
       updateFilterIndicator();
       updateAppUI();
@@ -1480,13 +1484,14 @@ function setupEventListeners() {
     });
   }
 
-  // Story Compare tab: Story Clusters Search, Filter & Sort
+  // Story Clusters Search, Filter & Sort (on Daily Briefing)
   if (elements.clustersSearchInput) {
     let clusterSearchTimer = null;
     elements.clustersSearchInput.addEventListener('input', (e) => {
       clearTimeout(clusterSearchTimer);
       clusterSearchTimer = setTimeout(() => {
         state.clusterSearch = e.target.value.toLowerCase().trim();
+        state.clustersLimit = 8;
         renderStoryClusters();
       }, 150);
     });
@@ -1494,7 +1499,15 @@ function setupEventListeners() {
 
   if (elements.clustersTopicSelect) {
     elements.clustersTopicSelect.addEventListener('change', (e) => {
-      state.clusterTopic = e.target.value;
+      const val = e.target.value;
+      state.clusterTopic = val;
+      state.filters.category = val;
+      state.clustersLimit = 8;
+      if (elements.filterCategory) elements.filterCategory.value = val;
+      if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = val;
+      updateTopicPillsActive(val);
+      updateFilterIndicator();
+      renderDailyPulse();
       renderStoryClusters();
     });
   }
@@ -1528,7 +1541,7 @@ function setupEventListeners() {
     });
   });
 
-  // Toggle all 13 outlets button
+  // Toggle all 17 outlets button
   const toggleOutletsBtn = document.getElementById('toggle-all-outlets-btn');
   if (toggleOutletsBtn) {
     toggleOutletsBtn.addEventListener('click', () => {
@@ -1536,7 +1549,7 @@ function setupEventListeners() {
       renderComparisonMatrix();
       const textSpan = document.getElementById('toggle-outlets-text');
       const icon = document.getElementById('toggle-outlets-icon');
-      if (textSpan) textSpan.textContent = state.showAllOutlets ? 'Show Top 6 Outlets' : 'Show All 13 Outlets';
+      if (textSpan) textSpan.textContent = state.showAllOutlets ? 'Show Top 6 Outlets' : 'Show All 17 Outlets';
       if (icon) icon.setAttribute('data-lucide', state.showAllOutlets ? 'chevrons-up' : 'chevrons-down');
       lucide.createIcons();
     });
@@ -1759,11 +1772,11 @@ function switchSentimentMode(mode) {
   }
 }
 
-// Switch Dashboard Tab (Pulse, Trends, Deep Dives, Methodology)
+// Switch Dashboard Tab (Daily Briefing, Newsrooms, Macro Trends, Methodology)
 function switchTab(tabId) {
-  if (tabId === 'feed') tabId = 'pulse';
-  if (tabId === 'sources') tabId = 'deepdives';
-  if (!['pulse', 'trends', 'compare', 'deepdives', 'methodology'].includes(tabId)) {
+  if (tabId === 'feed' || tabId === 'compare') tabId = 'pulse';
+  if (tabId === 'sources' || tabId === 'newsrooms') tabId = 'deepdives';
+  if (!['pulse', 'trends', 'deepdives', 'methodology'].includes(tabId)) {
     tabId = 'pulse';
   }
   state.activeTab = tabId;
@@ -1802,7 +1815,6 @@ function switchTab(tabId) {
   const panels = {
     pulse: document.getElementById('tab-panel-pulse'),
     trends: document.getElementById('tab-panel-trends'),
-    compare: document.getElementById('tab-panel-compare'),
     deepdives: document.getElementById('tab-panel-deepdives'),
     methodology: document.getElementById('tab-panel-methodology')
   };
@@ -1819,7 +1831,7 @@ function switchTab(tabId) {
     }
   });
 
-  // Toggle hero landing section visibility (only displayed on Daily Pulse, hidden on other tabs)
+  // Toggle hero landing section visibility (only displayed on Daily Briefing, hidden on other tabs)
   const heroSection = document.getElementById('pulse-section');
   if (heroSection) {
     if (tabId === 'pulse') {
@@ -1838,17 +1850,17 @@ function switchTab(tabId) {
 
   // Trigger specialized view renders if needed
   if (tabId === 'trends') {
-    renderHeatmapMatrix();
     renderSentimentTimeline();
-  } else if (tabId === 'compare') {
-    renderComparePage();
+    renderHeatmapMatrix();
   } else if (tabId === 'deepdives') {
+    renderDailyPulse();
+    renderSpectrum();
     renderComparisonMatrix();
+    renderHeadToHead();
     renderHeadlines();
   } else if (tabId === 'pulse') {
     renderDailyPulse();
-    renderSpectrum();
-    renderPulseTopStories();
+    renderStoryClusters();
   }
 
   // Sync URL state without jumping page scroll
@@ -1856,7 +1868,7 @@ function switchTab(tabId) {
 }
 window.switchTab = switchTab;
 
-// Smooth jump from Pulse to Outlets Deep Dive Feed
+// Smooth jump from Daily Briefing to Newsrooms Raw Headline Wire
 window.goToDeepDiveFeed = function(topic) {
   switchTab('deepdives');
   if (topic && topic !== 'all') {
@@ -1873,12 +1885,39 @@ window.goToDeepDiveFeed = function(topic) {
   }, 100);
 };
 
-// Reset Pulse Top Stories topic filter
+// Reset Story Clusters topic filter on Daily Briefing
 window.clearPulseClusterTopic = function() {
   state.filters.category = 'all';
+  state.clusterTopic = 'all';
+  state.clustersLimit = 8;
+  if (elements.clustersTopicSelect) elements.clustersTopicSelect.value = 'all';
+  if (elements.filterCategory) elements.filterCategory.value = 'all';
+  if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
   updateTopicPillsActive('all');
   updateFilterIndicator();
   updateAppUI();
+};
+
+// Progressive Pagination for Story Clusters on Daily Briefing
+window.showMoreStoryClusters = function() {
+  state.clustersLimit = (state.clustersLimit || 8) + 10;
+  renderStoryClusters();
+};
+
+// Mobile Progressive Disclosure Toggle for Daily Editorial Briefing
+window.toggleEditorialBriefing = function() {
+  const wrap = document.getElementById('hero-editorial-lead-wrap');
+  const btn = document.getElementById('editorial-expand-btn');
+  const textSpan = document.getElementById('editorial-expand-text');
+  const icon = document.getElementById('editorial-expand-icon');
+  if (!wrap) return;
+  const isExpanded = wrap.classList.toggle('is-expanded');
+  if (btn) btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+  if (textSpan) textSpan.textContent = isExpanded ? 'Show less' : 'Read full briefing';
+  if (icon) {
+    icon.setAttribute('data-lucide', isExpanded ? 'chevron-up' : 'chevron-down');
+    if (window.lucide && lucide.createIcons) lucide.createIcons({ root: btn });
+  }
 };
 
 // Switch active spectrum view mode (Averages vs Beeswarm Lanes)
@@ -2169,16 +2208,15 @@ function updateAppUI() {
   // Render views for currently active tab only to eliminate latency
   if (state.activeTab === 'pulse') {
     renderDailyPulse();
-    renderSpectrum();
-    renderPulseTopStories();
-    renderHeadlines();
+    renderStoryClusters();
   } else if (state.activeTab === 'trends') {
-    renderHeatmapMatrix();
     renderSentimentTimeline();
-  } else if (state.activeTab === 'compare') {
-    renderComparePage();
+    renderHeatmapMatrix();
   } else if (state.activeTab === 'deepdives') {
+    renderDailyPulse();
+    renderSpectrum();
     renderComparisonMatrix();
+    renderHeadToHead();
     renderHeadlines();
   }
 }
@@ -3723,6 +3761,9 @@ function renderStoryClusters() {
   const container = elements.clustersContainer || document.getElementById('clusters-container');
   if (!container) return;
 
+  const paginationWrap = document.getElementById('clusters-pagination-wrap');
+  const showMoreText = document.getElementById('clusters-show-more-text');
+
   const rawClusters = state.sharedStoryClusters || [];
   if (!rawClusters || rawClusters.length === 0) {
     container.innerHTML = `
@@ -3738,21 +3779,36 @@ function renderStoryClusters() {
       </div>
     `;
     if (elements.clustersCountBadge) elements.clustersCountBadge.innerText = '0 Clusters Identified';
+    if (paginationWrap) paginationWrap.style.display = 'none';
     if (window.lucide) lucide.createIcons();
     return;
   }
 
-  // Topic filter & Search filter
-  const activeTopic = state.clusterTopic || 'all';
+  // Topic filter & Search filter (synced with Hero Topic Tiles)
+  const activeTopic = (state.filters.category && state.filters.category !== 'all')
+    ? state.filters.category
+    : (state.clusterTopic || 'all');
+  if (elements.clustersTopicSelect && elements.clustersTopicSelect.value !== activeTopic) {
+    elements.clustersTopicSelect.value = activeTopic;
+  }
   const searchTerm = (state.clusterSearch || '').toLowerCase().trim();
+
+  // Update Topic Indicator Banner
+  if (elements.pulseClusterTopicIndicator && elements.pulseClusterTopicName) {
+    if (activeTopic !== 'all') {
+      const topicCap = activeTopic.charAt(0).toUpperCase() + activeTopic.slice(1);
+      elements.pulseClusterTopicName.innerText = topicCap;
+      elements.pulseClusterTopicIndicator.style.display = 'flex';
+    } else {
+      elements.pulseClusterTopicIndicator.style.display = 'none';
+    }
+  }
 
   // Annotate and filter clusters
   const processed = rawClusters.map(annotateStoryCluster).filter(c => {
-    // Topic filter
     if (activeTopic !== 'all' && c.topic !== activeTopic) {
       return false;
     }
-    // Search filter
     if (searchTerm) {
       const matchTitle = (c.story || '').toLowerCase().includes(searchTerm);
       const matchCoverage = c.coverage.some(cov => 
@@ -3764,11 +3820,14 @@ function renderStoryClusters() {
     return true;
   });
 
-  // Sort clusters
-  const sortMode = state.clusterSort || 'spread';
+  // Sort clusters (default to 'outlets' — Most Outlets Covering, then spread)
+  const sortMode = state.clusterSort || 'outlets';
   processed.sort((a, b) => {
+    if (sortMode === 'outlets') {
+      const covDiff = (b.coverage?.length || 0) - (a.coverage?.length || 0);
+      return covDiff !== 0 ? covDiff : (b.computedSpread - a.computedSpread);
+    }
     if (sortMode === 'spread') return b.computedSpread - a.computedSpread;
-    if (sortMode === 'outlets') return (b.coverage?.length || 0) - (a.coverage?.length || 0);
     if (sortMode === 'pessimistic') return a.averageSentiment - b.averageSentiment;
     if (sortMode === 'optimistic') return b.averageSentiment - a.averageSentiment;
     return 0;
@@ -3785,17 +3844,36 @@ function renderStoryClusters() {
       <div class="card" style="padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; grid-column: 1 / -1;">
         <i data-lucide="search-x" style="width: 36px; height: 36px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
         <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem;">No Matching Story Clusters</h3>
-        <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 440px; margin: 0 auto;">
+        <p style="color: var(--text-secondary); font-size: 0.85rem; max-width: 440px; margin: 0 auto 1rem;">
           No clusters found for topic "${activeTopic}"${searchTerm ? ` matching "${searchTerm}"` : ''}. Try selecting "All Topics" or clearing the search box.
         </p>
+        <button class="btn btn-secondary btn-sm" onclick="clearPulseClusterTopic()" style="margin: 0 auto;">
+          Show All Topics
+        </button>
       </div>
     `;
+    if (paginationWrap) paginationWrap.style.display = 'none';
     if (window.lucide) lucide.createIcons();
     return;
   }
 
+  // Progressive pagination: display up to state.clustersLimit (default 8)
+  const limit = state.clustersLimit || 8;
+  const visibleClusters = processed.slice(0, limit);
+
   // Render cluster cards in grid (collapsed by default, expandable to full width)
-  container.innerHTML = processed.map(cluster => buildClusterCardHTML(cluster, 'compare')).join('');
+  container.innerHTML = visibleClusters.map(cluster => buildClusterCardHTML(cluster, 'compare')).join('');
+
+  if (paginationWrap) {
+    if (processed.length > visibleClusters.length) {
+      paginationWrap.style.display = 'block';
+      if (showMoreText) {
+        showMoreText.innerText = `Show More Developing Stories (${visibleClusters.length} of ${processed.length})`;
+      }
+    } else {
+      paginationWrap.style.display = 'none';
+    }
+  }
 
   if (window.lucide) {
     lucide.createIcons();
@@ -5988,16 +6066,16 @@ function renderDailyPulse() {
       if (maxClash.outletA && maxClash.outletB) {
         if (elements.h2hSourceA) elements.h2hSourceA.value = maxClash.outletA.id;
         if (elements.h2hSourceB) elements.h2hSourceB.value = maxClash.outletB.id;
-        if (maxClash.topic) {
-          state.h2hTopic = maxClash.topic;
-          if (elements.h2hTopicSelect) elements.h2hTopicSelect.value = maxClash.topic;
+        if (maxClash.cat) {
+          state.h2hTopic = maxClash.cat;
+          if (elements.h2hTopicSelect) elements.h2hTopicSelect.value = maxClash.cat;
         }
-        switchTab('compare');
+        switchTab('deepdives');
         renderHeadToHead();
         const h2h = document.getElementById('h2h-section');
         if (h2h) h2h.scrollIntoView({ behavior: 'smooth' });
       } else {
-        switchTab('compare');
+        switchTab('deepdives');
       }
     };
   }
@@ -6069,7 +6147,7 @@ function renderDailyPulse() {
         const chip = document.createElement('button');
         chip.className = `beat-chip ${isActive ? 'active' : ''}`;
         chip.setAttribute('data-cat', cat);
-        chip.setAttribute('title', isActive ? 'Click to clear topic filter' : `Filter entire dashboard to ${cat} news`);
+        chip.setAttribute('title', isActive ? 'Click to clear topic filter' : `Filter Global Vibe & Developing Stories by ${cat}`);
         const labelText = cat === 'climate' ? 'Climate' : (cat.charAt(0).toUpperCase() + cat.slice(1));
         chip.innerHTML = `
           <div class="beat-chip-top">
@@ -6087,7 +6165,11 @@ function renderDailyPulse() {
           } else {
             state.filters.category = cat;
           }
+          state.clusterTopic = state.filters.category;
+          state.clustersLimit = 8;
           if (elements.filterCategory) elements.filterCategory.value = state.filters.category;
+          if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = state.filters.category;
+          if (elements.clustersTopicSelect) elements.clustersTopicSelect.value = state.filters.category;
           updateTopicPillsActive(state.filters.category);
           updateFilterIndicator();
           updateAppUI();

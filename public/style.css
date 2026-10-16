@@ -6533,3 +6533,137 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   }
 }
 
+/* ==========================================================================
+   FIRST-PRINCIPLES 4-PILLAR NO GOOD NEWS ARCHITECTURE & PROGRESSIVE DISCOVERY
+   ========================================================================== */
+
+/* Desktop: Always show full editorial summary, hide mobile expand button */
+.editorial-expand-btn {
+  display: none;
+}
+
+/* Newsrooms Tab: Unified Spectrum + 3 Key Outlet Signals Card */
+.newsrooms-spectrum-card .pulse-signals-strip {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  /* 1. 4-Pillar Navigation Bar: Clean 2x2 or single-scroll row with zero dead space */
+  .quick-nav-links {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.3rem !important;
+    width: 100% !important;
+  }
+
+  .quick-nav-links .nav-pill-btn {
+    padding: 0.42rem 0.35rem !important;
+    font-size: 0.72rem !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .quick-nav-links .nav-pill-btn i,
+  .quick-nav-links .nav-pill-btn svg {
+    width: 13px !important;
+    height: 13px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 2. Progressive Disclosure for Editorial Summary on Mobile */
+  .hero-editorial-lead-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+
+  .hero-editorial-lead-wrap:not(.is-expanded) .hero-editorial-lead {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .editorial-expand-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--accent-color);
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    border-radius: 999px;
+    padding: 0.26rem 0.75rem;
+    font-family: var(--font-sans);
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    align-self: flex-start;
+  }
+
+  .editorial-expand-btn:hover {
+    background: rgba(37, 99, 235, 0.14);
+  }
+
+  /* 3. Compact Story Clusters Controls Bar on Mobile */
+  .clusters-controls-bar.card {
+    padding: 0.75rem 0.85rem !important;
+    margin-bottom: 0.85rem !important;
+    gap: 0.55rem !important;
+  }
+
+  .clusters-filter-group {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.45rem !important;
+    width: 100% !important;
+  }
+
+  .clusters-search-box {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+
+  .clusters-topic-filter,
+  .clusters-sort-filter {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.2rem !important;
+    width: 100% !important;
+  }
+
+  .clusters-topic-filter label,
+  .clusters-sort-filter label {
+    font-size: 0.68rem !important;
+  }
+
+  .clusters-topic-filter .select-input,
+  .clusters-sort-filter .select-input {
+    width: 100% !important;
+    font-size: 0.76rem !important;
+    padding: 0.38rem 0.5rem !important;
+  }
+
+  .clusters-stats-pill {
+    width: 100%;
+    text-align: center;
+    font-size: 0.72rem !important;
+    padding: 0.25rem 0.6rem !important;
+  }
+
+  /* 4. Newsrooms Spectrum Card on Mobile */
+  .newsrooms-spectrum-card {
+    padding: 0.95rem 0.85rem !important;
+  }
+}
+
+
