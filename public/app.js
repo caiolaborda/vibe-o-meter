@@ -3563,25 +3563,29 @@ const CLUSTER_TOPIC_LABELS = {
 // Annotate a raw cluster with calculated metrics, date range, and editorial summaries
 function annotateStoryCluster(c) {
   const topic = getClusterTopic(c);
-  const coverage = c.coverage || [];
+  const validTimestamps = [];
+  const coverage = (c.coverage || []).map(cov => {
+    const src = state.sources && state.sources[cov.sourceId];
+    let liveScore = cov.sentiment;
+    let livePubDate = cov.pubDate;
+    if (src && src.articles) {
+      const match = src.articles.find(a => (a.link && a.link === cov.link) || (a.title && a.title === cov.title));
+      if (match) {
+        if (typeof match.sentiment === 'number') liveScore = match.sentiment;
+        if (match.pubDate) {
+          livePubDate = match.pubDate;
+          const t = new Date(match.pubDate).getTime();
+          if (!isNaN(t)) validTimestamps.push(t);
+        }
+      }
+    }
+    return { ...cov, sentiment: liveScore, pubDate: livePubDate };
+  });
   const sentiments = coverage.map(cov => cov.sentiment).filter(s => typeof s === 'number');
   const maxS = sentiments.length > 0 ? Math.max(...sentiments) : 0;
   const minS = sentiments.length > 0 ? Math.min(...sentiments) : 0;
   const computedSpread = sentiments.length > 1 ? Number((maxS - minS).toFixed(2)) : (c.sentimentSpread || 0);
   const avgSentiment = sentiments.length > 0 ? Number((sentiments.reduce((a, b) => a + b, 0) / sentiments.length).toFixed(2)) : (c.averageSentiment || 0);
-
-  // Compute cluster date range from coverage article pubDates (with news cycle windowing)
-  const validTimestamps = [];
-  coverage.forEach(cov => {
-    const src = state.sources && state.sources[cov.sourceId];
-    if (src && src.articles) {
-      const match = src.articles.find(a => (a.link && a.link === cov.link) || (a.title && a.title === cov.title));
-      if (match && match.pubDate) {
-        const t = new Date(match.pubDate).getTime();
-        if (!isNaN(t)) validTimestamps.push(t);
-      }
-    }
-  });
 
   let dateRangeStr = 'Current News Cycle';
   let minTime = Infinity;
@@ -3638,15 +3642,18 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
   const avgScoreFormatted = `${cluster.averageSentiment > 0 ? '+' : ''}${cluster.averageSentiment.toFixed(2)}`;
   const isHighSpread = cluster.computedSpread >= 0.35;
 
-  // Deduplicate coverage articles (keep freshest per outlet canonical link / clean title)
+  // Deduplicate coverage articles (1 representative dispatch per outlet, keeping freshest revision)
+  const seenCovOutlets = new Set();
   const seenCovUrls = new Set();
   const seenCovTitles = new Set();
   const dedupedCoverage = [];
   const sortedRawCoverage = [...(cluster.coverage || [])].sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
   for (const cov of sortedRawCoverage) {
-    const cUrl = `${cov.sourceId || ''}_${canonicalUrl(cov.link)}`;
-    const cTitle = `${cov.sourceId || ''}_${cleanHeadlineTitle(cov.title)}`;
-    if (seenCovUrls.has(cUrl) || seenCovTitles.has(cTitle)) continue;
+    const sid = cov.sourceId || '';
+    const cUrl = `${sid}_${canonicalUrl(cov.link)}`;
+    const cTitle = `${sid}_${cleanHeadlineTitle(cov.title)}`;
+    if (seenCovOutlets.has(sid) || seenCovUrls.has(cUrl) || seenCovTitles.has(cTitle)) continue;
+    if (sid) seenCovOutlets.add(sid);
     seenCovUrls.add(cUrl);
     seenCovTitles.add(cTitle);
     dedupedCoverage.push(cov);

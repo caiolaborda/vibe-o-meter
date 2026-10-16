@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=5.4">
+  <link rel="stylesheet" href="style.css?v=5.5">
 </head>
 <body data-edition="silver" data-silver-mode="antidote">
 
@@ -708,24 +708,24 @@
             </p>
           </div>
 
-          <!-- 2. THE 2-STEP GEMINI SCORING FORMULA -->
+          <!-- 2. THE 4-FACTOR FIRST-PRINCIPLES EVALUATION FORMULA -->
           <div class="methodology-formula-box">
             <div class="methodology-formula-header">
               <h4 class="methodology-subheading" style="margin: 0;">
-                <i data-lucide="cpu"></i> The 2-Step Gemini Evaluation Formula
+                <i data-lucide="cpu"></i> The 4-Factor First-Principles Formula
               </h4>
-              <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700;">Continuous Scale: -1.00 to +1.00</span>
+              <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700;">De-Quantized Continuum: -1.00 to +1.00</span>
             </div>
             <p class="methodology-lead-text">
-              Simple keyword dictionaries fail at journalism because words like <em>"strike"</em> or <em>"crash"</em> appear in routine reporting. Instead, every headline and lead summary is evaluated by <strong>Gemini 3.8 Flash</strong> by summing two distinct components:
+              Simple keyword dictionaries fail at journalism, and asking an LLM to guess a single rounded sentiment float causes artificial clustering around numbers like <code>-0.75</code> or <code>+0.30</code>. Instead, <strong>Gemini Flash</strong> evaluates every dispatch across <strong>four orthogonal, higher-order dimensions</strong>—with zero artificial topic caps—which are mathematically combined into a continuous score:
             </p>
 
             <div class="formula-equation-pill">
               <span class="eq-part eq-total">Final Score (-1.00 to +1.00)</span>
               <span class="eq-op">=</span>
-              <span class="eq-part eq-base">Event Base (-0.85 to +0.85)</span>
+              <span class="eq-part eq-base">Polarity &times; Impact(Reach, Permanence) [&pm;0.85]</span>
               <span class="eq-op">+</span>
-              <span class="eq-part eq-frame">Editorial Framing (-0.15 to +0.15)</span>
+              <span class="eq-part eq-frame">Editorial Framing [&pm;0.15]</span>
             </div>
 
             <div class="methodology-intro-grid">
@@ -734,12 +734,12 @@
                   <i data-lucide="globe"></i>
                 </div>
                 <div class="intro-content">
-                  <h3>Step 1: Event Base (-0.85 to +0.85)</h3>
-                  <p>Measures the inherent real-world impact of the event strictly by <strong>how many lives it affects and how lasting the consequence is</strong>—never by topic labels:</p>
+                  <h3>1. Real-World Event Base (-0.85 to +0.85)</h3>
+                  <p>Computed continuously from three universal physical properties of the underlying event—never anchored to topic labels or arbitrary ceilings:</p>
                   <ul class="methodology-bullet-list">
-                    <li><strong>Civilizational / Mass-Scale (&pm;0.65 to &pm;0.85):</strong> Active warfare or mass casualties vs. historic peace accords, disease eradication, or foundational scientific breakthroughs.</li>
-                    <li><strong>Societal / Multi-Year (&pm;0.35 to &pm;0.60):</strong> Severe disasters or institutional breakdown vs. national cost-of-living relief, binding treaties, coral/species recovery, or major archaeological discoveries.</li>
-                    <li><strong>Organizational / Transitory (&pm;0.10 to &pm;0.30):</strong> Routine partisan friction or stock dips vs. single-company quarterly revenue beats, IPOs, or sports wins (capped below <code>+0.28</code> so corporate profits never outrank human breakthroughs).</li>
+                    <li><strong>Polarity (-100 to +100):</strong> The inherent direction and counterfactual valence of the situation—from severe harm, conflict, and crisis aftermath (<code>-</code>) through procedural status quo (<code>0</code>) to genuine human flourishing and breakthroughs (<code>+</code>).</li>
+                    <li><strong>Reach (0 to 100):</strong> The breadth of the population, institution, or ecosystem affected—scaling smoothly from an individual or single firm up to national and civilizational scope.</li>
+                    <li><strong>Permanence (0 to 100):</strong> The depth and duration of the real-world consequence—separating ephemeral news-cycle blips or routine quarterly updates from irreversible, life-altering milestones.</li>
                   </ul>
                 </div>
               </div>
@@ -749,12 +749,12 @@
                   <i data-lucide="sliders"></i>
                 </div>
                 <div class="intro-content">
-                  <h3>Step 2: Editorial Framing (-0.15 to +0.15)</h3>
-                  <p>Measures how a specific newsroom chose to phrase the headline compared to a neutral wire-service statement of the same fact:</p>
+                  <h3>2. Editorial Framing (-0.15 to +0.15)</h3>
+                  <p>Rated continuously (<code>-100</code> to <code>+100</code>) by comparing how this specific newsroom packaged the headline against a strictly neutral wire-service statement (<code>0</code>):</p>
                   <ul class="methodology-bullet-list">
-                    <li><strong>Alarmist / Conflict-Amplifying (-0.15 to -0.05):</strong> Loaded conflict verbs (<em>"slams"</em>, <em>"chaos"</em>, <em>"betrayed"</em>, <em>"crisis"</em>) or worst-case speculation.</li>
-                    <li><strong>Matter-of-Fact / Wire Baseline (0.00):</strong> Direct, unembellished reporting of the event.</li>
-                    <li><strong>Constructive / Composed (+0.05 to +0.15):</strong> Highlights verified resilience, cooperation, de-escalation, or solutions.</li>
+                    <li><strong>Sensationalist / Conflict-Amplifying (-0.15 to -0.01):</strong> Uses loaded conflict rhetoric (<em>"raid"</em>, <em>"grim"</em>, <em>"barbaric"</em>, <em>"slams"</em>, <em>"chaos"</em>), amplifies fear or partisan blame, or foregrounds worst-case dread.</li>
+                    <li><strong>Proportional Wire Baseline (0.00):</strong> Direct, matter-of-fact reporting of verified facts without emotional spin.</li>
+                    <li><strong>Constructive / Composed (+0.01 to +0.15):</strong> Foregrounds verified human agency, cooperation, resilience, context, or solutions without sugarcoating facts.</li>
                   </ul>
                 </div>
               </div>
@@ -769,30 +769,30 @@
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
                     <span class="archetype-icon">🔗</span>
-                    <span class="archetype-name">Cross-Outlet Batch Parity</span>
+                    <span class="archetype-name">Cross-Batch &amp; Cross-Outlet Parity</span>
                   </div>
                 </div>
-                <p class="archetype-examples">Headlines from all 17 outlets are interleaved into shared context batches. When 6 outlets cover the same event, they receive the exact same <strong>Event Base</strong> and diverge solely by each editor's <strong>Framing Modifier</strong>.</p>
+                <p class="archetype-examples">Dispatches from all 17 outlets are interleaved into shared batches, and because <strong>Reach</strong> and <strong>Permanence</strong> are objective properties of an event, separate outlets and independent sync runs stay tightly calibrated (<code>~0.04</code> pts mean drift) while differing strictly by each editor's <strong>Framing</strong>.</p>
               </div>
 
               <div class="archetype-card">
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
                     <span class="archetype-icon">⚖️</span>
-                    <span class="archetype-name">Counterfactual Harm Rule</span>
+                    <span class="archetype-name">Counterfactual Harm Principle</span>
                   </div>
                 </div>
-                <p class="archetype-examples">Criminal convictions, prison sentences, and corporate fines are reactions to underlying harm. An aspirin treats a headache, but the headache is still bad—so crime trials and penalties stay negative (<code>-0.20</code> to <code>-0.55</code>), never false "good news."</p>
+                <p class="archetype-examples">We ask: <em>"If this entire situation had never happened, would the world be safer or better?"</em> Criminal convictions, murder trials, prison sentences, and bailouts are reactions to underlying harm—so their polarity remains negative rather than false "good news."</p>
               </div>
 
               <div class="archetype-card">
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
-                    <span class="archetype-icon">📡</span>
-                    <span class="archetype-name">Unfiltered RSS Baseline</span>
+                    <span class="archetype-icon">🧠</span>
+                    <span class="archetype-name">Pure Semantic AI Clustering</span>
                   </div>
                 </div>
-                <p class="archetype-examples">Instead of scraping personalized social feeds (X, TikTok) that optimize for individual outrage, we ingest each newsroom's primary RSS feed—capturing their true front-page editorial priority.</p>
+                <p class="archetype-examples">Developing story clusters are grouped 100% semantically by Gemini reading each headline and lead summary—with zero brittle keyword rules—selecting one definitive dispatch per newsroom so live-blog spam never skews the spectrum.</p>
               </div>
             </div>
           </div>
@@ -914,6 +914,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=5.4"></script>
+  <script src="app.js?v=5.5"></script>
 </body>
 </html>
