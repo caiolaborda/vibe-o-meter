@@ -11,7 +11,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=5.2">
+  <link rel="stylesheet" href="style.css?v=5.3">
 </head>
 <body data-edition="silver" data-silver-mode="antidote">
 
@@ -164,7 +164,7 @@
           <i data-lucide="compass"></i><span>Newsrooms</span>
         </button>
         <button class="nav-pill-btn" data-tab="trends" id="tab-btn-trends">
-          <i data-lucide="line-chart"></i><span>Macro Trends</span>
+          <i data-lucide="line-chart"></i><span>Trends</span>
         </button>
         <button class="nav-pill-btn" data-tab="methodology" id="tab-btn-methodology">
           <i data-lucide="help-circle"></i><span>Methodology</span>
@@ -177,13 +177,6 @@
           <span class="quick-filter-prefix">Source:</span>
           <strong id="quick-source-name">BBC</strong>
           <button id="quick-source-clear-btn" class="quick-clear-btn" aria-label="Clear source filter">&times;</button>
-        </div>
-        <!-- Active Topic Filter Indicator in Header Bar -->
-        <div id="quick-category-indicator" class="quick-source-pill topic-pill-active" style="display:none;" title="Click ✕ to clear topic filter">
-          <span class="quick-filter-dot topic-dot"></span>
-          <span class="quick-filter-prefix">Topic:</span>
-          <strong id="quick-category-name">World</strong>
-          <button id="quick-category-clear-btn" class="quick-clear-btn" aria-label="Clear topic filter">&times;</button>
         </div>
         <!-- Topic Filter Selector (Matches Some Good News floating menu bar) -->
         <div class="quick-timeframe-wrap quick-topic-wrap" title="Filter dashboard data by topic">
@@ -224,38 +217,20 @@
           <div class="clusters-controls-bar card">
             <div class="clusters-bar-title">
               <i data-lucide="layers"></i>
-              <h2>Top Stories</h2>
+              <h2 id="clusters-bar-heading">Most Covered Stories</h2>
             </div>
             <div class="clusters-filter-group">
-              <div class="clusters-topic-filter">
-                <label for="clusters-topic-select"><i data-lucide="filter"></i> Topic:</label>
-                <select id="clusters-topic-select" class="select-input">
-                  <option value="all" selected>All Topics</option>
-                  <option value="world">World Affairs</option>
-                  <option value="politics">Politics</option>
-                  <option value="business">Business &amp; Markets</option>
-                  <option value="technology">Technology</option>
-                  <option value="science">Science &amp; Space</option>
-                  <option value="health">Health &amp; Medicine</option>
-                  <option value="climate">Nature &amp; Climate</option>
-                </select>
-              </div>
               <div class="clusters-sort-filter">
                 <label for="clusters-sort-select"><i data-lucide="arrow-up-down"></i> Sort By:</label>
                 <select id="clusters-sort-select" class="select-input">
                   <option value="outlets" selected>Most Outlets Covering</option>
-                  <option value="spread">Highest Sentiment Spread</option>
+                  <option value="latest">Most Recent Coverage</option>
                   <option value="pessimistic">Most Negative Tone</option>
                   <option value="optimistic">Most Constructive Tone</option>
+                  <option value="spread">Highest Sentiment Spread</option>
                 </select>
               </div>
             </div>
-          </div>
-
-          <!-- Active Topic Filter Indicator for Story Clusters -->
-          <div id="pulse-cluster-topic-indicator" class="filter-indicator" style="display: none; margin: 0 0 1rem 0;">
-            Showing developing stories in: <strong id="pulse-cluster-topic-name">World</strong>
-            <button class="clear-btn" onclick="clearPulseClusterTopic()">&times; Show All Topics</button>
           </div>
 
           <!-- Clusters Dynamic Container -->
@@ -263,8 +238,8 @@
             <!-- Populated dynamically in app.js -->
           </div>
 
-          <!-- Progressive Pagination for Developing Story Clusters -->
-          <div id="clusters-pagination-wrap" class="headlines-pagination-wrap" style="display: none; padding: 1.25rem 0 0.25rem 0; text-align: center;">
+          <!-- Progressive Pagination for Developing Story Clusters (Transparent on canvas) -->
+          <div id="clusters-pagination-wrap" class="clusters-pagination-wrap" style="display: none; padding: 1.25rem 0 0.25rem 0; text-align: center;">
             <button type="button" id="clusters-show-more-btn" class="btn btn-secondary" onclick="showMoreStoryClusters()" style="font-weight: 700; padding: 0.65rem 1.5rem; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.45rem;">
               <span id="clusters-show-more-text">Show More Developing Stories</span>
               <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
@@ -378,19 +353,19 @@
 
     <!-- TAB 3: NEWSROOMS (Unified Outlet Spectrum, Topic Vibes, 17-Outlet Leaderboard, Head-to-Head Arena & Headline Wire) -->
     <main id="tab-panel-deepdives" class="tab-panel hidden">
-      <!-- 1. MEDIA SENTIMENT SPECTRUM, TOPIC VIBES & KEY OUTLET SIGNALS -->
-      <section class="newsrooms-spectrum-section" id="newsrooms-spectrum-section" style="margin-bottom: 2rem;">
+      <!-- 1. UNIFIED NEWSROOM SENTIMENT SPECTRUM, TOPIC BEATS & COMPACT LEADERBOARD -->
+      <section class="newsrooms-spectrum-section" id="newsrooms-spectrum-section" style="margin-bottom: 1.5rem;">
         <div class="section-header-row">
           <div>
             <h2 class="section-title flex-center">
               <i data-lucide="compass"></i>
-              Media Sentiment Spectrum &amp; Topic Beats
+              Newsroom Sentiment Spectrum &amp; Leaderboard
             </h2>
-            <p class="section-desc">Where all 17 international newsrooms sit on the Alarmist (-1.0) to Constructive (+1.0) spectrum right now. Filter by topic beat or click any outlet marker to inspect its coverage.</p>
+            <p class="section-desc">Where all 17 international newsrooms sit on the Alarmist (-1.0) to Constructive (+1.0) spectrum right now. Filter by topic beat or region, or click any outlet to inspect its coverage.</p>
           </div>
         </div>
 
-        <div class="card newsrooms-spectrum-card" style="padding: 1.35rem 1.5rem;">
+        <div class="card newsrooms-spectrum-card" style="padding: 1.25rem 1.4rem;">
           <!-- Topic Vibes Bar (Interactive Topic Filter across Newsrooms & Spectrum) -->
           <div class="pulse-topics-bar newsrooms-topics-bar">
             <div class="pulse-topic-chips" id="pulse-category-chips">
@@ -399,7 +374,7 @@
           </div>
 
           <!-- The 3 Key Signals Horizontal Strip -->
-          <div class="pulse-signals-strip" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 1.25rem;">
+          <div class="pulse-signals-strip" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 1.1rem;">
             <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
               <div class="signal-header">
                 <span class="signal-label neg">
@@ -443,8 +418,19 @@
             </div>
           </div>
 
+          <!-- Region Filter Pills (Filters BOTH the Spectrum Track AND the Compact Leaderboard below) -->
+          <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 0.9rem; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.25rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
+            <button class="region-pill active" data-region="all">All Outlets (<span data-region-count="all">17</span>)</button>
+            <button class="region-pill" data-region="US"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="US"> United States (<span data-region-count="US">8</span>)</button>
+            <button class="region-pill" data-region="UK"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (<span data-region-count="UK">3</span>)</button>
+            <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/eu.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (<span data-region-count="EU">3</span>)</button>
+            <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (<span data-region-count="ME">1</span>)</button>
+            <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.2rem;">🌐</span> Global Agencies (<span data-region-count="GLOBAL">2</span>)</button>
+          </div>
+
           <!-- Sentiment Spectrum Track & Beeswarm Distribution Lanes -->
-          <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper">
+          <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper" style="margin-top: 0; padding-top: 0.85rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.2rem; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.75rem;">
               <!-- Scale Labels -->
               <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
@@ -489,61 +475,40 @@
             <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
             
             <div class="spectrum-legend">
-              <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker to inspect its coverage spotlight and filter headlines below.</p>
+              <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker or leaderboard card to inspect its coverage spotlight and filter headlines below.</p>
             </div>
           </div>
 
           <!-- Conditional Outlet Spotlight (Opens beneath the sentiment spectrum when an outlet is selected) -->
-          <div id="pulse-spotlight-banner" class="spotlight-banner-unified" style="display: none; margin-top: 1.25rem;">
+          <div id="pulse-spotlight-banner" class="spotlight-banner-unified" style="display: none; margin-top: 1rem;">
             <!-- Content will be injected dynamically -->
           </div>
-        </div>
-      </section>
 
-      <!-- 2. NEWS SOURCES COMPARISON CARDS -->
-      <section class="comparison-section" id="comparison-section">
-        <div class="section-header-row">
-          <div>
-            <h2 class="section-title flex-center">
-              <i data-lucide="columns-3"></i>
-              17-Outlet Leaderboard Matrix
-            </h2>
-            <p class="section-desc">At-a-glance editorial tone, article distribution, and trend sparklines across all audited newsrooms.</p>
-          </div>
-        </div>
-        <div class="collapsible-content" id="sources-wrapper">
-          <!-- Region Filter Pills & Carousel Controls -->
-          <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center;">
-            <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.35rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
-            <button class="region-pill active" data-region="all">All Outlets (17)</button>
-            <button class="region-pill" data-region="US"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="US"> United States (8)</button>
-            <button class="region-pill" data-region="UK"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (3)</button>
-            <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/de.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (3)</button>
-            <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (1)</button>
-            <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.25rem;">🌐</span> Global Agencies (2)</button>
-            
-            <div class="sources-carousel-controls" style="margin-left: auto; display: flex; gap: 0.4rem; align-items: center;">
-              <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
-                <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
-              </button>
-              <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
-                <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
-              </button>
+          <!-- Integrated Compact Outlet Leaderboard Matrix -->
+          <div class="integrated-leaderboard-block" id="comparison-section">
+            <div class="integrated-leaderboard-header">
+              <div class="integrated-leaderboard-title">
+                <i data-lucide="columns-3" style="width:15px;height:15px;color:var(--accent-color);"></i>
+                <span>Outlet Leaderboard</span>
+                <span id="sources-carousel-count" class="leaderboard-count-pill">17 Outlets</span>
+              </div>
+              <div class="sources-carousel-controls" style="display: flex; gap: 0.4rem; align-items: center;">
+                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
+                  <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
+                </button>
+                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
+                  <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div id="sources-grid" class="sources-grid sources-sidescroll">
-            <!-- News source cards will be injected here dynamically -->
-            <div class="loading-state">
-              <i data-lucide="loader-2" class="spin"></i>
-              <span>Loading comparison data...</span>
+            <div id="sources-grid" class="sources-grid sources-sidescroll compact-leaderboard-grid">
+              <!-- Compact news source cards injected dynamically -->
+              <div class="loading-state">
+                <i data-lucide="loader-2" class="spin"></i>
+                <span>Loading comparison data...</span>
+              </div>
             </div>
-          </div>
-          <div class="sources-show-more-row" id="sources-show-more-row" style="display: none; text-align: center; margin-top: 1.25rem;">
-            <button id="toggle-all-outlets-btn" class="btn btn-secondary flex-center" style="margin: 0 auto; gap: 0.4rem; padding: 0.5rem 1.2rem; font-weight: 600;">
-              <i data-lucide="chevrons-down" id="toggle-outlets-icon"></i>
-              <span id="toggle-outlets-text">Show All 17 Outlets</span>
-            </button>
           </div>
         </div>
       </section>
@@ -993,6 +958,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=5.2"></script>
+  <script src="app.js?v=5.3"></script>
 </body>
 </html>

@@ -6937,6 +6937,287 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   }
 }
 
+/* ==========================================================================
+   V5.3 POLISH: UNIFIED NEWSROOMS MATRIX, DENSE CLUSTER SPECTRUM,
+   TRANSPARENT CLUSTER PAGINATION, AND MOBILE DAILY 5 ZERO DEAD SPACE
+   ========================================================================== */
 
+/* 1. Prevent right-column desktop gaps when expanding Developing Story cards */
+.clusters-container {
+  grid-auto-flow: dense;
+}
 
+/* 2. Remove weird rectangle background behind "Show More Developing Stories" button */
+.clusters-pagination-wrap {
+  text-align: center;
+  margin-top: 1.15rem;
+  padding: 0.35rem 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 
+/* 3. Multi-row collision-avoiding cluster spread spectrum track for high-coverage stories */
+.cluster-spectrum-track.cluster-spectrum-track-dense {
+  height: 44px;
+  margin: 0.45rem 0 0.35rem;
+}
+
+.cluster-outlet-bubble {
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, z-index 0.1s ease;
+}
+
+.cluster-outlet-bubble:hover {
+  transform: translate(-50%, -50%) scale(1.22) !important;
+  z-index: 40 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* 4. Unified Newsrooms Spectrum & Compact Leaderboard Matrix */
+.integrated-leaderboard-block {
+  margin-top: 1.5rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.integrated-leaderboard-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.integrated-leaderboard-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.integrated-leaderboard-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.integrated-leaderboard-title i,
+.integrated-leaderboard-title svg {
+  width: 17px;
+  height: 17px;
+  color: var(--accent-color);
+}
+
+.integrated-leaderboard-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.region-pill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 0.05rem 0.38rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--text-secondary);
+  margin-left: 0.15rem;
+}
+
+.region-tab.active .region-pill-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+/* Compact 3-to-4 Column Outlet Leaderboard Cards */
+.sources-grid.compact-sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.source-card.compact-source-card {
+  padding: 0.85rem 0.95rem !important;
+  border-radius: 12px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.source-card.compact-source-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+}
+
+.compact-source-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.compact-source-identity {
+  min-width: 0;
+  flex: 1;
+}
+
+.compact-source-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.compact-source-title {
+  font-size: 0.94rem !important;
+  font-weight: 800 !important;
+  margin: 0 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-source-meta {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.12rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-source-score-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.18rem;
+  flex-shrink: 0;
+}
+
+.compact-score-pill {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 0.16rem 0.5rem;
+  border-radius: 8px;
+  line-height: 1.2;
+}
+
+.compact-score-pill.mood-optimistic {
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--pos-color);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.compact-score-pill.mood-neutral {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--accent-color);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+.compact-score-pill.mood-gloomy,
+.compact-score-pill.mood-doom {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--neg-color);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.compact-delta-pill {
+  font-size: 0.63rem !important;
+  padding: 0.06rem 0.34rem !important;
+}
+
+.compact-source-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.compact-dist-bar {
+  flex: 1;
+  height: 6px !important;
+  margin: 0 !important;
+}
+
+.compact-dist-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.compact-source-headline {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  line-height: 1.32;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  padding-top: 0.38rem;
+}
+
+/* 5. Mobile Overrides: Eliminate Daily 5 bottom dead space & compact Top Stories / Leaderboard */
+@media (max-width: 768px) {
+  /* Eliminate dead space at bottom of Daily 5 Antidote on tall mobile screens */
+  body.good-news-mode.antidote-submode-daily .antidote-deck-stage {
+    padding: 0.1rem 0.45rem 0.15rem !important;
+    justify-content: space-between !important;
+  }
+
+  body.good-news-mode.antidote-submode-daily .antidote-deck-viewport {
+    max-height: none !important;
+    min-height: calc(100dvh - 134px) !important;
+    height: calc(100dvh - 134px) !important;
+    margin-bottom: 12px !important;
+  }
+
+  body.good-news-mode.antidote-submode-daily .antidote-deck-card {
+    max-height: none !important;
+    min-height: calc(100dvh - 134px) !important;
+    height: calc(100dvh - 134px) !important;
+  }
+
+  body.good-news-mode.antidote-submode-daily .antidote-card-Image-wrap {
+    height: clamp(190px, 31dvh, 290px) !important;
+    min-height: 185px !important;
+    max-height: 300px !important;
+  }
+
+  /* Single-column sort selector in Top Stories bar since duplicate Topic filter is removed */
+  .clusters-controls-bar .clusters-filter-group {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Compact 2-column or tight 1-column outlet cards on mobile */
+  .sources-grid.compact-sources-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.55rem !important;
+  }
+
+  .source-card.compact-source-card {
+    padding: 0.7rem 0.8rem !important;
+    gap: 0.42rem !important;
+  }
+
+  .integrated-leaderboard-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+  }
+}

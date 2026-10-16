@@ -1340,6 +1340,7 @@ function setupEventListeners() {
       btn.classList.add('active');
       state.activeRegion = btn.dataset.region || 'all';
       if (elements.sourcesGrid) elements.sourcesGrid.scrollLeft = 0;
+      renderSpectrum();
       renderComparisonMatrix();
     });
   }
@@ -2867,12 +2868,25 @@ function getValenceColor(score) {
 }
 
 // Draw the Vibe Spectrum Axis (Hero Averages vs Beeswarm Lanes)
+function updateRegionPillCounts(activeIdsByRegion) {
+  const tabs = document.getElementById('region-filter-tabs');
+  if (!tabs) return;
+  tabs.querySelectorAll('[data-region-count]').forEach(span => {
+    const reg = span.getAttribute('data-region-count') || 'all';
+    const count = reg === 'all' ? (activeIdsByRegion.all || 0) : (activeIdsByRegion[reg.toUpperCase()] || 0);
+    span.innerText = String(count);
+  });
+}
+
 function renderSpectrum() {
   const sources = resolvedSources || getResolvedSources();
   const isCategoryFiltered = state.filters.category !== 'all';
+  const activeRegion = (state.activeRegion || 'all').toUpperCase();
   
-  // Calculate average for each source (considering active category filter if set)
+  // Calculate average for each source (considering active category & region filter if set)
   const sourceScores = {};
+  const regionCounts = { all: 0, US: 0, UK: 0, EU: 0, ME: 0, GLOBAL: 0 };
+
   Object.keys(sources).forEach(id => {
     const src = sources[id];
     let arts = src.articles || [];
@@ -2881,8 +2895,21 @@ function renderSpectrum() {
     }
     const scored = arts.filter(a => typeof a.sentiment === 'number');
     const avg = scored.length > 0 ? (scored.reduce((sum, a) => sum + a.sentiment, 0) / scored.length) : null;
+    const meta = SOURCE_META[id] || { region: 'GLOBAL' };
+    const regKey = (meta.region || 'GLOBAL').toUpperCase();
+
+    if (!isCategoryFiltered || scored.length > 0) {
+      regionCounts.all++;
+      regionCounts[regKey] = (regionCounts[regKey] || 0) + 1;
+    }
+
+    if (activeRegion !== 'ALL' && regKey !== activeRegion) {
+      return;
+    }
     sourceScores[id] = { avg, scoredCount: scored.length, articles: arts };
   });
+
+  updateRegionPillCounts(regionCounts);
 
   const validScores = Object.values(sourceScores)
     .map(s => s.avg)
@@ -2945,13 +2972,13 @@ function renderSpectrum() {
 
     const isMobileTrack = window.innerWidth <= 640;
     const minGapPct = isMobileTrack ? 9.5 : 5.2;
-    const rowStepPx = isMobileTrack ? 36 : 42;
-    const bubbleSize = isMobileTrack ? 28 : 34;
+    const rowStepPx = isMobileTrack ? 34 : 38;
+    const bubbleSize = isMobileTrack ? 28 : 32;
 
-    Object.keys(sources).forEach(id => {
+    Object.keys(sourceScores).forEach(id => {
       const source = sources[id];
       const data = sourceScores[id];
-      if (data.avg === null || data.scoredCount === 0) return;
+      if (!data || data.avg === null || data.scoredCount === 0) return;
       
       const avg = data.avg;
       // Stretched normed percentage: 6% to 94%
@@ -2989,7 +3016,7 @@ function renderSpectrum() {
       marker.setAttribute('data-id', id);
       
       marker.innerHTML = `
-        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: ${bubbleSize}px; height: ${bubbleSize}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: ${isMobileTrack ? '0.66rem' : '0.75rem'}; border: 2.5px solid ${markerColor}; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
+        <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: ${bubbleSize}px; height: ${bubbleSize}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: ${isMobileTrack ? '0.66rem' : '0.72rem'}; border: 2.5px solid ${markerColor}; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
           <span>${meta.initials}</span>
         </div>
         <div class="marker-label" style="position: absolute; top: -28px; ${labelPosStyle} opacity: 0; pointer-events: none; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,0.18); white-space: nowrap; color: var(--text-primary); transition: all 0.2s; z-index: 40;">
@@ -3008,7 +3035,7 @@ function renderSpectrum() {
     const maxY = markerPositions.length > 0 ? Math.max(...markerPositions.map(p => p.y), 0) : 0;
     const trackContainerElem = document.querySelector('.spectrum-track-container');
     if (trackContainerElem) {
-      const calculatedHeight = Math.max(isMobileTrack ? 175 : 195, 70 + ((maxY + 1) * (rowStepPx + 2)));
+      const calculatedHeight = Math.max(isMobileTrack ? 155 : 170, 62 + ((maxY + 1) * (rowStepPx + 2)));
       trackContainerElem.style.height = `${calculatedHeight}px`;
     }
 
@@ -3018,7 +3045,7 @@ function renderSpectrum() {
     elements.spectrumLanes.innerHTML = '';
     
     // Sort sources by average sentiment (highest to lowest)
-    const sortedIds = Object.keys(sources).sort((a, b) => {
+    const sortedIds = Object.keys(sourceScores).sort((a, b) => {
       const valA = typeof sourceScores[a]?.avg === 'number' ? sourceScores[a].avg : -999;
       const valB = typeof sourceScores[b]?.avg === 'number' ? sourceScores[b].avg : -999;
       return valB - valA;
@@ -3027,7 +3054,7 @@ function renderSpectrum() {
     sortedIds.forEach(id => {
       const source = sources[id];
       const data = sourceScores[id];
-      if (data.articles.length === 0 && isCategoryFiltered) return;
+      if (!data || (data.articles.length === 0 && isCategoryFiltered)) return;
       
       const avg = data.avg ?? 0;
       const avgPct = Math.max(0, Math.min(100, ((avg + 1) / 2) * 100));
@@ -3179,52 +3206,16 @@ window.scrollToArticle = function(cardId) {
   }
 };
 
-// Create custom SVG Gauge Dial
-function createSvgGauge(score) {
-  // Score is between -1.0 and 1.0.
-  // Rotational angle for dial: -90 degrees (negative) to 90 degrees (positive)
-  if (score === null || score === undefined) {
-    return `
-      <svg viewBox="0 0 100 55" class="gauge-svg" style="width: 100px; height: 55px;">
-        <path d="M 15 45 A 35 35 0 0 1 85 45" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-linecap="round" opacity="0.4" />
-        <circle cx="50" cy="45" r="5" fill="var(--text-muted)" />
-      </svg>
-    `;
-  }
-  const angle = Math.max(-90, Math.min(90, score * 90));
-  
-  // Color of dial depending on sentiment
-  let themeColor = 'var(--neu-color)';
-  if (score > 0.15) themeColor = 'var(--pos-color)';
-  if (score < -0.15) themeColor = 'var(--neg-color)';
-  
-  return `
-    <svg viewBox="0 0 100 55" class="gauge-svg" style="width: 100px; height: 55px;">
-      <!-- Track Arc -->
-      <path d="M 15 45 A 35 35 0 0 1 85 45" fill="none" stroke="var(--border-color)" stroke-width="8" stroke-linecap="round" opacity="0.4" />
-      <!-- Red (negative) sector visual helper -->
-      <path d="M 15 45 A 35 35 0 0 1 40 18" fill="none" stroke="var(--neg-color)" stroke-width="8" stroke-opacity="0.25" />
-      <!-- Green (positive) sector visual helper -->
-      <path d="M 60 18 A 35 35 0 0 1 85 45" fill="none" stroke="var(--pos-color)" stroke-width="8" stroke-opacity="0.25" />
-      
-      <!-- Needle pointer -->
-      <line x1="50" y1="45" x2="50" y2="18" stroke="${themeColor}" stroke-width="3" stroke-linecap="round" transform="rotate(${angle}, 50, 45)" style="transition: transform 0.5s ease;" />
-      <circle cx="50" cy="45" r="4.5" fill="${themeColor}" />
-      <circle cx="50" cy="45" r="2.2" fill="var(--bg-card)" />
-    </svg>
-  `;
-}
-
 // Generate inline SVG Sparkline showing historic sentiment trends
 function createSvgSparkline(articles, sourceId = '') {
   if (!articles || articles.length < 2) {
-    return `<svg class="sparkline-svg" viewBox="0 0 300 56" preserveAspectRatio="none"><line x1="0" y1="28" x2="300" y2="28" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/></svg>`;
+    return `<svg class="sparkline-svg" viewBox="0 0 300 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="300" y2="20" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/></svg>`;
   }
   
   // Scored articles with valid sentiments
   const scored = articles.filter(a => typeof (a.sentiment ?? a.sentimentGemini ?? a.sentimentLocal) === 'number');
   if (scored.length < 2) {
-    return `<svg class="sparkline-svg" viewBox="0 0 300 56" preserveAspectRatio="none"><line x1="0" y1="28" x2="300" y2="28" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/></svg>`;
+    return `<svg class="sparkline-svg" viewBox="0 0 300 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="300" y2="20" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/></svg>`;
   }
 
   // Filter by active timeframe if applicable
@@ -3264,15 +3255,15 @@ function createSvgSparkline(articles, sourceId = '') {
 
   const count = sample.length;
   const width = 300;
-  const height = 56;
-  const zeroY = 28;
+  const height = 40;
+  const zeroY = 20;
   
   // Map index and score to svg coordinates (-1.0 to +1.0)
   const points = sample.map((art, idx) => {
     const sc = typeof art.sentiment === 'number' ? art.sentiment : (art.sentimentGemini ?? art.sentimentLocal ?? 0);
     const x = Number((idx * (width / Math.max(1, count - 1))).toFixed(1));
     const clampedScore = Math.max(-1, Math.min(1, sc));
-    const y = Number((zeroY - (clampedScore * 22)).toFixed(1));
+    const y = Number((zeroY - (clampedScore * 16)).toFixed(1));
     return { x, y, score: clampedScore };
   });
   
@@ -3310,77 +3301,100 @@ function createSvgSparkline(articles, sourceId = '') {
       </defs>
       <!-- Base middle line -->
       <line x1="0" y1="${zeroY}" x2="${width}" y2="${zeroY}" stroke="var(--border-color)" stroke-width="1" stroke-dasharray="3,3" opacity="0.6"/>
-      <text x="${width - 6}" y="${zeroY - 4}" text-anchor="end" font-family="var(--font-mono)" font-size="8" fill="var(--text-muted)" opacity="0.6">0.00</text>
-      
       <!-- Area fill -->
       <path d="${areaPath}" fill="url(#${gradId})" />
       <!-- Line stroke -->
-      <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="${linePath}" fill="none" stroke="${strokeColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
       <!-- Latest point dot -->
-      <circle cx="${lastPt.x}" cy="${lastPt.y}" r="3.5" fill="${strokeColor}" stroke="var(--bg-card)" stroke-width="1.5" />
+      <circle cx="${lastPt.x}" cy="${lastPt.y}" r="3" fill="${strokeColor}" stroke="var(--bg-card)" stroke-width="1.2" />
     </svg>
   `;
 }
 
-// Render News Source Comparison Cards (Sidescroller)
+// Render Compact News Source Leaderboard Cards (Integrated with Sentiment Spectrum)
 function renderComparisonMatrix() {
   if (!elements.sourcesGrid) return;
   elements.sourcesGrid.innerHTML = '';
-  
-  // Sort sources by average sentiment (highest to lowest)
-  let sortedIds = Object.keys(resolvedSources).sort((a, b) => {
-    const valA = typeof resolvedSources[a].averageSentiment === 'number' ? resolvedSources[a].averageSentiment : -999;
-    const valB = typeof resolvedSources[b].averageSentiment === 'number' ? resolvedSources[b].averageSentiment : -999;
-    return valB - valA;
+
+  const isCategoryFiltered = state.filters.category !== 'all';
+  const activeRegion = (state.activeRegion || 'all').toUpperCase();
+
+  // Compute category-aware metrics and dynamic region counts
+  const outletMetrics = {};
+  const regionCounts = { all: 0, US: 0, UK: 0, EU: 0, ME: 0, GLOBAL: 0 };
+
+  Object.keys(resolvedSources).forEach(id => {
+    const src = resolvedSources[id];
+    let arts = src.articles || [];
+    if (isCategoryFiltered) {
+      arts = arts.filter(a => (a.category || 'other') === state.filters.category);
+    }
+    const scored = arts.filter(a => typeof a.sentiment === 'number');
+    const avg = scored.length > 0 ? Number((scored.reduce((s, a) => s + a.sentiment, 0) / scored.length).toFixed(3)) : null;
+    let pos = 0, neu = 0, neg = 0;
+    scored.forEach(a => {
+      if (a.sentiment > 0.15) pos++;
+      else if (a.sentiment < -0.15) neg++;
+      else neu++;
+    });
+
+    const meta = SOURCE_META[id] || { region: 'GLOBAL' };
+    const regKey = (meta.region || 'GLOBAL').toUpperCase();
+    if (!isCategoryFiltered || scored.length > 0) {
+      regionCounts.all++;
+      regionCounts[regKey] = (regionCounts[regKey] || 0) + 1;
+    }
+
+    outletMetrics[id] = {
+      source: src,
+      articles: arts,
+      scoredCount: scored.length,
+      avg,
+      distribution: { positive: pos, neutral: neu, negative: neg },
+      regKey
+    };
   });
 
-  // Filter by active region if set
-  if (state.activeRegion && state.activeRegion !== 'all') {
-    sortedIds = sortedIds.filter(id => {
-      const meta = SOURCE_META[id];
-      return meta && meta.region && meta.region.toUpperCase() === state.activeRegion.toUpperCase();
-    });
-  }
+  updateRegionPillCounts(regionCounts);
+
+  // Sort sources by average sentiment (highest/most composed to lowest/most alarmist)
+  let sortedIds = Object.keys(outletMetrics).filter(id => {
+    if (isCategoryFiltered && outletMetrics[id].scoredCount === 0) return false;
+    if (activeRegion !== 'ALL' && outletMetrics[id].regKey !== activeRegion) return false;
+    return true;
+  }).sort((a, b) => {
+    const valA = typeof outletMetrics[a].avg === 'number' ? outletMetrics[a].avg : -999;
+    const valB = typeof outletMetrics[b].avg === 'number' ? outletMetrics[b].avg : -999;
+    return valB - valA;
+  });
 
   // Update carousel count badge if present
   const carouselCount = document.getElementById('sources-carousel-count');
   if (carouselCount) {
-    carouselCount.innerText = `${sortedIds.length} Outlets`;
-  }
-
-  const showMoreRow = document.getElementById('sources-show-more-row');
-  if (showMoreRow) {
-    showMoreRow.style.display = 'none'; // Carousel sidescrolls all outlets
+    carouselCount.innerText = `${sortedIds.length} Outlet${sortedIds.length === 1 ? '' : 's'}`;
   }
 
   if (sortedIds.length === 0) {
     elements.sourcesGrid.innerHTML = `
-      <div class="empty-state" style="padding: 2.5rem; text-align: center; width: 100%;">
+      <div class="empty-state" style="padding: 1.5rem; text-align: center; width: 100%;">
         <i data-lucide="globe-2"></i>
-        <span>No news outlets match the selected region filter.</span>
+        <span>No news outlets match the selected region or topic filter.</span>
       </div>
     `;
     lucide.createIcons();
     return;
   }
 
-  // In sidescroller, display all filtered outlets so user can swipe/scroll through all of them
-  sortedIds.forEach(id => {
-    const source = resolvedSources[id];
-    const avg = typeof source.averageSentiment === 'number' ? source.averageSentiment : 0;
-    const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global Agency', flag: '🌐' };
+  sortedIds.forEach((id, rankIdx) => {
+    const mData = outletMetrics[id];
+    const source = mData.source;
+    const avg = typeof mData.avg === 'number' ? mData.avg : 0;
+    const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global News', flag: '🌐' };
     
-    // Mood Class Label
     let moodClass = 'neutral';
-    let moodLabel = 'Objective & Neutral';
     const badgeText = (avg > 0 ? '+' : '') + avg.toFixed(2);
-    if (avg > 0.15) {
-      moodClass = 'positive';
-      moodLabel = 'Uplifting & Optimistic';
-    } else if (avg < -0.15) {
-      moodClass = 'negative';
-      moodLabel = 'Alarmist & Gloomy';
-    }
+    if (avg > 0.15) moodClass = 'positive';
+    else if (avg < -0.15) moodClass = 'negative';
 
     // Historical average across all available articles for this outlet (all-time)
     const rawArticles = (state.sources[id] && state.sources[id].articles) || [];
@@ -3392,86 +3406,67 @@ function renderComparisonMatrix() {
     let trendBadgeHTML = '';
     if (Math.abs(delta) >= 0.04) {
       if (delta > 0) {
-        trendBadgeHTML = `<span class="source-trend-badge up" title="Trending +${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▲ +${delta.toFixed(2)} vs Hist</span>`;
+        trendBadgeHTML = `<span class="source-trend-badge up" title="Trending +${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▲ +${delta.toFixed(2)}</span>`;
       } else {
-        trendBadgeHTML = `<span class="source-trend-badge down" title="Trending ${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▼ ${delta.toFixed(2)} vs Hist</span>`;
+        trendBadgeHTML = `<span class="source-trend-badge down" title="Trending ${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▼ ${delta.toFixed(2)}</span>`;
       }
     } else {
       trendBadgeHTML = `<span class="source-trend-badge stable" title="Within ±0.03 of all-time average (${histAvg.toFixed(2)})">● Stable</span>`;
     }
     
     // Calculate distributions
-    const total = (source.distribution.positive || 0) + (source.distribution.neutral || 0) + (source.distribution.negative || 0);
-    const posPct = total > 0 ? ((source.distribution.positive || 0) / total * 100).toFixed(0) : 0;
-    const neuPct = total > 0 ? ((source.distribution.neutral || 0) / total * 100).toFixed(0) : 0;
-    const negPct = total > 0 ? ((source.distribution.negative || 0) / total * 100).toFixed(0) : 0;
+    const total = (mData.distribution.positive || 0) + (mData.distribution.neutral || 0) + (mData.distribution.negative || 0);
+    const posPct = total > 0 ? ((mData.distribution.positive || 0) / total * 100).toFixed(0) : 0;
+    const neuPct = total > 0 ? ((mData.distribution.neutral || 0) / total * 100).toFixed(0) : 0;
+    const negPct = total > 0 ? ((mData.distribution.negative || 0) / total * 100).toFixed(0) : 0;
     
     const isSelected = state.filters.source === id;
 
-    // Create card element
     const card = document.createElement('div');
-    card.className = `source-card card ${isSelected ? 'active' : ''}`;
+    card.className = `source-card compact-source-card card ${isSelected ? 'active' : ''}`;
     card.setAttribute('data-id', id);
 
     card.innerHTML = `
-      <div class="source-card-header">
+      <div class="source-card-header compact-header">
         <div class="source-meta">
-          <div class="source-icon ${id}" style="background-color: ${meta.color}; color: #fff;">
+          <span class="leaderboard-rank-num">#${rankIdx + 1}</span>
+          <div class="source-icon compact-icon ${id}" style="background-color: ${meta.color}; color: #fff;">
             ${meta.initials}
             ${isSelected ? '<span class="source-icon-check">✓</span>' : ''}
           </div>
           <div style="display:flex; flex-direction:column; overflow:hidden; min-width:0;">
-            <div style="display:flex; align-items:center; gap:0.45rem;">
+            <div style="display:flex; align-items:center; gap:0.35rem;">
               <h3 class="source-name" title="${source.name}">${source.name}</h3>
-              ${isSelected ? '<span class="source-active-indicator">FOCUS</span>' : ''}
+              ${isSelected ? '<span class="source-active-indicator">ACTIVE</span>' : ''}
             </div>
-            <span class="source-region-tag">${getSourceFlagHTML(id)} ${meta.regionName}</span>
+            <span class="source-region-tag">${getSourceFlagHTML(id)} ${meta.regionName} · ${mData.scoredCount} stories</span>
           </div>
         </div>
-        <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.35rem;">
+        <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.2rem; flex-shrink:0;">
           <span class="score-badge ${moodClass}">${badgeText}</span>
           ${trendBadgeHTML}
         </div>
       </div>
       
-      <!-- Custom Dial Gauge -->
-      <div class="gauge-wrapper">
-        ${createSvgGauge(avg)}
-        <div class="dial-vibe-profile ${moodClass}">${moodLabel}</div>
-      </div>
-      
-      <!-- Stacked Distribution Bar -->
-      <div class="distribution-container">
-        <div class="dist-bar-label">
-          <span style="font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em;">Sentiment Mix</span>
-          <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${negPct}% neg / ${neuPct}% neu / ${posPct}% pos</span>
-        </div>
-        <div class="dist-bar-track">
+      <!-- Compact Stacked Distribution Bar -->
+      <div class="distribution-container compact-dist">
+        <div class="dist-bar-track" style="height: 6px;">
           <div class="dist-slice neg" style="width: ${negPct}%" title="Negative: ${negPct}%"></div>
           <div class="dist-slice neu" style="width: ${neuPct}%" title="Neutral: ${neuPct}%"></div>
           <div class="dist-slice pos" style="width: ${posPct}%" title="Positive: ${posPct}%"></div>
         </div>
+        <div class="dist-bar-label" style="margin-top: 0.2rem;">
+          <span style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">${negPct}% neg · ${neuPct}% neu · ${posPct}% pos</span>
+          <span class="compact-filter-hint">${isSelected ? '✓ Filtering' : 'Inspect →'}</span>
+        </div>
       </div>
 
-      <!-- Sparkline Graph -->
-      <div class="sparkline-container">
-        <div class="sparkline-label" style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em;">Vibe Trajectory</span>
-          <span style="font-size:0.72rem; font-family:var(--font-mono); color:var(--text-muted);">${source.articles?.length || 0} stories</span>
-        </div>
-        ${createSvgSparkline(source.articles, id)}
-      </div>
-      
-      <div class="card-footer">
-        <span class="text-muted small-text" style="font-size:0.72rem; font-family:var(--font-mono);">Sample: ${source.scoredCount || 0} articles</span>
-        <button class="inspect-btn ${isSelected ? 'active-inspect-btn' : ''}">
-          <span>${isSelected ? 'Selected (Deselect)' : 'Filter Headlines'}</span>
-          <i data-lucide="${isSelected ? 'check' : 'arrow-right'}" style="width:12px;height:12px;"></i>
-        </button>
+      <!-- Compact Sparkline Graph -->
+      <div class="sparkline-container compact-sparkline">
+        ${createSvgSparkline(mData.articles, id)}
       </div>
     `;
     
-    // Card click sets search/filter source
     card.addEventListener('click', () => {
       toggleSourceFilter(id);
     });
@@ -3479,10 +3474,8 @@ function renderComparisonMatrix() {
     elements.sourcesGrid.appendChild(card);
   });
   
-  // Re-create icons for dynamic templates
   lucide.createIcons();
 
-  // If an outlet is active, auto-scroll carousel to bring card into view
   if (state.filters.source !== 'all') {
     setTimeout(() => {
       const activeCard = elements.sourcesGrid?.querySelector(`.source-card[data-id="${state.filters.source}"]`);
@@ -3634,39 +3627,41 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
 
   const uniqueSources = new Set(dedupedCoverage.map(x => x.sourceId));
 
-  // Build mini-spectrum bubbles (deduplicate by sourceId for plot clarity)
-  const uniqueCoverage = [];
-  const seenSources = new Set();
-  dedupedCoverage.forEach(cov => {
-    if (!seenSources.has(cov.sourceId)) {
-      seenSources.add(cov.sourceId);
-      uniqueCoverage.push(cov);
-    }
-  });
-
-  const bubblesHTML = uniqueCoverage.map(cov => {
-    const meta = SOURCE_META[cov.sourceId] || { initials: cov.sourceId.toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
-    const score = typeof cov.sentiment === 'number' ? cov.sentiment : 0;
-    const leftPct = clamp(((score + 1) / 2) * 100, 4, 96);
-    const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
-    const cleanTitle = (cov.title || '').replace(/"/g, '&quot;');
-
-    return `
-      <div class="cluster-outlet-bubble" 
-           style="left: ${leftPct}%; background-color: ${meta.color};"
-           title="${meta.regionName || ''} (${cov.sourceName}): ${scoreStr} - ${cleanTitle}"
-           onclick="window.open('${cov.link}', '_blank', 'noopener,noreferrer')">
-        ${meta.initials}
-      </div>
-    `;
-  }).join('');
-
   // Sort reporting inside each story topic strictly by valence (from most negative to most positive)
   const sortedCoverage = [...dedupedCoverage].sort((a, b) => {
     const sa = typeof a.sentiment === 'number' ? a.sentiment : 0;
     const sb = typeof b.sentiment === 'number' ? b.sentiment : 0;
     return sa - sb;
   });
+
+  // Build mini-spectrum bubbles for ALL stories in sortedCoverage with smart collision de-stacking
+  // so that even when 19 stories cluster around -0.85, all 19 bubbles are visible and clickable
+  const placedBubbles = [];
+  const bubblesHTML = sortedCoverage.map(cov => {
+    const meta = SOURCE_META[cov.sourceId] || { initials: (cov.sourceId || 'NWS').toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
+    const score = typeof cov.sentiment === 'number' ? cov.sentiment : 0;
+    const basePct = clamp(((score + 1) / 2) * 100, 4, 96);
+    const scoreStr = `${score > 0 ? '+' : ''}${score.toFixed(2)}`;
+    const cleanTitle = (cov.title || '').replace(/"/g, '&quot;');
+
+    // Find how many already-placed bubbles are within 3.2% horizontal distance
+    const nearbyCount = placedBubbles.filter(p => Math.abs(p.basePct - basePct) < 3.2).length;
+    // Spread horizontally slightly and alternate vertical row offsets when clustered
+    const horizOffset = nearbyCount === 0 ? 0 : ((nearbyCount % 2 === 1 ? 1 : -1) * Math.min(2.4, Math.ceil(nearbyCount / 2) * 0.85));
+    const leftPct = clamp(basePct + horizOffset, 3, 97);
+    const rowOffsets = [0, -9, 9, -15, 15, -5, 5];
+    const yOffsetPx = rowOffsets[nearbyCount % rowOffsets.length];
+    placedBubbles.push({ basePct, leftPct });
+
+    return `
+      <div class="cluster-outlet-bubble" 
+           style="left: ${leftPct.toFixed(2)}%; top: calc(50% + ${yOffsetPx}px); background-color: ${meta.color}; z-index: ${10 + (nearbyCount % 5)};"
+           title="${meta.regionName || ''} (${cov.sourceName}): ${scoreStr} — ${cleanTitle}"
+           onclick="window.open('${cov.link}', '_blank', 'noopener,noreferrer')">
+        ${meta.initials}
+      </div>
+    `;
+  }).join('');
 
   // Build article cards in coverage grid
   const coverageCardsHTML = sortedCoverage.map(art => {
@@ -3702,6 +3697,8 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
     `;
   }).join('');
 
+  const trackExtraClass = sortedCoverage.length > 6 ? 'cluster-spectrum-track-dense' : '';
+
   return `
     <article class="cluster-card card" id="${clusterId}" onclick="handleClusterCardClick(event, '${clusterId}')">
       <div class="cluster-header">
@@ -3727,7 +3724,7 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
           <span>Neutral (0.0)</span>
           <span>Constructive / Optimistic (+1.0)</span>
         </div>
-        <div class="cluster-spectrum-track">
+        <div class="cluster-spectrum-track ${trackExtraClass}">
           ${bubblesHTML}
         </div>
       </div>
@@ -3737,7 +3734,7 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
         <div class="cluster-coverage-info" style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
           <span class="cluster-badge cluster-outlets-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
             <i data-lucide="radio" style="width:12px;height:12px;"></i>
-            ${uniqueSources.size} Outlets
+            ${sortedCoverage.length} Stories · ${uniqueSources.size} Outlets
           </span>
           <span class="cluster-badge cluster-score-badge ${moodClass}" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
             ${avgScoreFormatted} Avg Tone
@@ -3778,6 +3775,7 @@ function renderStoryClusters() {
 
   const paginationWrap = document.getElementById('clusters-pagination-wrap');
   const showMoreText = document.getElementById('clusters-show-more-text');
+  const barHeadingEl = document.getElementById('clusters-bar-heading');
 
   const rawClusters = state.sharedStoryClusters || [];
   if (!rawClusters || rawClusters.length === 0) {
@@ -3793,31 +3791,16 @@ function renderStoryClusters() {
         </button>
       </div>
     `;
-    if (elements.clustersCountBadge) elements.clustersCountBadge.innerText = '0 Clusters Identified';
     if (paginationWrap) paginationWrap.style.display = 'none';
     if (window.lucide) lucide.createIcons();
     return;
   }
 
-  // Topic filter & Search filter (synced with Hero Topic Tiles)
+  // Topic filter & Search filter (synced with Quick Nav Topic Select)
   const activeTopic = (state.filters.category && state.filters.category !== 'all')
     ? state.filters.category
     : (state.clusterTopic || 'all');
-  if (elements.clustersTopicSelect && elements.clustersTopicSelect.value !== activeTopic) {
-    elements.clustersTopicSelect.value = activeTopic;
-  }
   const searchTerm = (state.clusterSearch || '').toLowerCase().trim();
-
-  // Update Topic Indicator Banner
-  if (elements.pulseClusterTopicIndicator && elements.pulseClusterTopicName) {
-    if (activeTopic !== 'all') {
-      const topicCap = activeTopic.charAt(0).toUpperCase() + activeTopic.slice(1);
-      elements.pulseClusterTopicName.innerText = topicCap;
-      elements.pulseClusterTopicIndicator.style.display = 'flex';
-    } else {
-      elements.pulseClusterTopicIndicator.style.display = 'none';
-    }
-  }
 
   // Annotate and filter clusters
   const processed = rawClusters.map(annotateStoryCluster).filter(c => {
@@ -3835,23 +3818,33 @@ function renderStoryClusters() {
     return true;
   });
 
-  // Sort clusters (default to 'outlets' — Most Outlets Covering, then spread)
+  // Sort clusters & dynamically update section title to reflect active sort
   const sortMode = state.clusterSort || 'outlets';
+  const sortTitles = {
+    outlets: 'Most Covered Stories',
+    latest: 'Latest Developing Stories',
+    pessimistic: 'Most Covered Negative Stories',
+    optimistic: 'Most Covered Constructive Stories',
+    spread: 'Most Polarizing Stories'
+  };
+  if (barHeadingEl) {
+    barHeadingEl.innerText = sortTitles[sortMode] || 'Most Covered Stories';
+  }
+
   processed.sort((a, b) => {
     if (sortMode === 'outlets') {
       const covDiff = (b.coverage?.length || 0) - (a.coverage?.length || 0);
       return covDiff !== 0 ? covDiff : (b.computedSpread - a.computedSpread);
+    }
+    if (sortMode === 'latest') {
+      const timeDiff = (b.maxTime || 0) - (a.maxTime || 0);
+      return timeDiff !== 0 ? timeDiff : ((b.coverage?.length || 0) - (a.coverage?.length || 0));
     }
     if (sortMode === 'spread') return b.computedSpread - a.computedSpread;
     if (sortMode === 'pessimistic') return a.averageSentiment - b.averageSentiment;
     if (sortMode === 'optimistic') return b.averageSentiment - a.averageSentiment;
     return 0;
   });
-
-  // Update badge counter
-  if (elements.clustersCountBadge) {
-    elements.clustersCountBadge.innerText = `${processed.length} Cluster${processed.length === 1 ? '' : 's'} Identified`;
-  }
 
   // Empty state if filtered out
   if (processed.length === 0) {
@@ -3904,11 +3897,33 @@ window.handleClusterCardClick = function(event, clusterId) {
   toggleClusterCard(clusterId);
 };
 
-// Toggle cluster coverage accordion & expand card to full width
+// Toggle cluster coverage accordion & expand card to full width without leaving a right-column gap
 window.toggleClusterCard = function(clusterId) {
   const card = document.getElementById(clusterId);
   if (!card) return;
+  const parent = card.parentElement;
   const isExpanded = card.classList.toggle('is-expanded');
+
+  // On 2-column desktop layouts, if a right-column card is expanded, temporarily swap it before its
+  // left-column row partner so it expands in-place at the start of its row without leaving an empty gap.
+  if (parent && window.innerWidth > 900) {
+    if (isExpanded) {
+      const siblings = Array.from(parent.children).filter(el => el.classList.contains('cluster-card'));
+      const idx = siblings.indexOf(card);
+      const prev = card.previousElementSibling;
+      if (idx % 2 === 1 && prev && !prev.classList.contains('is-expanded')) {
+        card.dataset.swappedWithPrev = prev.id;
+        parent.insertBefore(card, prev);
+      }
+    } else if (card.dataset.swappedWithPrev) {
+      const prev = document.getElementById(card.dataset.swappedWithPrev);
+      delete card.dataset.swappedWithPrev;
+      if (prev && prev.parentElement === parent) {
+        parent.insertBefore(prev, card);
+      }
+    }
+  }
+
   const btn = card.querySelector('.cluster-toggle-btn');
   if (btn) {
     const span = btn.querySelector('span');
@@ -4425,12 +4440,6 @@ function renderSentimentTimeline() {
     }
   }
 
-  if (timeRangeEl) {
-    const filterPrefix = selectedSource ? `${sourceName}: ` : '';
-    const topicPrefix = topicMeta ? `${topicMeta.icon} ${topicMeta.name} — ` : '';
-    timeRangeEl.innerText = `${filterPrefix}${topicPrefix}${timeframeLabel} (${points.length} Data Points)`;
-  }
-
   // Sizing: 1060 x 360 to fill the card space cleanly
   const width = 1060;
   const height = 360;
@@ -4443,8 +4452,51 @@ function renderSentimentTimeline() {
     return;
   }
 
-  // Dynamic Y-Domain: scale to data but always include 0.00 neutrality baseline and historical baseline
-  let allScores = [0, histAvg, ...points.map(p => p.score)];
+  // Collect actual posted articles within the active window to plot at their real timestamps
+  const minTimeBound = points.length > 0 ? Math.min(cutoff > 0 && timeframe !== 'all' ? cutoff : Infinity, new Date(points[0].timestamp).getTime()) : (cutoff || (now - 24 * 3600 * 1000));
+  const maxTimeBound = points.length > 0 ? Math.max(now, new Date(points[points.length - 1].timestamp).getTime()) : now;
+  const timeSpanMs = Math.max(1, maxTimeBound - minTimeBound);
+  const getXByTime = (tMs) => padding.left + clamp((tMs - minTimeBound) / timeSpanMs, 0.01, 0.99) * chartW;
+
+  const postedArticles = [];
+  Object.entries(state.sources || {}).forEach(([sId, src]) => {
+    if (selectedSource && sId !== selectedSource) return;
+    const sName = src.name || SOURCE_META[sId]?.name || sId;
+    (src.articles || []).forEach(a => {
+      const t = new Date(a.pubDate).getTime();
+      const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
+      if (!isNaN(t) && t >= minTimeBound && t <= maxTimeBound && typeof sc === 'number') {
+        if (!selectedTopic || a.category === selectedTopic) {
+          postedArticles.push({
+            sId,
+            sourceName: sName,
+            title: a.title || 'Untitled Dispatch',
+            link: a.link || '#',
+            score: Number(sc.toFixed(3)),
+            time: t,
+            pubDate: a.pubDate,
+            category: a.category || 'world'
+          });
+        }
+      }
+    });
+  });
+  postedArticles.sort((a, b) => a.time - b.time);
+
+  // Sample neatly if there are hundreds of articles so the SVG remains crisp and responsive
+  const maxPlottedArticles = selectedSource ? 120 : 160;
+  const plottedArticles = postedArticles.length > maxPlottedArticles
+    ? postedArticles.filter((_, i) => i % Math.ceil(postedArticles.length / maxPlottedArticles) === 0)
+    : postedArticles;
+
+  if (timeRangeEl) {
+    const filterPrefix = selectedSource ? `${sourceName}: ` : '';
+    const topicPrefix = topicMeta ? `${topicMeta.icon} ${topicMeta.name} — ` : '';
+    timeRangeEl.innerText = `${filterPrefix}${topicPrefix}${timeframeLabel} (${postedArticles.length} Articles Posted)`;
+  }
+
+  // Dynamic Y-Domain: scale to data + posted articles while always including 0.00 neutrality & historical baseline
+  let allScores = [0, histAvg, ...points.map(p => p.score), ...plottedArticles.map(a => a.score)];
   points.forEach(p => {
     Object.values(p.averages || {}).forEach(v => {
       if (typeof v === 'number') allScores.push(v);
@@ -4581,15 +4633,18 @@ function renderSentimentTimeline() {
     `;
   }
 
-  // Dots for each point on the focused line
+  // Plot actual posted articles at their exact publication time & sentiment score
   let dotsHTML = '';
-  points.forEach((pt, idx) => {
-    const x = getX(idx);
-    const y = getY(pt.score);
-    const color = pt.score > 0.1 ? 'var(--pos-color)' : (pt.score < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
+  plottedArticles.forEach((art, idx) => {
+    const x = getXByTime(art.time);
+    const y = getY(art.score);
+    const meta = SOURCE_META[art.sId] || { color: '#6366f1' };
+    const dotColor = selectedSource
+      ? (art.score > 0.1 ? 'var(--pos-color)' : (art.score < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)'))
+      : meta.color;
     dotsHTML += `
-      <circle cx="${x}" cy="${y}" r="4.5" fill="${color}" stroke="var(--bg-secondary)" stroke-width="2" style="cursor:pointer; transition:transform 0.15s ease;"
-              data-idx="${idx}" class="timeline-dot"/>
+      <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4.2" fill="${dotColor}" fill-opacity="0.88" stroke="var(--bg-secondary)" stroke-width="1.5" style="cursor:pointer; transition: r 0.15s ease, fill-opacity 0.15s ease;"
+              data-art-idx="${idx}" data-source="${art.sId}" class="timeline-dot timeline-article-dot"/>
     `;
   });
 
@@ -4614,69 +4669,57 @@ function renderSentimentTimeline() {
     ${dotsHTML}
   `;
 
-  // Attach hover events to dots
-  chartSvg.querySelectorAll('.timeline-dot').forEach(dot => {
+  // Attach hover & click events to actual posted article dots
+  chartSvg.querySelectorAll('.timeline-article-dot').forEach(dot => {
     dot.addEventListener('mouseenter', () => {
-      const idx = parseInt(dot.getAttribute('data-idx'));
-      const pt = points[idx];
-      if (!pt || !tooltip) return;
+      const idx = parseInt(dot.getAttribute('data-art-idx'));
+      const art = plottedArticles[idx];
+      if (!art || !tooltip) return;
 
-      const dateStr = new Date(pt.timestamp).toLocaleString();
-      const moodText = pt.score < -0.3 ? 'Alarmist / Doom' : (pt.score < -0.05 ? 'Leaning Gloomy' : (pt.score > 0.1 ? 'Optimistic' : 'Neutral'));
-      const scoreColor = pt.score > 0 ? 'var(--pos-color)' : 'var(--neg-color)';
-      const ptDelta = pt.score - histAvg;
-      const ptDeltaStr = (ptDelta >= 0 ? '+' : '') + ptDelta.toFixed(2);
-      
-      let tooltipContent = '';
-      if (selectedTopic && topicMeta) {
-        tooltipContent = `
-          <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
-          <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-bottom:0.25rem;">
-            <span style="color:var(--text-secondary);">${topicMeta.icon} ${topicMeta.name}:</span>
-            <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
-          </div>
-          <div style="font-size:0.7rem; color:var(--accent-color); font-family:var(--font-mono);">vs Hist: ${ptDeltaStr}</div>
-        `;
-      } else if (selectedSource) {
-        tooltipContent = `
-          <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
-          <div style="font-size:0.78rem; color:${scoreColor}; font-weight:700; margin-bottom:0.2rem;">${sourceName}: ${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</div>
-          <div style="display:flex; justify-content:space-between; gap:0.6rem; font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono); border-top:1px solid var(--border-color); padding-top:0.25rem;">
-            <span>vs Historical: <strong style="color:var(--accent-color);">${ptDeltaStr}</strong></span>
-            <span>Global Avg: ${pt.averages ? ((Object.values(pt.averages).reduce((a,b)=>a+b,0)/Object.values(pt.averages).length).toFixed(2)) : '-'}</span>
-          </div>
-        `;
-      } else {
-        const outletEntries = Object.entries(pt.averages).filter(e => typeof e[1] === 'number').sort((a,b) => a[1] - b[1]);
-        const lowest = outletEntries[0];
-        const highest = outletEntries[outletEntries.length - 1];
-        const lowestName = lowest ? (resolvedSources[lowest[0]]?.name || SOURCE_META[lowest[0]]?.name || lowest[0]) : '';
-        const highestName = highest ? (resolvedSources[highest[0]]?.name || SOURCE_META[highest[0]]?.name || highest[0]) : '';
-        tooltipContent = `
-          <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.25rem;">${dateStr}</div>
-          <div style="display:flex; justify-content:space-between; gap:0.75rem; margin-bottom:0.25rem;">
-            <span style="color:var(--text-secondary);">Global Vibe:</span>
-            <strong style="color:${scoreColor};">${pt.score > 0 ? '+' : ''}${pt.score.toFixed(3)} (${moodText})</strong>
-          </div>
-          <div style="font-size:0.7rem; color:var(--accent-color); font-family:var(--font-mono); margin-bottom:0.25rem;">vs Historical: ${ptDeltaStr}</div>
-          ${lowest ? `<div style="font-size:0.7rem; color:var(--neg-color);">📉 Darkest: ${lowestName} (${lowest[1].toFixed(2)})</div>` : ''}
-          ${highest ? `<div style="font-size:0.7rem; color:var(--pos-color);">📈 Brightest: ${highestName} (${highest[1].toFixed(2)})</div>` : ''}
-        `;
-      }
+      const meta = SOURCE_META[art.sId] || { color: '#6366f1', name: art.sourceName };
+      const dateStr = new Date(art.time).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const scoreColor = art.score > 0.1 ? 'var(--pos-color)' : (art.score < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
+      const safeTitle = (art.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-      tooltip.innerHTML = tooltipContent;
+      tooltip.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem; margin-bottom:0.25rem;">
+          <span style="font-weight:700; color:var(--text-primary); display:inline-flex; align-items:center; gap:0.35rem; font-size:0.76rem;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${meta.color};"></span>
+            ${art.sourceName}
+          </span>
+          <span style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono);">${dateStr}</span>
+        </div>
+        <div style="font-size:0.78rem; font-weight:600; color:var(--text-primary); line-height:1.35; margin-bottom:0.3rem; max-width:260px;">
+          ${safeTitle}
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-size:0.7rem; border-top:1px solid var(--border-color); padding-top:0.22rem;">
+          <span style="color:${scoreColor}; font-weight:700; font-family:var(--font-mono);">Tone: ${art.score > 0 ? '+' : ''}${art.score.toFixed(2)}</span>
+          <span style="color:var(--accent-color); font-size:0.66rem;">Click dot to read &rarr;</span>
+        </div>
+      `;
       tooltip.style.display = 'block';
 
       const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
       const dotRect = dot.getBoundingClientRect();
-      tooltip.style.left = `${dotRect.left - wrapRect.left + 4}px`;
-      tooltip.style.top = `${dotRect.top - wrapRect.top - 8}px`;
+      tooltip.style.left = `${ clamp(dotRect.left - wrapRect.left + 4, 8, Math.max(12, wrapRect.width - 270)) }px`;
+      tooltip.style.top = `${ Math.max(8, dotRect.top - wrapRect.top - 12) }px`;
       dot.setAttribute('r', '7');
+      dot.setAttribute('fill-opacity', '1');
     });
 
     dot.addEventListener('mouseleave', () => {
       if (tooltip) tooltip.style.display = 'none';
-      dot.setAttribute('r', '4.5');
+      dot.setAttribute('r', '4.2');
+      dot.setAttribute('fill-opacity', '0.88');
+    });
+
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(dot.getAttribute('data-art-idx'));
+      const art = plottedArticles[idx];
+      if (art && art.link && art.link !== '#') {
+        window.open(art.link, '_blank', 'noopener,noreferrer');
+      }
     });
   });
 
@@ -5866,7 +5909,7 @@ function linkifyEditorialSummary(rawSummary, articles = []) {
       result += rawSummary.slice(cursor, m.start);
     }
     const safeTitle = (m.title || '').replace(/"/g, '&quot;').replace(/<[^>]+>/g, '');
-    result += `<a href="${m.url}" target="_blank" rel="noopener noreferrer" class="summary-story-link" title="${safeTitle}">${m.label} <i data-lucide="external-link"></i></a>`;
+    result += `<a href="${m.url}" target="_blank" rel="noopener noreferrer" class="summary-story-link" title="${safeTitle}">${m.label}</a>`;
     cursor = m.end;
   }
   if (cursor < rawSummary.length) {
