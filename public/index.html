@@ -143,6 +143,58 @@
           </p>
         </div>
 
+        <!-- 3. Topic Vibes Bar (Interactive Topic Filter inside Hero Container above Menu) -->
+        <div class="pulse-topics-bar hero-topics-bar" style="margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+          <div class="pulse-topic-chips" id="pulse-category-chips">
+            <!-- Dynamically populated chips in app.js -->
+          </div>
+        </div>
+
+        <!-- 4. The 3 Key Signals Horizontal Strip (Most Alarmist / Most Uplifting / Biggest Outlet Clash) -->
+        <div class="pulse-signals-strip hero-signals-strip" style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid var(--border-color);">
+          <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
+            <div class="signal-header">
+              <span class="signal-label neg">
+                <i data-lucide="arrow-down-right"></i>
+                <span>Most Alarmist Outlet</span>
+              </span>
+              <span id="pulse-alarmist-score" class="signal-score badge neg">-0.47</span>
+            </div>
+            <div class="signal-body">
+              <strong id="pulse-alarmist-name" class="signal-name">Sky News</strong>
+              <span id="pulse-alarmist-sub" class="signal-sub">Most pessimistic tone today</span>
+            </div>
+          </div>
+
+          <div class="pulse-signal-card" id="signal-uplifting-card" title="Click to filter headlines by most uplifting outlet">
+            <div class="signal-header">
+              <span class="signal-label pos">
+                <i data-lucide="arrow-up-right"></i>
+                <span>Most Uplifting Outlet</span>
+              </span>
+              <span id="pulse-uplifting-score" class="signal-score badge pos">-0.07</span>
+            </div>
+            <div class="signal-body">
+              <strong id="pulse-uplifting-name" class="signal-name">CNBC News</strong>
+              <span id="pulse-uplifting-sub" class="signal-sub">Holding relative composure</span>
+            </div>
+          </div>
+
+          <div class="pulse-signal-card" id="signal-polarization-card" title="Two outlets with the largest divergence on the same topic — click to inspect topic coverage">
+            <div class="signal-header">
+              <span class="signal-label warn">
+                <i data-lucide="split"></i>
+                <span>Biggest Outlet Clash</span>
+              </span>
+              <span id="pulse-polarization-score" class="signal-score badge warn">1.08 Spread</span>
+            </div>
+            <div class="signal-body">
+              <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
+              <span id="pulse-polarization-sub" class="signal-sub">Topic: Business</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Mobile Bottom Share Audit Row -->
         <div class="pulse-mobile-share-row">
           <button type="button" class="share-vibe-btn mobile-only-share" onclick="toggleSharePopover(event)" title="Share today's audit or download a Daily Vibe Card">
@@ -254,7 +306,7 @@
                 <strong>Want to audit individual newsrooms or browse the live chronological wire?</strong>
               </div>
               <p class="footer-banner-sub">
-                Explore how all 17 international outlets rank on the sentiment spectrum, compare two desks head-to-head, or search 900+ raw headlines.
+                Explore how all 17 international outlets rank on the sentiment spectrum, or search 900+ raw headlines.
               </p>
             </div>
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
@@ -351,75 +403,23 @@
       </section>
     </main>
 
-    <!-- TAB 3: NEWSROOMS (Unified Outlet Spectrum, Topic Vibes, 17-Outlet Leaderboard, Head-to-Head Arena & Headline Wire) -->
+    <!-- TAB 3: NEWSROOMS (Unified Outlet Leaderboard, Sentiment Spectrum & Headline Wire) -->
     <main id="tab-panel-deepdives" class="tab-panel hidden">
-      <!-- 1. UNIFIED NEWSROOM SENTIMENT SPECTRUM, TOPIC BEATS & COMPACT LEADERBOARD -->
+      <!-- 1. UNIFIED NEWSROOM LEADERBOARD & SENTIMENT SPECTRUM -->
       <section class="newsrooms-spectrum-section" id="newsrooms-spectrum-section" style="margin-bottom: 1.5rem;">
         <div class="section-header-row">
           <div>
             <h2 class="section-title flex-center">
               <i data-lucide="compass"></i>
-              Newsroom Sentiment Spectrum &amp; Leaderboard
+              Newsroom Leaderboard &amp; Sentiment Spectrum
             </h2>
-            <p class="section-desc">Where all 17 international newsrooms sit on the Alarmist (-1.0) to Constructive (+1.0) spectrum right now. Filter by topic beat or region, or click any outlet to inspect its coverage.</p>
+            <p class="section-desc">All 17 international newsrooms ranked from most alarmist to most constructive for the selected timeframe, alongside the live sentiment spectrum.</p>
           </div>
         </div>
 
         <div class="card newsrooms-spectrum-card" style="padding: 1.25rem 1.4rem;">
-          <!-- Topic Vibes Bar (Interactive Topic Filter across Newsrooms & Spectrum) -->
-          <div class="pulse-topics-bar newsrooms-topics-bar">
-            <div class="pulse-topic-chips" id="pulse-category-chips">
-              <!-- Dynamically populated chips in app.js -->
-            </div>
-          </div>
-
-          <!-- The 3 Key Signals Horizontal Strip -->
-          <div class="pulse-signals-strip" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 1.1rem;">
-            <div class="pulse-signal-card" id="signal-alarmist-card" title="Click to filter headlines by most alarmist outlet">
-              <div class="signal-header">
-                <span class="signal-label neg">
-                  <i data-lucide="arrow-down-right"></i>
-                  <span>Most Alarmist Outlet</span>
-                </span>
-                <span id="pulse-alarmist-score" class="signal-score badge neg">-0.47</span>
-              </div>
-              <div class="signal-body">
-                <strong id="pulse-alarmist-name" class="signal-name">Sky News</strong>
-                <span id="pulse-alarmist-sub" class="signal-sub">Most pessimistic tone today</span>
-              </div>
-            </div>
-
-            <div class="pulse-signal-card" id="signal-uplifting-card" title="Click to filter headlines by most uplifting outlet">
-              <div class="signal-header">
-                <span class="signal-label pos">
-                  <i data-lucide="arrow-up-right"></i>
-                  <span>Most Uplifting Outlet</span>
-                </span>
-                <span id="pulse-uplifting-score" class="signal-score badge pos">-0.07</span>
-              </div>
-              <div class="signal-body">
-                <strong id="pulse-uplifting-name" class="signal-name">CNBC News</strong>
-                <span id="pulse-uplifting-sub" class="signal-sub">Holding relative composure</span>
-              </div>
-            </div>
-
-            <div class="pulse-signal-card" id="signal-polarization-card" title="Two outlets with the largest divergence on the same topic — click to compare head-to-head below">
-              <div class="signal-header">
-                <span class="signal-label warn">
-                  <i data-lucide="split"></i>
-                  <span>Biggest Outlet Clash</span>
-                </span>
-                <span id="pulse-polarization-score" class="signal-score badge warn">1.08 Spread</span>
-              </div>
-              <div class="signal-body">
-                <strong id="pulse-polarization-name" class="signal-name">BBC vs NPR</strong>
-                <span id="pulse-polarization-sub" class="signal-sub">Topic: Business</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Region Filter Pills (Filters BOTH the Spectrum Track AND the Compact Leaderboard below) -->
-          <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 0.9rem; flex-wrap: wrap; align-items: center;">
+          <!-- Region Filter Pills (Filters BOTH the Outlet Leaderboard AND the Spectrum Track below) -->
+          <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
             <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.25rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
             <button class="region-pill active" data-region="all">All Outlets (<span data-region-count="all">17</span>)</button>
             <button class="region-pill" data-region="US"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="US"> United States (<span data-region-count="US">8</span>)</button>
@@ -429,8 +429,35 @@
             <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.2rem;">🌐</span> Global Agencies (<span data-region-count="GLOBAL">2</span>)</button>
           </div>
 
-          <!-- Sentiment Spectrum Track & Beeswarm Distribution Lanes -->
-          <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper" style="margin-top: 0; padding-top: 0.85rem;">
+          <!-- 1. Integrated Compact Outlet Leaderboard Matrix (Worst to Best, then Unranked) -->
+          <div class="integrated-leaderboard-block" id="comparison-section" style="margin-top: 0; padding-top: 0; border-top: none; margin-bottom: 1.25rem;">
+            <div class="integrated-leaderboard-header">
+              <div class="integrated-leaderboard-title">
+                <i data-lucide="columns-3" style="width:15px;height:15px;color:var(--accent-color);"></i>
+                <span>Outlets Leaderboard (Worst &rarr; Best)</span>
+                <span id="sources-carousel-count" class="leaderboard-count-pill">17 Outlets</span>
+              </div>
+              <div class="sources-carousel-controls" style="display: flex; gap: 0.4rem; align-items: center;">
+                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
+                  <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
+                </button>
+                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
+                  <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="sources-grid" class="sources-grid sources-sidescroll compact-leaderboard-grid">
+              <!-- Compact news source cards injected dynamically -->
+              <div class="loading-state">
+                <i data-lucide="loader-2" class="spin"></i>
+                <span>Loading comparison data...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Sentiment Spectrum Track & Beeswarm Distribution Lanes -->
+          <div class="pulse-spectrum-integrated" id="spectrum-card-wrapper" style="margin-top: 0; padding-top: 1.15rem; border-top: 1px solid var(--border-color);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.2rem; margin-bottom: 0.45rem; flex-wrap: wrap; gap: 0.75rem;">
               <!-- Scale Labels -->
               <div class="spectrum-labels" style="display: flex; gap: 1.25rem; font-size: 0.85rem; font-weight: 500;">
@@ -475,7 +502,7 @@
             <div id="global-spectrum-tooltip" class="card" style="position: absolute; display: none; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.75rem; box-shadow: var(--card-shadow); z-index: 100; max-width: 250px; pointer-events: none; white-space: normal; transition: left 0.08s ease-out, top 0.08s ease-out;"></div>
             
             <div class="spectrum-legend">
-              <p id="spectrum-legend-text" class="small-text text-muted">* Click on any source marker or leaderboard card to inspect its coverage spotlight and filter headlines below.</p>
+              <p id="spectrum-legend-text" class="small-text text-muted">* Click on any leaderboard card or spectrum marker to inspect its coverage spotlight and filter headlines below.</p>
             </div>
           </div>
 
@@ -483,38 +510,11 @@
           <div id="pulse-spotlight-banner" class="spotlight-banner-unified" style="display: none; margin-top: 1rem;">
             <!-- Content will be injected dynamically -->
           </div>
-
-          <!-- Integrated Compact Outlet Leaderboard Matrix -->
-          <div class="integrated-leaderboard-block" id="comparison-section">
-            <div class="integrated-leaderboard-header">
-              <div class="integrated-leaderboard-title">
-                <i data-lucide="columns-3" style="width:15px;height:15px;color:var(--accent-color);"></i>
-                <span>Outlet Leaderboard</span>
-                <span id="sources-carousel-count" class="leaderboard-count-pill">17 Outlets</span>
-              </div>
-              <div class="sources-carousel-controls" style="display: flex; gap: 0.4rem; align-items: center;">
-                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(-1)" aria-label="Previous outlets" title="Previous outlets">
-                  <i data-lucide="chevron-left" style="width: 15px; height: 15px;"></i>
-                </button>
-                <button type="button" class="carousel-nav-btn" onclick="scrollSourcesCarousel(1)" aria-label="Next outlets" title="Next outlets">
-                  <i data-lucide="chevron-right" style="width: 15px; height: 15px;"></i>
-                </button>
-              </div>
-            </div>
-
-            <div id="sources-grid" class="sources-grid sources-sidescroll compact-leaderboard-grid">
-              <!-- Compact news source cards injected dynamically -->
-              <div class="loading-state">
-                <i data-lucide="loader-2" class="spin"></i>
-                <span>Loading comparison data...</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      <!-- 3. HEAD-TO-HEAD OUTLET COMPARE -->
-      <section class="head-to-head-section" id="h2h-section" style="margin-top: 2rem;">
+      <!-- 3. HEAD-TO-HEAD OUTLET COMPARE (Hidden for now per user request) -->
+      <section class="head-to-head-section hidden" id="h2h-section" style="display: none !important; margin-top: 2rem;">
         <div class="section-header-row">
           <div>
             <h2 class="section-title flex-center">

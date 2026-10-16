@@ -3340,10 +3340,8 @@ function renderComparisonMatrix() {
 
     const meta = SOURCE_META[id] || { region: 'GLOBAL' };
     const regKey = (meta.region || 'GLOBAL').toUpperCase();
-    if (!isCategoryFiltered || scored.length > 0) {
-      regionCounts.all++;
-      regionCounts[regKey] = (regionCounts[regKey] || 0) + 1;
-    }
+    regionCounts.all++;
+    regionCounts[regKey] = (regionCounts[regKey] || 0) + 1;
 
     outletMetrics[id] = {
       source: src,
@@ -3357,44 +3355,56 @@ function renderComparisonMatrix() {
 
   updateRegionPillCounts(regionCounts);
 
-  // Sort sources by average sentiment (highest/most composed to lowest/most alarmist)
+  // Sort sources from Worst (most negative/alarmist) to Best (most positive/constructive),
+  // then append any unranked outlets (scoredCount === 0 for the current timeperiod/topic) at the end.
   let sortedIds = Object.keys(outletMetrics).filter(id => {
-    if (isCategoryFiltered && outletMetrics[id].scoredCount === 0) return false;
     if (activeRegion !== 'ALL' && outletMetrics[id].regKey !== activeRegion) return false;
     return true;
   }).sort((a, b) => {
-    const valA = typeof outletMetrics[a].avg === 'number' ? outletMetrics[a].avg : -999;
-    const valB = typeof outletMetrics[b].avg === 'number' ? outletMetrics[b].avg : -999;
-    return valB - valA;
+    const hasA = outletMetrics[a].scoredCount > 0 && typeof outletMetrics[a].avg === 'number';
+    const hasB = outletMetrics[b].scoredCount > 0 && typeof outletMetrics[b].avg === 'number';
+    if (hasA && !hasB) return -1;
+    if (!hasA && hasB) return 1;
+    if (!hasA && !hasB) return (outletMetrics[a].source.name || a).localeCompare(outletMetrics[b].source.name || b);
+    return outletMetrics[a].avg - outletMetrics[b].avg;
   });
 
   // Update carousel count badge if present
   const carouselCount = document.getElementById('sources-carousel-count');
   if (carouselCount) {
-    carouselCount.innerText = `${sortedIds.length} Outlet${sortedIds.length === 1 ? '' : 's'}`;
+    const rankedCount = sortedIds.filter(id => outletMetrics[id].scoredCount > 0).length;
+    const unrankedCount = sortedIds.length - rankedCount;
+    carouselCount.innerText = unrankedCount > 0
+      ? `${rankedCount} Ranked · ${unrankedCount} Unranked`
+      : `${sortedIds.length} Outlet${sortedIds.length === 1 ? '' : 's'}`;
   }
 
   if (sortedIds.length === 0) {
     elements.sourcesGrid.innerHTML = `
       <div class="empty-state" style="padding: 1.5rem; text-align: center; width: 100%;">
         <i data-lucide="globe-2"></i>
-        <span>No news outlets match the selected region or topic filter.</span>
+        <span>No news outlets match the selected region filter.</span>
       </div>
     `;
     lucide.createIcons();
     return;
   }
 
-  sortedIds.forEach((id, rankIdx) => {
+  let currentRank = 0;
+  sortedIds.forEach((id) => {
     const mData = outletMetrics[id];
     const source = mData.source;
-    const avg = typeof mData.avg === 'number' ? mData.avg : 0;
+    const isUnranked = mData.scoredCount === 0 || typeof mData.avg !== 'number';
+    if (!isUnranked) currentRank++;
+    const avg = !isUnranked ? mData.avg : 0;
     const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global News', flag: '🌐' };
     
     let moodClass = 'neutral';
-    const badgeText = (avg > 0 ? '+' : '') + avg.toFixed(2);
-    if (avg > 0.15) moodClass = 'positive';
-    else if (avg < -0.15) moodClass = 'negative';
+    const badgeText = isUnranked ? 'Unranked' : ((avg > 0 ? '+' : '') + avg.toFixed(2));
+    if (!isUnranked) {
+      if (avg > 0.15) moodClass = 'positive';
+      else if (avg < -0.15) moodClass = 'negative';
+    }
 
     // Historical average across all available articles for this outlet (all-time)
     const rawArticles = (state.sources[id] && state.sources[id].articles) || [];
@@ -3404,7 +3414,9 @@ function renderComparisonMatrix() {
       : avg;
     const delta = avg - histAvg;
     let trendBadgeHTML = '';
-    if (Math.abs(delta) >= 0.04) {
+    if (isUnranked) {
+      trendBadgeHTML = `<span class="source-trend-badge stable" title="No scored stories in selected timeframe/topic">No stories in window</span>`;
+    } else if (Math.abs(delta) >= 0.04) {
       if (delta > 0) {
         trendBadgeHTML = `<span class="source-trend-badge up" title="Trending +${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▲ +${delta.toFixed(2)}</span>`;
       } else {
@@ -3423,14 +3435,14 @@ function renderComparisonMatrix() {
     const isSelected = state.filters.source === id;
 
     const card = document.createElement('div');
-    card.className = `source-card compact-source-card card ${isSelected ? 'active' : ''}`;
+    card.className = `source-card compact-source-card card ${isSelected ? 'active' : ''} ${isUnranked ? 'unranked-source-card' : ''}`;
     card.setAttribute('data-id', id);
 
     card.innerHTML = `
       <div class="source-card-header compact-header">
         <div class="source-meta">
-          <span class="leaderboard-rank-num">#${rankIdx + 1}</span>
-          <div class="source-icon compact-icon ${id}" style="background-color: ${meta.color}; color: #fff;">
+          <span class="leaderboard-rank-num">${isUnranked ? '—' : `#${currentRank}`}</span>
+          <div class="source-icon compact-icon ${id}" style="background-color: ${meta.color}; color: #fff; ${isUnranked ? 'opacity:0.55;' : ''}">
             ${meta.initials}
             ${isSelected ? '<span class="source-icon-check">✓</span>' : ''}
           </div>
@@ -3443,7 +3455,7 @@ function renderComparisonMatrix() {
           </div>
         </div>
         <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.2rem; flex-shrink:0;">
-          <span class="score-badge ${moodClass}">${badgeText}</span>
+          <span class="score-badge ${moodClass}" style="${isUnranked ? 'opacity:0.65; font-size:0.7rem;' : ''}">${badgeText}</span>
           ${trendBadgeHTML}
         </div>
       </div>
@@ -3456,7 +3468,7 @@ function renderComparisonMatrix() {
           <div class="dist-slice pos" style="width: ${posPct}%" title="Positive: ${posPct}%"></div>
         </div>
         <div class="dist-bar-label" style="margin-top: 0.2rem;">
-          <span style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">${negPct}% neg · ${neuPct}% neu · ${posPct}% pos</span>
+          <span style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">${isUnranked ? 'No coverage in active window' : `${negPct}% neg · ${neuPct}% neu · ${posPct}% pos`}</span>
           <span class="compact-filter-hint">${isSelected ? '✓ Filtering' : 'Inspect →'}</span>
         </div>
       </div>
@@ -3634,8 +3646,8 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
     return sa - sb;
   });
 
-  // Build mini-spectrum bubbles for ALL stories in sortedCoverage with smart collision de-stacking
-  // so that even when 19 stories cluster around -0.85, all 19 bubbles are visible and clickable
+  // Build mini-spectrum bubbles for ALL stories in sortedCoverage with subtle collision de-stacking
+  // on a uniform-height track so cards never vary in bar height
   const placedBubbles = [];
   const bubblesHTML = sortedCoverage.map(cov => {
     const meta = SOURCE_META[cov.sourceId] || { initials: (cov.sourceId || 'NWS').toUpperCase().slice(0, 3), color: '#3b82f6', flag: '🌐' };
@@ -3646,10 +3658,10 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
 
     // Find how many already-placed bubbles are within 3.2% horizontal distance
     const nearbyCount = placedBubbles.filter(p => Math.abs(p.basePct - basePct) < 3.2).length;
-    // Spread horizontally slightly and alternate vertical row offsets when clustered
-    const horizOffset = nearbyCount === 0 ? 0 : ((nearbyCount % 2 === 1 ? 1 : -1) * Math.min(2.4, Math.ceil(nearbyCount / 2) * 0.85));
+    // Spread horizontally slightly and use subtle vertical micro-offsets within a fixed uniform track
+    const horizOffset = nearbyCount === 0 ? 0 : ((nearbyCount % 2 === 1 ? 1 : -1) * Math.min(2.6, Math.ceil(nearbyCount / 2) * 0.9));
     const leftPct = clamp(basePct + horizOffset, 3, 97);
-    const rowOffsets = [0, -9, 9, -15, 15, -5, 5];
+    const rowOffsets = [0, -5, 5, -8, 8, -3, 3];
     const yOffsetPx = rowOffsets[nearbyCount % rowOffsets.length];
     placedBubbles.push({ basePct, leftPct });
 
@@ -3697,8 +3709,6 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
     `;
   }).join('');
 
-  const trackExtraClass = sortedCoverage.length > 6 ? 'cluster-spectrum-track-dense' : '';
-
   return `
     <article class="cluster-card card" id="${clusterId}" onclick="handleClusterCardClick(event, '${clusterId}')">
       <div class="cluster-header">
@@ -3724,7 +3734,7 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
           <span>Neutral (0.0)</span>
           <span>Constructive / Optimistic (+1.0)</span>
         </div>
-        <div class="cluster-spectrum-track ${trackExtraClass}">
+        <div class="cluster-spectrum-track">
           ${bubblesHTML}
         </div>
       </div>
@@ -6121,20 +6131,12 @@ function renderDailyPulse() {
   }
   if (polCard) {
     polCard.onclick = () => {
-      if (maxClash.outletA && maxClash.outletB) {
-        if (elements.h2hSourceA) elements.h2hSourceA.value = maxClash.outletA.id;
-        if (elements.h2hSourceB) elements.h2hSourceB.value = maxClash.outletB.id;
-        if (maxClash.cat) {
-          state.h2hTopic = maxClash.cat;
-          if (elements.h2hTopicSelect) elements.h2hTopicSelect.value = maxClash.cat;
-        }
-        switchTab('deepdives');
-        renderHeadToHead();
-        const h2h = document.getElementById('h2h-section');
-        if (h2h) h2h.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        switchTab('deepdives');
+      if (maxClash.cat) {
+        setQuickCategoryFilter(maxClash.cat);
       }
+      switchTab('deepdives');
+      const specSec = document.getElementById('newsrooms-spectrum-section');
+      if (specSec) specSec.scrollIntoView({ behavior: 'smooth' });
     };
   }
 

@@ -6957,21 +6957,57 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   box-shadow: none !important;
 }
 
-/* 3. Multi-row collision-avoiding cluster spread spectrum track for high-coverage stories */
-.cluster-spectrum-track.cluster-spectrum-track-dense {
-  height: 44px;
-  margin: 0.45rem 0 0.35rem;
+/* 3. Uniform-height, subtle-gradient cluster spread spectrum track across all cards */
+.cluster-spectrum-wrap {
+  padding: 0.55rem 0.85rem 0.6rem !important;
+}
+
+.cluster-spectrum-track {
+  position: relative;
+  width: 100%;
+  height: 28px !important;
+  margin: 0.25rem 0 0.1rem !important;
+  background: transparent !important;
+  border-radius: 999px;
+}
+
+.cluster-spectrum-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.38) 0%,
+    rgba(148, 163, 184, 0.24) 50%,
+    rgba(16, 185, 129, 0.38) 100%
+  );
 }
 
 .cluster-outlet-bubble {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 0.58rem !important;
   transform: translate(-50%, -50%);
   transition: transform 0.15s ease, box-shadow 0.15s ease, z-index 0.1s ease;
 }
 
 .cluster-outlet-bubble:hover {
-  transform: translate(-50%, -50%) scale(1.22) !important;
+  transform: translate(-50%, -50%) scale(1.24) !important;
   z-index: 40 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.unranked-source-card {
+  opacity: 0.72;
+}
+
+.unranked-source-card:hover {
+  opacity: 0.95;
 }
 
 /* 4. Unified Newsrooms Spectrum & Compact Leaderboard Matrix */
