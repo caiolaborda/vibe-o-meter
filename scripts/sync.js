@@ -354,7 +354,7 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchS
 
   // Interleave across outlets so simultaneous coverage of the same story sits in the same context window
   const orderedHeadlines = interleaveByOutlet(headlines);
-  const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || 120;
+  const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || 50;
   const allResults = [];
   let modelUsed = modelsToTry[0];
 
@@ -370,13 +370,14 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchS
     const prompt = `You are an impartial, senior media analyst evaluating global news dispatches from first principles.
 Evaluate each article across FOUR continuous higher-order dimensions (integers from -100 to 100 or 0 to 100), without artificial topic ceilings or stepped numeric buckets:
 
-1. "polarity" (integer -100 to 100 — Inherent Valence & Counterfactual Direction):
-   What is the inherent real-world valence of the situation being reported?
+1. "polarity" (integer -100 to 100 — Inherent Valence & Full-Situation Counterfactual):
+   What is the inherent real-world valence of the ENTIRE underlying situation being reported?
+   - Apply the Full-Situation Counterfactual: Do NOT isolate a silver lining, legal dismissal, or bureaucratic relief from a tragic premise. Ask: "Does this story only exist because a person is enduring a severe tragedy, terminal condition, or alleged crime?" If the underlying premise is someone dying, suffering a fatal/terminal condition, or facing criminal/abuse proceedings, the overall situation's polarity is negative or at most strictly neutral (<= 0)—even if a final wish, visa, or court dismissal was granted.
    - Deeply Negative (-100 to -60): Loss of life, violence, war, severe trauma, or systemic crisis.
-   - Moderately to Mildly Negative (-59 to -5): Institutional, legal, or political aftermath of harm (murder trials, convictions, arrests, bailouts, war crimes records, cancelling an execution livestream), partisan hostility, fiscal strain, or mixed stories where caveats/layoffs offset gains. Ask the counterfactual: "If this entire situation had never happened, would the world be safer or better?" If yes, polarity is negative.
-   - Strictly Neutral (-4 to +4): Purely procedural mechanics (supplier swaps, routine debate recaps, sports banter).
-   - Mildly to Moderately Positive (+5 to +59): Constructive cooperation, trade progress, medical recovery, civic or economic gains without negative caveats.
-   - Deeply Positive (+60 to +100): Life-saving breakthroughs, peace accords, major scientific, medical, or ecological triumphs.
+   - Moderately to Mildly Negative (-59 to -5): Institutional, legal, or political aftermath of harm, tragic/terminal human predicaments, partisan hostility, fiscal strain, or mixed stories where caveats/harm offset gains.
+   - Strictly Neutral (-4 to +4): Purely procedural mechanics, routine commerce, or bittersweet relief within a tragic/terminal situation.
+   - Mildly to Moderately Positive (+5 to +59): Genuine net-positive progress, cooperation, medical recovery, or civic/economic gains where the underlying premise itself is constructive and free of tragedy.
+   - Deeply Positive (+60 to +100): Life-saving breakthroughs, major ecological/climate reversals, peace accords, or paradigm-shifting scientific/medical triumphs.
 
 2. "reach" (integer 0 to 100 — Scope of Population / System Affected):
    How broad is the human, institutional, or ecological scope? From a single individual or niche incident (5-15), to a single firm or local community (20-40), to a national population or major sector (45-70), up to multi-nation, global, or universal human/scientific scope (75-100).
@@ -401,7 +402,7 @@ Return ONLY a JSON array of objects with:
 - framing: integer -100 to 100
 - category: strictly one of 'world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports', 'other'
 - explanation: concise 1-sentence analytical note on real-world impact and headline framing
-- summary: ONLY IF polarity >= 10 AND input description is empty (""), write a clean, engaging 2-sentence journalistic summary of the story/breakthrough for readers (do NOT mention scores, polarity, or framing in summary; omit field otherwise)
+- summary: ONLY IF polarity >= 15 AND input description is empty (""), write a clean, engaging 2-sentence journalistic summary of the story/breakthrough for readers (do NOT mention scores, polarity, or framing in summary; omit field otherwise)
 
 Articles:
 ${JSON.stringify(promptData, null, 2)}
@@ -417,7 +418,7 @@ Return ONLY valid JSON.`;
           console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} (attempt ${attempt}/${maxAttempts})...`);
           const model = genAI.getGenerativeModel({
             model: modelName,
-            generationConfig: { temperature: 0.1, maxOutputTokens: 16384, responseMimeType: 'application/json' }
+            generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
           });
 
           const generatePromise = model.generateContent(prompt);
@@ -432,12 +433,18 @@ Return ONLY valid JSON.`;
           text = tryRepairJsonArray(text.trim());
 
           const parsed = JSON.parse(text);
-          if (Array.isArray(parsed)) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            let matchedInBatch = 0;
             chunk.forEach((item, idx) => {
-              const match = parsed.find(r => r.index === idx) || { polarity: 0, reach: 10, permanence: 10, framing: 0, category: 'other' };
+              const match = parsed.find(r => r && r.index === idx);
+              // Never fabricate a 0.00 fallback if an item was omitted or truncated
+              if (!match || typeof match.polarity !== 'number' || !match.explanation) {
+                return;
+              }
+              matchedInBatch++;
               const calc = computeFourFactorScore(match);
               const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
-              const rawExp = (match.explanation || `Analyzed via Gemini (${modelName}).`).replace(/\s*\[Event Base:.*$/, '');
+              const rawExp = String(match.explanation).replace(/\s*\[Event Base:.*$/, '');
               const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
               allResults.push({
                 sourceId: item.sourceId,
@@ -451,6 +458,9 @@ Return ONLY valid JSON.`;
                 ...(cleanSummary ? { summary: cleanSummary } : {})
               });
             });
+            if (matchedInBatch < chunk.length) {
+              console.warn(`[Gemini] Partial batch: ${matchedInBatch}/${chunk.length} items returned (${chunk.length - matchedInBatch} left queued).`);
+            }
             modelUsed = modelName;
             batchSuccess = true;
             break;
@@ -546,40 +556,47 @@ Return ONLY valid JSON array.`;
   return { results, modelUsed: modelName };
 }
 
-// Cross-Outlet Story Clustering (100% Pure AI Semantic Clustering with Lead Context & 1 Representative Dispatch per Outlet)
-async function clusterCrossOutletStories(finalSources, apiKey) {
-  if (!apiKey) return [];
+// Cross-Outlet Story Clustering (100% Pure AI Semantic Clustering with 7-Day Constructive Window & Rolling Cluster Memory)
+async function clusterCrossOutletStories(finalSources, apiKey, previousClusters = []) {
+  if (!apiKey) return previousClusters;
   
-  // Gather fresh headlines from the past 36h (up to 28 per outlet) PLUS all constructive 72h stories (sentiment >= 0.14)
-  // so both breaking stories and multi-day Some Good News breakthroughs get clustered by AI
+  // Gather fresh breaking headlines from the past 36h (up to 25 per outlet)
+  // PLUS all constructive stories (sentiment >= 0.15) from the past 7 DAYS so slow-burn discoveries reported days apart cluster together
   const candidates = [];
   const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
   const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
   Object.entries(finalSources).forEach(([sourceId, src]) => {
     const articles = src.articles || [];
-    let addedForSource = 0;
+    let addedBreakingForSource = 0;
+    let addedConstructiveForSource = 0;
     for (let i = 0; i < articles.length; i++) {
       const art = articles[i];
       if (!art || !art.title || art.title.trim().length <= 10) continue;
       const t = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
-      if (!isNaN(t) && t < threeDaysAgo) continue;
+      if (isNaN(t) || t < sevenDaysAgo) continue;
 
       const score = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0);
-      const isRecent36h = !isNaN(t) && t >= thirtySixHoursAgo;
-      const isConstructive72h = score >= 0.14;
+      const isRecent36h = t >= thirtySixHoursAgo;
+      const isRecent72h = t >= threeDaysAgo;
+      const isConstructive7d = score >= 0.15;
 
-      if (!isConstructive72h) {
-        if (addedForSource >= 28) continue;
-        if (!isRecent36h && addedForSource >= 8) continue;
-        addedForSource++;
+      if (isConstructive7d) {
+        if (addedConstructiveForSource >= 15) continue;
+        addedConstructiveForSource++;
+      } else {
+        if (!isRecent72h) continue;
+        if (addedBreakingForSource >= 24) continue;
+        if (!isRecent36h && addedBreakingForSource >= 8) continue;
+        addedBreakingForSource++;
       }
 
       candidates.push({
         sourceId,
         sourceName: src.name,
         title: art.title.trim(),
-        description: (art.description || '').slice(0, 130).trim(),
+        description: (art.description || '').slice(0, 125).trim(),
         sentiment: score,
         link: art.link || '',
         pubDate: art.pubDate || ''
@@ -587,7 +604,7 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
     }
   });
 
-  if (candidates.length < 6) return [];
+  if (candidates.length < 6) return previousClusters;
 
   // Pass headline + brief lead snippet so Gemini resolves oblique headlines semantically without any hardcoded token matching
   const promptLines = candidates.map((c, idx) => {
@@ -599,11 +616,11 @@ async function clusterCrossOutletStories(finalSources, apiKey) {
 Identify distinct real-world events, developments, or discoveries that are covered by 2 or more DIFFERENT news outlets.
 
 Rules:
-- Group dispatches strictly by the exact same underlying real-world event (never merge two separate tragedies, attacks, or debates that occurred in different places just because they share a theme).
+- Group dispatches strictly by the exact same underlying real-world event or discovery (never merge two separate tragedies, awards, or debates that occurred in different places just because they share a theme).
 - Match dispatches by their primary headline subject; use the short description snippet only to disambiguate who or where an oblique headline refers to, never to match multi-story digest roundups ("...and more top headlines").
-- Scan the full list carefully so every outlet covering that specific event is included in "ids".
-- If a single outlet published multiple live-updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster) so one outlet's live-blog does not drown out other newsrooms.
-- Provide a concise neutral story title (3-6 words, e.g. "Oregon Elementary School Shooting", "Israeli Settlers Attack Olive Harvest", "Tesla Unveils Flying Roadster").
+- Scan the full list carefully so every outlet covering that specific event or discovery (even if published a few days apart) is included in "ids".
+- If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
+- Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how outlets are framing it.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
@@ -619,8 +636,8 @@ Return JSON array in format:
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     process.env.GEMINI_MODEL,
-    'gemini-2.5-flash',
     'gemini-3.8-flash',
+    'gemini-2.5-flash',
     'gemini-3.5-flash',
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
@@ -661,6 +678,8 @@ Return JSON array in format:
 
   if (Array.isArray(clusters)) {
     const formattedClusters = [];
+    const coveredUrls = new Set();
+    const coveredTitles = new Set();
 
     clusters.forEach(cl => {
       if (!cl.ids || cl.ids.length < 2) return;
@@ -678,6 +697,10 @@ Return JSON array in format:
       }
 
       if (matchingArticles.length >= 2) {
+        matchingArticles.forEach(m => {
+          if (m.link) coveredUrls.add(canonicalUrl(m.link));
+          if (m.title) coveredTitles.add(cleanHeadlineTitle(m.title));
+        });
         const scores = matchingArticles.map(m => m.sentiment);
         const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
         const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
@@ -701,7 +724,31 @@ Return JSON array in format:
         });
       }
     });
-    // Weight recent 24h stories higher so fresh breaking stories rank above multi-day stale stories
+
+    // Rolling 7-Day Cluster Memory: preserve any valid multi-outlet cluster from the previous run (< 7 days old)
+    // whose articles weren't already superseded by a new cluster in this pass
+    if (Array.isArray(previousClusters)) {
+      previousClusters.forEach(prev => {
+        if (!prev || !Array.isArray(prev.coverage) || prev.coverage.length < 2) return;
+        const newestPrevMs = Math.max(...prev.coverage.map(c => new Date(c.pubDate).getTime() || 0));
+        if (newestPrevMs < sevenDaysAgo) return;
+        const isBreakingNeg = (prev.averageSentiment || 0) < 0.10;
+        if (isBreakingNeg && newestPrevMs < threeDaysAgo) return;
+
+        const alreadyCovered = prev.coverage.some(c =>
+          (c.link && coveredUrls.has(canonicalUrl(c.link))) ||
+          (c.title && coveredTitles.has(cleanHeadlineTitle(c.title)))
+        );
+        if (!alreadyCovered) {
+          formattedClusters.push({
+            ...prev,
+            newestMs: newestPrevMs
+          });
+        }
+      });
+    }
+
+    // Weight recent 24h stories higher so fresh breaking stories rank above multi-day stories
     const nowMs = Date.now();
     formattedClusters.sort((a, b) => {
       const ageHoursA = a.newestMs ? Math.max(0, (nowMs - a.newestMs) / 3600000) : 48;
@@ -715,7 +762,7 @@ Return JSON array in format:
     formattedClusters.forEach(c => delete c.newestMs);
     return formattedClusters;
   }
-  return [];
+  return previousClusters;
 }
 
 // Enrich top constructive/positive articles with Open Graph images and descriptions if missing in RSS
@@ -771,11 +818,11 @@ async function enrichTopPositiveArticleImages(finalSources) {
   }));
 }
 
-// Helper: check if an article has a valid Gemini evaluation (not an old local lexicon fallback)
+// Helper: check if an article has a valid Gemini evaluation (not an old local lexicon fallback or truncated batch 0.00 fallback)
 function hasValidGeminiScore(art) {
   if (!art) return false;
   const exp = art.explanationGemini || art.explanation || '';
-  if (exp.includes('Analyzed locally')) return false;
+  if (!exp || exp.includes('Analyzed locally') || exp.startsWith('Analyzed via Gemini (')) return false;
   const s = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : art.sentiment;
   return typeof s === 'number' && !isNaN(s);
 }
@@ -899,16 +946,19 @@ async function main() {
   const recalc24h = process.argv.includes('--recalc-24h');
   const recalcAll = process.argv.includes('--recalc-all');
   const h24CutoffMs = Date.now() - (24 * 60 * 60 * 1000);
-  const maxBacklog = recalcAll ? 10000 : (recalc24h ? 850 : (process.argv.includes('--backlog') ? 120 : 40));
+  const maxBacklog = recalcAll ? 10000 : (recalc24h ? 850 : (process.argv.includes('--backlog') ? 1000 : 60));
   let backlogAdded = 0;
   const unanalyzedKeys = new Set(unanalyzedArticles.map(a => `${a.sourceId}_${a.title.trim().toLowerCase()}`));
-  for (const [key, article] of existingMap.entries()) {
+  const sortedExisting = Array.from(existingMap.values()).sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+  for (const article of sortedExisting) {
     if (backlogAdded >= maxBacklog) break;
     const pubMs = article.pubDate ? new Date(article.pubDate).getTime() : 0;
     const missing4Factor = typeof article.eventBase !== 'number';
     const positiveNeedsSummary = (article.sentiment >= 0.10) && needsCleanEditorialSummary(article.description, article.title);
     const needsRecalc = (recalcAll && (missing4Factor || positiveNeedsSummary)) || (recalc24h && pubMs >= h24CutoffMs && (missing4Factor || positiveNeedsSummary));
     if (!hasValidGeminiScore(article) || needsRecalc) {
+      if (process.argv.includes('--backlog-24h') && pubMs < h24CutoffMs) continue;
+      if (process.argv.includes('--backlog-72h') && pubMs < (Date.now() - 72 * 3600 * 1000)) continue;
       const dedupeKey = `${article.sourceId}_${(article.title || '').trim().toLowerCase()}`;
       if (!unanalyzedKeys.has(dedupeKey)) {
         unanalyzedArticles.push(article);
@@ -1144,7 +1194,7 @@ async function main() {
         await new Promise(r => setTimeout(r, 6000));
       }
       console.log(`[Sync] Running cross-outlet story clustering (key: ${usingSeparatePaidKey ? 'PAID' : 'PRIMARY'}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
-      const clusters = await clusterCrossOutletStories(finalSources, geminiPaidKey);
+      const clusters = await clusterCrossOutletStories(finalSources, geminiPaidKey, currentCache.sharedStoryClusters);
       if (clusters && clusters.length > 0) {
         sharedStoryClusters = clusters;
         lastClusteredAt = now.toISOString();
@@ -1228,7 +1278,9 @@ async function main() {
   }
 }
 
-main().catch(err => {
+main().then(() => {
+  process.exit(0);
+}).catch(err => {
   console.error('Fatal error during sync:', err);
   process.exit(1);
 });

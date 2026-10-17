@@ -683,13 +683,24 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       }
     });
 
-    const positiveClusterCov = (cl.coverage || []).filter(c => typeof c.sentiment === 'number' && c.sentiment > 0.05);
-    if (matched.length >= 2 || (matched.length === 1 && cl.averageSentiment > 0.15 && positiveClusterCov.length >= 2)) {
+    const positiveClusterCov = (cl.coverage || []).filter(c => typeof c.sentiment === 'number' && c.sentiment >= 0.15);
+    if (matched.length >= 1 && cl.averageSentiment >= 0.15 && positiveClusterCov.length >= 2) {
       matched.forEach(m => used.add(m.idx));
       const rawCov = [...matched.map(m => m.a)];
       positiveClusterCov.forEach(c => {
         if (!rawCov.some(x => x.sourceId === c.sourceId)) {
-          rawCov.push(c);
+          // Enrich from state.sources if available so imageUrl/description are preserved across multi-day cluster members
+          const srcArticles = state.sources?.[c.sourceId]?.articles || [];
+          const fullArt = srcArticles.find(sa =>
+            (c.link && sa.link && canonicalUrl(sa.link) === canonicalUrl(c.link)) ||
+            (c.title && sa.title && cleanHeadlineTitle(sa.title) === cleanHeadlineTitle(c.title))
+          );
+          rawCov.push(fullArt ? {
+            ...fullArt,
+            sourceId: c.sourceId,
+            sourceName: c.sourceName || state.sources?.[c.sourceId]?.name || c.sourceId,
+            sentiment: typeof c.sentiment === 'number' ? c.sentiment : fullArt.sentiment
+          } : c);
         }
       });
       rawCov.sort((x, y) => y.sentiment - x.sentiment);
@@ -1990,95 +2001,16 @@ function runWithViewLoader(label, workFn) {
   });
 }
 
-// 24-Hour / New-Day Cache Reset for Some Good News Daily 5 Antidote
-const ANTIDOTE_STORAGE_KEY = 'vibe_daily_antidote_state_v1';
-const ANTIDOTE_RESET_WINDOW_MS = 24 * 60 * 60 * 1000;
-let hasHydratedAntidoteState = false;
-
-function getLocalDayKey(ts = Date.now()) {
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function readAntidoteStorageRaw() {
-  try {
-    const raw = localStorage.getItem(ANTIDOTE_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
-}
-
+// Session-only deck progress for Some Good News Top 5 (always starts fresh at #1 on visit)
 function loadAntidoteProgress() {
-  try {
-    const now = Date.now();
-    const todayKey = getLocalDayKey(now);
-    const parsed = readAntidoteStorageRaw();
-    if (!parsed) {
-      const initial = { deckIndex: 0, cycleStartMs: now, dayKey: todayKey };
-      localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(initial));
-      state.silverDeckIndex = 0;
-      hasHydratedAntidoteState = true;
-      return initial;
-    }
-    const cycleStartMs = Number(parsed?.cycleStartMs) || 0;
-    const elapsed = now - cycleStartMs;
-    const isNewDay = parsed?.dayKey && parsed.dayKey !== todayKey;
-    // Reset to Story #1 if 24+ hours have passed OR it is a new calendar day
-    if (!cycleStartMs || elapsed >= ANTIDOTE_RESET_WINDOW_MS || isNewDay) {
-      const fresh = { deckIndex: 0, cycleStartMs: now, dayKey: todayKey };
-      localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(fresh));
-      state.silverDeckIndex = 0;
-      hasHydratedAntidoteState = true;
-      return fresh;
-    }
-    // Only hydrate state.silverDeckIndex from storage once on initial boot so live clicks are never clobbered
-    if (!hasHydratedAntidoteState) {
-      const savedIdx = typeof parsed.deckIndex === 'number' ? Math.max(0, Math.min(5, parsed.deckIndex)) : 0;
-      state.silverDeckIndex = savedIdx;
-      hasHydratedAntidoteState = true;
-    }
-    return { deckIndex: state.silverDeckIndex || 0, cycleStartMs, dayKey: parsed.dayKey || todayKey };
-  } catch (e) {
-    return { deckIndex: state.silverDeckIndex || 0, cycleStartMs: Date.now(), dayKey: getLocalDayKey() };
+  if (typeof state.silverDeckIndex !== 'number') {
+    state.silverDeckIndex = 0;
   }
+  return { deckIndex: state.silverDeckIndex };
 }
 
 function saveAntidoteProgress(deckIndex) {
-  try {
-    const cleanIdx = Math.max(0, Math.min(5, Number(deckIndex) || 0));
-    state.silverDeckIndex = cleanIdx;
-    hasHydratedAntidoteState = true;
-    const existing = readAntidoteStorageRaw();
-    const updated = {
-      deckIndex: cleanIdx,
-      cycleStartMs: Number(existing?.cycleStartMs) || Date.now(),
-      dayKey: existing?.dayKey || getLocalDayKey()
-    };
-    localStorage.setItem(ANTIDOTE_STORAGE_KEY, JSON.stringify(updated));
-  } catch (e) {
-    // Ignore storage quota / private mode errors
-  }
-}
-
-function getHoursUntilNextAntidote() {
-  try {
-    // Calculate hours until the next 4-hour sync cycle OR remaining 24h cycle window
-    if (state.lastUpdated) {
-      const lastSyncMs = new Date(state.lastUpdated).getTime();
-      if (!isNaN(lastSyncMs)) {
-        const nextSyncMs = lastSyncMs + (4 * 60 * 60 * 1000);
-        const diffHrs = Math.ceil((nextSyncMs - Date.now()) / (60 * 60 * 1000));
-        if (diffHrs >= 1 && diffHrs <= 4) return diffHrs;
-      }
-    }
-    const existing = readAntidoteStorageRaw();
-    const cycleStartMs = Number(existing?.cycleStartMs) || Date.now();
-    const remainingMs = Math.max(0, (cycleStartMs + ANTIDOTE_RESET_WINDOW_MS) - Date.now());
-    return Math.max(1, Math.min(24, Math.ceil(remainingMs / (60 * 60 * 1000))));
-  } catch (e) {
-    return 4;
-  }
+  state.silverDeckIndex = Math.max(0, Math.min(5, Number(deckIndex) || 0));
 }
 
 // Compute dynamic statistics based on selected mode and optional timeOverride (decouples Some Good News vs No Good News)
@@ -2124,7 +2056,7 @@ function getResolvedSources(timeOverride) {
 
       const rawScore = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : art.sentiment;
       const rawExp = art.explanationGemini || art.explanation || '';
-      const hasGemini = typeof rawScore === 'number' && !isNaN(rawScore) && !rawExp.includes('Analyzed locally');
+      const hasGemini = typeof rawScore === 'number' && !isNaN(rawScore) && !rawExp.includes('Analyzed locally') && !rawExp.startsWith('Analyzed via Gemini (');
       if (hasGemini) {
         score = rawScore;
         explanation = rawExp || `Analyzed using Google Gemini. Score: ${score.toFixed(2)}.`;
@@ -2133,9 +2065,9 @@ function getResolvedSources(timeOverride) {
       if (score !== null && score !== undefined) {
         totalSentiment += score;
         scoredCount++;
-        if (score > 0.15) {
+        if (score >= 0.15) {
           positive++;
-        } else if (score < -0.15) {
+        } else if (score <= -0.15) {
           negative++;
         } else {
           neutral++;
@@ -2473,7 +2405,6 @@ function renderSilverEdition() {
   const silverSection = document.getElementById('silver-edition-section');
   if (!silverSection) return;
 
-  // Ensure 24-hour / new-day reset is checked whenever rendering Some Good News
   loadAntidoteProgress();
 
   usedSilverFallbackImages.clear();
@@ -2510,8 +2441,8 @@ function renderSilverEdition() {
   if (!container) return;
   container.innerHTML = '';
 
-  // 1. Gather all positive articles:
-  // Daily 5 Antidote ('antidote') is ALWAYS locked to '24h' and 'all' topics so it never changes when All Good News filters are adjusted
+  // 1. Gather all genuinely constructive articles (sentiment >= 0.15):
+  // Daily 5 Antidote ('antidote') uses the live 24h all-topic pool so it always matches the top of All Good News (24h)
   const effectiveTime = activeMode === 'antidote' ? '24h' : activeSilverTime;
   const silverSources = getResolvedSources(effectiveTime);
 
@@ -2523,7 +2454,7 @@ function renderSilverEdition() {
     const src = silverSources[sourceId];
     if (src && src.articles) {
       src.articles.forEach(art => {
-        if (typeof art.sentiment === 'number' && art.sentiment > 0.05) {
+        if (typeof art.sentiment === 'number' && art.sentiment >= 0.15) {
           const cat = (art.category || 'other').toLowerCase();
           let matchesTopic = (effectiveTopic === 'all');
           if (!matchesTopic) {
@@ -2620,10 +2551,9 @@ function renderSilverEdition() {
     return;
   }
 
-  // MODE A: DAILY 5 ANTIDOTE (PRE-RENDERED STACKED CARD DECK FOR INSTANT ZERO-GLITCH SWITCHING)
+  // MODE A: DAILY 5 ANTIDOTE (PRE-RENDERED STACKED CARD DECK — ALWAYS TOP 5 OF LIVE FEED)
   if (activeMode === 'antidote') {
-    const pureBreakthroughs = feedItems.filter(it => !isBackgroundSeriesOrMixedFeature(it));
-    const antidoteItems = (pureBreakthroughs.length >= 5 ? pureBreakthroughs : feedItems).slice(0, 5);
+    const antidoteItems = feedItems.slice(0, 5);
     state.silverAntidoteCount = antidoteItems.length;
     const currentIdx = Math.max(0, Math.min(antidoteItems.length, state.silverDeckIndex || 0));
     state.silverDeckIndex = currentIdx;
@@ -2672,16 +2602,13 @@ function renderSilverEdition() {
       `;
     }).join('');
 
-    const hoursLeft = getHoursUntilNextAntidote();
-    const hoursText = hoursLeft === 1 ? '1 hr' : `${hoursLeft} hrs`;
-
     deckCardsHTML += `
       <div class="silver-story-card antidote-deck-card antidote-completion-card is-hidden" data-deck-idx="${antidoteItems.length}">
         <div class="antidote-completion-header">
           <div class="antidote-sun-orb">☀️</div>
           <h2 class="antidote-complete-title">You're Caught Up on Human Progress.</h2>
           <p class="antidote-complete-desc">
-            You've read today's <strong>${antidoteItems.length} highest-impact breakthroughs</strong>. Check back in <strong>${hoursText}</strong> for a fresh set of good news — or explore <a href="javascript:void(0)" onclick="setSilverViewMode('grid')" style="color:#b45309;font-weight:700;text-decoration:underline;text-underline-offset:3px;">All Good News (${feedItems.length})</a> right now.
+            You've read the <strong>top ${antidoteItems.length} highest-impact breakthroughs</strong> from the past 24 hours. Explore <a href="javascript:void(0)" onclick="setSilverViewMode('grid')" style="color:#b45309;font-weight:700;text-decoration:underline;text-underline-offset:3px;">All Good News (${feedItems.length})</a> for the full feed or replay the Top ${antidoteItems.length} below.
           </p>
         </div>
         <div class="antidote-recap-list">
@@ -3566,8 +3493,8 @@ function annotateStoryCluster(c) {
   if (validTimestamps.length > 0) {
     validTimestamps.sort((a, b) => a - b);
     maxTime = validTimestamps[validTimestamps.length - 1];
-    // Max window for an active news cycle: 5 days from newest article
-    const cycleCutoff = maxTime - (5 * 24 * 60 * 60 * 1000);
+    // Max window for an active news cycle: 7 days from newest article
+    const cycleCutoff = maxTime - (7 * 24 * 60 * 60 * 1000);
     const activeTimestamps = validTimestamps.filter(t => t >= cycleCutoff);
     minTime = activeTimestamps.length > 0 ? activeTimestamps[0] : maxTime;
 
@@ -4241,7 +4168,7 @@ function renderSentimentTimeline() {
   let histAvg = 0;
   if (selectedSource) {
     const rawArts = (state.sources[selectedSource] && state.sources[selectedSource].articles) || [];
-    const scored = rawArts.filter(a => typeof (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal) === 'number');
+    const scored = rawArts.filter(a => typeof (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal) === 'number' && !(a.explanation || '').startsWith('Analyzed via Gemini ('));
     if (scored.length > 0) {
       histAvg = scored.reduce((sum, a) => sum + (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal), 0) / scored.length;
     } else if (typeof resolvedSources[selectedSource]?.averageSentiment === 'number') {
@@ -4287,7 +4214,7 @@ function renderSentimentTimeline() {
       (src.articles || []).forEach(a => {
         const t = new Date(a.pubDate).getTime();
         const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
-        if (t >= cutoff && t <= now && typeof sc === 'number') {
+        if (t >= cutoff && t <= now && typeof sc === 'number' && !(a.explanation || '').startsWith('Analyzed via Gemini (')) {
           if (!selectedTopic || a.category === selectedTopic) {
             allWindowArticles.push({ sId, score: sc, time: t, category: a.category });
           }
@@ -4454,7 +4381,7 @@ function renderSentimentTimeline() {
     (src.articles || []).forEach(a => {
       const t = new Date(a.pubDate).getTime();
       const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
-      if (!isNaN(t) && t >= minTimeBound && t <= maxTimeBound && typeof sc === 'number') {
+      if (!isNaN(t) && t >= minTimeBound && t <= maxTimeBound && typeof sc === 'number' && !(a.explanation || '').startsWith('Analyzed via Gemini (')) {
         if (!selectedTopic || a.category === selectedTopic) {
           postedArticles.push({
             sId,
