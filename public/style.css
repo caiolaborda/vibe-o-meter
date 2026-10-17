@@ -5529,24 +5529,21 @@ select option {
   backdrop-filter: blur(8px);
 }
 
-.silver-consensus-hover-wrap {
+.silver-story-meta-bar {
   position: relative;
+  z-index: 35;
+}
+
+.silver-consensus-hover-wrap {
+  position: static;
   display: inline-flex;
   align-items: center;
   z-index: 25;
   outline: none;
 }
 
-.silver-consensus-hover-wrap::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 10px;
-}
-
 .silver-consensus-tag {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.34rem;
@@ -5560,6 +5557,15 @@ select option {
   cursor: pointer;
   user-select: none;
   transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.silver-consensus-tag::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
 }
 
 .silver-consensus-hover-wrap:hover .silver-consensus-tag,
@@ -5595,10 +5601,13 @@ select option {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  width: min(330px, calc(100vw - 3rem));
-  max-height: 230px;
+  right: 0;
+  width: 100%;
+  max-width: 380px;
+  max-height: 220px;
   overflow-y: auto;
-  padding: 0.72rem 0.82rem;
+  box-sizing: border-box;
+  padding: 0.68rem 0.78rem;
   border-radius: 12px;
   background: var(--bg-card);
   border: 1.5px solid rgba(16, 185, 129, 0.48);
@@ -5608,7 +5617,7 @@ select option {
   transform: translateY(6px);
   pointer-events: none;
   transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
-  z-index: 40;
+  z-index: 50;
 }
 
 .silver-consensus-hover-wrap:hover .silver-hover-coverage-menu,
@@ -6185,9 +6194,10 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  justify-content: center;
+  gap: 0.4rem;
   margin: 0.1rem 0;
-  padding-right: 0.2rem;
+  padding-right: 0.1rem;
   text-align: left;
   box-sizing: border-box;
 }
@@ -6201,8 +6211,8 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   max-width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-  padding: 0.42rem 0.65rem;
-  border-radius: 10px;
+  padding: 0.46rem 0.68rem;
+  border-radius: 11px;
   background: rgba(254, 243, 199, 0.45);
   border: 1px solid rgba(245, 158, 11, 0.25);
   text-decoration: none;
@@ -6228,7 +6238,7 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 }
 
 .recap-title {
-  font-size: 0.82rem;
+  font-size: 0.83rem;
   font-weight: 700;
   flex: 1 1 0%;
   width: 0;
@@ -6239,12 +6249,30 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 }
 
 .recap-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 700;
-  color: #059669;
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.recap-outlet {
+  color: #64748b;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.recap-score {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  padding: 0.08rem 0.34rem;
+  border-radius: 6px;
+  font-size: 0.67rem;
+  font-weight: 800;
 }
 
 .antidote-complete-actions {
@@ -6344,20 +6372,20 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 @media (max-width: 768px) {
   /* Compact mobile container & masthead in both Antidote and Grid modes so there is no dead space */
   body[data-edition="silver"] .app-container {
-    padding: 0.55rem 0.75rem 1.5rem !important;
-    gap: 0.5rem !important;
+    padding: 0.45rem 0.7rem 0.55rem !important;
+    gap: 0.42rem !important;
   }
 
   body[data-edition="silver"] .app-masthead-central {
-    padding-bottom: 0.35rem !important;
+    padding-bottom: 0.25rem !important;
     margin-bottom: 0 !important;
-    gap: 0.25rem !important;
+    gap: 0.2rem !important;
   }
 
   body[data-edition="silver"][data-silver-mode="antidote"] .app-masthead-central {
-    padding-bottom: 0.15rem !important;
+    padding-bottom: 0.1rem !important;
     border-bottom: none !important;
-    gap: 0.15rem !important;
+    gap: 0.1rem !important;
   }
 
   /* Hide verbose subtitle & timestamp on mobile in Daily 5 Antidote mode so the card sits right below the top toggle */
@@ -6367,7 +6395,7 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   }
 
   .silver-edition-section {
-    gap: 0.6rem !important;
+    gap: 0.45rem !important;
   }
 
   .silver-controls-bar {
@@ -6435,33 +6463,47 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
   }
 
   .silver-antidote-stage {
-    gap: 0.38rem;
-    margin: 0;
+    gap: 0.38rem !important;
+    margin: 0 !important;
   }
 
   .antidote-deck-viewport {
-    padding-bottom: 1.05rem;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
   }
 
+  /* Sleek Full-Width Capsule Bottom Bar Matching Top Toggle */
   .antidote-progress-header {
-    justify-content: center;
-    border-radius: 999px;
-    padding: 0.3rem 0.5rem;
-    gap: 0.25rem;
-    margin-top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: space-between !important;
+    border-radius: 999px !important;
+    padding: 0.28rem 0.34rem !important;
+    gap: 0.25rem !important;
+    margin-top: 0 !important;
+  }
+
+  .antidote-bubbles-row {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.24rem !important;
+    flex-wrap: nowrap !important;
   }
 
   .antidote-step-bubble {
-    padding: 0.22rem 0.54rem;
-    font-size: 0.72rem;
+    flex: 1 1 0% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.34rem 0.2rem !important;
+    font-size: 0.73rem !important;
+    white-space: nowrap !important;
   }
 
-  /* Match card height to mobile screen viewport so top toggle + card + beneath 1-5 Done bar fit neatly on screen */
-  .antidote-deck-card {
-    height: calc(100dvh - 155px);
-    min-height: 360px;
-    max-height: 515px;
-    border-radius: 22px !important;
+  .antidote-step-bubble.finish-bubble {
+    flex: 1.45 1 0% !important;
   }
 
   .antidote-deck-card .silver-media-hero {
@@ -6484,50 +6526,83 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
     line-height: 1.5;
   }
 
-  /* Mobile-friendly Completion Card (#6) */
+  /* Mobile-friendly Completion Card (#6) — Sleek, Un-Cramped & Readable */
   .antidote-completion-card {
-    padding: 1.05rem 0.95rem !important;
-    gap: 0.45rem;
+    padding: 0.95rem 0.9rem !important;
+    gap: 0.4rem !important;
+  }
+
+  .antidote-completion-header {
+    gap: 0.24rem !important;
   }
 
   .antidote-sun-orb {
-    width: 42px;
-    height: 42px;
-    font-size: 1.35rem;
-  }
-
-  .antidote-complete-title {
+    width: 36px;
+    height: 36px;
     font-size: 1.15rem;
   }
 
+  .antidote-complete-title {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+
   .antidote-complete-desc {
-    font-size: 0.78rem;
-    line-height: 1.4;
+    font-size: 0.76rem;
+    line-height: 1.35;
+  }
+
+  .antidote-recap-list {
+    gap: 0.36rem;
+    padding-right: 0;
   }
 
   .antidote-recap-row {
-    padding: 0.38rem 0.55rem;
-    gap: 0.38rem;
+    padding: 0.45rem 0.58rem;
+    gap: 0.4rem;
+    border-radius: 10px;
   }
 
   .recap-title {
-    font-size: 0.76rem;
+    font-size: 0.79rem;
   }
 
   .recap-meta {
-    font-size: 0.65rem;
+    font-size: 0.64rem;
+    gap: 0.22rem;
+  }
+
+  .recap-outlet {
+    font-size: 0.62rem;
+  }
+
+  .recap-score {
+    font-size: 0.64rem;
+    padding: 0.06rem 0.3rem;
   }
 
   .antidote-complete-actions {
-    flex-direction: column;
-    gap: 0.38rem;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 0.42rem !important;
+    padding-top: 0.1rem !important;
   }
 
-  .antidote-cta-primary,
+  .antidote-cta-primary {
+    flex: 1.4 1 0% !important;
+    width: auto !important;
+    padding: 0.56rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+    box-sizing: border-box;
+  }
+
   .antidote-cta-secondary {
-    width: 100%;
-    padding: 0.54rem 1rem;
-    font-size: 0.8rem;
+    flex: 1 1 0% !important;
+    width: auto !important;
+    padding: 0.56rem 0.55rem !important;
+    font-size: 0.76rem !important;
+    white-space: nowrap !important;
     box-sizing: border-box;
   }
 }
@@ -6550,7 +6625,11 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 
 /* 2. Daily 5 Antidote: Visible Stacked Card Edges at Bottom (transform-origin: center bottom) */
 .antidote-stack-frame {
-  margin-bottom: 24px !important;
+  margin-bottom: 22px !important;
+}
+
+.antidote-stack-frame.is-complete-step {
+  margin-bottom: 2px !important;
 }
 
 .antidote-deck-card {
@@ -6560,7 +6639,7 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 .antidote-deck-card.is-next {
   z-index: 2;
   transform-origin: center bottom !important;
-  transform: translateY(11px) scale(0.955) !important;
+  transform: translateY(10px) scale(0.955) !important;
   background: #fffbeb !important;
   border: 1.5px solid rgba(245, 158, 11, 0.45) !important;
   box-shadow: 0 10px 24px -6px rgba(180, 83, 9, 0.16) !important;
@@ -6569,7 +6648,7 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 .antidote-deck-card.is-third {
   z-index: 1;
   transform-origin: center bottom !important;
-  transform: translateY(21px) scale(0.91) !important;
+  transform: translateY(19px) scale(0.91) !important;
   background: #fef3c7 !important;
   border: 1.5px solid rgba(245, 158, 11, 0.38) !important;
   box-shadow: 0 8px 18px -6px rgba(180, 83, 9, 0.12) !important;
@@ -6671,22 +6750,26 @@ body[data-edition="silver"][data-silver-mode="antidote"] .silver-edition-section
 
   /* Maximise Daily 5 Card Height on Mobile with Visible Stack Edges + Bottom 1-5 Bar */
   .antidote-stack-frame {
-    margin-bottom: 22px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .antidote-stack-frame.is-complete-step {
+    margin-bottom: 2px !important;
   }
 
   .antidote-deck-card {
-    height: calc(100dvh - 166px) !important;
+    height: calc(100dvh - 134px) !important;
     min-height: 390px !important;
-    max-height: 640px !important;
+    max-height: 590px !important;
     border-radius: 22px !important;
   }
 
   .antidote-deck-card.is-next {
-    transform: translateY(10px) scale(0.952) !important;
+    transform: translateY(8px) scale(0.955) !important;
   }
 
   .antidote-deck-card.is-third {
-    transform: translateY(19px) scale(0.905) !important;
+    transform: translateY(15px) scale(0.91) !important;
   }
 
   /* Un-Cramped No Good News Spacing & Navigation on Mobile */

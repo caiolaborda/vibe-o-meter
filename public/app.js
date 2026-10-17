@@ -2261,6 +2261,7 @@ function syncAntidoteDeckDOM() {
   const currentIdx = Math.max(0, Math.min(totalStories, state.silverDeckIndex || 0));
   state.silverDeckIndex = currentIdx;
   const isComplete = currentIdx >= totalStories;
+  stackFrame.classList.toggle('is-complete-step', isComplete);
 
   const cards = stackFrame.querySelectorAll('.antidote-deck-card[data-deck-idx]');
   if (!cards.length) return false;
@@ -2353,6 +2354,13 @@ document.addEventListener('keydown', (e) => {
   } else if (e.key === 'ArrowLeft') {
     e.preventDefault();
     window.navigateSilverDeck(-1);
+  }
+});
+
+// Close any open Cross-Outlet coverage popover when tapping outside on mobile
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.silver-consensus-hover-wrap')) {
+    document.querySelectorAll('.silver-consensus-hover-wrap.open').forEach(el => el.classList.remove('open'));
   }
 });
 
@@ -2597,16 +2605,42 @@ function renderSilverEdition() {
       `;
     });
 
+    const shortOutletMap = {
+      scmp: 'SCMP',
+      abcau: 'ABC AU',
+      nyt: 'NYT',
+      wsj: 'WSJ',
+      ft: 'FT',
+      guardian: 'Guardian',
+      aljazeera: 'Al Jazeera',
+      france24: 'France 24',
+      spiegel: 'Spiegel',
+      bloomberg: 'Bloomberg',
+      reuters: 'Reuters',
+      ap: 'AP',
+      bbc: 'BBC',
+      cnn: 'CNN',
+      fox: 'Fox',
+      npr: 'NPR',
+      cnbc: 'CNBC',
+      skynews: 'Sky',
+      dw: 'DW',
+      politico: 'Politico',
+      euronews: 'Euronews',
+      cbc: 'CBC'
+    };
+
     const recapRowsHTML = antidoteItems.map((it, i) => {
       const title = cleanDisplayHeadline(it.title || it.leadArticle?.title);
       const url = it.isCluster ? (it.leadArticle?.url || it.leadArticle?.link || '#') : (it.url || it.link || '#');
-      const badge = it.isCluster ? `${it.articles.length} Outlets` : (it.sourceName || 'Global Press');
+      const shortSrc = shortOutletMap[it.sourceId] || (it.sourceName || 'Press').replace(/^The\s+/i, '');
+      const badge = it.isCluster ? `${it.articles.length} Outlets` : shortSrc;
       return `
         <a href="${url}" target="_blank" rel="noopener noreferrer" class="antidote-recap-row">
           <span class="recap-rank">#${i + 1}</span>
           <span class="recap-title">${title}</span>
-          <span class="recap-meta">${badge} • +${it.sentiment.toFixed(2)}</span>
-          <i data-lucide="external-link" style="width:13px;height:13px;flex-shrink:0;opacity:0.65;"></i>
+          <span class="recap-meta"><span class="recap-outlet">${badge}</span> <span class="recap-score">+${it.sentiment.toFixed(2)}</span></span>
+          <i data-lucide="external-link" class="recap-ext-icon" style="width:12px;height:12px;flex-shrink:0;opacity:0.65;"></i>
         </a>
       `;
     }).join('');
@@ -2617,7 +2651,7 @@ function renderSilverEdition() {
           <div class="antidote-sun-orb">☀️</div>
           <h2 class="antidote-complete-title">You're Caught Up on Human Progress.</h2>
           <p class="antidote-complete-desc">
-            You've read the <strong>top ${antidoteItems.length} highest-impact breakthroughs</strong> from the past 24 hours. Explore <a href="javascript:void(0)" onclick="setSilverViewMode('grid')" style="color:#b45309;font-weight:700;text-decoration:underline;text-underline-offset:3px;">All Good News (${feedItems.length})</a> for the full feed or replay the Top ${antidoteItems.length} below.
+            You've read the <strong>top ${antidoteItems.length} highest-impact breakthroughs</strong> from the past 24 hours.
           </p>
         </div>
         <div class="antidote-recap-list">
@@ -2625,11 +2659,11 @@ function renderSilverEdition() {
         </div>
         <div class="antidote-complete-actions">
           <button type="button" class="antidote-cta-primary" onclick="setSilverViewMode('grid')">
-            <i data-lucide="layout-grid" style="width:16px;height:16px;"></i>
+            <i data-lucide="layout-grid" style="width:15px;height:15px;"></i>
             <span>See All Good News (${feedItems.length})</span>
           </button>
           <button type="button" class="antidote-cta-secondary" onclick="jumpSilverDeck(0)">
-            <i data-lucide="rotate-ccw" style="width:15px;height:15px;"></i>
+            <i data-lucide="rotate-ccw" style="width:14px;height:14px;"></i>
             <span>Replay Top ${antidoteItems.length}</span>
           </button>
         </div>
