@@ -322,11 +322,14 @@ function computeFourFactorScore(match) {
   const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
-  // Non-linear continuous impact curve: preserves mild/localized nuance while allowing high-permanence/high-reach events to span out to ±0.85
-  const weightedMag = 0.62 * perm + 0.38 * reach;
-  const impactScale = 0.25 + 0.75 * Math.pow(weightedMag, 0.85);
-  const eventBase = Number((pol * impactScale * 0.85).toFixed(2));
-  const framingMod = Number((frame * 0.15).toFixed(2));
+  // Reach-balanced geometric + linear magnitude curve:
+  // Prevents tiny-reach local stories (reach < 20) from leapfrogging national/global breakthroughs via warm framing
+  const linearMag = 0.52 * reach + 0.48 * perm;
+  const geoMag = Math.sqrt(Math.max(0.02, reach) * Math.max(0.02, perm));
+  const combinedMag = 0.65 * linearMag + 0.35 * geoMag;
+  const impactScale = 0.12 + 0.88 * Math.pow(combinedMag, 0.85);
+  const eventBase = Number((pol * impactScale * 0.88).toFixed(2));
+  const framingMod = Number((frame * 0.12).toFixed(2));
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
 
   return {
@@ -368,31 +371,23 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchS
     }));
 
     const prompt = `You are an impartial, senior media analyst evaluating global news dispatches from first principles.
-Evaluate each article across FOUR continuous higher-order dimensions (integers from -100 to 100 or 0 to 100), without artificial topic ceilings or stepped numeric buckets:
+Evaluate each article across FOUR continuous higher-order dimensions using precise integers (avoid rounding to multiples of 5 or 10):
 
-1. "polarity" (integer -100 to 100 — Inherent Valence & Full-Situation Counterfactual):
-   What is the inherent real-world valence of the ENTIRE underlying situation being reported?
-   - Apply the Full-Situation Counterfactual: Do NOT isolate a silver lining, legal dismissal, or bureaucratic relief from a tragic premise. Ask: "Does this story only exist because a person is enduring a severe tragedy, terminal condition, or alleged crime?" If the underlying premise is someone dying, suffering a fatal/terminal condition, or facing criminal/abuse proceedings, the overall situation's polarity is negative or at most strictly neutral (<= 0)—even if a final wish, visa, or court dismissal was granted.
-   - Deeply Negative (-100 to -60): Loss of life, violence, war, severe trauma, or systemic crisis.
-   - Moderately to Mildly Negative (-59 to -5): Institutional, legal, or political aftermath of harm, tragic/terminal human predicaments, partisan hostility, fiscal strain, or mixed stories where caveats/harm offset gains.
-   - Strictly Neutral (-4 to +4): Purely procedural mechanics, routine commerce, or bittersweet relief within a tragic/terminal situation.
-   - Mildly to Moderately Positive (+5 to +59): Genuine net-positive progress, cooperation, medical recovery, or civic/economic gains where the underlying premise itself is constructive and free of tragedy.
-   - Deeply Positive (+60 to +100): Life-saving breakthroughs, major ecological/climate reversals, peace accords, or paradigm-shifting scientific/medical triumphs.
+1. "polarity" (integer -100 to 100 — Net Real-World Valence & Causal Direction):
+   Evaluate the inherent net valence of the primary real-world change along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, or offsetting mixed outcomes) to +100 (maximum net constructive advancement).
+   - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, discovery, infrastructure investment, or systemic aid that builds durable capacity or resolves a deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, or acute economic/harm shock and merely highlights a procedural concession, secondary byproduct, or risk catalog, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
 
-2. "reach" (integer 0 to 100 — Scope of Population / System Affected):
-   How broad is the human, institutional, or ecological scope? From a single individual or niche incident (5-15), to a single firm or local community (20-40), to a national population or major sector (45-70), up to multi-nation, global, or universal human/scientific scope (75-100).
+2. "reach" (integer 0 to 100 — Proportional Scope of Affected Population or System):
+   Measure the breadth of the directly affected population, institution, or system along a continuous logarithmic scale from 0 (an isolated individual or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific knowledge). Score strictly in proportion to the true scale of the population or system impacted.
 
-3. "permanence" (integer 0 to 100 — Depth & Duration of Real-World Consequence):
-   How deeply and permanently does this event alter lives or systems? From ephemeral day-to-day chatter or routine commerce (5-20), to multi-month/year policy or financial impact (25-60), up to irreversible life-or-death or paradigm-shifting consequence (65-100).
+3. "permanence" (integer 0 to 100 — Structural Depth & Temporal Horizon of Consequence):
+   Measure the durability and reversibility of the real-world consequence along a continuous scale from 0 (ephemeral, momentary, or symbolic occurrences with no lasting structural change) to 100 (irreversible, multi-generational, or permanent structural/scientific transformation).
 
-4. "framing" (integer -100 to 100 — Editorial Rhetoric & Headline Packaging):
-   Compare THIS outlet's headline phrasing against a dry, neutral wire-service statement (0):
-   - Negative / Sensationalist (-100 to -8): Loaded conflict/fear words ("raid", "grim", "barbaric", "slams", "chaos", "disgrace", "even as cuts force layoffs"), alarmist spin, or amplifying division.
-   - Neutral Wire Tone (-7 to +7): Matter-of-fact, proportional reporting.
-   - Constructive / Composed (+8 to +100): Highlights verified agency, cooperation, solutions, or resilience ("helps doctors", "work together").
+4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
+   Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, agency-highlighting, or solutions-oriented rhetoric).
 
-COHERENCE RULE:
-If multiple dispatches in this batch cover the exact same underlying real-world event, give them identical "polarity", "reach", and "permanence", and use "framing" to capture how each newsroom's headline rhetoric differs.
+COHERENCE PRINCIPLE:
+If multiple dispatches in this batch cover the same underlying real-world event, assign them identical "polarity", "reach", and "permanence", differentiating them only via "framing".
 
 Return ONLY a JSON array of objects with:
 - index: integer matching input index
@@ -453,6 +448,7 @@ Return ONLY valid JSON.`;
                 sentiment: calc.score,
                 eventBase: calc.eventBase,
                 framingMod: calc.framingMod,
+                factors: [calc.polarity, calc.reach, calc.permanence, calc.framing],
                 category: match.category || 'other',
                 explanation: rawExp + expSuffix,
                 ...(cleanSummary ? { summary: cleanSummary } : {})
@@ -846,6 +842,7 @@ function compactArticleRecord(art, sourceId) {
     clean.sentiment = score;
     if (typeof art.eventBase === 'number') clean.eventBase = art.eventBase;
     if (typeof art.framingMod === 'number') clean.framingMod = art.framingMod;
+    if (Array.isArray(art.factors) && art.factors.length === 4) clean.factors = art.factors;
     clean.category = category;
     if (explanation) clean.explanation = explanation;
   }
@@ -942,20 +939,28 @@ async function main() {
   }
 
   // Pull in backlogged pending articles from historical cache if any exist
-  // Supports --recalc-24h (past 24 hours) or --recalc-all (entire archive missing 4-Factor eventBase OR positive articles missing clean descriptions)
+  // Supports --recalc-positive (7d positive articles), --recalc-24h (past 24 hours), --recalc-48h (past 48 hours), or --recalc-all
+  const recalcPositive = process.argv.includes('--recalc-positive');
   const recalc24h = process.argv.includes('--recalc-24h');
+  const recalc48h = process.argv.includes('--recalc-48h');
   const recalcAll = process.argv.includes('--recalc-all');
   const h24CutoffMs = Date.now() - (24 * 60 * 60 * 1000);
-  const maxBacklog = recalcAll ? 10000 : (recalc24h ? 850 : (process.argv.includes('--backlog') ? 1000 : 60));
+  const h48CutoffMs = Date.now() - (48 * 60 * 60 * 1000);
+  const d7CutoffMs = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const maxBacklog = recalcAll ? 10000 : ((recalc24h || recalc48h || recalcPositive) ? 1500 : (process.argv.includes('--backlog') ? 1000 : 60));
   let backlogAdded = 0;
   const unanalyzedKeys = new Set(unanalyzedArticles.map(a => `${a.sourceId}_${a.title.trim().toLowerCase()}`));
   const sortedExisting = Array.from(existingMap.values()).sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
   for (const article of sortedExisting) {
     if (backlogAdded >= maxBacklog) break;
     const pubMs = article.pubDate ? new Date(article.pubDate).getTime() : 0;
-    const missing4Factor = typeof article.eventBase !== 'number';
-    const positiveNeedsSummary = (article.sentiment >= 0.10) && needsCleanEditorialSummary(article.description, article.title);
-    const needsRecalc = (recalcAll && (missing4Factor || positiveNeedsSummary)) || (recalc24h && pubMs >= h24CutoffMs && (missing4Factor || positiveNeedsSummary));
+    const missingFactors = !Array.isArray(article.factors) || article.factors.length !== 4;
+    const positiveNeedsSummary = (article.sentiment >= 0.15) && needsCleanEditorialSummary(article.description, article.title);
+    const needsRecalc =
+      (recalcAll && (missingFactors || positiveNeedsSummary)) ||
+      (recalcPositive && pubMs >= d7CutoffMs && article.sentiment >= 0.14 && missingFactors) ||
+      (recalc48h && pubMs >= h48CutoffMs && missingFactors) ||
+      (recalc24h && pubMs >= h24CutoffMs && missingFactors);
     if (!hasValidGeminiScore(article) || needsRecalc) {
       if (process.argv.includes('--backlog-24h') && pubMs < h24CutoffMs) continue;
       if (process.argv.includes('--backlog-72h') && pubMs < (Date.now() - 72 * 3600 * 1000)) continue;
@@ -991,6 +996,7 @@ async function main() {
             target.sentiment = res.sentiment;
             if (typeof res.eventBase === 'number') target.eventBase = res.eventBase;
             if (typeof res.framingMod === 'number') target.framingMod = res.framingMod;
+            if (Array.isArray(res.factors)) target.factors = res.factors;
             target.explanation = res.explanation;
             target.category = res.category;
             if (res.summary && needsCleanEditorialSummary(target.description, target.title)) {
@@ -1205,6 +1211,28 @@ async function main() {
     }
   } else {
     console.log(`[Sync] Skipping story clustering (last clustered ${hoursSinceLastCluster.toFixed(1)}h ago; interval is ${clusterIntervalHours}h).`);
+  }
+
+  // Always synchronize cluster coverage sentiment scores with the latest article scores in finalSources
+  if (Array.isArray(sharedStoryClusters) && sharedStoryClusters.length > 0) {
+    sharedStoryClusters.forEach(cl => {
+      if (!Array.isArray(cl.coverage)) return;
+      cl.coverage.forEach(cov => {
+        const srcArts = finalSources[cov.sourceId]?.articles || [];
+        const match = srcArts.find(a =>
+          (cov.link && a.link && canonicalUrl(a.link) === canonicalUrl(cov.link)) ||
+          (cov.title && a.title && cleanHeadlineTitle(a.title) === cleanHeadlineTitle(cov.title))
+        );
+        if (match && typeof match.sentiment === 'number') {
+          cov.sentiment = match.sentiment;
+        }
+      });
+      const validScores = cl.coverage.map(c => c.sentiment).filter(s => typeof s === 'number');
+      if (validScores.length > 0) {
+        cl.averageSentiment = Number((validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(2));
+        cl.sentimentSpread = Number((Math.max(...validScores) - Math.min(...validScores)).toFixed(2));
+      }
+    });
   }
 
   const globalStats = {

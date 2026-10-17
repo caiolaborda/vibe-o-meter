@@ -714,7 +714,9 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       });
 
       if (dedupedCov.length >= 2) {
-        const avgScore = Number((dedupedCov.reduce((s, x) => s + x.sentiment, 0) / dedupedCov.length).toFixed(2));
+        const avgScore = dedupedCov.reduce((s, x) => s + x.sentiment, 0) / dedupedCov.length;
+        const maxScore = dedupedCov[0].sentiment;
+        const blendedScore = Number((0.70 * maxScore + 0.30 * avgScore).toFixed(2));
         const leadArt = matched[0].a;
         feedItems.push({
           isCluster: true,
@@ -722,8 +724,9 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
           summary: cl.summary || leadArt.description || '',
           category: leadArt.category || 'world',
           pubDate: leadArt.pubDate,
-          sentiment: avgScore,
-          maxSentiment: dedupedCov[0].sentiment,
+          sentiment: blendedScore,
+          avgSentiment: Number(avgScore.toFixed(2)),
+          maxSentiment: maxScore,
           leadArticle: rawCov.find(x => isValidEditorialImage(x.imageUrl)) || leadArt,
           articles: dedupedCov
         });
@@ -743,8 +746,12 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
     });
   });
 
-  // Sort feed items descending by sentiment score (breaking ties with maxSentiment)
-  feedItems.sort((a, b) => (b.sentiment - a.sentiment) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment)));
+  // Sort feed items descending by sentiment + cross-outlet corroboration boost
+  feedItems.sort((a, b) => {
+    const boostA = a.isCluster && a.articles?.length > 1 ? Math.min(0.10, (a.articles.length - 1) * 0.035) : 0;
+    const boostB = b.isCluster && b.articles?.length > 1 ? Math.min(0.10, (b.articles.length - 1) * 0.035) : 0;
+    return ((b.sentiment + boostB) - (a.sentiment + boostA)) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment));
+  });
   return feedItems;
 }
 
@@ -2504,8 +2511,10 @@ function renderSilverEdition() {
   });
   const feedItems = groupSilverArticlesIntoFeedItems(uniqueArticles);
   feedItems.sort((a, b) => {
-    const rankA = a.sentiment - (isBackgroundSeriesOrMixedFeature(a) ? 0.22 : 0);
-    const rankB = b.sentiment - (isBackgroundSeriesOrMixedFeature(b) ? 0.22 : 0);
+    const boostA = a.isCluster && a.articles?.length > 1 ? Math.min(0.10, (a.articles.length - 1) * 0.035) : 0;
+    const boostB = b.isCluster && b.articles?.length > 1 ? Math.min(0.10, (b.articles.length - 1) * 0.035) : 0;
+    const rankA = a.sentiment + boostA - (isBackgroundSeriesOrMixedFeature(a) ? 0.22 : 0);
+    const rankB = b.sentiment + boostB - (isBackgroundSeriesOrMixedFeature(b) ? 0.22 : 0);
     return (rankB - rankA) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment));
   });
 
@@ -3734,8 +3743,19 @@ function renderStoryClusters() {
     : (state.clusterTopic || 'all');
   const searchTerm = (state.clusterSearch || '').toLowerCase().trim();
 
-  // Annotate and filter clusters
+  // Annotate and filter clusters (respecting active timeframe window so 4-7d archive clusters only show when 3d/7d/all is selected)
+  const activeTime = state.filters?.time || '24h';
+  let clusterCutoffMs = 0;
+  if (activeTime === '3h' || activeTime === '6h' || activeTime === '12h') clusterCutoffMs = Date.now() - 24 * 3600 * 1000;
+  else if (activeTime === '24h') clusterCutoffMs = Date.now() - 48 * 3600 * 1000; // 48h developing cycle window for default view
+  else if (activeTime === '3d') clusterCutoffMs = Date.now() - 3.5 * 24 * 3600 * 1000;
+  else if (activeTime === '7d') clusterCutoffMs = Date.now() - 7.5 * 24 * 3600 * 1000;
+  else if (activeTime === '30d') clusterCutoffMs = Date.now() - 30 * 24 * 3600 * 1000;
+
   const processed = rawClusters.map(annotateStoryCluster).filter(c => {
+    if (clusterCutoffMs > 0 && c.maxTime > 0 && c.maxTime < clusterCutoffMs) {
+      return false;
+    }
     if (activeTopic !== 'all' && c.topic !== activeTopic) {
       return false;
     }
