@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>No Good News | There's No Such Thing as Good News</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
   <!-- Google Fonts: Newsreader (Editorial Serif), Plus Jakarta Sans (Modern Sans UI), JetBrains Mono (Tabular Data) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +12,7 @@
   <!-- Lucide Icons (development bundle) -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css?v=5.5">
+  <link rel="stylesheet" href="style.css?v=5.6">
 </head>
 <body data-edition="silver" data-silver-mode="antidote">
 
@@ -339,6 +340,19 @@
         </div>
 
         <div class="timeline-card card">
+          <!-- Region Filter Pills on Trends Timeline (Synced globally with Newsrooms & Headlines) -->
+          <div class="region-filter-tabs" id="timeline-region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 0.85rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.25rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
+            <button class="region-pill active" data-region="all" onclick="selectRegionFilter('all')">All Outlets (<span data-region-count="all">35</span>)</button>
+            <button class="region-pill" data-region="NA" onclick="selectRegionFilter('NA')"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="NA"> North America (<span data-region-count="NA">11</span>)</button>
+            <button class="region-pill" data-region="LATAM" onclick="selectRegionFilter('LATAM')"><img src="https://flagcdn.com/20x15/ar.png" class="flag-icon-img" width="16" height="12" alt="LATAM"> Latin America (<span data-region-count="LATAM">3</span>)</button>
+            <button class="region-pill" data-region="UK" onclick="selectRegionFilter('UK')"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (<span data-region-count="UK">4</span>)</button>
+            <button class="region-pill" data-region="EU" onclick="selectRegionFilter('EU')"><img src="https://flagcdn.com/20x15/eu.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (<span data-region-count="EU">7</span>)</button>
+            <button class="region-pill" data-region="APAC" onclick="selectRegionFilter('APAC')"><img src="https://flagcdn.com/20x15/au.png" class="flag-icon-img" width="16" height="12" alt="APAC"> Asia-Pacific (<span data-region-count="APAC">5</span>)</button>
+            <button class="region-pill" data-region="ME" onclick="selectRegionFilter('ME')"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (<span data-region-count="ME">1</span>)</button>
+            <button class="region-pill" data-region="GLOBAL" onclick="selectRegionFilter('GLOBAL')"><span style="margin-right:0.2rem;">🌐</span> Global &amp; Science (<span data-region-count="GLOBAL">4</span>)</button>
+          </div>
+
           <div class="timeline-header-row">
             <!-- Clear Active Filters Indicator Bar for Timeline (Outlet, Timeframe, Topic) -->
             <div class="timeline-active-filters-wrap" id="timeline-active-filters-wrap">
@@ -918,6 +932,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=5.5"></script>
+  <script src="app.js?v=5.6"></script>
 </body>
 </html>
