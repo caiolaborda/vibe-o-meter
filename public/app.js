@@ -634,20 +634,20 @@ function normalizeSilverTokens(str) {
   const stopWords = new Set([
     'about', 'after', 'again', 'against', 'amid', 'among', 'around', 'awarded', 'back', 'been',
     'before', 'behind', 'between', 'beyond', 'bill', 'both', 'calls', 'claim', 'claims', 'could',
-    'despite', 'down', 'even', 'find', 'finds', 'first', 'five', 'four', 'from', 'gave', 'give',
+    'days', 'despite', 'down', 'even', 'find', 'finds', 'first', 'five', 'four', 'from', 'gave', 'give',
     'good', 'have', 'help', 'helped', 'helps', 'high', 'home', 'into', 'just', 'keep', 'kept',
-    'know', 'last', 'late', 'latest', 'lead', 'left', 'life', 'like', 'live', 'lives', 'long',
+    'know', 'last', 'late', 'latest', 'lead', 'leaves', 'left', 'life', 'like', 'live', 'lives', 'long',
     'look', 'made', 'major', 'make', 'makes', 'many', 'more', 'most', 'much', 'must', 'near',
     'need', 'news', 'next', 'nine', 'only', 'open', 'other', 'over', 'part', 'pass', 'passed',
     'past', 'people', 'plan', 'plans', 'play', 'post', 'prize', 'push', 'report', 'reports',
-    'right', 'rise', 'rule', 'rules', 'said', 'save', 'saved', 'saves', 'says', 'second', 'seen',
+    'return', 'returns', 'right', 'rise', 'rule', 'rules', 'said', 'save', 'saved', 'saves', 'says', 'second', 'seen',
     'seek', 'seeks', 'seven', 'show', 'shows', 'side', 'since', 'some', 'soon', 'state', 'states',
     'still', 'stop', 'study', 'tackle', 'take', 'takes', 'talk', 'talks', 'team', 'tell', 'tells',
     'than', 'that', 'their', 'them', 'then', 'there', 'these', 'they', 'this', 'those', 'thought',
     'three', 'time', 'times', 'today', 'told', 'took', 'turn', 'turns', 'under', 'until', 'upon',
     'used', 'very', 'vote', 'want', 'wants', 'warn', 'warns', 'week', 'weeks', 'well', 'were',
     'what', 'when', 'where', 'which', 'while', 'will', 'wins', 'with', 'within', 'without',
-    'work', 'works', 'world', 'would', 'year', 'years', 'young'
+    'work', 'works', 'world', 'would', 'year', 'years', 'young', 'new', 'updated', 'following'
   ]);
   return (str || '')
     .toLowerCase()
@@ -655,11 +655,14 @@ function normalizeSilverTokens(str) {
     .replace(/\b(türkiye|turkiye|turkish)\b/g, 'turkey')
     .replace(/\b(britain|british|uk)\b/g, 'uk')
     .replace(/\b(united states|u\.s\.|usa|americans?)\b/g, 'usa')
+    .replace(/\b(denuclearisation|denuclearization)\b/g, 'denuclearization')
+    .replace(/\b(operation|surgery)\b/g, 'surgery')
+    .replace(/\b(discharged|leaves|leaving|leave|returns|recovering|recovery)\b/g, 'discharged')
     .replace(/working\s+week|work\s+week/g, 'workweek')
     .replace(/\b(economists?|economics?|economies|economy)\b/g, 'economics')
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
-    .filter(w => w.length >= 4 && !stopWords.has(w));
+    .filter(w => w.length >= 3 && !stopWords.has(w));
 }
 
 function groupSilverArticlesIntoFeedItems(uniqueArticles) {
@@ -667,9 +670,14 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
   const feedItems = [];
   const clusters = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
 
-  // 1. Group strictly via AI-verified sharedStoryClusters (using the AI cluster title & summary)
+  // 1. Group via AI-verified sharedStoryClusters (plus absorb late-arriving articles that match the cluster's tokens)
   clusters.forEach(cl => {
     const matched = [];
+    const clTokens = new Set(normalizeSilverTokens(
+      `${cl.story || ''} ${(cl.coverage || []).map(c => c.title || '').join(' ')}`
+    ));
+    const clTitleTokens = new Set(normalizeSilverTokens(cl.story || ''));
+
     uniqueArticles.forEach((a, idx) => {
       if (used.has(idx)) return;
       const aClean = cleanHeadlineTitle(a.title);
@@ -680,16 +688,33 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       );
       if (inCl) {
         matched.push({ a, idx });
+        return;
+      }
+      // Absorb late-arriving / differently phrased dispatches into existing AI cluster
+      const aTokens = normalizeSilverTokens(a.title);
+      if (aTokens.length >= 2 && clTitleTokens.size >= 2) {
+        const sharedWithTitle = aTokens.filter(t => clTitleTokens.has(t)).length;
+        const sharedWithAll = aTokens.filter(t => clTokens.has(t)).length;
+        const ratio = sharedWithAll / aTokens.length;
+        if (
+          (sharedWithTitle >= 2 && (sharedWithTitle / clTitleTokens.size >= 0.5 || ratio >= 0.4 || sharedWithAll >= 3)) ||
+          (sharedWithAll >= 3 && ratio >= 0.55)
+        ) {
+          matched.push({ a, idx });
+        }
       }
     });
 
     const positiveClusterCov = (cl.coverage || []).filter(c => typeof c.sentiment === 'number' && c.sentiment >= 0.15);
-    if (matched.length >= 1 && cl.averageSentiment >= 0.15 && positiveClusterCov.length >= 2) {
+    const allPosCount = new Set([...matched.map(m => m.a.sourceId), ...positiveClusterCov.map(c => c.sourceId)]).size;
+
+    // Group whenever 2+ positive outlets belong to this cluster and cluster average is >= 0.10
+    // (so borderline clusters like +0.14 avg with 6 positive outlets collapse into 1 card instead of spilling 4-6 separate cards!)
+    if (matched.length >= 1 && cl.averageSentiment >= 0.10 && allPosCount >= 2) {
       matched.forEach(m => used.add(m.idx));
       const rawCov = [...matched.map(m => m.a)];
       positiveClusterCov.forEach(c => {
         if (!rawCov.some(x => x.sourceId === c.sourceId)) {
-          // Enrich from state.sources if available so imageUrl/description are preserved across multi-day cluster members
           const srcArticles = state.sources?.[c.sourceId]?.articles || [];
           const fullArt = srcArticles.find(sa =>
             (c.link && sa.link && canonicalUrl(sa.link) === canonicalUrl(c.link)) ||
@@ -714,18 +739,21 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       });
 
       if (dedupedCov.length >= 2) {
-        const avgScore = dedupedCov.reduce((s, x) => s + x.sentiment, 0) / dedupedCov.length;
+        const avgPosScore = dedupedCov.reduce((s, x) => s + x.sentiment, 0) / dedupedCov.length;
         const maxScore = dedupedCov[0].sentiment;
-        const blendedScore = Number((0.70 * maxScore + 0.30 * avgScore).toFixed(2));
+        const blendedScore = cl.averageSentiment >= 0.15
+          ? Number((0.70 * maxScore + 0.30 * avgPosScore).toFixed(2))
+          : Number((0.50 * cl.averageSentiment + 0.50 * avgPosScore).toFixed(2));
         const leadArt = matched[0].a;
         feedItems.push({
           isCluster: true,
+          isBorderlineCluster: cl.averageSentiment < 0.15,
           title: cl.story || leadArt.title,
           summary: cl.summary || leadArt.description || '',
           category: leadArt.category || 'world',
           pubDate: leadArt.pubDate,
           sentiment: blendedScore,
-          avgSentiment: Number(avgScore.toFixed(2)),
+          avgSentiment: Number(avgPosScore.toFixed(2)),
           maxSentiment: maxScore,
           leadArticle: rawCov.find(x => isValidEditorialImage(x.imageUrl)) || leadArt,
           articles: dedupedCov
@@ -733,23 +761,79 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       } else {
         matched.forEach(m => used.delete(m.idx));
       }
+    } else if (matched.length >= 1 && cl.averageSentiment < 0.10) {
+      // Suppress false-positive outliers belonging to predominantly negative/neutral clusters
+      matched.forEach(m => used.add(m.idx));
     }
   });
 
-  // 2. Add remaining unclustered positive articles as individual stories (no hardcoded keyword guessing)
-  uniqueArticles.forEach((a, idx) => {
-    if (used.has(idx)) return;
-    used.add(idx);
+  // 2. Deduplicate same-outlet headline rewrites & group remaining unclustered multi-outlet stories
+  const tokenCache = uniqueArticles.map(a => normalizeSilverTokens(a.title));
+  for (let i = 0; i < uniqueArticles.length; i++) {
+    if (used.has(i)) continue;
+    const a = uniqueArticles[i];
+    const tA = tokenCache[i];
+    const group = [{ a, idx: i }];
+
+    for (let j = i + 1; j < uniqueArticles.length; j++) {
+      if (used.has(j)) continue;
+      const b = uniqueArticles[j];
+      const tB = tokenCache[j];
+      if (!tA.length || !tB.length) continue;
+      const shared = tA.filter(t => tB.includes(t));
+      const overlap = shared.length / Math.min(tA.length, tB.length);
+
+      if (a.sourceId === b.sourceId && shared.length >= 3 && overlap >= 0.6) {
+        used.add(j);
+        continue;
+      }
+      if (a.sourceId !== b.sourceId && ((shared.length >= 3 && overlap >= 0.5) || (shared.length >= 4 && overlap >= 0.4))) {
+        group.push({ a: b, idx: j });
+      }
+    }
+
+    if (group.length >= 2) {
+      const seenOutlets = new Set();
+      const deduped = [];
+      group.forEach(g => {
+        used.add(g.idx);
+        if (!seenOutlets.has(g.a.sourceId)) {
+          seenOutlets.add(g.a.sourceId);
+          deduped.push(g.a);
+        }
+      });
+      if (deduped.length >= 2) {
+        const avgScore = deduped.reduce((s, x) => s + x.sentiment, 0) / deduped.length;
+        const maxScore = deduped[0].sentiment;
+        const blendedScore = Number((0.70 * maxScore + 0.30 * avgScore).toFixed(2));
+        const leadArt = deduped[0];
+        feedItems.push({
+          isCluster: true,
+          title: cleanDisplayHeadline(leadArt.title),
+          summary: leadArt.description || '',
+          category: leadArt.category || 'world',
+          pubDate: leadArt.pubDate,
+          sentiment: blendedScore,
+          avgSentiment: Number(avgScore.toFixed(2)),
+          maxSentiment: maxScore,
+          leadArticle: deduped.find(x => isValidEditorialImage(x.imageUrl)) || leadArt,
+          articles: deduped
+        });
+        continue;
+      }
+    }
+
+    used.add(i);
     feedItems.push({
       isCluster: false,
       ...a
     });
-  });
+  }
 
   // Sort feed items descending by sentiment + cross-outlet corroboration boost
   feedItems.sort((a, b) => {
-    const boostA = a.isCluster && a.articles?.length > 1 ? Math.min(0.10, (a.articles.length - 1) * 0.035) : 0;
-    const boostB = b.isCluster && b.articles?.length > 1 ? Math.min(0.10, (b.articles.length - 1) * 0.035) : 0;
+    const boostA = (a.isCluster && !a.isBorderlineCluster && a.articles?.length > 1) ? Math.min(0.10, (a.articles.length - 1) * 0.035) : 0;
+    const boostB = (b.isCluster && !b.isBorderlineCluster && b.articles?.length > 1) ? Math.min(0.10, (b.articles.length - 1) * 0.035) : 0;
     return ((b.sentiment + boostB) - (a.sentiment + boostA)) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment));
   });
   return feedItems;
@@ -2519,8 +2603,8 @@ function renderSilverEdition() {
   });
   const feedItems = groupSilverArticlesIntoFeedItems(uniqueArticles);
   feedItems.sort((a, b) => {
-    const boostA = a.isCluster && a.articles?.length > 1 ? Math.min(0.10, (a.articles.length - 1) * 0.035) : 0;
-    const boostB = b.isCluster && b.articles?.length > 1 ? Math.min(0.10, (b.articles.length - 1) * 0.035) : 0;
+    const boostA = (a.isCluster && !a.isBorderlineCluster && a.articles?.length > 1) ? Math.min(0.10, (a.articles.length - 1) * 0.035) : 0;
+    const boostB = (b.isCluster && !b.isBorderlineCluster && b.articles?.length > 1) ? Math.min(0.10, (b.articles.length - 1) * 0.035) : 0;
     const rankA = a.sentiment + boostA - (isBackgroundSeriesOrMixedFeature(a) ? 0.22 : 0);
     const rankB = b.sentiment + boostB - (isBackgroundSeriesOrMixedFeature(b) ? 0.22 : 0);
     return (rankB - rankA) || ((b.maxSentiment || b.sentiment) - (a.maxSentiment || a.sentiment));
