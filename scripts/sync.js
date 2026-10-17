@@ -378,16 +378,27 @@ function computeFourFactorScore(match) {
   const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
-  // Hill-Saturated Magnitude Curve (g = R^0.72 * D^0.28, half-saturation k = 0.335, Hill exponent = 3.4):
-  // - Below g = 0.335 (micro-local features, local buildings/awards, palace intrigue): steeply damped toward 0
-  // - Above g = 0.35 (regional, national, and global news): saturates smoothly toward 0.85..1.00 so major news events
-  //   (both positive breakthroughs and acute negative crises/unrest) utilize the full [-1.0, +1.0] scale.
-  const geoMag = Math.pow(Math.max(0.01, reach), 0.72) * Math.pow(Math.max(0.01, perm), 0.28);
-  const gPow = Math.pow(geoMag, 3.4);
-  const kPow = Math.pow(0.335, 3.4);
-  const impactScale = gPow / (gPow + kPow);
-  const eventBase = Number((pol * impactScale * 0.92).toFixed(2));
-  const framingMod = Number((frame * 0.18 * (0.35 + 0.65 * impactScale)).toFixed(2));
+  // Asymmetric First-Principles Magnitude Curve:
+  // 1. Positive / Constructive progress (pol >= 0) requires BOTH broad Reach AND lasting Permanence
+  //    (R^0.60 * D^0.40, k = 0.90) so ephemeral corporate PR, routine earnings, and local micro-stories stay < +0.15.
+  // 2. Negative / Destructive harm (pol < 0) is acute (riots, attacks, shootings, disasters are severe immediately
+  //    even if a clash lasts days rather than centuries), using a Hill saturation curve (g = R^0.72 * D^0.28, k = 0.335)
+  //    so regional/national crises utilize the full [-1.0, 0.0] scale while palace intrigue (R < 28) stays near 0.
+  let eventBase;
+  let framingMod;
+  if (pol >= 0) {
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.60) * Math.pow(Math.max(0.01, perm), 0.40);
+    const impactScale = Math.pow(geoMag, 0.90);
+    eventBase = Number((pol * impactScale * 0.90).toFixed(2));
+    framingMod = Number((frame * 0.10 * (0.4 + 0.6 * reach)).toFixed(2));
+  } else {
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.72) * Math.pow(Math.max(0.01, perm), 0.28);
+    const gPow = Math.pow(geoMag, 3.4);
+    const kPow = Math.pow(0.335, 3.4);
+    const impactScale = gPow / (gPow + kPow);
+    eventBase = Number((pol * impactScale * 0.92).toFixed(2));
+    framingMod = Number((frame * 0.18 * (0.35 + 0.65 * impactScale)).toFixed(2));
+  }
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
 
   return {
