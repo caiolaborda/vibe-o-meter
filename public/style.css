@@ -2384,16 +2384,42 @@ body:not([data-edition="silver"]) .cluster-summary-text {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 0.55rem 0.85rem 0.65rem;
+  padding: 0.5rem 0.85rem 0.7rem;
 }
 
 .cluster-spectrum-scale-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.68rem;
-  font-weight: 600;
+  position: relative;
+  height: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
   color: var(--text-muted);
   margin-bottom: 0.45rem;
+  user-select: none;
+}
+
+.scale-tick-label {
+  position: absolute;
+  top: 0;
+  line-height: 1;
+}
+
+.scale-tick-label.tick-start {
+  left: 0;
+  color: var(--neg-color);
+  opacity: 0.85;
+}
+
+.scale-tick-label.tick-mid {
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--text-muted);
+}
+
+.scale-tick-label.tick-end {
+  right: 0;
+  color: var(--pos-color);
+  opacity: 0.85;
 }
 
 .cluster-spectrum-track {
@@ -2402,6 +2428,31 @@ body:not([data-edition="silver"]) .cluster-summary-text {
   height: 6px;
   border-radius: 3px;
   background: linear-gradient(to right, var(--neg-color) 0%, #cbd5e1 50%, var(--pos-color) 100%);
+}
+
+.cluster-spectrum-tick {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1.5px;
+  height: 12px;
+  background: var(--text-muted);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cluster-spectrum-tick.tick-quarter {
+  width: 1px;
+  height: 10px;
+  opacity: 0.28;
+}
+
+.cluster-spectrum-tick.tick-center {
+  width: 2px;
+  height: 15px;
+  background: var(--text-secondary);
+  opacity: 0.65;
 }
 
 .cluster-outlet-bubble {

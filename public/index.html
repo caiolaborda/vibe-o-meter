@@ -297,13 +297,13 @@
                 <strong>Want to audit individual newsrooms or browse the live chronological wire?</strong>
               </div>
               <p class="footer-banner-sub">
-                Explore how all 22 international outlets rank on the sentiment spectrum, or search 900+ raw headlines.
+                Explore how all 35 international outlets rank on the sentiment spectrum, or search 1,200+ raw headlines.
               </p>
             </div>
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               <button class="btn btn-secondary btn-sm flex-center" onclick="switchTab('deepdives')" style="gap: 0.45rem; white-space: nowrap; padding: 0.6rem 1.15rem; font-weight: 700;">
                 <i data-lucide="compass" style="width: 15px; height: 15px;"></i>
-                <span>Audit 22 Newsrooms</span>
+                <span>Audit 35 Newsrooms</span>
               </button>
               <button class="btn btn-primary btn-sm flex-center" onclick="goToDeepDiveFeed()" style="gap: 0.45rem; white-space: nowrap; padding: 0.6rem 1.15rem; font-weight: 700;">
                 <span>Browse Raw Headlines Wire</span>
@@ -396,14 +396,14 @@
           <!-- Region Filter Pills (Filters BOTH the Outlet Leaderboard AND the Spectrum Track below) -->
           <div class="region-filter-tabs" id="region-filter-tabs" style="display: flex; gap: 0.4rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
             <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 0.25rem; display: flex; align-items: center; gap: 0.25rem;"><i data-lucide="globe" style="width:13px;height:13px;"></i> Region:</span>
-            <button class="region-pill active" data-region="all">All Outlets (<span data-region-count="all">22</span>)</button>
-            <button class="region-pill" data-region="US"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="US"> United States (<span data-region-count="US">8</span>)</button>
+            <button class="region-pill active" data-region="all">All Outlets (<span data-region-count="all">35</span>)</button>
+            <button class="region-pill" data-region="NA"><img src="https://flagcdn.com/20x15/us.png" class="flag-icon-img" width="16" height="12" alt="NA"> North America (<span data-region-count="NA">11</span>)</button>
+            <button class="region-pill" data-region="LATAM"><img src="https://flagcdn.com/20x15/ar.png" class="flag-icon-img" width="16" height="12" alt="LATAM"> Latin America (<span data-region-count="LATAM">3</span>)</button>
             <button class="region-pill" data-region="UK"><img src="https://flagcdn.com/20x15/gb.png" class="flag-icon-img" width="16" height="12" alt="UK"> United Kingdom (<span data-region-count="UK">4</span>)</button>
-            <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/eu.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (<span data-region-count="EU">4</span>)</button>
-            <button class="region-pill" data-region="CA"><img src="https://flagcdn.com/20x15/ca.png" class="flag-icon-img" width="16" height="12" alt="CA"> Canada (<span data-region-count="CA">1</span>)</button>
-            <button class="region-pill" data-region="APAC"><img src="https://flagcdn.com/20x15/au.png" class="flag-icon-img" width="16" height="12" alt="APAC"> Asia-Pacific (<span data-region-count="APAC">2</span>)</button>
+            <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/eu.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (<span data-region-count="EU">7</span>)</button>
+            <button class="region-pill" data-region="APAC"><img src="https://flagcdn.com/20x15/au.png" class="flag-icon-img" width="16" height="12" alt="APAC"> Asia-Pacific (<span data-region-count="APAC">5</span>)</button>
             <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (<span data-region-count="ME">1</span>)</button>
-            <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.2rem;">🌐</span> Global Agencies (<span data-region-count="GLOBAL">2</span>)</button>
+            <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.2rem;">🌐</span> Global &amp; Science (<span data-region-count="GLOBAL">4</span>)</button>
           </div>
 
           <!-- 1. Integrated Compact Outlet Leaderboard Matrix (Worst #17 to Best #1, then Unranked) -->
@@ -619,7 +619,7 @@
             <div class="control-group">
               <label for="deepdive-filter-source"><i data-lucide="globe"></i> Source</label>
               <select id="deepdive-filter-source" class="select-input">
-                <option value="all">All 22 Outlets</option>
+                <option value="all">All 35 Outlets</option>
               </select>
             </div>
 
@@ -664,11 +664,6 @@
           </div>
         </div>
 
-        <!-- Spotlight Banner for Filtered Source (Slides in ahead of the list of headlines when an outlet is selected) -->
-        <div id="deepdive-spotlight-banner" class="spotlight-banner-unified" style="display: none;">
-          <!-- Content will be injected dynamically -->
-        </div>
-
         <!-- Filtered outlet articles injected dynamically -->
         <div id="deepdive-headlines-container" class="headlines-list-unified"></div>
 
@@ -689,7 +684,7 @@
       <div class="section-header-row">
         <div>
           <h2 class="section-title">Methodology &amp; Calibration</h2>
-          <p class="section-desc" style="font-size: 1.05rem; max-width: 780px;">How we audit 22 global newsrooms every day, separate verified real-world impact from headline rhetoric, and surface genuine human progress.</p>
+          <p class="section-desc" style="font-size: 1.05rem; max-width: 780px;">How we audit 35 global newsrooms every day, separate verified real-world impact from headline rhetoric, and surface genuine human progress.</p>
         </div>
       </div>
 
@@ -706,7 +701,7 @@
               Commercial media operates as a <strong>24-hour threat-surveillance engine</strong>. Because human attention is evolutionarily wired to fixate on danger, news desks disproportionately amplify conflict, crisis, and outrage—leaving readers with the false impression that nothing constructive is happening on Earth.
             </p>
             <p class="methodology-story-p">
-              <strong>No Good News</strong> audits this structural negativity across <strong>22 major international outlets</strong> using their raw, un-personalized RSS feeds. <strong>Some Good News</strong> uses that exact same dataset to rescue the verified scientific, medical, environmental, and humanitarian breakthroughs that get buried beneath the daily panic.
+              <strong>No Good News</strong> audits this structural negativity across <strong>35 major international outlets</strong> using their raw, un-personalized RSS feeds. <strong>Some Good News</strong> uses that exact same dataset to rescue the verified scientific, medical, environmental, and humanitarian breakthroughs that get buried beneath the daily panic.
             </p>
           </div>
 
@@ -774,7 +769,7 @@
                     <span class="archetype-name">Cross-Batch &amp; Cross-Sync Event Coherence</span>
                   </div>
                 </div>
-                <p class="archetype-examples">Dispatches covering the same developing story across all 22 outlets are grouped into shared evaluation batches and anchored against a 36-hour rolling event memory—locking objective <strong>Polarity, Reach, and Permanence</strong> across newsrooms while isolating each editor's <strong>Framing</strong>.</p>
+                <p class="archetype-examples">Dispatches covering the same developing story across all 35 outlets are grouped into shared evaluation batches and anchored against a 36-hour rolling event memory—locking objective <strong>Polarity, Reach, and Permanence</strong> across newsrooms while isolating each editor's <strong>Framing</strong>.</p>
               </div>
 
               <div class="archetype-card">
@@ -843,14 +838,14 @@
                     To verify that our grading engine isn't biased toward negativity, we ran the exact same Gemini rubric against a control feed from <strong>The Good News Network (GNN)</strong> and a 46-story stratified benchmark across all 10 news beats.
                   </p>
                   <p class="methodology-story-p">
-                    While the 22 mainstream newsrooms average <strong>-0.21</strong>, the control feed scored <strong>+0.73</strong>—proving the model responds symmetrically when fed constructive journalism.
+                    While the 35 mainstream newsrooms average <strong>-0.21</strong>, the control feed scored <strong>+0.73</strong>—proving the model responds symmetrically when fed constructive journalism.
                   </p>
                 </div>
 
                 <div class="control-comparison-box">
                   <div class="control-row neg">
                     <div>
-                      <div class="control-row-title">Mainstream News (22 Global Outlets)</div>
+                      <div class="control-row-title">Mainstream News (35 Global Outlets)</div>
                       <div class="control-row-sub">Geopolitics, conflict, crime, partisan friction</div>
                     </div>
                     <strong>-0.21</strong>

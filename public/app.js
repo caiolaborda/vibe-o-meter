@@ -43,28 +43,48 @@ let resolvedSources = {};
 
 // News Source Metadata with Origin Region, Country Codes and Visual Colors
 const SOURCE_META = {
+  // North America (US & Canada)
+  nyt: { name: 'The New York Times', initials: 'NYT', color: '#1e293b', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  cnn: { name: 'CNN', initials: 'CNN', color: '#cc0000', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  fox: { name: 'Fox News', initials: 'FOX', color: '#003366', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  npr: { name: 'NPR', initials: 'NPR', color: '#3c78d8', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  pbs: { name: 'PBS NewsHour', initials: 'PBS', color: '#1d4ed8', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  cnbc: { name: 'CNBC', initials: 'CNB', color: '#0077b6', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  bloomberg: { name: 'Bloomberg', initials: 'BBG', color: '#4338ca', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  wsj: { name: 'The Wall Street Journal', initials: 'WSJ', color: '#0274b6', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  politico: { name: 'Politico', initials: 'POL', color: '#e83e8c', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
+  cbc: { name: 'CBC News', initials: 'CBC', color: '#dc2626', region: 'NA', regionName: 'North America', countryCode: 'ca', flag: '🇨🇦' },
+  globalnews: { name: 'Global News', initials: 'GLB', color: '#b91c1c', region: 'NA', regionName: 'North America', countryCode: 'ca', flag: '🇨🇦' },
+  // Latin America
+  batimes: { name: 'Buenos Aires Times', initials: 'BAT', color: '#0284c7', region: 'LATAM', regionName: 'Latin America', countryCode: 'ar', flag: '🇦🇷' },
+  mexiconews: { name: 'Mexico News Daily', initials: 'MND', color: '#15803d', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🇲🇽' },
+  mercopress: { name: 'MercoPress', initials: 'MCP', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'uy', flag: '🇺🇾' },
+  // United Kingdom
   bbc: { name: 'BBC News', initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  nyt: { name: 'The New York Times', initials: 'NYT', color: '#1e293b', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  cnn: { name: 'CNN', initials: 'CNN', color: '#cc0000', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
   guardian: { name: 'The Guardian', initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  fox: { name: 'Fox News', initials: 'FOX', color: '#003366', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
-  npr: { name: 'NPR', initials: 'NPR', color: '#3c78d8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  cnbc: { name: 'CNBC', initials: 'CNB', color: '#0077b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
   skynews: { name: 'Sky News', initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  spiegel: { name: 'Der Spiegel', initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
-  reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
-  ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global News', countryCode: 'un', flag: '🌐' },
-  bloomberg: { name: 'Bloomberg', initials: 'BBG', color: '#1d4ed8', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  dw: { name: 'DW News', initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
-  wsj: { name: 'The Wall Street Journal', initials: 'WSJ', color: '#0274b6', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
-  france24: { name: 'France 24', initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
-  politico: { name: 'Politico', initials: 'POL', color: '#e83e8c', region: 'US', regionName: 'United States', countryCode: 'us', flag: '🇺🇸' },
   ft: { name: 'Financial Times', initials: 'FT', color: '#d97706', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
+  // Europe
+  spiegel: { name: 'Der Spiegel', initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
+  dw: { name: 'DW News', initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
+  france24: { name: 'France 24', initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
   euronews: { name: 'Euronews', initials: 'EUR', color: '#2563eb', region: 'EU', regionName: 'Europe', countryCode: 'eu', flag: '🇪🇺' },
-  cbc: { name: 'CBC News', initials: 'CBC', color: '#dc2626', region: 'CA', regionName: 'Canada', countryCode: 'ca', flag: '🇨🇦' },
+  lemonde: { name: 'Le Monde', initials: 'LM', color: '#0f172a', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
+  elpais: { name: 'El País', initials: 'ELP', color: '#0c4a6e', region: 'EU', regionName: 'Europe', countryCode: 'es', flag: '🇪🇸' },
+  rte: { name: 'RTÉ News', initials: 'RTE', color: '#059669', region: 'EU', regionName: 'Europe', countryCode: 'ie', flag: '🇮🇪' },
+  // Asia-Pacific
   abcau: { name: 'ABC News Australia', initials: 'ABC', color: '#0d9488', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
-  scmp: { name: 'South China Morning Post', initials: 'SCM', color: '#4f46e5', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'hk', flag: '🇭🇰' }
+  smh: { name: 'Sydney Morning Herald', initials: 'SMH', color: '#0891b2', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
+  scmp: { name: 'South China Morning Post', initials: 'SCM', color: '#4f46e5', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'hk', flag: '🇭🇰' },
+  japantimes: { name: 'The Japan Times', initials: 'JPT', color: '#be123c', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'jp', flag: '🇯🇵' },
+  hindu: { name: 'The Hindu', initials: 'TH', color: '#1e3a8a', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'in', flag: '🇮🇳' },
+  // Middle East
+  aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
+  // Global & Science/Tech
+  reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '🌐' },
+  ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '🌐' },
+  newscientist: { name: 'New Scientist', initials: 'NSC', color: '#10b981', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '🔬' },
+  arstechnica: { name: 'Ars Technica', initials: 'ARS', color: '#f97316', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '⚡' }
 };
 
 // Cross-platform flag renderer (renders crisp FlagCDN images on Windows & mobile)
@@ -3776,11 +3796,16 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
       <!-- Mini-Spectrum Distribution Track across all covering desks -->
       <div class="cluster-spectrum-wrap">
         <div class="cluster-spectrum-scale-labels">
-          <span>Crisis / Gloomy (-1.0)</span>
-          <span>Neutral (0.0)</span>
-          <span>Constructive / Optimistic (+1.0)</span>
+          <span class="scale-tick-label tick-start">-1.0</span>
+          <span class="scale-tick-label tick-mid">0.0</span>
+          <span class="scale-tick-label tick-end">+1.0</span>
         </div>
         <div class="cluster-spectrum-track">
+          <span class="cluster-spectrum-tick" style="left: 0%;"></span>
+          <span class="cluster-spectrum-tick tick-quarter" style="left: 25%;"></span>
+          <span class="cluster-spectrum-tick tick-center" style="left: 50%;"></span>
+          <span class="cluster-spectrum-tick tick-quarter" style="left: 75%;"></span>
+          <span class="cluster-spectrum-tick" style="left: 100%;"></span>
           ${bubblesHTML}
         </div>
       </div>
@@ -4293,21 +4318,38 @@ function renderSentimentTimeline() {
     business: { name: 'Business & Economy', icon: '📈' },
     health: { name: 'Health & Medicine', icon: '🏥' },
     politics: { name: 'Politics & Governance', icon: '🗳️' },
-    world: { name: 'World & Global Affairs', icon: '🌍' }
+    world: { name: 'World & Global Affairs', icon: '🌍' },
+    entertainment: { name: 'Culture & Entertainment', icon: '🎭' },
+    sports: { name: 'Sports', icon: '🏅' }
   };
 
-  const selectedTopic = state.macroTrendsTopic && state.macroTrendsTopic !== 'all' ? state.macroTrendsTopic : null;
-  const topicMeta = selectedTopic ? categoryNames[selectedTopic] : null;
+  // Sync topic filter from either the global header topic filter OR the inline timeline topic cards
+  const activeCat = (state.filters.category && state.filters.category !== 'all')
+    ? state.filters.category
+    : (state.macroTrendsTopic && state.macroTrendsTopic !== 'all' ? state.macroTrendsTopic : null);
+  state.macroTrendsTopic = activeCat || 'all';
+  const selectedTopic = activeCat;
+  const topicMeta = selectedTopic ? (categoryNames[selectedTopic] || { name: selectedTopic, icon: '🏷️' }) : null;
 
-  // Calculate Historical Baseline (All-time average)
+  const activeSourceMap = (resolvedSources && Object.keys(resolvedSources).length > 0) ? resolvedSources : (state.sources || {});
+
+  // Calculate Historical Baseline (All-time average for the active scope)
   let histAvg = 0;
-  if (selectedSource) {
-    const rawArts = (state.sources[selectedSource] && state.sources[selectedSource].articles) || [];
-    const scored = rawArts.filter(a => typeof (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal) === 'number' && !(a.explanation || '').startsWith('Analyzed via Gemini ('));
-    if (scored.length > 0) {
-      histAvg = scored.reduce((sum, a) => sum + (a.sentimentGemini ?? a.sentiment ?? a.sentimentLocal), 0) / scored.length;
-    } else if (typeof resolvedSources[selectedSource]?.averageSentiment === 'number') {
-      histAvg = resolvedSources[selectedSource].averageSentiment;
+  if (selectedSource || selectedTopic) {
+    const scopeArts = [];
+    Object.entries(activeSourceMap).forEach(([sId, src]) => {
+      if (selectedSource && sId !== selectedSource) return;
+      (src.articles || []).forEach(a => {
+        const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
+        if (typeof sc === 'number' && (!selectedTopic || a.category === selectedTopic)) {
+          scopeArts.push(sc);
+        }
+      });
+    });
+    if (scopeArts.length > 0) {
+      histAvg = scopeArts.reduce((sum, v) => sum + v, 0) / scopeArts.length;
+    } else if (selectedSource && typeof activeSourceMap[selectedSource]?.averageSentiment === 'number') {
+      histAvg = activeSourceMap[selectedSource].averageSentiment;
     }
   } else {
     if (rawSeries.length > 0) {
@@ -4317,19 +4359,17 @@ function renderSentimentTimeline() {
           if (typeof v === 'number') allAvgs.push(v);
         });
       });
-      histAvg = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length) : -0.12;
+      histAvg = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length) : -0.15;
     } else {
-      histAvg = -0.12;
+      histAvg = -0.15;
     }
   }
 
   // --- TIME-RANGE DEPENDENT DENSE DATA GENERATION ---
   let points = [];
-  const sourceIds = Object.keys(resolvedSources);
+  const sourceIds = Object.keys(activeSourceMap);
 
   if ( timeframe === 'all' ) {
-    // For "All Time", anchor to the start of the continuous active monitoring history (Oct 12 onward, or earliest article within 30d)
-    // so a 3-month offline gap from July test snapshots doesn't compress all recent lines and dots to the far edges
     const recentSeries = rawSeries.filter(s => new Date(s.timestamp).getTime() >= (now - 30 * 86400 * 1000));
     if (recentSeries.length >= 2) {
       cutoff = new Date(recentSeries[0].timestamp).getTime() - 6 * 3600 * 1000;
@@ -4339,13 +4379,12 @@ function renderSentimentTimeline() {
   }
 
   if (cutoff > 0) {
-    // Generate 16 to 24 time buckets based on window so lines and article dots share the exact same linear time X-axis
-    const numBuckets = (timeframe === '3h' || timeframe === '6h') ? 14 : ((timeframe === '12h' || timeframe === '24h') ? 18 : 24);
+    const numBuckets = (timeframe === '3h' || timeframe === '6h') ? 12 : ((timeframe === '12h' || timeframe === '24h') ? 16 : 22);
     const bucketDuration = (now - cutoff) / numBuckets;
 
-    // Collect all scored articles across all sources
+    // Collect all scored articles across all sources within window & topic
     const allWindowArticles = [];
-    Object.entries(state.sources || {}).forEach(([sId, src]) => {
+    Object.entries(activeSourceMap).forEach(([sId, src]) => {
       (src.articles || []).forEach(a => {
         const t = new Date(a.pubDate).getTime();
         const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
@@ -4357,16 +4396,18 @@ function renderSentimentTimeline() {
       });
     });
 
-    // Initialize baseline averages from earliest articles in window
+    // Only track outlets that actually published in this window/topic so empty outlets don't flatten the curve
+    const activeWindowOutlets = sourceIds.filter(id => allWindowArticles.some(a => a.sId === id));
     let lastKnownAverages = {};
-    sourceIds.forEach(id => {
-      const sArts = allWindowArticles.filter(a => a.sId === id);
-      if (sArts.length > 0) {
-        lastKnownAverages[id] = Number((sArts.reduce((acc, a) => acc + a.score, 0) / sArts.length).toFixed(3));
-      } else {
-        lastKnownAverages[id] = resolvedSources[id]?.averageSentiment ?? 0;
-      }
+    activeWindowOutlets.forEach(id => {
+      const sArts = allWindowArticles.filter(a => a.sId === id).sort((a, b) => a.time - b.time);
+      const seedSlice = sArts.slice(0, Math.max(1, Math.min(3, sArts.length)));
+      lastKnownAverages[id] = Number((seedSlice.reduce((acc, a) => acc + a.score, 0) / seedSlice.length).toFixed(3));
     });
+
+    let rollingMacroScore = allWindowArticles.length > 0
+      ? (allWindowArticles.slice(0, Math.min(8, allWindowArticles.length)).reduce((s, a) => s + a.score, 0) / Math.min(8, allWindowArticles.length))
+      : histAvg;
 
     for (let i = 0; i < numBuckets; i++) {
       const bStart = cutoff + i * bucketDuration;
@@ -4376,32 +4417,27 @@ function renderSentimentTimeline() {
       const bucketAverages = {};
       const bucketArticles = allWindowArticles.filter(a => a.time >= bStart && a.time < bEnd);
 
-      sourceIds.forEach(sId => {
+      activeWindowOutlets.forEach(sId => {
         const sArts = bucketArticles.filter(a => a.sId === sId);
         if (sArts.length > 0) {
           const avg = sArts.reduce((acc, a) => acc + a.score, 0) / sArts.length;
-          // Smoothly blend bucket average with previous state (70% new / 30% carry) for organic trajectory lines
-          const blended = 0.7 * avg + 0.3 * (lastKnownAverages[sId] ?? avg);
+          const blended = 0.75 * avg + 0.25 * (lastKnownAverages[sId] ?? avg);
           bucketAverages[sId] = Number(blended.toFixed(3));
           lastKnownAverages[sId] = bucketAverages[sId];
-        } else {
+        } else if (typeof lastKnownAverages[sId] === 'number') {
           bucketAverages[sId] = lastKnownAverages[sId];
         }
       });
 
-      // Compute score for this bucket
-      let score = 0;
-      if (selectedTopic) {
-        if (bucketArticles.length > 0) {
-          score = bucketArticles.reduce((acc, a) => acc + a.score, 0) / bucketArticles.length;
-        } else {
-          score = points.length > 0 ? points[points.length - 1].score : histAvg;
-        }
-      } else if (selectedSource) {
-        score = bucketAverages[selectedSource] ?? lastKnownAverages[selectedSource];
-      } else {
-        const vals = Object.values(bucketAverages);
-        score = vals.length > 0 ? (vals.reduce((a, b) => a + b, 0) / vals.length) : histAvg;
+      // Compute responsive macro/scoped score for this time bucket
+      let score = rollingMacroScore;
+      const scopedBucketArts = selectedSource ? bucketArticles.filter(a => a.sId === selectedSource) : bucketArticles;
+      if (scopedBucketArts.length > 0) {
+        const rawBucketMean = scopedBucketArts.reduce((acc, a) => acc + a.score, 0) / scopedBucketArts.length;
+        score = 0.72 * rawBucketMean + 0.28 * rollingMacroScore;
+        rollingMacroScore = score;
+      } else if (selectedSource && typeof bucketAverages[selectedSource] === 'number') {
+        score = bucketAverages[selectedSource];
       }
 
       points.push({
@@ -4413,8 +4449,21 @@ function renderSentimentTimeline() {
     }
   }
 
-  // Calculate current window average and vs Historical delta
-  const currentAvg = points.length > 0 ? (points.reduce((sum, p) => sum + p.score, 0) / points.length) : histAvg;
+  // Calculate current window average from actual articles in window & vs Historical delta
+  const windowScopedArts = [];
+  Object.entries(activeSourceMap).forEach(([sId, src]) => {
+    if (selectedSource && sId !== selectedSource) return;
+    (src.articles || []).forEach(a => {
+      const t = new Date(a.pubDate).getTime();
+      const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
+      if (t >= cutoff && t <= now && typeof sc === 'number' && (!selectedTopic || a.category === selectedTopic)) {
+        windowScopedArts.push(sc);
+      }
+    });
+  });
+  const currentAvg = windowScopedArts.length > 0
+    ? (windowScopedArts.reduce((s, v) => s + v, 0) / windowScopedArts.length)
+    : (points.length > 0 ? (points.reduce((sum, p) => sum + p.score, 0) / points.length) : histAvg);
   const delta = currentAvg - histAvg;
 
   // Render Active Filter Chips & Historical Baseline Badge in Timeline Header
@@ -4916,22 +4965,24 @@ function renderSentimentTimeline() {
   }
 }
 
-// Toggle Macro Trends Timeline Topic Filter (filters timeline on current page without redirecting)
+// Toggle Macro Trends Timeline Topic Filter (filters timeline & heatmap on current page without redirecting)
 window.toggleTimelineTopicFilter = function(catKey) {
-  if (state.macroTrendsTopic === catKey) {
-    state.macroTrendsTopic = 'all';
-  } else {
-    state.macroTrendsTopic = catKey;
-  }
-  renderSentimentTimeline();
-  if (window.lucide && lucide.createIcons) {
-    lucide.createIcons();
-  }
+  const nextCat = (state.macroTrendsTopic === catKey || state.filters.category === catKey) ? 'all' : catKey;
+  state.macroTrendsTopic = nextCat;
+  state.filters.category = nextCat;
+  state.clusterTopic = nextCat;
+  if (elements.quickTopicSelect) elements.quickTopicSelect.value = nextCat;
+  if (elements.filterCategory) elements.filterCategory.value = nextCat;
+  if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = nextCat;
+  updateTopicPillsActive(nextCat);
+  updateFilterIndicator();
+  updateAppUI();
 };
 
 window.clearTimelineSourceFilter = function() {
   state.filters.source = 'all';
   if (elements.filterSource) elements.filterSource.value = 'all';
+  if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = 'all';
   updateFilterIndicator();
   updateAppUI();
 };
@@ -4941,8 +4992,7 @@ window.changeTimelineWindow = function(val) {
   state.headlinesLimit = 20;
   if (elements.quickTimeframeSelect) elements.quickTimeframeSelect.value = val;
   if (elements.filterTime) elements.filterTime.value = val;
-  const silverTime = document.getElementById('silver-timeframe-select');
-  if (silverTime) silverTime.value = val;
+  if (elements.deepdiveFilterTime) elements.deepdiveFilterTime.value = val;
   updateAppUI();
 };
 
@@ -4950,7 +5000,10 @@ window.resetTimelineScope = function() {
   state.filters.source = 'all';
   state.macroTrendsTopic = 'all';
   state.filters.category = 'all';
+  state.clusterTopic = 'all';
   if (elements.filterSource) elements.filterSource.value = 'all';
+  if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = 'all';
+  if (elements.quickTopicSelect) elements.quickTopicSelect.value = 'all';
   if (elements.filterCategory) elements.filterCategory.value = 'all';
   if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
   updateFilterIndicator();

@@ -41,28 +41,48 @@ const parser = new Parser({
 const sentimentAnalyzer = new Sentiment();
 
 const NEWS_SOURCES = [
-  { id: 'bbc', name: 'BBC News', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
+  // North America (US & Canada)
   { id: 'nyt', name: 'The New York Times', feedUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml' },
   { id: 'cnn', name: 'CNN', feedUrl: 'https://news.google.com/rss/search?q=site:cnn.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'guardian', name: 'The Guardian', feedUrl: 'https://www.theguardian.com/uk/rss' },
   { id: 'fox', name: 'Fox News', feedUrl: 'https://feeds.foxnews.com/foxnews/latest' },
-  { id: 'aljazeera', name: 'Al Jazeera', feedUrl: 'https://www.aljazeera.com/xml/rss/all.xml' },
   { id: 'npr', name: 'NPR News', feedUrl: 'https://feeds.npr.org/1001/rss.xml' },
+  { id: 'pbs', name: 'PBS NewsHour', feedUrl: 'https://www.pbs.org/newshour/feeds/rss/headlines' },
   { id: 'cnbc', name: 'CNBC News', feedUrl: 'https://www.cnbc.com/id/100003114/device/rss/rss.html' },
+  { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://feeds.bloomberg.com/markets/news.rss' },
+  { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en' },
+  { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' },
+  { id: 'cbc', name: 'CBC News', feedUrl: 'https://www.cbc.ca/webfeed/rss/rss-topstories' },
+  { id: 'globalnews', name: 'Global News', feedUrl: 'https://globalnews.ca/feed/' },
+  // Latin America
+  { id: 'batimes', name: 'Buenos Aires Times', feedUrl: 'https://www.batimes.com.ar/feed' },
+  { id: 'mexiconews', name: 'Mexico News Daily', feedUrl: 'https://mexiconewsdaily.com/feed/' },
+  { id: 'mercopress', name: 'MercoPress', feedUrl: 'https://en.mercopress.com/rss/' },
+  // United Kingdom
+  { id: 'bbc', name: 'BBC News', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
+  { id: 'guardian', name: 'The Guardian', feedUrl: 'https://www.theguardian.com/uk/rss' },
   { id: 'skynews', name: 'Sky News', feedUrl: 'https://feeds.skynews.com/feeds/rss/home.xml' },
+  { id: 'ft', name: 'Financial Times', feedUrl: 'https://www.ft.com/world?format=rss' },
+  // Europe
   { id: 'spiegel', name: 'Spiegel International', feedUrl: 'https://www.spiegel.de/international/index.rss' },
+  { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
+  { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
+  { id: 'euronews', name: 'Euronews', feedUrl: 'https://www.euronews.com/rss?level=theme&name=news' },
+  { id: 'lemonde', name: 'Le Monde', feedUrl: 'https://www.lemonde.fr/en/rss/une.xml' },
+  { id: 'elpais', name: 'El País', feedUrl: 'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada' },
+  { id: 'rte', name: 'RTÉ News', feedUrl: 'https://www.rte.ie/feeds/rss/?index=/news/&limit=30' },
+  // Asia-Pacific
+  { id: 'abcau', name: 'ABC News Australia', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
+  { id: 'smh', name: 'Sydney Morning Herald', feedUrl: 'https://www.smh.com.au/rss/feed.xml' },
+  { id: 'scmp', name: 'South China Morning Post', feedUrl: 'https://www.scmp.com/rss/91/feed' },
+  { id: 'japantimes', name: 'The Japan Times', feedUrl: 'https://www.japantimes.co.jp/feed/' },
+  { id: 'hindu', name: 'The Hindu', feedUrl: 'https://www.thehindu.com/news/national/feeder/default.rss' },
+  // Middle East
+  { id: 'aljazeera', name: 'Al Jazeera', feedUrl: 'https://www.aljazeera.com/xml/rss/all.xml' },
+  // Global Agencies & Science/Tech
   { id: 'reuters', name: 'Reuters', feedUrl: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://news.google.com/rss/search?q=site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
-  { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
-  { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' },
-  { id: 'ft', name: 'Financial Times', feedUrl: 'https://www.ft.com/world?format=rss' },
-  { id: 'euronews', name: 'Euronews', feedUrl: 'https://www.euronews.com/rss?level=theme&name=news' },
-  { id: 'cbc', name: 'CBC News', feedUrl: 'https://www.cbc.ca/webfeed/rss/rss-topstories' },
-  { id: 'abcau', name: 'ABC News Australia', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
-  { id: 'scmp', name: 'South China Morning Post', feedUrl: 'https://www.scmp.com/rss/91/feed' }
+  { id: 'newscientist', name: 'New Scientist', feedUrl: 'https://www.newscientist.com/feed/home/' },
+  { id: 'arstechnica', name: 'Ars Technica', feedUrl: 'https://feeds.arstechnica.com/arstechnica/index' }
 ];
 
 const MAX_ARTICLES_PER_SOURCE = 500;
@@ -95,7 +115,7 @@ function cleanHeadlineTitle(title) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|abc news|scmp|south china morning post).*$/i, '')
+    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|pbs|pbs newshour|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|global news|abc news|sydney morning herald|smh|scmp|south china morning post|the japan times|japan times|the hindu|le monde|el pais|el país|rte|rté|buenos aires times|mexico news daily|mercopress|new scientist|ars technica).*$/i, '')
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
     .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
     .replace(/[\u2013\u2014-]/g, ' ')
@@ -126,21 +146,24 @@ function needsCleanEditorialSummary(desc, title) {
 
 // Extract richest lead paragraph from multiple RSS/Atom summary tags
 function extractBestDescription(item) {
-  const candidates = [
-    item.contentEncoded,
-    item.atomSummary,
+  // Prefer concise editorial lead summaries (contentSnippet / description / atomSummary) before full-article contentEncoded
+  const leadCandidates = [
     item.contentSnippet,
-    item.summary,
     item.description,
-    item.content,
+    item.atomSummary,
+    item.summary,
     item.mediaDescription,
-    item.itunesSummary
+    item.itunesSummary,
+    item.contentEncoded,
+    item.content
   ];
 
-  for (const c of candidates) {
-    if (typeof c === 'string' && c.trim().length > 15) {
-      const clean = sanitizeText(c);
-      if (clean.length > 15) {
+  for (const c of leadCandidates) {
+    if (typeof c === 'string' && c.trim().length > 25) {
+      const clean = sanitizeText(c)
+        .replace(/^The post\s+.*?\s+appeared first on\s+.*$/i, '')
+        .trim();
+      if (clean.length > 25) {
         // Truncate to ~450 characters (2-3 solid sentences) to balance rich context with low token usage
         return clean.length > 450 ? clean.substring(0, 447) + '...' : clean;
       }
@@ -163,14 +186,15 @@ function isRealEditorialImageUrl(url) {
     u.includes('beacon') ||
     u.includes('1x1') ||
     u.includes('pixel') ||
-    u.includes('favicon')
+    u.includes('favicon') ||
+    u.includes('avatar')
   );
 }
 
 function extractImageUrl(item) {
   if (!item) return null;
   // 1. Enclosure
-  if (item.enclosure && isRealEditorialImageUrl(item.enclosure.url) && (!item.enclosure.type || item.enclosure.type.startsWith('image/'))) {
+  if (item.enclosure && isRealEditorialImageUrl(item.enclosure.url) && (!item.enclosure.type || item.enclosure.type.startsWith('image/') || /\.(jpe?g|png|webp|gif)(\?|$)/i.test(item.enclosure.url))) {
     return item.enclosure.url;
   }
   // 2. Media Content (handle single object or array, pick largest/highest resolution)
@@ -1036,6 +1060,12 @@ async function main() {
         if (cached) {
           if (!cached.imageUrl && item.imageUrl) {
             cached.imageUrl = item.imageUrl;
+          }
+          if (needsCleanEditorialSummary(cached.description, cached.title) && item.description && !needsCleanEditorialSummary(item.description, item.title)) {
+            cached.description = item.description;
+          }
+          if (cached.link && cached.link.includes('news.google.com') && item.link && !item.link.includes('news.google.com')) {
+            cached.link = item.link;
           }
           if (new Date(item.pubDate) > new Date(cached.pubDate)) {
             cached.pubDate = item.pubDate;
