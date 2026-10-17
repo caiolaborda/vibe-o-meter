@@ -1364,6 +1364,7 @@ function setupEventListeners() {
       state.filters.category = 'all';
       state.filters.vibe = 'all';
       state.filters.search = '';
+      state.activeRegion = 'all';
       state.headlinesLimit = 20;
       if (elements.filterSource) elements.filterSource.value = 'all';
       if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = 'all';
@@ -1373,6 +1374,9 @@ function setupEventListeners() {
       if (elements.deepdiveFilterVibe) elements.deepdiveFilterVibe.value = 'all';
       if (elements.searchInput) elements.searchInput.value = '';
       if (elements.deepdiveSearchInput) elements.deepdiveSearchInput.value = '';
+      if (elements.regionFilterTabs) {
+        elements.regionFilterTabs.querySelectorAll('.region-pill').forEach(b => b.classList.toggle('active', b.dataset.region === 'all'));
+      }
       document.querySelectorAll('.source-card').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.outlet-marker').forEach(m => m.classList.remove('active'));
       updateTopicPillsActive('all');
@@ -1431,9 +1435,22 @@ function setupEventListeners() {
       elements.regionFilterTabs.querySelectorAll('.region-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       state.activeRegion = btn.dataset.region || 'all';
+      state.headlinesLimit = 20;
+      if (state.activeRegion !== 'all' && state.filters.source !== 'all') {
+        const srcReg = (SOURCE_META[state.filters.source]?.region || 'GLOBAL').toUpperCase();
+        if (srcReg !== state.activeRegion.toUpperCase()) {
+          state.filters.source = 'all';
+          if (elements.filterSource) elements.filterSource.value = 'all';
+          if (elements.deepdiveFilterSource) elements.deepdiveFilterSource.value = 'all';
+        }
+      }
       if (elements.sourcesGrid) elements.sourcesGrid.scrollLeft = 0;
+      updateFilterIndicator();
       renderSpectrum();
       renderComparisonMatrix();
+      renderHeadlines();
+      renderSentimentTimeline();
+      renderHeatmapMatrix();
     });
   }
   
@@ -4307,9 +4324,13 @@ function renderSentimentTimeline() {
     timeframeLabel = 'Past 30 Days';
   }
 
-  // Active source & topic filtering
+  // Active source, region & topic filtering
   const selectedSource = state.filters.source && state.filters.source !== 'all' ? state.filters.source : null;
-  const sourceName = selectedSource ? (SOURCE_META[selectedSource]?.name || (state.sources[selectedSource] ? state.sources[selectedSource].name : selectedSource)) : 'Global';
+  const selectedRegion = (!selectedSource && state.activeRegion && state.activeRegion !== 'all') ? state.activeRegion : null;
+  const regionName = selectedRegion ? (REGION_LABELS[selectedRegion] || selectedRegion) : null;
+  const sourceName = selectedSource
+    ? (SOURCE_META[selectedSource]?.name || (state.sources[selectedSource] ? state.sources[selectedSource].name : selectedSource))
+    : (regionName || 'Global');
 
   const categoryNames = {
     science: { name: 'Science & Space', icon: '🚀' },
@@ -4331,11 +4352,16 @@ function renderSentimentTimeline() {
   const selectedTopic = activeCat;
   const topicMeta = selectedTopic ? (categoryNames[selectedTopic] || { name: selectedTopic, icon: '🏷️' }) : null;
 
-  const activeSourceMap = (resolvedSources && Object.keys(resolvedSources).length > 0) ? resolvedSources : (state.sources || {});
+  const rawSourceMap = (resolvedSources && Object.keys(resolvedSources).length > 0) ? resolvedSources : (state.sources || {});
+  const activeSourceMap = {};
+  Object.entries(rawSourceMap).forEach(([sId, src]) => {
+    if (selectedRegion && (SOURCE_META[sId]?.region || 'GLOBAL') !== selectedRegion) return;
+    activeSourceMap[sId] = src;
+  });
 
   // Calculate Historical Baseline (All-time average for the active scope)
   let histAvg = 0;
-  if (selectedSource || selectedTopic) {
+  if (selectedSource || selectedRegion || selectedTopic) {
     const scopeArts = [];
     Object.entries(activeSourceMap).forEach(([sId, src]) => {
       if (selectedSource && sId !== selectedSource) return;
@@ -4480,6 +4506,14 @@ function renderSentimentTimeline() {
           <button type="button" class="timeline-chip-clear" onclick="clearTimelineSourceFilter()" title="Clear outlet filter" aria-label="Clear outlet filter">&times;</button>
         </span>
       `;
+    } else if (selectedRegion && regionName) {
+      chipsHtml += `
+        <span class="timeline-filter-chip outlet-chip" title="Timeline focused on ${regionName}">
+          <i data-lucide="map-pin" style="width:13px;height:13px;"></i>
+          <span>Region: <strong>${regionName}</strong></span>
+          <button type="button" class="timeline-chip-clear" onclick="clearRegionFilter()" title="Clear region filter" aria-label="Clear region filter">&times;</button>
+        </span>
+      `;
     }
 
     // 2. Topic Filter Pill
@@ -4517,17 +4551,17 @@ function renderSentimentTimeline() {
     const histDeltaClass = delta >= 0.04 ? 'up' : (delta <= -0.04 ? 'down' : 'stable');
     const histDeltaIcon = delta >= 0.04 ? '▲' : (delta <= -0.04 ? '▼' : '●');
     chipsHtml += `
-      <div class="timeline-historical-badge ${histDeltaClass}" title="${selectedSource ? sourceName : 'Global'} current window (${currentAvg.toFixed(2)}) vs historical baseline (${histAvg.toFixed(2)})">
-        <span class="timeline-hist-label">${selectedSource ? sourceName : 'Macro'} vs Hist:</span>
+      <div class="timeline-historical-badge ${histDeltaClass}" title="${selectedSource || selectedRegion ? sourceName : 'Global'} current window (${currentAvg.toFixed(2)}) vs historical baseline (${histAvg.toFixed(2)})">
+        <span class="timeline-hist-label">${selectedSource || selectedRegion ? sourceName : 'Macro'} vs Hist:</span>
         <strong class="timeline-hist-val">${histDeltaIcon} ${histDeltaSign}${delta.toFixed(2)}</strong>
         <span class="timeline-hist-base">(Base: ${histAvg >= 0 ? '+' : ''}${histAvg.toFixed(2)})</span>
       </div>
     `;
 
     // 5. Reset Filters Action
-    if (selectedSource || selectedTopic) {
+    if (selectedSource || selectedRegion || selectedTopic) {
       chipsHtml += `
-        <button type="button" class="timeline-reset-all-btn" onclick="resetTimelineScope()" title="Reset to all outlets and all topics">
+        <button type="button" class="timeline-reset-all-btn" onclick="resetTimelineScope()" title="Reset to all outlets, regions, and topics">
           <i data-lucide="rotate-ccw" style="width:12px;height:12px;"></i>
           <span>Reset Filters</span>
         </button>
@@ -4543,7 +4577,7 @@ function renderSentimentTimeline() {
   // Sizing: 1060 x 360 to fill the card space cleanly
   const width = 1060;
   const height = 360;
-  const padding = { top: 35, right: 35, bottom: 50, left: 65 };
+  const padding = { top: 42, right: 35, bottom: 50, left: 65 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
@@ -4559,7 +4593,7 @@ function renderSentimentTimeline() {
   const getXByTime = (tMs) => padding.left + clamp((tMs - minTimeBound) / timeSpanMs, 0.01, 0.99) * chartW;
 
   const postedArticles = [];
-  Object.entries(state.sources || {}).forEach(([sId, src]) => {
+  Object.entries(activeSourceMap).forEach(([sId, src]) => {
     if (selectedSource && sId !== selectedSource) return;
     const sName = src.name || SOURCE_META[sId]?.name || sId;
     (src.articles || []).forEach(a => {
@@ -4590,7 +4624,7 @@ function renderSentimentTimeline() {
     : postedArticles;
 
   if (timeRangeEl) {
-    const filterPrefix = selectedSource ? `${sourceName}: ` : '';
+    const filterPrefix = (selectedSource || selectedRegion) ? `${sourceName}: ` : '';
     const topicPrefix = topicMeta ? `${topicMeta.icon} ${topicMeta.name} — ` : '';
     timeRangeEl.innerText = `${filterPrefix}${topicPrefix}${timeframeLabel} (${postedArticles.length} Articles Posted)`;
   }
@@ -4632,7 +4666,7 @@ function renderSentimentTimeline() {
   gridHTML += `
     <text x="${width - padding.right}" y="${zeroY - 6}" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="600" fill="var(--text-muted)" opacity="0.6">Neutrality (0.00)</text>
     <line x1="${padding.left}" y1="${histY}" x2="${width - padding.right}" y2="${histY}" stroke="var(--accent-color)" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.65"/>
-    <text x="${width - padding.right}" y="${histY - 6}" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="600" fill="var(--accent-color)" opacity="0.85">${selectedSource ? sourceName : 'Historical'} Baseline (${histAvg > 0 ? '+' : ''}${histAvg.toFixed(2)})</text>
+    <text x="${width - padding.right}" y="${histY - 6}" text-anchor="end" font-family="var(--font-mono)" font-size="10" font-weight="600" fill="var(--accent-color)" opacity="0.85">${selectedSource || selectedRegion ? sourceName : 'Historical'} Baseline (${histAvg > 0 ? '+' : ''}${histAvg.toFixed(2)})</text>
   `;
 
   // Time labels on X axis
@@ -4721,7 +4755,7 @@ function renderSentimentTimeline() {
 
   let mainLineHTML = '';
   if (!selectedSource) {
-    // If no outlet is selected, Global Average stands out with vibrant gradient & area fill
+    // If no outlet is selected, Global/Regional Average stands out with vibrant gradient & area fill
     mainLineHTML = `
       <path d="${globalAreaD}" fill="url(#timelineAreaGrad)"/>
       <path d="${globalPathD}" fill="none" stroke="url(#timelineLineGrad)" stroke-width="3.8" stroke-linecap="round"/>
@@ -4748,6 +4782,85 @@ function renderSentimentTimeline() {
     `;
   });
 
+  // --- IDEA #3: STORY CLUSTER "EVENT PINS" ON THE TIMELINE ---
+  // Surface major cross-outlet story clusters driving sentiment peaks/troughs in this window
+  let clusterPinsHTML = '';
+  const candidateClusters = [];
+  (state.clusters || []).forEach((cl, clIdx) => {
+    if (!cl || !Array.isArray(cl.articles) || cl.articles.length < 3) return;
+    if (selectedTopic && cl.category !== selectedTopic) return;
+
+    // Filter cluster articles by active source/region & time window
+    const matchingArts = cl.articles.filter(a => {
+      const sId = a.sourceId || a.source;
+      if (selectedSource && sId !== selectedSource) return false;
+      if (selectedRegion && (SOURCE_META[sId]?.region || 'GLOBAL') !== selectedRegion) return false;
+      const t = new Date(a.pubDate).getTime();
+      return !isNaN(t) && t >= minTimeBound && t <= maxTimeBound;
+    });
+    if (matchingArts.length === 0) return;
+    if (!selectedSource && matchingArts.length < 2) return;
+
+    // Compute median timestamp of cluster dispatches in window
+    const times = matchingArts.map(a => new Date(a.pubDate).getTime()).sort((a, b) => a - b);
+    const eventTime = times[Math.floor(times.length / 2)];
+    const meanSent = typeof cl.meanSentiment === 'number'
+      ? cl.meanSentiment
+      : (matchingArts.reduce((s, a) => s + (typeof a.sentiment === 'number' ? a.sentiment : 0), 0) / matchingArts.length);
+
+    candidateClusters.push({
+      cl,
+      clIdx,
+      eventTime,
+      meanSent: Number(meanSent.toFixed(2)),
+      sourceCount: cl.sourceCount || cl.articles.length,
+      headline: cl.headline || matchingArts[0]?.title || 'Developing Story'
+    });
+  });
+
+  // Rank by cross-outlet breadth * sentiment intensity so both major crises and major breakthroughs appear
+  candidateClusters.sort((a, b) => {
+    const weightA = a.sourceCount * (1 + Math.abs(a.meanSent) * 0.9);
+    const weightB = b.sourceCount * (1 + Math.abs(b.meanSent) * 0.9);
+    return weightB - weightA;
+  });
+
+  const selectedPins = [];
+  const minPinSpacingPx = 145;
+  for (const cand of candidateClusters) {
+    if (selectedPins.length >= 5) break;
+    const x = getXByTime(cand.eventTime);
+    if (x < padding.left + 55 || x > width - padding.right - 55) continue;
+    if (selectedPins.some(p => Math.abs(p.x - x) < minPinSpacingPx)) continue;
+    const y = clamp(getY(cand.meanSent), padding.top + 14, padding.top + chartH - 14);
+    selectedPins.push({ ...cand, x, y });
+  }
+
+  selectedPins.forEach((pin, pIdx) => {
+    const isPos = pin.meanSent > 0.12;
+    const isNeg = pin.meanSent < -0.12;
+    const pinColor = isPos ? '#10b981' : (isNeg ? '#ef4444' : '#6366f1');
+    const labelY = pIdx % 2 === 0 ? 18 : 33;
+    const shortTitle = pin.headline.length > 26 ? pin.headline.slice(0, 25) + '…' : pin.headline;
+    const safeShort = shortTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const pillW = Math.max(108, Math.min(188, safeShort.length * 5.6 + 44));
+
+    clusterPinsHTML += `
+      <g class="timeline-cluster-pin" data-pin-idx="${pIdx}" style="cursor:pointer;">
+        <line x1="${pin.x.toFixed(1)}" y1="${labelY + 8}" x2="${pin.x.toFixed(1)}" y2="${pin.y.toFixed(1)}"
+              stroke="${pinColor}" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.75"/>
+        <circle cx="${pin.x.toFixed(1)}" cy="${pin.y.toFixed(1)}" r="6.5"
+                fill="${pinColor}" stroke="var(--bg-card)" stroke-width="2"/>
+        <rect x="${(pin.x - pillW / 2).toFixed(1)}" y="${labelY - 9}" width="${pillW}" height="19" rx="9.5"
+              fill="var(--bg-card)" stroke="${pinColor}" stroke-width="1.25"/>
+        <text x="${pin.x.toFixed(1)}" y="${labelY + 4}" text-anchor="middle"
+              font-family="var(--font-sans)" font-size="10" font-weight="700" fill="var(--text-primary)">
+          📍 ${pin.sourceCount}src · ${safeShort}
+        </text>
+      </g>
+    `;
+  });
+
   chartSvg.innerHTML = `
     <defs>
       <linearGradient id="timelineAreaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -4767,7 +4880,61 @@ function renderSentimentTimeline() {
     ${mainLineHTML}
     ${outletHitAreasHTML}
     ${dotsHTML}
+    ${clusterPinsHTML}
   `;
+
+  // Attach hover & click events to Story Cluster Event Pins
+  chartSvg.querySelectorAll('.timeline-cluster-pin').forEach(pinEl => {
+    pinEl.addEventListener('mouseenter', () => {
+      const idx = parseInt(pinEl.getAttribute('data-pin-idx'));
+      const pin = selectedPins[idx];
+      if (!pin || !tooltip) return;
+
+      const dateStr = new Date(pin.eventTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const scoreColor = pin.meanSent > 0.12 ? 'var(--pos-color)' : (pin.meanSent < -0.12 ? 'var(--neg-color)' : 'var(--accent-color)');
+      const safeTitle = (pin.headline || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const catMeta = categoryNames[pin.cl.category] || { name: pin.cl.category || 'World', icon: '🌐' };
+
+      tooltip.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem; margin-bottom:0.25rem;">
+          <span style="font-weight:700; color:var(--accent-color); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em;">
+            📍 Major Story Cluster (${pin.sourceCount} Outlets)
+          </span>
+          <span style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono);">${dateStr}</span>
+        </div>
+        <div style="font-size:0.8rem; font-weight:700; color:var(--text-primary); line-height:1.35; margin-bottom:0.35rem; max-width:270px;">
+          ${safeTitle}
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-size:0.7rem; border-top:1px solid var(--border-color); padding-top:0.25rem;">
+          <span style="color:${scoreColor}; font-weight:700; font-family:var(--font-mono);">Cluster Tone: ${pin.meanSent > 0 ? '+' : ''}${pin.meanSent.toFixed(2)}</span>
+          <span style="color:var(--text-secondary);">${catMeta.icon} ${catMeta.name}</span>
+        </div>
+        <div style="color:var(--accent-color); font-size:0.66rem; font-weight:600; margin-top:0.2rem;">Click pin to inspect cross-outlet framing &rarr;</div>
+      `;
+      tooltip.style.display = 'block';
+
+      const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
+      const pinRect = pinEl.getBoundingClientRect();
+      tooltip.style.left = `${clamp(pinRect.left - wrapRect.left, 8, Math.max(12, wrapRect.width - 285))}px`;
+      tooltip.style.top = `${Math.max(8, pinRect.bottom - wrapRect.top + 6)}px`;
+    });
+
+    pinEl.addEventListener('mouseleave', () => {
+      if (tooltip) tooltip.style.display = 'none';
+    });
+
+    pinEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(pinEl.getAttribute('data-pin-idx'));
+      const pin = selectedPins[idx];
+      if (!pin) return;
+      // Switch to Stories tab and filter/scroll to this cluster's category
+      const storiesTabBtn = document.querySelector('.main-tab-btn[data-tab="tab-stories"]');
+      if (storiesTabBtn) storiesTabBtn.click();
+      const clustersSection = document.getElementById('story-clusters-section');
+      if (clustersSection) clustersSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
 
   // Attach hover & click events to actual posted article dots
   chartSvg.querySelectorAll('.timeline-article-dot').forEach(dot => {
@@ -4914,50 +5081,89 @@ function renderSentimentTimeline() {
     });
   });
 
-  // Render Topic Dynamics Breakdown
+  // Render Topic Dynamics Breakdown with Center-Zero Diverging Bar + Baseline Delta + Top Driver Headline
   if (topicsGrid) {
     const topicAvgs = {};
     const topicCounts = {};
-    const activeSources = selectedSource ? { [selectedSource]: state.sources[selectedSource] } : state.sources;
+    const topicAllTimeAvgs = {};
+    const topicAllTimeCounts = {};
+    const topicTopDriver = {};
+    const scopedSources = selectedSource ? { [selectedSource]: activeSourceMap[selectedSource] } : activeSourceMap;
 
-    Object.values(activeSources || {}).forEach(s => {
+    Object.entries(scopedSources || {}).forEach(([sId, s]) => {
+      if (!s) return;
       (s.articles || []).forEach(a => {
+        const cat = a.category || 'other';
+        const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
+        if (typeof sc !== 'number') return;
+
+        // Track all-time baseline for this topic
+        topicAllTimeAvgs[cat] = (topicAllTimeAvgs[cat] || 0) + sc;
+        topicAllTimeCounts[cat] = (topicAllTimeCounts[cat] || 0) + 1;
+
         if (cutoff > 0) {
           const pub = new Date(a.pubDate).getTime();
           if (!isNaN(pub) && pub < cutoff) return;
         }
-        const cat = a.category || 'other';
-        if (!topicAvgs[cat]) { topicAvgs[cat] = 0; topicCounts[cat] = 0; }
-        const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini || 0);
-        topicAvgs[cat] += sc;
-        topicCounts[cat]++;
+        topicAvgs[cat] = (topicAvgs[cat] || 0) + sc;
+        topicCounts[cat] = (topicCounts[cat] || 0) + 1;
+
+        // Track strongest driver headline in the active window
+        if (!topicTopDriver[cat] || Math.abs(sc) > Math.abs(topicTopDriver[cat].score)) {
+          topicTopDriver[cat] = {
+            title: a.title || '',
+            score: sc,
+            sourceName: s.name || SOURCE_META[sId]?.name || sId
+          };
+        }
       });
     });
 
     topicsGrid.innerHTML = Object.keys(categoryNames).map(catKey => {
       const count = topicCounts[catKey] || 0;
       const avg = count > 0 ? (topicAvgs[catKey] / count) : 0;
+      const cleanAvg = Math.abs(avg) < 0.005 ? 0 : avg;
+      const allTimeCount = topicAllTimeCounts[catKey] || 0;
+      const baseAvg = allTimeCount > 0 ? (topicAllTimeAvgs[catKey] / allTimeCount) : 0;
+      const catDelta = cleanAvg - baseAvg;
+
       const meta = categoryNames[catKey];
-      const pct = Math.max(0, Math.min(100, ((avg + 1) / 2) * 100));
-      const scoreClass = avg > 0.1 ? 'pos' : (avg < -0.1 ? 'neg' : 'neu');
-      const fillColor = avg > 0.1 ? 'var(--pos-color)' : (avg < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)');
+      const scoreClass = cleanAvg > 0.12 ? 'pos' : (cleanAvg < -0.12 ? 'neg' : 'neu');
+      const fillColor = cleanAvg > 0.12 ? 'var(--pos-color)' : (cleanAvg < -0.12 ? 'var(--neg-color)' : 'var(--accent-color)');
       const isSelected = (state.macroTrendsTopic === catKey);
+
+      // Center-Zero Diverging Bar calculation (center = 50%, full scale at ±0.65 so typical -0.35..+0.35 averages are clearly legible)
+      const spanPct = Math.min(48, Math.max(2, (Math.abs(cleanAvg) / 0.65) * 48));
+      const barStyle = cleanAvg >= 0
+        ? `left: 50%; width: ${count > 0 ? spanPct.toFixed(1) : 0}%; background-color: ${fillColor}; border-radius: 0 4px 4px 0;`
+        : `right: 50%; width: ${count > 0 ? spanPct.toFixed(1) : 0}%; background-color: ${fillColor}; border-radius: 4px 0 0 4px;`;
+
+      const deltaSign = catDelta >= 0 ? '+' : '';
+      const driver = topicTopDriver[catKey];
+      const safeDriver = driver && driver.title
+        ? driver.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        : 'No articles in window';
 
       return `
         <div class="topic-trajectory-card ${isSelected ? 'topic-traj-card-active' : ''}" 
              onclick="toggleTimelineTopicFilter('${catKey}')" 
              style="cursor:pointer; ${isSelected ? 'border: 2px solid var(--accent-color);' : ''}" 
-             title="${isSelected ? 'Click to clear filter' : `Click to filter timeline to ${meta.name}`}">
+             title="${isSelected ? 'Click to clear topic filter' : `Click to filter timeline & heatmap to ${meta.name}`}">
           <div class="topic-traj-header">
             <span>${meta.icon} ${meta.name}</span>
-            <span class="topic-traj-score ${scoreClass}">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</span>
+            <span class="topic-traj-score ${scoreClass}">${cleanAvg > 0 ? '+' : ''}${cleanAvg.toFixed(2)}</span>
           </div>
-          <div class="topic-traj-bar-wrap">
-            <div class="topic-traj-bar-fill" style="width: ${pct}%; background-color: ${fillColor};"></div>
+          <!-- Center-Zero Diverging Bar (-1.0 Left | 0.0 Center | +1.0 Right) -->
+          <div class="topic-traj-bar-wrap" style="position:relative; height:8px; background:var(--bg-tertiary); border-radius:4px; overflow:hidden; margin: 0.25rem 0;">
+            <div style="position:absolute; left:50%; top:0; bottom:0; width:1.5px; background:var(--text-muted); opacity:0.55; z-index:2;"></div>
+            <div style="position:absolute; top:0; bottom:0; ${barStyle} transition: all 0.25s ease;"></div>
           </div>
-          <div style="display:flex; justify-content:space-between; font-size:0.68rem; color:var(--text-muted); font-weight:600;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.67rem; color:var(--text-muted); font-weight:600;">
             <span>${count} Articles</span>
-            <span>${isSelected ? 'Active Filter ✕' : (avg > 0.15 ? 'Optimistic' : (avg < -0.15 ? 'Alarmist' : 'Balanced'))}</span>
+            <span style="font-family:var(--font-mono);">${isSelected ? 'Active Filter ✕' : `vs Base: ${deltaSign}${catDelta.toFixed(2)}`}</span>
+          </div>
+          <div style="font-size:0.66rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-top:1px dashed var(--border-color); padding-top:0.28rem; margin-top:0.15rem;" title="${safeDriver}">
+            ${driver ? `<strong style="color:var(--text-primary);">${driver.sourceName}:</strong> ${safeDriver}` : 'No dispatches in selected timeframe'}
           </div>
         </div>
       `;
@@ -4998,6 +5204,7 @@ window.changeTimelineWindow = function(val) {
 
 window.resetTimelineScope = function() {
   state.filters.source = 'all';
+  state.activeRegion = 'all';
   state.macroTrendsTopic = 'all';
   state.filters.category = 'all';
   state.clusterTopic = 'all';
@@ -5006,6 +5213,11 @@ window.resetTimelineScope = function() {
   if (elements.quickTopicSelect) elements.quickTopicSelect.value = 'all';
   if (elements.filterCategory) elements.filterCategory.value = 'all';
   if (elements.deepdiveFilterCategory) elements.deepdiveFilterCategory.value = 'all';
+  if (elements.regionFilterTabs) {
+    elements.regionFilterTabs.querySelectorAll('.region-pill').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-region') === 'all');
+    });
+  }
   updateFilterIndicator();
   updateTopicPillsActive('all');
   updateAppUI();
@@ -5131,8 +5343,36 @@ function updateSpectrumActiveStates() {
   });
 }
 
+const REGION_LABELS = {
+  NA: 'North America',
+  LATAM: 'Latin America',
+  UK: 'United Kingdom',
+  EU: 'Europe',
+  APAC: 'Asia-Pacific',
+  MENA: 'Middle East',
+  GLOBAL: 'Global & Science'
+};
+
+window.clearRegionFilter = function() {
+  state.activeRegion = 'all';
+  if (elements.regionFilterTabs) {
+    elements.regionFilterTabs.querySelectorAll('.region-pill').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-region') === 'all');
+    });
+  }
+  updateFilterIndicator();
+  renderSpectrum();
+  renderLeaderboard();
+  renderHeadlines();
+  renderSentimentTimeline();
+  renderHeatmapMatrix();
+};
+
 function updateFilterIndicator() {
   const isSourceActive = state.filters.source !== 'all' && state.sources[state.filters.source];
+  const activeReg = state.activeRegion && state.activeRegion !== 'all' ? state.activeRegion : null;
+  const regionName = activeReg ? (REGION_LABELS[activeReg] || activeReg) : null;
+
   if (isSourceActive) {
     const srcName = state.sources[state.filters.source].name;
     if (elements.filterName) elements.filterName.innerText = srcName;
@@ -5159,7 +5399,19 @@ function updateFilterIndicator() {
 
     const deepdiveFeedTitle = document.getElementById('deepdive-feed-title-text');
     if (deepdiveFeedTitle) {
-      deepdiveFeedTitle.innerText = 'Headlines Feed';
+      deepdiveFeedTitle.innerText = regionName ? `${regionName} Headlines Feed` : 'Headlines Feed';
+    }
+  }
+
+  // Active Region Filter Indicator in Sticky Header Bar
+  const quickRegionIndicator = document.getElementById('quick-region-indicator');
+  const quickRegionName = document.getElementById('quick-region-name');
+  if (quickRegionIndicator && quickRegionName) {
+    if (regionName) {
+      quickRegionName.innerText = regionName;
+      quickRegionIndicator.style.display = 'inline-flex';
+    } else {
+      quickRegionIndicator.style.display = 'none';
     }
   }
 
@@ -5177,6 +5429,7 @@ function updateFilterIndicator() {
   // Highlight sticky navbar when any filter or search query is actively applied
   const hasActiveFilters = Boolean(
     (state.filters.source && state.filters.source !== 'all') ||
+    (state.activeRegion && state.activeRegion !== 'all') ||
     (state.filters.category && state.filters.category !== 'all') ||
     (state.filters.vibe && state.filters.vibe !== 'all') ||
     (state.filters.search && state.filters.search.trim().length > 0)
@@ -5236,6 +5489,11 @@ function renderHeadlines() {
     // Skip if we filtered to a specific source and this is not it
     if (state.filters.source !== 'all' && state.filters.source !== sourceId) {
       return;
+    }
+    // Apply Global Region Filter when not narrowed to a single source
+    if (state.filters.source === 'all' && state.activeRegion && state.activeRegion !== 'all') {
+      const reg = SOURCE_META[sourceId]?.region || 'GLOBAL';
+      if (reg !== state.activeRegion) return;
     }
     
     const source = resolvedSources[sourceId];
@@ -5579,11 +5837,9 @@ function setupSpectrumMagnification() {
 // Render Spotlight Banner for a filtered source showing interactive article sentiment plot
 function renderSpotlightBanner(filteredArticles) {
   const pulseEl = document.getElementById('pulse-spotlight-banner') || elements.spotlightBanner;
-  const ddEl = document.getElementById('deepdive-spotlight-banner') || elements.deepdiveSpotlightBanner;
 
   const banners = [
-    { el: pulseEl, prefix: 'pulse' },
-    { el: ddEl, prefix: 'dd' }
+    { el: pulseEl, prefix: 'dd' }
   ];
   
   if (state.filters.source === 'all' || filteredArticles.length === 0) {
@@ -5603,10 +5859,11 @@ function renderSpotlightBanner(filteredArticles) {
   
   let moodClass = 'neutral';
   let badgeText = 'Avg: N/A';
-  if (avg !== null) {
-    badgeText = `Average: ${avg > 0 ? '+' : ''}${avg.toFixed(2)}`;
-    if (avg > 0.15) moodClass = 'positive';
-    else if (avg < -0.15) moodClass = 'negative';
+  if (avg !== null && avg !== undefined) {
+    const cleanAvg = Math.abs(avg) < 0.005 ? 0 : avg;
+    badgeText = `Average: ${cleanAvg > 0 ? '+' : ''}${cleanAvg.toFixed(2)}`;
+    if (cleanAvg > 0.15) moodClass = 'positive';
+    else if (cleanAvg < -0.15) moodClass = 'negative';
   }
   
   const total = scored.length;
@@ -5678,13 +5935,6 @@ function renderSpotlightBanner(filteredArticles) {
       `;
     }).join('');
 
-    const extraActionBtn = prefix === 'pulse' 
-      ? `<button type="button" class="action-btn" onclick="goToDeepDiveFeed()" style="font-size: 0.75rem; padding: 0.28rem 0.65rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; font-weight: 500;">
-           <i data-lucide="newspaper" style="width: 13px; height: 13px; color: var(--accent-color);"></i>
-           <span>View in Deep Dive &rarr;</span>
-         </button>`
-      : '';
-
     el.style.display = 'flex';
     el.style.flexDirection = 'column';
     el.style.gap = '1rem';
@@ -5697,7 +5947,6 @@ function renderSpotlightBanner(filteredArticles) {
         <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
           <span class="score-badge ${moodClass}" style="font-size: 0.85rem; padding: 0.25rem 0.6rem; font-family: var(--font-mono);">${badgeText}</span>
           <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 500;">(${total} Articles)</span>
-          ${extraActionBtn}
           <button type="button" class="close-spotlight-btn" onclick="toggleSourceFilter('${sourceId}')" title="Dismiss outlet spotlight" style="background: none; border: 1px solid transparent; color: var(--text-secondary); cursor: pointer; padding: 0.28rem; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;">
             <i data-lucide="x" style="width: 16px; height: 16px;"></i>
           </button>
@@ -5725,16 +5974,16 @@ function renderSpotlightBanner(filteredArticles) {
         </div>
         <div style="position: relative; height: ${containerHeight}px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border-color); width: 100%; overflow: hidden; display: flex; align-items: center;">
           
-          <!-- Editorial Valence Zones -->
-          <div style="position: absolute; left: 0; width: 33%; top: 0; bottom: 0; background: rgba(197, 34, 31, 0.035); border-right: 1px dashed rgba(197, 34, 31, 0.18); pointer-events: none;"></div>
-          <div style="position: absolute; left: 33%; width: 27%; top: 0; bottom: 0; background: transparent; pointer-events: none;"></div>
-          <div style="position: absolute; left: 60%; right: 0; top: 0; bottom: 0; background: rgba(21, 128, 61, 0.035); border-left: 1px dashed rgba(21, 128, 61, 0.18); pointer-events: none;"></div>
+          <!-- Editorial Valence Zones (strictly aligned with xPct = 4 + ((score + 1) / 2) * 92 at -0.15 -> 43.1% and +0.15 -> 56.9%, centered on 50.0%) -->
+          <div style="position: absolute; left: 0; width: 43.1%; top: 0; bottom: 0; background: rgba(197, 34, 31, 0.045); border-right: 1px dashed rgba(197, 34, 31, 0.22); pointer-events: none;"></div>
+          <div style="position: absolute; left: 43.1%; width: 13.8%; top: 0; bottom: 0; background: rgba(100, 116, 139, 0.04); pointer-events: none;"></div>
+          <div style="position: absolute; left: 56.9%; right: 0; top: 0; bottom: 0; background: rgba(21, 128, 61, 0.045); border-left: 1px dashed rgba(21, 128, 61, 0.22); pointer-events: none;"></div>
 
           <!-- Track Baseline -->
           <div style="position: absolute; left: 16px; right: 16px; bottom: 20px; height: 1.5px; background: var(--border-color); z-index: 1;"></div>
           
           <!-- Zero Line Marker -->
-          <div style="position: absolute; left: 50%; bottom: 16px; top: 10px; width: 1px; border-left: 1px dashed var(--text-muted); opacity: 0.35; z-index: 1; pointer-events: none;"></div>
+          <div style="position: absolute; left: 50%; bottom: 16px; top: 10px; width: 1px; border-left: 1px dashed var(--text-muted); opacity: 0.45; z-index: 1; pointer-events: none;"></div>
 
           <!-- Track labels -->
           <span style="position: absolute; left: 16px; bottom: 4px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--neg-color); font-weight: 700; pointer-events: none; z-index: 2;">Alarmist (-1.0)</span>
@@ -6344,7 +6593,12 @@ function renderHeatmapMatrix() {
   if (!container) return;
 
   const sources = resolvedSources || getResolvedSources();
-  const sourceIds = Object.keys(sources);
+  const sourceIds = Object.keys(sources).filter(id => {
+    if (state.activeRegion && state.activeRegion !== 'all') {
+      return (SOURCE_META[id]?.region || 'GLOBAL') === state.activeRegion;
+    }
+    return true;
+  });
   if (sourceIds.length === 0) return;
 
   const categories = ['world', 'politics', 'business', 'technology', 'science', 'climate', 'health'];

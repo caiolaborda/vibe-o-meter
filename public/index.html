@@ -223,6 +223,13 @@
         </button>
       </div>
       <div class="quick-nav-actions">
+        <!-- Active Region Filter Indicator in Header Bar -->
+        <div id="quick-region-indicator" class="quick-source-pill" style="display:none;" title="Click ✕ to clear region filter">
+          <span class="quick-filter-dot" style="background: #10b981;"></span>
+          <span class="quick-filter-prefix">Region:</span>
+          <strong id="quick-region-name">North America</strong>
+          <button id="quick-region-clear-btn" class="quick-clear-btn" onclick="clearRegionFilter()" aria-label="Clear region filter">&times;</button>
+        </div>
         <!-- Active Source Filter Indicator in Header Bar -->
         <div id="quick-source-indicator" class="quick-source-pill" style="display:none;" title="Click ✕ to clear filter">
           <span class="quick-filter-dot"></span>
