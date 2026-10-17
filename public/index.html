@@ -297,13 +297,13 @@
                 <strong>Want to audit individual newsrooms or browse the live chronological wire?</strong>
               </div>
               <p class="footer-banner-sub">
-                Explore how all 17 international outlets rank on the sentiment spectrum, or search 900+ raw headlines.
+                Explore how all 22 international outlets rank on the sentiment spectrum, or search 900+ raw headlines.
               </p>
             </div>
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               <button class="btn btn-secondary btn-sm flex-center" onclick="switchTab('deepdives')" style="gap: 0.45rem; white-space: nowrap; padding: 0.6rem 1.15rem; font-weight: 700;">
                 <i data-lucide="compass" style="width: 15px; height: 15px;"></i>
-                <span>Audit 17 Newsrooms</span>
+                <span>Audit 22 Newsrooms</span>
               </button>
               <button class="btn btn-primary btn-sm flex-center" onclick="goToDeepDiveFeed()" style="gap: 0.45rem; white-space: nowrap; padding: 0.6rem 1.15rem; font-weight: 700;">
                 <span>Browse Raw Headlines Wire</span>
@@ -619,7 +619,7 @@
             <div class="control-group">
               <label for="deepdive-filter-source"><i data-lucide="globe"></i> Source</label>
               <select id="deepdive-filter-source" class="select-input">
-                <option value="all">All 17 Outlets</option>
+                <option value="all">All 22 Outlets</option>
               </select>
             </div>
 
@@ -689,7 +689,7 @@
       <div class="section-header-row">
         <div>
           <h2 class="section-title">Methodology &amp; Calibration</h2>
-          <p class="section-desc" style="font-size: 1.05rem; max-width: 780px;">How we audit 17 global newsrooms every day, separate real-world impact from headline spin, and surface genuine human progress.</p>
+          <p class="section-desc" style="font-size: 1.05rem; max-width: 780px;">How we audit 22 global newsrooms every day, separate verified real-world impact from headline rhetoric, and surface genuine human progress.</p>
         </div>
       </div>
 
@@ -706,7 +706,7 @@
               Commercial media operates as a <strong>24-hour threat-surveillance engine</strong>. Because human attention is evolutionarily wired to fixate on danger, news desks disproportionately amplify conflict, crisis, and outrage—leaving readers with the false impression that nothing constructive is happening on Earth.
             </p>
             <p class="methodology-story-p">
-              <strong>No Good News</strong> audits this structural negativity across <strong>17 major international outlets</strong> using their raw, un-personalized RSS feeds. <strong>Some Good News</strong> uses that exact same dataset to rescue the verified scientific, medical, environmental, and humanitarian breakthroughs that get buried beneath the daily panic.
+              <strong>No Good News</strong> audits this structural negativity across <strong>22 major international outlets</strong> using their raw, un-personalized RSS feeds. <strong>Some Good News</strong> uses that exact same dataset to rescue the verified scientific, medical, environmental, and humanitarian breakthroughs that get buried beneath the daily panic.
             </p>
           </div>
 
@@ -716,18 +716,18 @@
               <h4 class="methodology-subheading" style="margin: 0;">
                 <i data-lucide="cpu"></i> The 4-Factor First-Principles Formula
               </h4>
-              <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700;">De-Quantized Continuum: -1.00 to +1.00</span>
+              <span class="badge pos" style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700;">Asymmetric Continuum: -1.00 to +1.00</span>
             </div>
             <p class="methodology-lead-text">
-              Simple keyword dictionaries fail at journalism, and asking an LLM to guess a single rounded sentiment float causes artificial clustering around numbers like <code>-0.75</code> or <code>+0.30</code>. Instead, <strong>Gemini Flash</strong> evaluates every dispatch across <strong>four orthogonal, higher-order dimensions</strong>—with zero artificial topic caps—which are mathematically combined into a continuous score:
+              Simple keyword dictionaries fail at journalism, and asking an LLM to guess a single rounded sentiment float causes artificial clustering around numbers like <code>-0.75</code> or <code>+0.30</code>. Instead, <strong>Gemini Flash</strong> evaluates every dispatch across <strong>four orthogonal, higher-order dimensions</strong>—with zero artificial topic caps—which are mathematically combined using an asymmetric impact curve:
             </p>
 
             <div class="formula-equation-pill">
               <span class="eq-part eq-total">Final Score (-1.00 to +1.00)</span>
               <span class="eq-op">=</span>
-              <span class="eq-part eq-base">Polarity &times; Impact(Reach, Permanence) [&pm;0.85]</span>
+              <span class="eq-part eq-base">Polarity &times; AsymmetricImpact(Reach, Permanence)</span>
               <span class="eq-op">+</span>
-              <span class="eq-part eq-frame">Editorial Framing [&pm;0.15]</span>
+              <span class="eq-part eq-frame">Editorial Framing</span>
             </div>
 
             <div class="methodology-intro-grid">
@@ -736,12 +736,12 @@
                   <i data-lucide="globe"></i>
                 </div>
                 <div class="intro-content">
-                  <h3>1. Real-World Event Base (-0.85 to +0.85)</h3>
-                  <p>Computed continuously from three universal physical properties of the underlying event—never anchored to topic labels or arbitrary ceilings:</p>
+                  <h3>1. Real-World Event Base (-0.92 to +0.90)</h3>
+                  <p>Computed continuously from three universal physical properties of the underlying event—with an <strong>asymmetric magnitude curve</strong> reflecting that progress is slow to build while destruction is acute:</p>
                   <ul class="methodology-bullet-list">
-                    <li><strong>Polarity (-100 to +100):</strong> The inherent direction and counterfactual valence of the situation—from severe harm, conflict, and crisis aftermath (<code>-</code>) through procedural status quo (<code>0</code>) to genuine human flourishing and breakthroughs (<code>+</code>).</li>
-                    <li><strong>Reach (0 to 100):</strong> The breadth of the population, institution, or ecosystem affected—scaling smoothly from an individual or single firm up to national and civilizational scope.</li>
-                    <li><strong>Permanence (0 to 100):</strong> The depth and duration of the real-world consequence—separating ephemeral news-cycle blips or routine quarterly updates from irreversible, life-altering milestones.</li>
+                    <li><strong>Polarity &amp; Actuality (-100 to +100):</strong> Evaluates the inherent human valence of verified real-world events, physical discoveries, and enacted decisions—while discounting unsubstantiated forecasts, self-interested corporate promotion, and pure op-ed rhetoric toward neutral (<code>0</code>).</li>
+                    <li><strong>Reach (0 to 100):</strong> The breadth of the population, institution, or ecosystem affected—scaling smoothly from an individual or single firm up to national and planetary scope.</li>
+                    <li><strong>Permanence &amp; Asymmetric Scaling (0 to 100):</strong> Constructive progress (<code>Polarity &ge; 0</code>) requires <em>both</em> broad Reach and lasting Permanence (<code>R<sup>0.60</sup> &middot; D<sup>0.40</sup></code>) so ephemeral corporate PR or local human-interest blips don't masquerade as breakthroughs. Destructive harm (<code>Polarity &lt; 0</code>) uses a Hill saturation curve (<code>R<sup>0.72</sup> &middot; D<sup>0.28</sup></code>) because violent unrest, attacks, and disasters are immediately severe even when short-lived.</li>
                   </ul>
                 </div>
               </div>
@@ -751,12 +751,12 @@
                   <i data-lucide="sliders"></i>
                 </div>
                 <div class="intro-content">
-                  <h3>2. Editorial Framing (-0.15 to +0.15)</h3>
+                  <h3>2. Editorial Framing (-0.18 to +0.10)</h3>
                   <p>Rated continuously (<code>-100</code> to <code>+100</code>) by comparing how this specific newsroom packaged the headline against a strictly neutral wire-service statement (<code>0</code>):</p>
                   <ul class="methodology-bullet-list">
-                    <li><strong>Sensationalist / Conflict-Amplifying (-0.15 to -0.01):</strong> Uses loaded conflict rhetoric (<em>"raid"</em>, <em>"grim"</em>, <em>"barbaric"</em>, <em>"slams"</em>, <em>"chaos"</em>), amplifies fear or partisan blame, or foregrounds worst-case dread.</li>
-                    <li><strong>Proportional Wire Baseline (0.00):</strong> Direct, matter-of-fact reporting of verified facts without emotional spin.</li>
-                    <li><strong>Constructive / Composed (+0.01 to +0.15):</strong> Foregrounds verified human agency, cooperation, resilience, context, or solutions without sugarcoating facts.</li>
+                    <li><strong>Sensationalist / Conflict-Amplifying (-):</strong> Uses emotionally loaded conflict language, foregrounds worst-case dread, or amplifies partisan blame and fear beyond the underlying facts.</li>
+                    <li><strong>Proportional Wire Baseline (0.00):</strong> Direct, matter-of-fact reporting of verified facts without emotional spin or speculative hype.</li>
+                    <li><strong>Constructive / Composed (+):</strong> Foregrounds verified human agency, cooperation, resilience, context, or solutions without sugarcoating facts.</li>
                   </ul>
                 </div>
               </div>
@@ -771,20 +771,20 @@
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
                     <span class="archetype-icon">🔗</span>
-                    <span class="archetype-name">Cross-Batch &amp; Cross-Outlet Parity</span>
+                    <span class="archetype-name">Cross-Batch &amp; Cross-Sync Event Coherence</span>
                   </div>
                 </div>
-                <p class="archetype-examples">Dispatches from all 17 outlets are interleaved into shared batches, and because <strong>Reach</strong> and <strong>Permanence</strong> are objective properties of an event, separate outlets and independent sync runs stay tightly calibrated (<code>~0.04</code> pts mean drift) while differing strictly by each editor's <strong>Framing</strong>.</p>
+                <p class="archetype-examples">Dispatches covering the same developing story across all 22 outlets are grouped into shared evaluation batches and anchored against a 36-hour rolling event memory—locking objective <strong>Polarity, Reach, and Permanence</strong> across newsrooms while isolating each editor's <strong>Framing</strong>.</p>
               </div>
 
               <div class="archetype-card">
                 <div class="archetype-header">
                   <div class="archetype-title-wrap">
                     <span class="archetype-icon">⚖️</span>
-                    <span class="archetype-name">Counterfactual Harm Principle</span>
+                    <span class="archetype-name">Counterfactual Harm &amp; Epistemic Actuality</span>
                   </div>
                 </div>
-                <p class="archetype-examples">We ask: <em>"If this entire situation had never happened, would the world be safer or better?"</em> Criminal convictions, murder trials, prison sentences, and bailouts are reactions to underlying harm—so their polarity remains negative rather than false "good news."</p>
+                <p class="archetype-examples">We ask: <em>"If this entire situation had never happened, would the world be safer or better?"</em> Criminal convictions, murder trials, and crisis bailouts remain negative reactions to harm—while unverified corporate claims and speculative op-eds are separated from concrete real-world actions.</p>
               </div>
 
               <div class="archetype-card">
@@ -811,22 +811,22 @@
               <div class="valence-band-card band-gloomy">
                 <div class="band-tag">-0.45 to -0.15</div>
                 <div class="band-title">Leaning Gloomy</div>
-                <p class="band-desc">Economic strain, political conflict, criminal trials, layoffs, diplomatic friction.</p>
+                <p class="band-desc">Economic strain, violent protests, criminal trials, layoffs, diplomatic friction.</p>
               </div>
               <div class="valence-band-card band-neutral">
                 <div class="band-tag">-0.15 to +0.15</div>
                 <div class="band-title">Neutral / Procedural</div>
-                <p class="band-desc">Scheduled hearings, routine governance, standard weather or market updates.</p>
+                <p class="band-desc">Routine governance, corporate forecasts, local features, standard market updates.</p>
               </div>
               <div class="valence-band-card band-positive">
                 <div class="band-tag">+0.15 to +0.45</div>
                 <div class="band-title">Constructive</div>
-                <p class="band-desc">Diplomatic progress, civic improvements, cultural milestones, corporate growth.</p>
+                <p class="band-desc">Diplomatic progress, verified civic improvements, cultural &amp; scientific milestones.</p>
               </div>
               <div class="valence-band-card band-inspiring">
                 <div class="band-tag">+0.45 to +1.00</div>
                 <div class="band-title">Major Breakthrough</div>
-                <p class="band-desc">Peace accords, medical cures, clean energy records, major scientific discoveries.</p>
+                <p class="band-desc">Peace accords, medical cures, ecosystem restoration, major scientific discoveries.</p>
               </div>
             </div>
           </div>
@@ -840,17 +840,17 @@
                     <i data-lucide="microscope" style="color: #10b981;"></i> Control Experiment: Is the AI Cynical, or Is the News?
                   </h4>
                   <p class="methodology-story-p" style="margin-bottom: 0.75rem;">
-                    To verify that our grading engine isn't biased toward negativity, we ran the exact same Gemini rubric against a control feed from <strong>The Good News Network (GNN)</strong>.
+                    To verify that our grading engine isn't biased toward negativity, we ran the exact same Gemini rubric against a control feed from <strong>The Good News Network (GNN)</strong> and a 46-story stratified benchmark across all 10 news beats.
                   </p>
                   <p class="methodology-story-p">
-                    While the 17 mainstream newsrooms average <strong>-0.21</strong>, the control feed scored <strong>+0.73</strong>—proving the model responds symmetrically when fed constructive journalism.
+                    While the 22 mainstream newsrooms average <strong>-0.21</strong>, the control feed scored <strong>+0.73</strong>—proving the model responds symmetrically when fed constructive journalism.
                   </p>
                 </div>
 
                 <div class="control-comparison-box">
                   <div class="control-row neg">
                     <div>
-                      <div class="control-row-title">Mainstream News (17 Global Outlets)</div>
+                      <div class="control-row-title">Mainstream News (22 Global Outlets)</div>
                       <div class="control-row-sub">Geopolitics, conflict, crime, partisan friction</div>
                     </div>
                     <strong>-0.21</strong>

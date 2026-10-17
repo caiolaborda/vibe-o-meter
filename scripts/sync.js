@@ -1283,18 +1283,6 @@ async function main() {
     categoryAverages[cat] = Number((categoryStats[cat].total / categoryStats[cat].count).toFixed(3));
   });
 
-  // 5.6 Daily Editorial Briefing (Decoupled call)
-  const todayDateStr = now.toISOString().slice(0, 10);
-  let editorialSummary = currentCache.editorialSummary || '';
-  try {
-    const briefing = await generateDailyBriefing({ force: process.argv.includes('--force') });
-    if (briefing) {
-      editorialSummary = briefing;
-    }
-  } catch (err) {
-    console.warn('[Sync] Non-blocking briefing notice:', err.message);
-  }
-
   // 5.65 Enrich Top Constructive Articles with OG Images if missing in RSS
   try {
     await enrichTopPositiveArticleImages(finalSources);
@@ -1353,6 +1341,22 @@ async function main() {
         cl.sentimentSpread = Number((Math.max(...validScores) - Math.min(...validScores)).toFixed(2));
       }
     });
+  }
+
+  // 5.8 Daily Editorial Briefing (Uses fresh in-memory sources & clusters)
+  const todayDateStr = now.toISOString().slice(0, 10);
+  let editorialSummary = currentCache.editorialSummary || '';
+  try {
+    const briefing = await generateDailyBriefing({
+      force: process.argv.includes('--force'),
+      sources: finalSources,
+      sharedStoryClusters
+    });
+    if (briefing) {
+      editorialSummary = briefing;
+    }
+  } catch (err) {
+    console.warn('[Sync] Non-blocking briefing notice:', err.message);
   }
 
   const globalStats = {
