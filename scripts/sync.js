@@ -378,13 +378,16 @@ function computeFourFactorScore(match) {
   const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
-  // Balanced Multiplicative (Cobb-Douglas) Magnitude Curve (R^0.60 * D^0.40, k=0.90):
-  // Keeps Reach primary so local micro-stories cannot leapfrog national/global events,
-  // while giving universal scientific/archaeological/ecological permanence a 0.40 exponent weight.
-  const geoMag = Math.pow(Math.max(0.01, reach), 0.60) * Math.pow(Math.max(0.01, perm), 0.40);
-  const impactScale = Math.pow(geoMag, 0.90);
-  const eventBase = Number((pol * impactScale * 0.90).toFixed(2));
-  const framingMod = Number((frame * 0.10 * (0.4 + 0.6 * reach)).toFixed(2));
+  // Hill-Saturated Magnitude Curve (g = R^0.72 * D^0.28, half-saturation k = 0.335, Hill exponent = 3.4):
+  // - Below g = 0.335 (micro-local features, local buildings/awards, palace intrigue): steeply damped toward 0
+  // - Above g = 0.35 (regional, national, and global news): saturates smoothly toward 0.85..1.00 so major news events
+  //   (both positive breakthroughs and acute negative crises/unrest) utilize the full [-1.0, +1.0] scale.
+  const geoMag = Math.pow(Math.max(0.01, reach), 0.72) * Math.pow(Math.max(0.01, perm), 0.28);
+  const gPow = Math.pow(geoMag, 3.4);
+  const kPow = Math.pow(0.335, 3.4);
+  const impactScale = gPow / (gPow + kPow);
+  const eventBase = Number((pol * impactScale * 0.92).toFixed(2));
+  const framingMod = Number((frame * 0.18 * (0.35 + 0.65 * impactScale)).toFixed(2));
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
 
   return {
