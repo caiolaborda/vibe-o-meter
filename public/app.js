@@ -741,13 +741,10 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       if (dedupedCov.length >= 2) {
         const avgPosScore = dedupedCov.reduce((s, x) => s + x.sentiment, 0) / dedupedCov.length;
         const maxScore = dedupedCov[0].sentiment;
-        const blendedScore = cl.averageSentiment >= 0.15
-          ? Number((0.70 * maxScore + 0.30 * avgPosScore).toFixed(2))
-          : Number((0.50 * cl.averageSentiment + 0.50 * avgPosScore).toFixed(2));
+        const blendedScore = Number((0.70 * maxScore + 0.30 * avgPosScore).toFixed(2));
         const leadArt = matched[0].a;
         feedItems.push({
           isCluster: true,
-          isBorderlineCluster: cl.averageSentiment < 0.15,
           title: cl.story || leadArt.title,
           summary: cl.summary || leadArt.description || '',
           category: leadArt.category || 'world',

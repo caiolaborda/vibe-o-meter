@@ -310,7 +310,7 @@ h1, h2, h3, h4 {
   margin: 0.85rem auto 0.5rem auto;
 }
 
-/* Ambient Semicircular / Radial Faded Aura */
+/* Ambient Semicircular / Radial Faded Aura (Cross-faded via ::before and ::after so radial-gradients never snap) */
 .edition-ambient-glow {
   position: absolute;
   top: 50%;
@@ -322,37 +322,98 @@ h1, h2, h3, h4 {
   pointer-events: none;
   z-index: 0;
   filter: blur(36px);
-  will-change: opacity, transform;
-  transition: opacity 0.4s ease, transform 0.4s ease, background 0.4s ease;
+  will-change: transform;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Doom Mode Ambient Aura: Midnight Slate & Obsidian Deep Atmosphere */
+.edition-ambient-glow::before,
+.edition-ambient-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  will-change: opacity, transform;
+  transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ::before = Warm Sunlit Golden Dawn Aura */
+.edition-ambient-glow::before {
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(251, 191, 36, 0.58) 0%, rgba(245, 158, 11, 0.30) 48%, transparent 80%);
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* ::after = Cool Midnight & Indigo Blue Aura */
+.edition-ambient-glow::after {
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(59, 130, 246, 0.48) 0%, rgba(30, 58, 138, 0.28) 48%, transparent 80%);
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+/* Doom Mode Ambient Aura Default */
 body[data-edition="doom"] .edition-ambient-glow,
 body:not([data-edition="silver"]) .edition-ambient-glow {
-  background: radial-gradient(ellipse 75% 65% at 50% 50%, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.65) 45%, transparent 75%);
-  opacity: 0.9;
   transform: translate(-50%, -50%) scale(1);
 }
 
-/* Silver Mode Ambient Aura: Warm Sunlit Golden Dawn */
+body[data-edition="doom"] .edition-ambient-glow::before,
+body:not([data-edition="silver"]) .edition-ambient-glow::before {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+body[data-edition="doom"] .edition-ambient-glow::after,
+body:not([data-edition="silver"]) .edition-ambient-glow::after {
+  opacity: 0.45;
+  transform: scale(1);
+}
+
+/* Silver Mode Ambient Aura Default: Warm Sunlit Golden Dawn */
 body[data-edition="silver"] .edition-ambient-glow {
-  background: radial-gradient(ellipse 78% 68% at 50% 50%, rgba(251, 191, 36, 0.55) 0%, rgba(245, 158, 11, 0.28) 48%, transparent 80%);
-  opacity: 1;
   transform: translate(-50%, -50%) scale(1.1);
 }
 
-/* Whole-Toggle Ambient Glow Shift When Hovering the Target Edition Button */
+body[data-edition="silver"] .edition-ambient-glow::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+body[data-edition="silver"] .edition-ambient-glow::after {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* Whole-Toggle Ambient Glow Smooth Cross-Fade When Hovering the Target Edition Button */
 body[data-edition="doom"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow,
 body:not([data-edition="silver"]) .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow {
-  background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(251, 191, 36, 0.62) 0%, rgba(245, 158, 11, 0.34) 48%, transparent 80%);
-  opacity: 1;
   transform: translate(-50%, -50%) scale(1.14);
 }
 
-body[data-edition="silver"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="doom"]:hover) .edition-ambient-glow {
-  background: radial-gradient(ellipse 80% 70% at 50% 50%, rgba(59, 130, 246, 0.52) 0%, rgba(30, 58, 138, 0.32) 48%, transparent 80%);
+body[data-edition="doom"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow::before,
+body:not([data-edition="silver"]) .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow::before {
   opacity: 1;
+  transform: scale(1.04);
+}
+
+body[data-edition="doom"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow::after,
+body:not([data-edition="silver"]) .edition-toggle-stage:has(.edition-pill-btn[data-edition="silver"]:hover) .edition-ambient-glow::after {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+body[data-edition="silver"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="doom"]:hover) .edition-ambient-glow {
   transform: translate(-50%, -50%) scale(1.14);
+}
+
+body[data-edition="silver"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="doom"]:hover) .edition-ambient-glow::before {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+body[data-edition="silver"] .edition-toggle-stage:has(.edition-pill-btn[data-edition="doom"]:hover) .edition-ambient-glow::after {
+  opacity: 1;
+  transform: scale(1.04);
 }
 
 /* Large Central Toggle Pill Wrapper with Sliding Indicator */
@@ -370,7 +431,7 @@ body[data-edition="silver"] .edition-toggle-stage:has(.edition-pill-btn[data-edi
   padding: 8px;
   gap: 10px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background 0.38s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.38s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.38s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Sliding Background Pill inside Edition Toggle */
@@ -430,7 +491,7 @@ body:not([data-edition="silver"]) .edition-toggle-wrap-large:has(.edition-pill-b
 
 body[data-edition="silver"] .edition-toggle-wrap-large:has(.edition-pill-btn[data-edition="doom"]:hover) {
   border-color: rgba(59, 130, 246, 0.48);
-  box-shadow: 0 14px 40px -4px rgba(59, 130, 246, 0.38), 0 0 24px rgba(96, 165, 250, 0.22), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 40px -4px rgba(59, 130, 246, 0.35), 0 0 24px rgba(96, 165, 250, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
 
 /* Central Edition Buttons */
@@ -453,7 +514,7 @@ body[data-edition="silver"] .edition-toggle-wrap-large:has(.edition-pill-btn[dat
   font-weight: 700;
   cursor: pointer;
   letter-spacing: -0.015em;
-  transition: background 0.25s ease, color 0.25s ease;
+  transition: background-color 0.35s cubic-bezier(0.22, 1, 0.36, 1), color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   user-select: none;
   transform: none;
   white-space: nowrap;
@@ -466,40 +527,42 @@ body[data-edition="silver"] .edition-toggle-wrap-large:has(.edition-pill-btn[dat
   height: 22px;
   display: inline-block;
   vertical-align: middle;
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.22s ease, filter 0.22s ease;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
   flex-shrink: 0;
 }
 
-/* Interactive Hover Peak States — Original clean button hover (no individual button glow) */
+/* Interactive Hover Peak States — Smooth symmetrical fade in both directions */
 .edition-toggle-wrap-large .edition-pill-btn:hover {
   transform: none;
 }
 
 body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"] {
   color: #64748b;
+  background-color: rgba(59, 130, 246, 0);
 }
 
 body[data-edition="silver"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover {
-  color: #1e293b;
-  background: rgba(0, 0, 0, 0.04);
+  color: #1e40af;
+  background-color: rgba(59, 130, 246, 0.08);
 }
 
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover svg,
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="doom"]:hover i {
   transform: rotate(-12deg) scale(1.18);
-  color: #60a5fa;
-  filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5));
+  color: #3b82f6;
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.45));
 }
 
 body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"],
 body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"] {
   color: #94a3b8;
+  background-color: rgba(254, 243, 199, 0);
 }
 
 body[data-edition="doom"] .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover,
 body:not([data-edition="silver"]) .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover {
   color: #fbbf24;
-  background: rgba(254, 243, 199, 0.12);
+  background-color: rgba(254, 243, 199, 0.12);
 }
 
 .edition-toggle-wrap-large .edition-pill-btn[data-edition="silver"]:hover svg,

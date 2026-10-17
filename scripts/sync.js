@@ -322,14 +322,13 @@ function computeFourFactorScore(match) {
   const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
-  // Reach-balanced geometric + linear magnitude curve:
-  // Prevents tiny-reach local stories (reach < 20) from leapfrogging national/global breakthroughs via warm framing
-  const linearMag = 0.52 * reach + 0.48 * perm;
-  const geoMag = Math.sqrt(Math.max(0.02, reach) * Math.max(0.02, perm));
-  const combinedMag = 0.65 * linearMag + 0.35 * geoMag;
-  const impactScale = 0.12 + 0.88 * Math.pow(combinedMag, 0.85);
-  const eventBase = Number((pol * impactScale * 0.88).toFixed(2));
-  const framingMod = Number((frame * 0.12).toFixed(2));
+  // Pure Multiplicative (Cobb-Douglas) Reach-Dominant Magnitude Curve:
+  // Reach acts as a strict necessary multiplier on Permanence so a local/individual story (reach < 35)
+  // cannot use high permanence (e.g., a single local building or lifetime award) or warm feature framing to leapfrog national/global events.
+  const geoMag = Math.pow(Math.max(0.01, reach), 0.65) * Math.pow(Math.max(0.01, perm), 0.35);
+  const impactScale = Math.pow(geoMag, 1.08);
+  const eventBase = Number((pol * impactScale * 0.90).toFixed(2));
+  const framingMod = Number((frame * 0.10 * (0.4 + 0.6 * reach)).toFixed(2));
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
 
   return {
