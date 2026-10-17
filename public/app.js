@@ -80,11 +80,11 @@ const SOURCE_META = {
   hindu: { name: 'The Hindu', initials: 'TH', color: '#1e3a8a', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'in', flag: '🇮🇳' },
   // Middle East
   aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
-  // Global & Science/Tech
-  reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '🌐' },
-  ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '🌐' },
-  newscientist: { name: 'New Scientist', initials: 'NSC', color: '#10b981', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '🔬' },
-  arstechnica: { name: 'Ars Technica', initials: 'ARS', color: '#f97316', region: 'GLOBAL', regionName: 'Global & Science', countryCode: 'un', flag: '⚡' }
+  // Global
+  reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
+  ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
+  newscientist: { name: 'New Scientist', initials: 'NSC', color: '#10b981', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🔬' },
+  arstechnica: { name: 'Ars Technica', initials: 'ARS', color: '#f97316', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '⚡' }
 };
 
 // Cross-platform flag renderer (renders crisp FlagCDN images on Windows & mobile)
@@ -617,7 +617,7 @@ function createSilverCardHTML(art, idx, related, isDeckCard) {
         <div class="silver-story-meta-left">
           <span class="source-badge" style="background-color: ${brandMeta.color}">${getSourceFlagHTML(art.sourceId)} ${art.sourceName}</span>
           ${relatedHoverChipHTML}
-          <span class="cat-badge ${art.category || 'other'}">${art.category === 'climate' ? '🌱 Nature & Climate' : (art.category || 'other')}</span>
+          <span class="cat-badge ${art.category || 'other'}">${art.category || 'other'}</span>
         </div>
         <div class="silver-story-meta-right">
           <i data-lucide="clock" style="width:12px;height:12px;"></i>
@@ -956,7 +956,7 @@ function createSilverClusterCardHTML(item, idx, isDeckCard) {
               </div>
             </div>
           </div>
-          <span class="cat-badge ${item.category || 'other'}">${item.category === 'climate' ? '🌱 Nature & Climate' : (item.category || 'other')}</span>
+          <span class="cat-badge ${item.category || 'other'}">${item.category || 'other'}</span>
         </div>
         <div class="silver-story-meta-right">
           <i data-lucide="clock" style="width:12px;height:12px;"></i>
@@ -2574,12 +2574,13 @@ function renderSilverEdition() {
           let matchesTopic = (effectiveTopic === 'all');
           if (!matchesTopic) {
             if (effectiveTopic === 'climate') matchesTopic = (cat === 'climate' || cat === 'environment' || cat === 'nature');
-            else if (effectiveTopic === 'science') matchesTopic = (cat === 'science' || cat === 'technology' || cat === 'tech' || cat === 'space');
+            else if (effectiveTopic === 'science') matchesTopic = (cat === 'science' || cat === 'space');
+            else if (effectiveTopic === 'technology') matchesTopic = (cat === 'technology' || cat === 'tech');
             else if (effectiveTopic === 'world') matchesTopic = (cat === 'world' || cat === 'society' || cat === 'global');
             else if (effectiveTopic === 'health') matchesTopic = (cat === 'health' || cat === 'medicine');
             else if (effectiveTopic === 'business') matchesTopic = (cat === 'business' || cat === 'markets' || cat === 'economy');
             else if (effectiveTopic === 'politics') matchesTopic = (cat === 'politics' || cat === 'policy');
-            else if (effectiveTopic === 'culture') matchesTopic = (cat === 'culture' || cat === 'arts' || cat === 'entertainment');
+            else if (effectiveTopic === 'entertainment' || effectiveTopic === 'culture') matchesTopic = (cat === 'entertainment' || cat === 'culture' || cat === 'arts');
             else if (effectiveTopic === 'sports') matchesTopic = (cat === 'sports');
             else matchesTopic = (cat === effectiveTopic);
           }
@@ -3589,16 +3590,16 @@ function getClusterTopic(cluster) {
 }
 
 const CLUSTER_TOPIC_LABELS = {
-  world: '🌐 World Affairs',
-  politics: '🏛️ Politics',
-  business: '📈 Business & Markets',
+  world: '🌍 World',
+  politics: '🗳️ Politics',
+  business: '📈 Business',
   technology: '⚡ Technology',
-  science: '🔬 Science & Space',
-  health: '🩺 Health & Medicine',
-  climate: '🌱 Nature & Climate',
+  science: '🚀 Science',
+  health: '🏥 Health',
+  climate: '🌱 Climate',
   entertainment: '🎭 Entertainment',
   sports: '⚽ Sports',
-  other: '📰 General News'
+  other: '📰 General'
 };
 
 // Annotate a raw cluster with calculated metrics, date range, and editorial summaries
@@ -4313,15 +4314,15 @@ function renderSentimentTimeline() {
     : (regionName || 'Global');
 
   const categoryNames = {
-    science: { name: 'Science & Space', icon: '🚀' },
-    climate: { name: 'Nature & Climate', icon: '🌱' },
-    technology: { name: 'Tech & AI', icon: '⚡' },
-    business: { name: 'Business & Economy', icon: '📈' },
-    health: { name: 'Health & Medicine', icon: '🏥' },
-    politics: { name: 'Politics & Governance', icon: '🗳️' },
-    world: { name: 'World & Global Affairs', icon: '🌍' },
-    entertainment: { name: 'Culture & Entertainment', icon: '🎭' },
-    sports: { name: 'Sports', icon: '🏅' }
+    world: { name: 'World', icon: '🌍' },
+    politics: { name: 'Politics', icon: '🗳️' },
+    business: { name: 'Business', icon: '📈' },
+    technology: { name: 'Technology', icon: '⚡' },
+    science: { name: 'Science', icon: '🚀' },
+    climate: { name: 'Climate', icon: '🌱' },
+    health: { name: 'Health', icon: '🏥' },
+    entertainment: { name: 'Entertainment', icon: '🎭' },
+    sports: { name: 'Sports', icon: '⚽' }
   };
 
   // Sync topic filter from either the global header topic filter OR the inline timeline topic cards
@@ -5315,7 +5316,7 @@ const REGION_LABELS = {
   APAC: 'Asia-Pacific',
   ME: 'Middle East',
   MENA: 'Middle East',
-  GLOBAL: 'Global & Science'
+  GLOBAL: 'Global'
 };
 
 window.selectRegionFilter = function(regionCode) {
@@ -6588,7 +6589,7 @@ function renderHeatmapMatrix() {
     world: '🌍 World',
     politics: '🗳️ Politics',
     business: '📈 Business',
-    technology: '⚡ Tech',
+    technology: '⚡ Technology',
     science: '🚀 Science',
     climate: '🌱 Climate',
     health: '🏥 Health'

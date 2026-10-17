@@ -83,14 +83,15 @@
             <i data-lucide="filter" class="quick-time-icon"></i>
             <select id="silver-topic-select" class="quick-time-select silver-time-select" aria-label="Select topic for good news">
               <option value="all" selected>All Topics</option>
-              <option value="science">🔬 Science &amp; Space</option>
-              <option value="climate">🌱 Nature &amp; Climate</option>
-              <option value="health">🩺 Health &amp; Medicine</option>
-              <option value="business">📈 Business &amp; Economy</option>
-              <option value="culture">🎨 Culture &amp; Arts</option>
-              <option value="world">🌐 World &amp; Society</option>
-              <option value="politics">🏛️ Politics</option>
-              <option value="sports">🏅 Sports</option>
+              <option value="world">🌍 World</option>
+              <option value="politics">🗳️ Politics</option>
+              <option value="business">📈 Business</option>
+              <option value="technology">⚡ Technology</option>
+              <option value="science">🚀 Science</option>
+              <option value="climate">🌱 Climate</option>
+              <option value="health">🏥 Health</option>
+              <option value="entertainment">🎭 Entertainment</option>
+              <option value="sports">⚽ Sports</option>
             </select>
           </div>
 
@@ -243,13 +244,15 @@
           <i data-lucide="filter" class="quick-time-icon"></i>
           <select id="quick-topic-select" class="quick-time-select" aria-label="Select topic">
             <option value="all" selected>All Topics</option>
-            <option value="world">🌍 World Affairs</option>
+            <option value="world">🌍 World</option>
             <option value="politics">🗳️ Politics</option>
-            <option value="business">📈 Business &amp; Markets</option>
+            <option value="business">📈 Business</option>
             <option value="technology">⚡ Technology</option>
-            <option value="science">🚀 Science &amp; Space</option>
-            <option value="climate">🌱 Nature &amp; Climate</option>
-            <option value="health">🏥 Health &amp; Medicine</option>
+            <option value="science">🚀 Science</option>
+            <option value="climate">🌱 Climate</option>
+            <option value="health">🏥 Health</option>
+            <option value="entertainment">🎭 Entertainment</option>
+            <option value="sports">⚽ Sports</option>
           </select>
         </div>
         <!-- Top Stories Sort Selector (Shown when on Top Stories tab instead of Timeframe) -->
@@ -350,7 +353,7 @@
             <button class="region-pill" data-region="EU" onclick="selectRegionFilter('EU')"><img src="https://flagcdn.com/20x15/eu.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (<span data-region-count="EU">7</span>)</button>
             <button class="region-pill" data-region="APAC" onclick="selectRegionFilter('APAC')"><img src="https://flagcdn.com/20x15/au.png" class="flag-icon-img" width="16" height="12" alt="APAC"> Asia-Pacific (<span data-region-count="APAC">5</span>)</button>
             <button class="region-pill" data-region="ME" onclick="selectRegionFilter('ME')"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (<span data-region-count="ME">1</span>)</button>
-            <button class="region-pill" data-region="GLOBAL" onclick="selectRegionFilter('GLOBAL')"><span style="margin-right:0.2rem;">🌐</span> Global &amp; Science (<span data-region-count="GLOBAL">4</span>)</button>
+            <button class="region-pill" data-region="GLOBAL" onclick="selectRegionFilter('GLOBAL')"><span style="margin-right:0.2rem;">🌐</span> Global (<span data-region-count="GLOBAL">4</span>)</button>
           </div>
 
           <div class="timeline-header-row">
@@ -424,7 +427,7 @@
             <button class="region-pill" data-region="EU"><img src="https://flagcdn.com/20x15/eu.png" class="flag-icon-img" width="16" height="12" alt="EU"> Europe (<span data-region-count="EU">7</span>)</button>
             <button class="region-pill" data-region="APAC"><img src="https://flagcdn.com/20x15/au.png" class="flag-icon-img" width="16" height="12" alt="APAC"> Asia-Pacific (<span data-region-count="APAC">5</span>)</button>
             <button class="region-pill" data-region="ME"><img src="https://flagcdn.com/20x15/qa.png" class="flag-icon-img" width="16" height="12" alt="QA"> Middle East (<span data-region-count="ME">1</span>)</button>
-            <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.2rem;">🌐</span> Global &amp; Science (<span data-region-count="GLOBAL">4</span>)</button>
+            <button class="region-pill" data-region="GLOBAL"><span style="margin-right:0.2rem;">🌐</span> Global (<span data-region-count="GLOBAL">4</span>)</button>
           </div>
 
           <!-- 1. Integrated Compact Outlet Leaderboard Matrix (Worst #17 to Best #1, then Unranked) -->
@@ -514,14 +517,16 @@
               <div class="h2h-control-item">
                 <label for="h2h-topic-select"><i data-lucide="layers"></i> Compare by Topic:</label>
                 <select id="h2h-topic-select" class="select-input">
-                  <option value="all" selected>All Topics (Overall)</option>
-                  <option value="world">World Affairs</option>
+                  <option value="all" selected>All Topics</option>
+                  <option value="world">World</option>
                   <option value="politics">Politics</option>
-                  <option value="business">Business &amp; Markets</option>
+                  <option value="business">Business</option>
                   <option value="technology">Technology</option>
-                  <option value="science">Science &amp; Space</option>
-                  <option value="health">Health &amp; Medicine</option>
-                  <option value="climate">Nature &amp; Climate</option>
+                  <option value="science">Science</option>
+                  <option value="climate">Climate</option>
+                  <option value="health">Health</option>
+                  <option value="entertainment">Entertainment</option>
+                  <option value="sports">Sports</option>
                 </select>
               </div>
 
@@ -624,13 +629,13 @@
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">
               <i data-lucide="tag" style="width: 14px; height: 14px; color: var(--accent-color);"></i> Topics:
             </span>
-            <button class="topic-pill-btn active" data-topic="all">All Stories</button>
+            <button class="topic-pill-btn active" data-topic="all">All Topics</button>
             <button class="topic-pill-btn" data-topic="world">🌍 World</button>
             <button class="topic-pill-btn" data-topic="politics">🗳️ Politics</button>
             <button class="topic-pill-btn" data-topic="business">📈 Business</button>
-            <button class="topic-pill-btn" data-topic="technology">⚡ Tech &amp; AI</button>
-            <button class="topic-pill-btn" data-topic="science">🚀 Science &amp; Space</button>
-            <button class="topic-pill-btn" data-topic="climate">🌱 Nature &amp; Climate</button>
+            <button class="topic-pill-btn" data-topic="technology">⚡ Technology</button>
+            <button class="topic-pill-btn" data-topic="science">🚀 Science</button>
+            <button class="topic-pill-btn" data-topic="climate">🌱 Climate</button>
             <button class="topic-pill-btn" data-topic="health">🏥 Health</button>
             <button class="topic-pill-btn" data-topic="entertainment">🎭 Entertainment</button>
             <button class="topic-pill-btn" data-topic="sports">⚽ Sports</button>
@@ -932,6 +937,6 @@
   <!-- SHARE TOAST -->
   <div id="share-toast" class="share-toast hidden">Copied to clipboard!</div>
 
-  <script src="app.js?v=5.6"></script>
+  <script src="app.js?v=5.7"></script>
 </body>
 </html>
