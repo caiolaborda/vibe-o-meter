@@ -282,7 +282,42 @@ function tryRepairJsonArray(text) {
   return clean;
 }
 
-// Interleave articles across outlets (round-robin) so every batch contains a cross-outlet mix of the current news cycle
+// Extract significant content tokens from a headline for cross-outlet event grouping
+function getHeadlineTopicTokens(title) {
+  const stop = new Set([
+    'about', 'after', 'again', 'against', 'amid', 'among', 'around', 'Became', 'because', 'before',
+    'being', 'below', 'between', 'bill', 'both', 'bring', 'calls', 'cloud', 'comes', 'could', 'daily',
+    'days', 'deal', 'despite', 'does', 'down', 'during', 'early', 'even', 'every', 'face', 'faces',
+    'find', 'finds', 'first', 'five', 'four', 'from', 'full', 'gets', 'give', 'gives', 'global', 'goes',
+    'good', 'government', 'great', 'group', 'have', 'head', 'help', 'helps', 'here', 'high', 'hold',
+    'home', 'house', 'into', 'just', 'keep', 'keeps', 'know', 'large', 'last', 'late', 'latest', 'lead',
+    'leads', 'leave', 'leaves', 'left', 'less', 'life', 'like', 'live', 'lives', 'long', 'look', 'looks',
+    'made', 'make', 'makes', 'making', 'many', 'market', 'media', 'meet', 'meets', 'might', 'million',
+    'more', 'most', 'move', 'moves', 'much', 'must', 'near', 'nearly', 'need', 'needs', 'never', 'news',
+    'next', 'nine', 'north', 'official', 'officials', 'once', 'only', 'open', 'opens', 'other', 'over',
+    'part', 'past', 'people', 'plan', 'plans', 'play', 'point', 'policy', 'power', 'press', 'price',
+    'public', 'push', 'pushes', 'puts', 'raise', 'raises', 'rate', 'rates', 'reach', 'ready', 'real',
+    'record', 'report', 'reports', 'return', 'returns', 'right', 'rise', 'rises', 'risk', 'risks',
+    'road', 'role', 'rule', 'rules', 'said', 'says', 'second', 'seek', 'seeks', 'seen', 'send', 'sends',
+    'seven', 'show', 'shows', 'side', 'sign', 'signs', 'since', 'site', 'some', 'soon', 'south', 'spark',
+    'sparks', 'speak', 'star', 'start', 'starts', 'state', 'states', 'stay', 'step', 'steps', 'still',
+    'stop', 'stops', 'story', 'study', 'support', 'take', 'takes', 'talk', 'talks', 'team', 'tell',
+    'tells', 'test', 'tests', 'than', 'that', 'their', 'them', 'then', 'there', 'these', 'they', 'thing',
+    'things', 'think', 'three', 'through', 'time', 'times', 'today', 'told', 'took', 'turn', 'turns',
+    'under', 'until', 'update', 'updates', 'used', 'using', 'very', 'view', 'vote', 'votes', 'wait',
+    'wants', 'warn', 'warns', 'watch', 'water', 'week', 'weeks', 'well', 'were', 'west', 'what', 'when',
+    'where', 'which', 'while', 'will', 'with', 'within', 'without', 'women', 'work', 'working', 'world',
+    'would', 'year', 'years', 'your', 'reuters', 'bloomberg', 'news', 'guardian', 'bbc', 'cnn'
+  ]);
+  return cleanHeadlineTitle(title)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 4 && !stop.has(w));
+}
+
+// Interleave articles across outlets (round-robin) and group matching event topics together
+// so simultaneous coverage of the same story always sits in the same 50-item batch
 function interleaveByOutlet(articles) {
   const bySource = {};
   articles.forEach(art => {
@@ -302,11 +337,32 @@ function interleaveByOutlet(articles) {
       }
     }
   }
-  return interleaved;
+  // Group articles sharing >= 2 significant topic tokens adjacent to each other
+  const tokenized = interleaved.map(art => ({ art, tokens: new Set(getHeadlineTopicTokens(art.title)) }));
+  const grouped = [];
+  const used = new Set();
+  for (let i = 0; i < tokenized.length; i++) {
+    if (used.has(i)) continue;
+    used.add(i);
+    grouped.push(tokenized[i].art);
+    if (tokenized[i].tokens.size < 2) continue;
+    for (let j = i + 1; j < tokenized.length; j++) {
+      if (used.has(j) || tokenized[j].tokens.size < 2) continue;
+      let shared = 0;
+      for (const t of tokenized[i].tokens) {
+        if (tokenized[j].tokens.has(t)) shared++;
+      }
+      if (shared >= 2) {
+        used.add(j);
+        grouped.push(tokenized[j].art);
+      }
+    }
+  }
+  return grouped;
 }
 
 // Compute continuous sentiment score from 4 higher-order orthogonal dimensions:
-// - polarity: -100 to +100 (inherent real-world valence & counterfactual direction)
+// - polarity: -100 to +100 (inherent real-world valence & causal direction)
 // - reach: 0 to 100 (breadth of human, institutional, or ecological scope)
 // - permanence: 0 to 100 (depth & duration of consequence)
 // - framing: -100 to +100 (editorial rhetoric & packaging vs neutral wire baseline)
@@ -322,11 +378,11 @@ function computeFourFactorScore(match) {
   const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
-  // Pure Multiplicative (Cobb-Douglas) Reach-Dominant Magnitude Curve:
-  // Reach acts as a strict necessary multiplier on Permanence so a local/individual story (reach < 35)
-  // cannot use high permanence (e.g., a single local building or lifetime award) or warm feature framing to leapfrog national/global events.
-  const geoMag = Math.pow(Math.max(0.01, reach), 0.65) * Math.pow(Math.max(0.01, perm), 0.35);
-  const impactScale = Math.pow(geoMag, 1.08);
+  // Balanced Multiplicative (Cobb-Douglas) Magnitude Curve (R^0.60 * D^0.40, k=0.90):
+  // Keeps Reach primary so local micro-stories cannot leapfrog national/global events,
+  // while giving universal scientific/archaeological/ecological permanence a 0.40 exponent weight.
+  const geoMag = Math.pow(Math.max(0.01, reach), 0.60) * Math.pow(Math.max(0.01, perm), 0.40);
+  const impactScale = Math.pow(geoMag, 0.90);
   const eventBase = Number((pol * impactScale * 0.90).toFixed(2));
   const framingMod = Number((frame * 0.10 * (0.4 + 0.6 * reach)).toFixed(2));
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
@@ -343,7 +399,7 @@ function computeFourFactorScore(match) {
 }
 
 // Structured Gemini sentiment analysis with cross-outlet batching & 4-Factor First-Principles Formula
-async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchSize) {
+async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchSize, existingEvaluatedPool = []) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     requestedModel,
@@ -354,7 +410,36 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchS
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
-  // Interleave across outlets so simultaneous coverage of the same story sits in the same context window
+  // Pre-tokenize recent 4-factor articles from the last 36 hours for cross-sync Event Base anchoring
+  const recentCutoffMs = Date.now() - (36 * 60 * 60 * 1000);
+  const anchorCandidates = existingEvaluatedPool
+    .filter(a => Array.isArray(a.factors) && a.factors.length === 4 && (!a.pubDate || new Date(a.pubDate).getTime() >= recentCutoffMs))
+    .map(a => ({
+      factors: a.factors.slice(0, 3),
+      tokens: new Set(getHeadlineTopicTokens(a.title))
+    }))
+    .filter(a => a.tokens.size >= 2);
+
+  function findPriorEventAnchor(title) {
+    const tokens = getHeadlineTopicTokens(title);
+    if (tokens.length < 2) return null;
+    let best = null;
+    let bestShared = 0;
+    for (const cand of anchorCandidates) {
+      let shared = 0;
+      for (const t of tokens) {
+        if (cand.tokens.has(t)) shared++;
+      }
+      const minLen = Math.min(tokens.length, cand.tokens.size);
+      if ((shared >= 3 || (shared >= 2 && shared / minLen >= 0.6)) && shared > bestShared) {
+        bestShared = shared;
+        best = cand.factors;
+      }
+    }
+    return best;
+  }
+
+  // Interleave & topic-group across outlets so simultaneous coverage of the same story sits in the same context window
   const orderedHeadlines = interleaveByOutlet(headlines);
   const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || 50;
   const allResults = [];
@@ -362,31 +447,36 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchS
 
   for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
     const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
-    const promptData = chunk.map((item, index) => ({
-      index,
-      outlet: item.sourceId,
-      headline: item.title,
-      description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || '')
-    }));
+    const promptData = chunk.map((item, index) => {
+      const priorAnchor = findPriorEventAnchor(item.title);
+      return {
+        index,
+        outlet: item.sourceId,
+        headline: item.title,
+        description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || ''),
+        ...(priorAnchor ? { priorEventFactors: priorAnchor } : {})
+      };
+    });
 
     const prompt = `You are an impartial, senior media analyst evaluating global news dispatches from first principles.
 Evaluate each article across FOUR continuous higher-order dimensions using precise integers (avoid rounding to multiples of 5 or 10):
 
 1. "polarity" (integer -100 to 100 — Net Real-World Valence & Causal Direction):
    Evaluate the inherent net valence of the primary real-world change along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, or offsetting mixed outcomes) to +100 (maximum net constructive advancement).
-   - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, discovery, infrastructure investment, or systemic aid that builds durable capacity or resolves a deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, or acute economic/harm shock and merely highlights a procedural concession, secondary byproduct, or risk catalog, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
+   - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, clinical or scientific advance, discovery, infrastructure investment, or systemic aid that builds durable capacity or resolves a deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, or acute economic/harm shock and merely highlights a procedural concession, secondary byproduct, or risk catalog, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
+   - Concrete Action vs. Unsubstantiated Rhetoric (Symmetrical): Concrete actions, empirical findings, active clinical or scientific trials, physical discoveries, enacted policies, and verified acute events carry full positive or negative valence. Conversely, when a dispatch consists of unsubstantiated future predictions, preliminary or conditional assertions, self-serving promotional claims, routine audience/market metrics, unverified rumors, or pure opinion commentary without a verified structural milestone, discount event polarity toward zero and attribute the directional spin primarily to "framing".
 
 2. "reach" (integer 0 to 100 — Proportional Scope of Affected Population or System):
-   Measure the breadth of the directly affected population, institution, or system along a continuous logarithmic scale from 0 (an isolated individual or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific knowledge). Score strictly in proportion to the true scale of the population or system impacted.
+   Measure the breadth of the directly affected population, institution, or system along a continuous logarithmic scale from 0 (an isolated individual or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific and historical knowledge). Score strictly in proportion to the true scale of the population or knowledge domain impacted.
 
 3. "permanence" (integer 0 to 100 — Structural Depth & Temporal Horizon of Consequence):
-   Measure the durability and reversibility of the real-world consequence along a continuous scale from 0 (ephemeral, momentary, or symbolic occurrences with no lasting structural change) to 100 (irreversible, multi-generational, or permanent structural/scientific transformation).
+   Measure the durability and reversibility of the real-world consequence along a continuous scale from 0 (ephemeral, unverified, speculative, or routine occurrences with no lasting structural change) to 100 (irreversible, multi-generational, or permanent structural, clinical, or scientific transformation).
 
 4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
-   Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, agency-highlighting, or solutions-oriented rhetoric).
+   Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, promotional, or agency-highlighting rhetoric).
 
 COHERENCE PRINCIPLE:
-If multiple dispatches in this batch cover the same underlying real-world event, assign them identical "polarity", "reach", and "permanence", differentiating them only via "framing".
+If multiple dispatches in this batch cover the same underlying real-world event (or match a provided "priorEventFactors" [polarity, reach, permanence] anchor from an earlier dispatch on the exact same event), assign them identical "polarity", "reach", and "permanence", differentiating them only via "framing".
 
 Return ONLY a JSON array of objects with:
 - index: integer matching input index
@@ -825,9 +915,9 @@ function hasValidGeminiScore(art) {
 // Helper: strip legacy AFINN/VADER/duplicate fields to keep JSON payload lean
 function compactArticleRecord(art, sourceId) {
   const hasGemini = hasValidGeminiScore(art);
-  const score = hasGemini ? Number((art.sentimentGemini ?? art.sentiment).toFixed(2)) : null;
+  let score = hasGemini ? Number((art.sentimentGemini ?? art.sentiment).toFixed(2)) : null;
   const category = art.categoryGemini || art.category || 'other';
-  const explanation = hasGemini ? (art.explanationGemini || art.explanation || '') : undefined;
+  let explanation = hasGemini ? (art.explanationGemini || art.explanation || '') : undefined;
 
   const clean = {
     sourceId: art.sourceId || sourceId,
@@ -838,10 +928,27 @@ function compactArticleRecord(art, sourceId) {
     pubDate: art.pubDate
   };
   if (score !== null) {
-    clean.sentiment = score;
-    if (typeof art.eventBase === 'number') clean.eventBase = art.eventBase;
-    if (typeof art.framingMod === 'number') clean.framingMod = art.framingMod;
-    if (Array.isArray(art.factors) && art.factors.length === 4) clean.factors = art.factors;
+    if (Array.isArray(art.factors) && art.factors.length === 4) {
+      const calc = computeFourFactorScore({
+        polarity: art.factors[0],
+        reach: art.factors[1],
+        permanence: art.factors[2],
+        framing: art.factors[3]
+      });
+      clean.sentiment = calc.score;
+      clean.eventBase = calc.eventBase;
+      clean.framingMod = calc.framingMod;
+      clean.factors = art.factors;
+      if (explanation) {
+        const rawExp = String(explanation).replace(/\s*\[Event Base:.*$/, '');
+        const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
+        explanation = rawExp + expSuffix;
+      }
+    } else {
+      clean.sentiment = score;
+      if (typeof art.eventBase === 'number') clean.eventBase = art.eventBase;
+      if (typeof art.framingMod === 'number') clean.framingMod = art.framingMod;
+    }
     clean.category = category;
     if (explanation) clean.explanation = explanation;
   }
@@ -983,7 +1090,7 @@ async function main() {
     if (geminiPaidKey) {
       try {
         console.log(`[AI] Processing ${unanalyzedArticles.length} articles with Gemini (${geminiModel})...`);
-        const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiPaidKey, geminiModel);
+        const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiPaidKey, geminiModel, undefined, sortedExisting);
         
         const articleMap = new Map();
         unanalyzedArticles.forEach(a => articleMap.set(`${a.sourceId}_${a.title.trim().toLowerCase()}`, a));
