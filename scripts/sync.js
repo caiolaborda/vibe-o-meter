@@ -840,9 +840,51 @@ Return JSON array in format:
         const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
         const newestMs = matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : 0;
 
+        // Check if this cluster matches a previous cluster by shared article URLs/titles
+        let matchedPrev = null;
+        const evolvedIds = new Set();
+        const newUrls = new Set(matchingArticles.map(m => m.link ? canonicalUrl(m.link) : '').filter(Boolean));
+        const newTitles = new Set(matchingArticles.map(m => m.title ? cleanHeadlineTitle(m.title) : '').filter(Boolean));
+
+        if (Array.isArray(previousClusters)) {
+          for (const prev of previousClusters) {
+            if (!prev || !Array.isArray(prev.coverage)) continue;
+            const prevSlug = prev.id || String(prev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const sharedCount = prev.coverage.filter(c =>
+              (c.link && newUrls.has(canonicalUrl(c.link))) ||
+              (c.title && newTitles.has(cleanHeadlineTitle(c.title)))
+            ).length;
+            if (sharedCount >= 2 || (sharedCount >= 1 && prev.coverage.length <= 2 && matchingArticles.length <= 2)) {
+              if (!matchedPrev) matchedPrev = prev;
+              if (prevSlug) evolvedIds.add(prevSlug);
+              if (Array.isArray(prev.evolvedFromIds)) {
+                prev.evolvedFromIds.forEach(id => evolvedIds.add(id));
+              }
+            }
+          }
+        }
+
+        // If the underlying articles haven't expanded since matchedPrev, preserve matchedPrev's canonical story title & summary
+        // so cluster slugs don't jitter cosmetically between syncs (e.g. "Discovered" vs "Found").
+        let finalStory = cl.story;
+        let finalSummary = cl.summary || '';
+        if (matchedPrev) {
+          const prevUrls = new Set((matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean));
+          const addedArticles = matchingArticles.filter(m => m.link && !prevUrls.has(canonicalUrl(m.link)));
+          if (addedArticles.length === 0 && matchedPrev.story) {
+            finalStory = matchedPrev.story;
+            if (matchedPrev.summary) finalSummary = matchedPrev.summary;
+          }
+        }
+
+        const currentSlug = String(finalStory || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        evolvedIds.delete(currentSlug);
+
         formattedClusters.push({
-          story: cl.story,
-          summary: cl.summary || '',
+          id: currentSlug,
+          story: finalStory,
+          summary: finalSummary,
+          ...(evolvedIds.size > 0 ? { evolvedFromIds: Array.from(evolvedIds) } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
           outletCount: matchingArticles.length,
@@ -882,9 +924,12 @@ Return JSON array in format:
       });
     }
 
+    // Longitudinal Cluster Consolidation Pass: merge duplicate or sequentially evolving story clusters
+    const consolidatedClusters = await consolidateEvolvingClusters(formattedClusters, apiKey);
+
     // Weight recent 24h stories higher so fresh breaking stories rank above multi-day stories
     const nowMs = Date.now();
-    formattedClusters.sort((a, b) => {
+    consolidatedClusters.sort((a, b) => {
       const ageHoursA = a.newestMs ? Math.max(0, (nowMs - a.newestMs) / 3600000) : 48;
       const ageHoursB = b.newestMs ? Math.max(0, (nowMs - b.newestMs) / 3600000) : 48;
       const recencyBoostA = ageHoursA <= 24 ? 1.35 : 0.75;
@@ -893,10 +938,128 @@ Return JSON array in format:
       const scoreB = b.outletCount * (b.sentimentSpread + 0.15) * recencyBoostB;
       return scoreB - scoreA;
     });
-    formattedClusters.forEach(c => delete c.newestMs);
-    return formattedClusters;
+    consolidatedClusters.forEach(c => delete c.newestMs);
+    return consolidatedClusters;
   }
   return previousClusters;
+}
+
+// Single-pass Longitudinal Cluster Consolidation: merges duplicate or evolving story arcs across syncs
+async function consolidateEvolvingClusters(clusters, apiKey) {
+  if (!apiKey || !Array.isArray(clusters) || clusters.length < 4) return clusters;
+
+  const slugify = (str) => String(str || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const lines = clusters.map((c, idx) => {
+    const id = c.id || slugify(c.story);
+    const sampleOutlets = (c.coverage || []).slice(0, 4).map(a => a.sourceId).join(',');
+    return `[${idx}] id="${id}" | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+  }).join('\n');
+
+  const prompt = `You are the Executive Editor of a global news intelligence wire.
+Below are ${clusters.length} story clusters currently active across our rolling 7-day window. Because clusters are generated across multiple syncs, the exact same real-world story or direct sequential phases of the same story (e.g., "Leader Detained" -> "Leader Released", "Student Protests Clash in Tirana" -> "Anti-Government Protests Escalate in Albania", "Tesla Unveils Flying Roadster" -> "Tesla Showcases Redesigned Flying Roadster") sometimes appear as separate clusters.
+
+Task:
+Identify any groups of 2 or more clusters that represent EITHER:
+1. Duplicate clusters of the exact same real-world event/announcement, OR
+2. Direct sequential evolutions of the exact same specific incident/protest/case/person over recent days.
+
+Strict Guardrails:
+- NEVER merge distinct events that merely share a broad topic or country (e.g. do NOT merge a court dispute over Trump's records with No Kings rallies or Russia sanctions; do NOT merge two unrelated shootings or crashes).
+- Only merge clusters when they are genuinely the SAME underlying story or a direct chronological progression of that exact incident.
+- For each merged group, provide:
+  - "indices": array of integer indices from the list below to merge together
+  - "story": an updated, authoritative 3-6 word headline reflecting the latest state of the story
+  - "summary": an updated 1-2 sentence synthesis that captures the full arc and latest development, weaving timing (day, date span, or time-of-day cue) organically and variedly into the sentence structure rather than starting with a rigid "On [Day], [Date]," formula.
+
+Clusters:
+${lines}
+
+Return ONLY valid JSON in this format:
+{
+  "merges": [
+    {
+      "indices": [13, 14],
+      "story": "Updated Authoritative Story Title",
+      "summary": "1-2 sentence synthesis with organic, varied temporal grounding."
+    }
+  ]
+}`;
+
+  try {
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-3.5-flash-lite',
+      generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+    });
+    const resp = await model.generateContent(prompt);
+    const parsed = JSON.parse(resp.response.text().trim());
+    const merges = Array.isArray(parsed?.merges) ? parsed.merges : [];
+    if (merges.length === 0) return clusters;
+
+    const consumed = new Set();
+    const result = [];
+
+    for (const m of merges) {
+      const validIdx = (m.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length && !consumed.has(i));
+      if (validIdx.length < 2) continue;
+      validIdx.forEach(i => consumed.add(i));
+
+      const group = validIdx.map(i => clusters[i]);
+      const evolvedIds = new Set();
+      const rawCov = [];
+      let maxNewestMs = 0;
+
+      for (const g of group) {
+        const gSlug = g.id || slugify(g.story);
+        if (gSlug) evolvedIds.add(gSlug);
+        if (Array.isArray(g.evolvedFromIds)) {
+          g.evolvedFromIds.forEach(id => evolvedIds.add(id));
+        }
+        if (g.newestMs && g.newestMs > maxNewestMs) maxNewestMs = g.newestMs;
+        if (Array.isArray(g.coverage)) rawCov.push(...g.coverage);
+      }
+
+      rawCov.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+      const seenOutlets = new Set();
+      const dedupedCov = [];
+      for (const art of rawCov) {
+        if (!art.sourceId || seenOutlets.has(art.sourceId)) continue;
+        seenOutlets.add(art.sourceId);
+        dedupedCov.push(art);
+      }
+
+      const scores = dedupedCov.map(a => a.sentiment).filter(s => typeof s === 'number');
+      const avgScore = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : 0;
+      const spreadRange = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : 0;
+      const newStory = (m.story && m.story.trim()) || group[0].story;
+      const newSlug = slugify(newStory);
+      evolvedIds.delete(newSlug);
+
+      result.push({
+        ...group[0],
+        id: newSlug,
+        story: newStory,
+        summary: (m.summary && m.summary.trim()) || group[0].summary,
+        evolvedFromIds: Array.from(evolvedIds),
+        averageSentiment: avgScore,
+        sentimentSpread: spreadRange,
+        outletCount: dedupedCov.length,
+        newestMs: maxNewestMs || Date.now(),
+        coverage: dedupedCov
+      });
+    }
+
+    clusters.forEach((c, idx) => {
+      if (!consumed.has(idx)) result.push(c);
+    });
+
+    console.log(`[Clusters] Consolidated ${merges.length} evolving cluster groups (${clusters.length} -> ${result.length} clusters).`);
+    return result;
+  } catch (e) {
+    console.warn('[Clusters] Consolidation pass skipped:', e.message);
+    return clusters;
+  }
 }
 
 // Enrich top constructive/positive articles with Open Graph images and descriptions if missing in RSS

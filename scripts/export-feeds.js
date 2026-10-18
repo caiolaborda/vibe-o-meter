@@ -148,13 +148,17 @@ function exportPublicJsonFeeds(fullPayload) {
       ? [0, 1, 2, 3].map(i => Math.round(validFactors.reduce((sum, f) => sum + Number(f[i] || 0), 0) / validFactors.length))
       : null;
     const bestImg = enrichedCov.find(c => isValidImage(c.imageUrl))?.imageUrl || null;
-    const slug = String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const slug = cl.id || String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const outletCount = enrichedCov.length;
     const sign = avgSent >= 0 ? 1 : -1;
     const consensusBoost = outletCount > 1 ? sign * Math.min(0.25, 0.075 * Math.log2(outletCount)) : 0;
     const significanceScore = Number(Math.max(-1, Math.min(1, avgSent + consensusBoost)).toFixed(3));
+    const evolvedFromIds = Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0
+      ? cl.evolvedFromIds
+      : undefined;
 
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
+    cl.id = slug;
     cl.topic = topic;
     cl.averageSentiment = avgSent;
     cl.significanceScore = significanceScore;
@@ -166,6 +170,7 @@ function exportPublicJsonFeeds(fullPayload) {
       id: slug,
       story: cl.story,
       summary: cl.summary || '',
+      ...(evolvedFromIds ? { evolvedFromIds } : {}),
       topic,
       imageUrl: bestImg,
       averageSentiment: avgSent,
