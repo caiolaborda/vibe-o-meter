@@ -2867,27 +2867,33 @@ function renderSilverEdition() {
 
 // Populate source options dynamically in drop-down filters
 function populateFilterOptions() {
-  const sources = Object.keys(state.sources).map(id => ({
+  const allSources = Object.keys(state.sources).map(id => ({
     id,
-    name: state.sources[id].name
+    name: state.sources[id].name,
+    region: (SOURCE_META[id]?.region || 'GLOBAL').toUpperCase()
   }));
+
+  const activeReg = (state.activeRegion && state.activeRegion !== 'all') ? state.activeRegion.toUpperCase() : 'ALL';
+  const scopedSources = activeReg === 'ALL'
+    ? allSources
+    : allSources.filter(s => s.region === activeReg);
   
   // Populate filter source dropdown
   if (elements.filterSource) {
-    elements.filterSource.innerHTML = '<option value="all">All Sources</option>';
-    sources.forEach(src => {
+    elements.filterSource.innerHTML = `<option value="all">All ${scopedSources.length} Outlets</option>`;
+    scopedSources.forEach(src => {
       elements.filterSource.innerHTML += `<option value="${src.id}">${src.name}</option>`;
     });
-    elements.filterSource.value = state.filters.source;
+    elements.filterSource.value = scopedSources.some(s => s.id === state.filters.source) ? state.filters.source : 'all';
   }
 
   // Populate Deep Dive dedicated source filter dropdown
   if (elements.deepdiveFilterSource) {
-    elements.deepdiveFilterSource.innerHTML = `<option value="all">All ${sources.length} Outlets</option>`;
-    sources.forEach(src => {
+    elements.deepdiveFilterSource.innerHTML = `<option value="all">All ${scopedSources.length} Outlets</option>`;
+    scopedSources.forEach(src => {
       elements.deepdiveFilterSource.innerHTML += `<option value="${src.id}">${src.name}</option>`;
     });
-    elements.deepdiveFilterSource.value = state.filters.source;
+    elements.deepdiveFilterSource.value = scopedSources.some(s => s.id === state.filters.source) ? state.filters.source : 'all';
   }
 
   // Sync Deep Dive timeframe filter dropdown
@@ -2902,14 +2908,14 @@ function populateFilterOptions() {
   elements.h2hSourceA.innerHTML = '';
   elements.h2hSourceB.innerHTML = '';
   
-  sources.forEach((src, idx) => {
+  allSources.forEach((src, idx) => {
     elements.h2hSourceA.innerHTML += `<option value="${src.id}" ${idx === 0 ? 'selected' : ''}>${src.name}</option>`;
     elements.h2hSourceB.innerHTML += `<option value="${src.id}" ${idx === 1 ? 'selected' : ''}>${src.name}</option>`;
   });
   
   // Keep previous values if they still exist
-  if (sources.some(s => s.id === prevA)) elements.h2hSourceA.value = prevA;
-  if (sources.some(s => s.id === prevB)) elements.h2hSourceB.value = prevB;
+  if (allSources.some(s => s.id === prevA)) elements.h2hSourceA.value = prevA;
+  if (allSources.some(s => s.id === prevB)) elements.h2hSourceB.value = prevB;
 }
 
 // Map continuous sentiment score to calibrated color matching source bubble rings
@@ -3808,12 +3814,12 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
         </div>
       </div>
 
-      <!-- Interactive Coverage Toggle Bar -->
+      <!-- Interactive Coverage Meta Bar -->
       <div class="cluster-coverage-meta-bar">
         <div class="cluster-coverage-info" style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
           <span class="cluster-badge cluster-outlets-badge" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
             <i data-lucide="radio" style="width:12px;height:12px;"></i>
-            ${sortedCoverage.length} Stories · ${uniqueSources.size} Outlets
+            ${uniqueSources.size} Outlets
           </span>
           <span class="cluster-badge cluster-score-badge ${moodClass}" style="font-size:0.75rem; padding:0.25rem 0.65rem;">
             ${avgScoreFormatted} Avg Tone
@@ -3823,10 +3829,6 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
             ${cluster.computedSpread.toFixed(2)} Spread
           </span>
         </div>
-        <button type="button" class="cluster-toggle-btn" onclick="toggleClusterCard('${clusterId}')" title="Inspect full multi-outlet coverage">
-          <span>Inspect Full Coverage (${sortedCoverage.length})</span>
-          <i data-lucide="chevron-down" style="width:12px;height:12px;"></i>
-        </button>
       </div>
 
       <!-- Coverage Grid of Desks (Smooth CSS Accordion) -->
@@ -5357,6 +5359,7 @@ window.selectRegionFilter = function(regionCode) {
   }
   if (elements.sourcesGrid) elements.sourcesGrid.scrollLeft = 0;
 
+  populateFilterOptions();
   updateFilterIndicator();
   renderSpectrum();
   renderComparisonMatrix();
