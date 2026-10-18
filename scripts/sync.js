@@ -745,6 +745,8 @@ Rules:
 - If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how outlets are framing it.
+- Provide a "briefing" object with 3 crisp, neutral 1-sentence bullets: "whatHappened" (verified core event), "whyItMatters" (structural, geopolitical, scientific, or human significance), and "whatsNext" (upcoming milestone, vote, or ongoing watchpoint).
+- Provide "wikiEntities": an array of 1 to 3 exact English Wikipedia article titles for the key places, institutions, treaties, people, or scientific concepts central to understanding the story's background.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
 Dispatches:
@@ -752,7 +754,17 @@ ${promptLines}
 
 Return JSON array in format:
 [
-  { "story": "Topic Title", "summary": "1-2 sentence editorial summary of the event.", "ids": [0, 4, 12] }
+  {
+    "story": "Topic Title",
+    "summary": "1-2 sentence editorial summary of the event.",
+    "briefing": {
+      "whatHappened": "1 sentence on the verified event.",
+      "whyItMatters": "1 sentence on broader significance.",
+      "whatsNext": "1 sentence on what to watch next."
+    },
+    "wikiEntities": ["Entity One", "Entity Two"],
+    "ids": [0, 4, 12]
+  }
 ]`;
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -820,18 +832,55 @@ Return JSON array in format:
       }
 
       if (matchingArticles.length >= 2) {
+        const newUrls = new Set();
+        const newTitles = new Set();
         matchingArticles.forEach(m => {
-          if (m.link) coveredUrls.add(canonicalUrl(m.link));
-          if (m.title) coveredTitles.add(cleanHeadlineTitle(m.title));
+          if (m.link) {
+            const cu = canonicalUrl(m.link);
+            coveredUrls.add(cu);
+            newUrls.add(cu);
+          }
+          if (m.title) {
+            const ct = cleanHeadlineTitle(m.title);
+            coveredTitles.add(ct);
+            newTitles.add(ct);
+          }
         });
         const scores = matchingArticles.map(m => m.sentiment);
         const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
         const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
         const newestMs = matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : 0;
-        
+
+        // Check if this cluster evolves an existing cluster from previousClusters to preserve longitudinal chapters
+        let priorChapters = [];
+        if (Array.isArray(previousClusters)) {
+          const matchingPrev = previousClusters.find(prev =>
+            Array.isArray(prev?.coverage) && prev.coverage.some(c =>
+              (c.link && newUrls.has(canonicalUrl(c.link))) ||
+              (c.title && newTitles.has(cleanHeadlineTitle(c.title)))
+            )
+          );
+          if (matchingPrev) {
+            priorChapters = Array.isArray(matchingPrev.chapters) ? [...matchingPrev.chapters] : [];
+            const prevSnapTime = matchingPrev.newestMs ? new Date(matchingPrev.newestMs).toISOString() : null;
+            if (prevSnapTime && (!priorChapters.length || priorChapters[priorChapters.length - 1].story !== matchingPrev.story)) {
+              priorChapters.push({
+                timestamp: prevSnapTime,
+                story: matchingPrev.story,
+                summary: matchingPrev.summary || '',
+                averageSentiment: matchingPrev.averageSentiment,
+                outletCount: matchingPrev.outletCount || matchingPrev.coverage.length
+              });
+            }
+          }
+        }
+
         formattedClusters.push({
           story: cl.story,
           summary: cl.summary || '',
+          ...(cl.briefing && typeof cl.briefing === 'object' ? { briefing: cl.briefing } : {}),
+          ...(Array.isArray(cl.wikiEntities) && cl.wikiEntities.length > 0 ? { wikiEntities: cl.wikiEntities.slice(0, 3) } : {}),
+          ...(priorChapters.length > 0 ? { chapters: priorChapters.slice(-8) } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
           outletCount: matchingArticles.length,

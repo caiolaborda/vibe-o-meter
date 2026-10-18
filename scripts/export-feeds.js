@@ -14,6 +14,8 @@ const OUTLET_REGION_MAP = {
   reuters: 'GLOBAL', ap: 'GLOBAL', bloomberg: 'GLOBAL', newscientist: 'GLOBAL', nature: 'GLOBAL', UN: 'GLOBAL'
 };
 
+const ALL_REGIONS = ['NA', 'UK', 'EU', 'ME', 'APAC', 'LATAM', 'GLOBAL'];
+
 function canonicalUrl(url) {
   if (!url) return '';
   try {
@@ -80,6 +82,33 @@ function inferClusterTopic(cluster, sources) {
   return 'world';
 }
 
+function extractCandidateWikiEntities(cl) {
+  if (Array.isArray(cl.wikiEntities) && cl.wikiEntities.length > 0) return cl.wikiEntities.slice(0, 3);
+  const text = `${cl.story || ''} ${cl.summary || ''}`;
+  const knownEntities = [
+    'Strait of Hormuz', 'United Nations', 'European Union', 'NATO', 'World Health Organization',
+    'Federal Reserve', 'International Monetary Fund', 'Supreme Court of the United States',
+    'Gaza Strip', 'West Bank', 'Ukraine', 'Russia', 'Iran', 'Israel', 'Lebanon', 'China', 'Taiwan',
+    'Amazon rainforest', 'NASA', 'SpaceX', 'Artemis program', 'European Central Bank', 'Bank of England',
+    'Pentagon', 'Kremlin', 'White House', 'Downing Street', 'Silicon Valley', 'OpenAI', 'Google', 'Apple Inc.'
+  ];
+  const found = [];
+  for (const ent of knownEntities) {
+    if (text.toLowerCase().includes(ent.toLowerCase())) {
+      found.push(ent);
+      if (found.length >= 3) break;
+    }
+  }
+  if (found.length === 0 && cl.story) {
+    const words = cl.story
+      .split(/\s+/)
+      .map(w => w.replace(/[^a-zA-Z0-9-]/g, ''))
+      .filter(w => /^[A-Z][a-zA-Z]{2,}/.test(w) && !/^(The|And|For|With|Over|After|From|Into|Amid|Says|New|How|Why|What|More|Most|First|Global|World)$/.test(w));
+    if (words.length > 0) found.push(words.slice(0, 2).join(' '));
+  }
+  return found;
+}
+
 function exportPublicJsonFeeds(fullPayload) {
   if (!fs.existsSync(PUBLIC_DATA_DIR)) {
     fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
@@ -111,6 +140,10 @@ function exportPublicJsonFeeds(fullPayload) {
         if (!isNaN(t)) timestamps.push(t);
       }
       const sentiment = (match && typeof match.sentiment === 'number') ? match.sentiment : cov.sentiment;
+      const eventBase = (match && typeof match.eventBase === 'number') ? match.eventBase : null;
+      const framingMod = (match && typeof match.framingMod === 'number') ? match.framingMod : null;
+      const factors = (match && Array.isArray(match.factors)) ? match.factors : null;
+      const explanation = (match && (match.explanation || match.explanationGemini)) || cov.explanation || '';
       const imageUrl = (match && isValidImage(match.imageUrl)) ? match.imageUrl : (isValidImage(cov.imageUrl) ? cov.imageUrl : null);
       const description = (match && match.description) || cov.description || '';
       const category = (match && match.category) || topic;
@@ -122,6 +155,10 @@ function exportPublicJsonFeeds(fullPayload) {
         title: cov.title,
         description,
         sentiment: typeof sentiment === 'number' ? Number(sentiment.toFixed(3)) : 0,
+        ...(eventBase !== null ? { eventBase } : {}),
+        ...(framingMod !== null ? { framingMod } : {}),
+        ...(factors ? { factors } : {}),
+        ...(explanation ? { explanation } : {}),
         category,
         imageUrl,
         link: cov.link,
@@ -132,9 +169,96 @@ function exportPublicJsonFeeds(fullPayload) {
     timestamps.sort((a, b) => a - b);
     const scores = enrichedCov.map(c => c.sentiment).filter(s => typeof s === 'number');
     const avgSent = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : (cl.averageSentiment || 0);
-    const spread = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : (cl.sentimentSpread || 0);
-    const bestImg = enrichedCov.find(c => isValidImage(c.imageUrl))?.imageUrl || null;
+    const minSent = scores.length > 0 ? Number(Math.min(...scores).toFixed(2)) : avgSent;
+    const maxSent = scores.length > 0 ? Number(Math.max(...scores).toFixed(2)) : avgSent;
+    const spread = scores.length > 1 ? Number((maxSent - minSent).toFixed(2)) : (typeof cl.sentimentSpread === 'number' ? cl.sentimentSpread : (cl.sentimentSpread?.range || 0));
+
+    // Collect all unique valid press images across covering outlets
+    const seenImgs = new Set();
+    const images = [];
+    enrichedCov.forEach(c => {
+      if (isValidImage(c.imageUrl) && !seenImgs.has(c.imageUrl)) {
+        seenImgs.add(c.imageUrl);
+        images.push({
+          url: c.imageUrl,
+          sourceId: c.sourceId,
+          sourceName: c.sourceName,
+          caption: c.title
+        });
+      }
+    });
+    const bestImg = images[0]?.url || null;
     const slug = String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+    // Regional breakdown & blindspot detection
+    const regionBreakdown = {};
+    enrichedCov.forEach(c => {
+      const reg = c.region || 'GLOBAL';
+      if (!regionBreakdown[reg]) {
+        regionBreakdown[reg] = { count: 0, sum: 0, leadHeadline: c.title, leadSource: c.sourceName };
+      }
+      regionBreakdown[reg].count++;
+      regionBreakdown[reg].sum += c.sentiment;
+    });
+    Object.keys(regionBreakdown).forEach(reg => {
+      regionBreakdown[reg].averageSentiment = Number((regionBreakdown[reg].sum / regionBreakdown[reg].count).toFixed(2));
+      delete regionBreakdown[reg].sum;
+    });
+    const regionsCovered = Object.keys(regionBreakdown);
+    const blindspotRegions = enrichedCov.length >= 4
+      ? ALL_REGIONS.filter(r => r !== 'GLOBAL' && !regionBreakdown[r])
+      : [];
+
+    // Smart Brevity triad (uses Gemini's briefing if present, or synthesizes from summary + coverage)
+    const sortedByDateAsc = [...enrichedCov].sort((a, b) => new Date(a.pubDate || 0) - new Date(b.pubDate || 0));
+    const mostNeutralDispatch = [...enrichedCov].sort((a, b) => Math.abs(a.sentiment - avgSent) - Math.abs(b.sentiment - avgSent))[0];
+    const briefing = cl.briefing && cl.briefing.whatHappened ? cl.briefing : {
+      whatHappened: cl.summary || mostNeutralDispatch?.description || mostNeutralDispatch?.title || cl.story,
+      whyItMatters: `Covered across ${enrichedCov.length} outlets in ${regionsCovered.length} region${regionsCovered.length === 1 ? '' : 's'} (${regionsCovered.join(', ')}) with an average sentiment of ${avgSent >= 0 ? '+' : ''}${avgSent.toFixed(2)}.`,
+      whatsNext: spread >= 0.30
+        ? `Notable framing divergence (${spread.toFixed(2)} spread between ${minSent.toFixed(2)} and ${maxSent.toFixed(2)}) as newsrooms weigh competing impacts.`
+        : `High cross-outlet consensus (${spread.toFixed(2)} spread) across international desks.`
+    };
+
+    // Longitudinal chapters: combine persisted chapters with chronological dispatch progression
+    const chapters = Array.isArray(cl.chapters) && cl.chapters.length > 0
+      ? cl.chapters
+      : (() => {
+          if (sortedByDateAsc.length < 2) return [];
+          const first = sortedByDateAsc[0];
+          const latest = sortedByDateAsc[sortedByDateAsc.length - 1];
+          const list = [
+            {
+              stage: 'Initial Dispatch',
+              timestamp: first.pubDate,
+              sourceName: first.sourceName,
+              headline: first.title,
+              sentiment: first.sentiment
+            }
+          ];
+          if (sortedByDateAsc.length >= 4) {
+            const mid = sortedByDateAsc[Math.floor(sortedByDateAsc.length / 2)];
+            list.push({
+              stage: 'Broadening Coverage',
+              timestamp: mid.pubDate,
+              sourceName: mid.sourceName,
+              headline: mid.title,
+              sentiment: mid.sentiment
+            });
+          }
+          if (latest && latest !== first) {
+            list.push({
+              stage: 'Latest Update',
+              timestamp: latest.pubDate,
+              sourceName: latest.sourceName,
+              headline: latest.title,
+              sentiment: latest.sentiment
+            });
+          }
+          return list;
+        })();
+
+    const wikiEntities = extractCandidateWikiEntities(cl);
 
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.topic = topic;
@@ -145,13 +269,24 @@ function exportPublicJsonFeeds(fullPayload) {
       id: slug,
       story: cl.story,
       summary: cl.summary || '',
+      briefing,
       topic,
       imageUrl: bestImg,
+      images,
+      wikiEntities,
       averageSentiment: avgSent,
-      sentimentSpread: spread,
+      sentimentSpread: {
+        range: spread,
+        min: minSent,
+        max: maxSent
+      },
       outletCount: enrichedCov.length,
+      regionsCovered,
+      blindspotRegions,
+      regionBreakdown,
       firstSeenAt: timestamps.length > 0 ? new Date(timestamps[0]).toISOString() : null,
       latestUpdateAt: timestamps.length > 0 ? new Date(timestamps[timestamps.length - 1]).toISOString() : null,
+      chapters,
       coverage: enrichedCov
     };
   });
@@ -188,7 +323,7 @@ function exportPublicJsonFeeds(fullPayload) {
         description: art.description || '',
         sentiment: Number(score.toFixed(3)),
         explanation: art.explanation || art.explanationGemini || '',
-        category: art.category || art.categoryGemini || 'world',
+        category: (art.category && art.category !== 'other') ? art.category : 'world',
         imageUrl: isValidImage(art.imageUrl) ? art.imageUrl : null,
         sourceId,
         sourceName: src.name || sourceId,
@@ -297,7 +432,7 @@ function exportPublicJsonFeeds(fullPayload) {
     endpoints: {
       clusters: {
         path: 'data/clusters.json',
-        description: 'Cross-outlet story clusters with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, and per-outlet coverage links.',
+        description: 'Cross-outlet story clusters with neutral headlines, Smart Brevity triads (whatHappened/whyItMatters/whatsNext), single-word topic tags, multi-photo galleries, Wikipedia entity keys, regional breakdowns/blindspots, longitudinal chapters, and per-outlet 4-factor spin metrics.',
         count: enrichedClusters.length
       },
       goodNews: {
@@ -346,7 +481,6 @@ if (require.main === module) {
   }
   const payload = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   const stats = exportPublicJsonFeeds(payload);
-  // Also re-save data.json and summary.json with enriched cluster images & topics
   fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf8');
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'data.json'), JSON.stringify(payload), 'utf8');
   const summaryPath = path.join(PUBLIC_DATA_DIR, 'summary.json');
@@ -356,5 +490,10 @@ if (require.main === module) {
     if (sumPayload.globalStats) sumPayload.globalStats.sharedStoryClusters = payload.sharedStoryClusters;
     fs.writeFileSync(summaryPath, JSON.stringify(sumPayload), 'utf8');
   }
-  console.log('✅ Exported public JSON feeds to public/data/:', stats);
+  console.log('✅ Exported public JSON feeds to public/data/:', {
+    clustersCount: stats.clustersCount,
+    goodNews24hCount: stats.goodNews24hCount,
+    goodNews7dCount: stats.goodNews7dCount,
+    outletsCount: stats.outletsCount
+  });
 }
