@@ -864,27 +864,54 @@ Return JSON array in format:
           }
         }
 
-        // If the underlying articles haven't expanded since matchedPrev, preserve matchedPrev's canonical story title & summary
-        // so cluster slugs don't jitter cosmetically between syncs (e.g. "Discovered" vs "Found").
+        // Default to preserving matchedPrev's canonical id, story, summary, and version so syndication catch-up
+        // (additional outlets reporting the same initial event) NEVER jitters the cluster slug or headline!
+        // If new articles joined, attach `_pendingUpdate` so the single consolidation pass can verify if a real development occurred.
+        let finalId = null;
         let finalStory = cl.story;
         let finalSummary = cl.summary || '';
+        let prevVersion = 1;
+        let prevLastDevelopedAt = null;
+        let prevDevelopmentNote = null;
+        let pendingUpdate = null;
+
         if (matchedPrev) {
+          const prevSlug = matchedPrev.id || String(matchedPrev.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          finalId = prevSlug;
+          finalStory = matchedPrev.story || cl.story;
+          finalSummary = matchedPrev.summary || cl.summary || '';
+          prevVersion = typeof matchedPrev.version === 'number' ? matchedPrev.version : 1;
+          prevLastDevelopedAt = matchedPrev.lastDevelopedAt || null;
+          prevDevelopmentNote = matchedPrev.developmentNote || null;
+
           const prevUrls = new Set((matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean));
-          const addedArticles = matchingArticles.filter(m => m.link && !prevUrls.has(canonicalUrl(m.link)));
-          if (addedArticles.length === 0 && matchedPrev.story) {
-            finalStory = matchedPrev.story;
-            if (matchedPrev.summary) finalSummary = matchedPrev.summary;
+          const prevTitles = new Set((matchedPrev.coverage || []).map(c => c.title ? cleanHeadlineTitle(c.title) : '').filter(Boolean));
+          const addedArticles = matchingArticles.filter(m =>
+            (!m.link || !prevUrls.has(canonicalUrl(m.link))) &&
+            (!m.title || !prevTitles.has(cleanHeadlineTitle(m.title)))
+          );
+
+          if (addedArticles.length > 0) {
+            pendingUpdate = {
+              candidateStory: cl.story,
+              candidateSummary: cl.summary || '',
+              addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
+            };
           }
         }
 
-        const currentSlug = String(finalStory || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const currentSlug = finalId || String(finalStory || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         evolvedIds.delete(currentSlug);
 
         formattedClusters.push({
           id: currentSlug,
           story: finalStory,
           summary: finalSummary,
+          version: prevVersion,
+          ...(prevLastDevelopedAt ? { lastDevelopedAt: prevLastDevelopedAt } : {}),
+          ...(prevDevelopmentNote ? { developmentNote: prevDevelopmentNote } : {}),
           ...(evolvedIds.size > 0 ? { evolvedFromIds: Array.from(evolvedIds) } : {}),
+          ...(pendingUpdate ? { _pendingUpdate: pendingUpdate } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
           outletCount: matchingArticles.length,
@@ -918,13 +945,14 @@ Return JSON array in format:
         if (!alreadyCovered) {
           formattedClusters.push({
             ...prev,
+            version: typeof prev.version === 'number' ? prev.version : 1,
             newestMs: newestPrevMs
           });
         }
       });
     }
 
-    // Longitudinal Cluster Consolidation Pass: merge duplicate or sequentially evolving story clusters
+    // Longitudinal Cluster Consolidation & Development Verification Pass
     const consolidatedClusters = await consolidateEvolvingClusters(formattedClusters, apiKey);
 
     // Weight recent 24h stories higher so fresh breaking stories rank above multi-day stories
@@ -938,13 +966,16 @@ Return JSON array in format:
       const scoreB = b.outletCount * (b.sentimentSpread + 0.15) * recencyBoostB;
       return scoreB - scoreA;
     });
-    consolidatedClusters.forEach(c => delete c.newestMs);
+    consolidatedClusters.forEach(c => {
+      delete c.newestMs;
+      delete c._pendingUpdate;
+    });
     return consolidatedClusters;
   }
   return previousClusters;
 }
 
-// Single-pass Longitudinal Cluster Consolidation: merges duplicate or evolving story arcs across syncs
+// Single-pass Longitudinal Cluster Consolidation & Substantive Development Verifier
 async function consolidateEvolvingClusters(clusters, apiKey) {
   if (!apiKey || !Array.isArray(clusters) || clusters.length < 4) return clusters;
 
@@ -952,35 +983,53 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   const lines = clusters.map((c, idx) => {
     const id = c.id || slugify(c.story);
     const sampleOutlets = (c.coverage || []).slice(0, 4).map(a => a.sourceId).join(',');
-    return `[${idx}] id="${id}" | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+    let line = `[${idx}] id="${id}" | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+    if (c._pendingUpdate && Array.isArray(c._pendingUpdate.addedHeadlines) && c._pendingUpdate.addedHeadlines.length > 0) {
+      line += `\n    [CANDIDATE IN-PLACE UPDATE: +${c._pendingUpdate.addedHeadlines.length} new dispatches -> ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
+    }
+    return line;
   }).join('\n');
 
   const prompt = `You are the Executive Editor of a global news intelligence wire.
-Below are ${clusters.length} story clusters currently active across our rolling 7-day window. Because clusters are generated across multiple syncs, the exact same real-world story or direct sequential phases of the same story (e.g., "Leader Detained" -> "Leader Released", "Student Protests Clash in Tirana" -> "Anti-Government Protests Escalate in Albania", "Tesla Unveils Flying Roadster" -> "Tesla Showcases Redesigned Flying Roadster") sometimes appear as separate clusters.
+Below are ${clusters.length} story clusters currently active across our rolling 7-day window.
 
-Task:
+You have TWO jobs in this single pass:
+
+JOB 1 — "merges" (Cross-Cluster Consolidation):
 Identify any groups of 2 or more clusters that represent EITHER:
-1. Duplicate clusters of the exact same real-world event/announcement, OR
-2. Direct sequential evolutions of the exact same specific incident/protest/case/person over recent days.
+- Duplicate clusters of the exact same real-world event/announcement ("isNewDevelopment": false), OR
+- Direct sequential phases/evolutions of the exact same specific incident/protest/case/person over recent days ("isNewDevelopment": true, e.g., "Talks Begin" -> "Talks Collapse", "Leader Detained" -> "Leader Released").
+Strict Guardrails for merges:
+- NEVER merge distinct events that merely share a broad topic or country.
+- Set "isNewDevelopment": true ONLY when the newer cluster introduces a concrete new factual development, outcome flip, or material escalation beyond the earlier cluster. If they are just duplicates of the same event, set "isNewDevelopment": false.
 
-Strict Guardrails:
-- NEVER merge distinct events that merely share a broad topic or country (e.g. do NOT merge a court dispute over Trump's records with No Kings rallies or Russia sanctions; do NOT merge two unrelated shootings or crashes).
-- Only merge clusters when they are genuinely the SAME underlying story or a direct chronological progression of that exact incident.
-- For each merged group, provide:
-  - "indices": array of integer indices from the list below to merge together
-  - "story": an updated, authoritative 3-6 word headline reflecting the latest state of the story
-  - "summary": an updated 1-2 sentence synthesis that captures the full arc and latest development, weaving timing (day, date span, or time-of-day cue) organically and variedly into the sentence structure rather than starting with a rigid "On [Day], [Date]," formula.
+JOB 2 — "inPlaceDevelopments" (Evaluating New Dispatches on Existing Clusters):
+Some clusters below have a "[CANDIDATE IN-PLACE UPDATE: +N new dispatches -> ...]" line showing articles that just joined that existing cluster.
+- Most of the time, new dispatches are simply "syndication catch-up" (additional outlets reporting the exact same initial event). Ignore those!
+- ONLY include a cluster in "inPlaceDevelopments" if its newly added dispatches report a CONCRETE NEW FACTUAL DEVELOPMENT, OUTCOME FLIP (e.g. proposed -> passed, talks -> collapse), or MATERIAL ESCALATION that was NOT already present in the cluster's existing headline & summary.
+
+For every merge or inPlaceDevelopment, weave timing (day, date span, or time-of-day cue) organically and variedly into "summary" rather than starting with a rigid "On [Day], [Date]," formula, and provide a crisp 1-sentence "developmentNote" when a genuine new development occurred.
 
 Clusters:
 ${lines}
 
-Return ONLY valid JSON in this format:
+Return ONLY valid JSON in this exact format:
 {
   "merges": [
     {
       "indices": [13, 14],
-      "story": "Updated Authoritative Story Title",
-      "summary": "1-2 sentence synthesis with organic, varied temporal grounding."
+      "isNewDevelopment": true,
+      "story": "Updated Authoritative 3-6 Word Title",
+      "summary": "1-2 sentence synthesis with organic, varied temporal grounding.",
+      "developmentNote": "1-sentence summary of what newly developed (or null if duplicate merge)."
+    }
+  ],
+  "inPlaceDevelopments": [
+    {
+      "index": 4,
+      "story": "Updated Authoritative 3-6 Word Title",
+      "summary": "1-2 sentence synthesis reflecting the new development.",
+      "developmentNote": "1-sentence summary of the new factual development."
     }
   ]
 }`;
@@ -995,7 +1044,40 @@ Return ONLY valid JSON in this format:
     const resp = await model.generateContent(prompt);
     const parsed = JSON.parse(resp.response.text().trim());
     const merges = Array.isArray(parsed?.merges) ? parsed.merges : [];
-    if (merges.length === 0) return clusters;
+    const inPlaceDevs = Array.isArray(parsed?.inPlaceDevelopments) ? parsed.inPlaceDevelopments : [];
+
+    // Apply verified in-place developments first
+    const inPlaceByIdx = new Map();
+    for (const dev of inPlaceDevs) {
+      if (Number.isInteger(dev?.index) && dev.index >= 0 && dev.index < clusters.length && dev.story) {
+        inPlaceByIdx.set(dev.index, dev);
+      }
+    }
+
+    for (const [idx, dev] of inPlaceByIdx.entries()) {
+      const c = clusters[idx];
+      const oldSlug = c.id || slugify(c.story);
+      const newStory = dev.story.trim();
+      const newSlug = slugify(newStory);
+      const evolvedIds = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
+      if (oldSlug && oldSlug !== newSlug) evolvedIds.add(oldSlug);
+      evolvedIds.delete(newSlug);
+
+      c.id = newSlug;
+      c.story = newStory;
+      if (dev.summary) c.summary = dev.summary.trim();
+      c.version = (typeof c.version === 'number' ? c.version : 1) + 1;
+      c.lastDevelopedAt = new Date(c.newestMs || Date.now()).toISOString();
+      c.developmentNote = (dev.developmentNote && dev.developmentNote.trim()) || `Story developed: ${newStory}`;
+      if (evolvedIds.size > 0) c.evolvedFromIds = Array.from(evolvedIds);
+    }
+
+    if (merges.length === 0) {
+      if (inPlaceByIdx.size > 0) {
+        console.log(`[Clusters] Verified ${inPlaceByIdx.size} in-place story developments.`);
+      }
+      return clusters;
+    }
 
     const consumed = new Set();
     const result = [];
@@ -1009,6 +1091,12 @@ Return ONLY valid JSON in this format:
       const evolvedIds = new Set();
       const rawCov = [];
       let maxNewestMs = 0;
+      let maxVersion = 1;
+      let bestLastDevelopedAt = null;
+      let bestDevelopmentNote = null;
+
+      // Pick the most established cluster in the group as the anchor for duplicate merges
+      const anchor = [...group].sort((a, b) => (b.outletCount || 0) - (a.outletCount || 0))[0] || group[0];
 
       for (const g of group) {
         const gSlug = g.id || slugify(g.story);
@@ -1017,6 +1105,11 @@ Return ONLY valid JSON in this format:
           g.evolvedFromIds.forEach(id => evolvedIds.add(id));
         }
         if (g.newestMs && g.newestMs > maxNewestMs) maxNewestMs = g.newestMs;
+        if (typeof g.version === 'number' && g.version > maxVersion) maxVersion = g.version;
+        if (g.lastDevelopedAt && (!bestLastDevelopedAt || new Date(g.lastDevelopedAt) > new Date(bestLastDevelopedAt))) {
+          bestLastDevelopedAt = g.lastDevelopedAt;
+          bestDevelopmentNote = g.developmentNote || bestDevelopmentNote;
+        }
         if (Array.isArray(g.coverage)) rawCov.push(...g.coverage);
       }
 
@@ -1032,15 +1125,26 @@ Return ONLY valid JSON in this format:
       const scores = dedupedCov.map(a => a.sentiment).filter(s => typeof s === 'number');
       const avgScore = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : 0;
       const spreadRange = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : 0;
-      const newStory = (m.story && m.story.trim()) || group[0].story;
-      const newSlug = slugify(newStory);
-      evolvedIds.delete(newSlug);
+
+      const isDev = Boolean(m.isNewDevelopment);
+      const finalStory = isDev ? ((m.story && m.story.trim()) || anchor.story) : (anchor.story || (m.story && m.story.trim()));
+      const finalSlug = isDev ? slugify(finalStory) : (anchor.id || slugify(finalStory));
+      evolvedIds.delete(finalSlug);
+
+      const nextVersion = isDev ? (maxVersion + 1) : maxVersion;
+      const nextDevelopedAt = isDev ? new Date(maxNewestMs || Date.now()).toISOString() : bestLastDevelopedAt;
+      const nextDevNote = isDev
+        ? ((m.developmentNote && m.developmentNote.trim()) || `Story evolved: ${finalStory}`)
+        : bestDevelopmentNote;
 
       result.push({
-        ...group[0],
-        id: newSlug,
-        story: newStory,
-        summary: (m.summary && m.summary.trim()) || group[0].summary,
+        ...anchor,
+        id: finalSlug,
+        story: finalStory,
+        summary: (m.summary && m.summary.trim()) || anchor.summary,
+        version: nextVersion,
+        ...(nextDevelopedAt ? { lastDevelopedAt: nextDevelopedAt } : {}),
+        ...(nextDevNote ? { developmentNote: nextDevNote } : {}),
         evolvedFromIds: Array.from(evolvedIds),
         averageSentiment: avgScore,
         sentimentSpread: spreadRange,
@@ -1054,7 +1158,7 @@ Return ONLY valid JSON in this format:
       if (!consumed.has(idx)) result.push(c);
     });
 
-    console.log(`[Clusters] Consolidated ${merges.length} evolving cluster groups (${clusters.length} -> ${result.length} clusters).`);
+    console.log(`[Clusters] Consolidated ${merges.length} cluster groups (${inPlaceByIdx.size} in-place developments, ${clusters.length} -> ${result.length} clusters).`);
     return result;
   } catch (e) {
     console.warn('[Clusters] Consolidation pass skipped:', e.message);

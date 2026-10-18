@@ -156,10 +156,14 @@ function exportPublicJsonFeeds(fullPayload) {
     const evolvedFromIds = Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0
       ? cl.evolvedFromIds
       : undefined;
+    const version = typeof cl.version === 'number' ? cl.version : 1;
+    const lastDevelopedAt = cl.lastDevelopedAt || undefined;
+    const developmentNote = cl.developmentNote || undefined;
 
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.id = slug;
     cl.topic = topic;
+    cl.version = version;
     cl.averageSentiment = avgSent;
     cl.significanceScore = significanceScore;
     cl.sentimentSpread = spread;
@@ -170,6 +174,9 @@ function exportPublicJsonFeeds(fullPayload) {
       id: slug,
       story: cl.story,
       summary: cl.summary || '',
+      version,
+      ...(lastDevelopedAt ? { lastDevelopedAt } : {}),
+      ...(developmentNote ? { developmentNote } : {}),
       ...(evolvedFromIds ? { evolvedFromIds } : {}),
       topic,
       imageUrl: bestImg,
