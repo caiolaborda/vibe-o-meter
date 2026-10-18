@@ -4827,18 +4827,44 @@ function renderSentimentTimeline() {
       }
     });
 
-    // Include any cluster dispatches that weren't in the sampled plottedArticles array so the zone bounds are exact
+    // Include any cluster dispatches that weren't in the sampled plottedArticles array so ALL cluster dots exist on the timeline
     if (memberPoints.length < matchingArts.length) {
       matchingArts.forEach(a => {
+        const cUrl = canonicalUrl(a.link);
+        const cTitle = cleanHeadlineTitle(a.title);
+        const alreadyPlotted = plottedArticles.some((pArt, pIdx) =>
+          memberArtIndices.has(pIdx) && ((cUrl && canonicalUrl(pArt.link) === cUrl) || (cTitle && cleanHeadlineTitle(pArt.title) === cTitle))
+        );
+        if (alreadyPlotted) return;
+
         const rawT = a.pubDate ? new Date(a.pubDate).getTime() : fallbackClusterTime;
         const t = clamp(!isNaN(rawT) ? rawT : fallbackClusterTime, minTimeBound, maxTimeBound);
         const sc = typeof a.sentiment === 'number' ? a.sentiment : (cl.averageSentiment || 0);
-        memberPoints.push({
-          x: getXByTime(t),
-          y: clamp(getY(sc), padding.top + 8, padding.top + chartH - 8),
+        const sId = a.sourceId || a.source || 'reuters';
+        const sName = a.sourceName || SOURCE_META[sId]?.name || sId;
+        const newIdx = plottedArticles.length;
+        plottedArticles.push({
+          sId,
+          sourceName: sName,
+          title: a.title || cl.story || 'Dispatch',
+          link: a.link || '#',
+          score: Number(sc.toFixed(3)),
           time: t,
-          score: sc
+          pubDate: a.pubDate,
+          category: cl.topic || 'world'
         });
+        const px = getXByTime(t);
+        const py = clamp(getY(sc), padding.top + 8, padding.top + chartH - 8);
+        const meta = SOURCE_META[sId] || { color: '#6366f1' };
+        const dotColor = selectedSource
+          ? (sc > 0.1 ? 'var(--pos-color)' : (sc < -0.1 ? 'var(--neg-color)' : 'var(--accent-color)'))
+          : meta.color;
+        dotsHTML += `
+          <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="4.2" fill="${dotColor}" fill-opacity="0.88" stroke="var(--bg-secondary)" stroke-width="1.5" style="cursor:pointer; transition: r 0.15s ease, fill-opacity 0.15s ease;"
+                  data-art-idx="${newIdx}" data-source="${sId}" class="timeline-dot timeline-article-dot"/>
+        `;
+        memberArtIndices.add(newIdx);
+        memberPoints.push({ x: px, y: py, time: t, score: sc });
       });
     }
 
@@ -4852,6 +4878,7 @@ function renderSentimentTimeline() {
       ? cl.averageSentiment
       : (matchingArts.reduce((s, a) => s + (typeof a.sentiment === 'number' ? a.sentiment : 0), 0) / matchingArts.length);
     const uniqueSrcs = new Set((cl.coverage || []).map(x => x.sourceId)).size || cl.coverage.length;
+    const memberSources = Array.from(new Set(matchingArts.map(a => a.sourceId || a.source).filter(Boolean)));
 
     candidateClusters.push({
       cl,
@@ -4861,7 +4888,8 @@ function renderSentimentTimeline() {
       sourceCount: uniqueSrcs,
       headline: cl.story || matchingArts[0]?.title || 'Developing Story',
       memberPoints,
-      memberArtIndices: Array.from(memberArtIndices)
+      memberArtIndices: Array.from(memberArtIndices),
+      memberSources
     });
   });
 
@@ -4872,9 +4900,22 @@ function renderSentimentTimeline() {
     return weightB - weightA;
   });
 
+  // Smart whole-word title truncation so pill labels never cut off mid-word (e.g. "Hospita…")
+  const truncateClusterTitle = (raw, maxLen = 26) => {
+    const str = String(raw || '').trim();
+    if (str.length <= maxLen) return str;
+    const words = str.split(/\s+/);
+    let out = '';
+    for (const w of words) {
+      if ((out ? out.length + 1 + w.length : w.length) > maxLen) break;
+      out = out ? `${out} ${w}` : w;
+    }
+    return (out || str.slice(0, maxLen - 1)) + '…';
+  };
+
   // Select up to 5 clusters with strict 2-lane pill collision prevention so top banners NEVER overlap
   const selectedPins = [];
-  const rowBoxes = [[], []]; // row 0 (y=14) and row 1 (y=36) occupied [left, right] intervals
+  const rowBoxes = [[], []]; // row 0 (y=14) and row 1 (y=38) occupied [left, right] intervals
   const minBeaconSpacingPx = 72;
 
   for (const cand of candidateClusters) {
@@ -4882,14 +4923,15 @@ function renderSentimentTimeline() {
     const x = clamp(getXByTime(cand.eventTime), padding.left + 10, width - padding.right - 10);
     if (selectedPins.some(p => Math.abs(p.x - x) < minBeaconSpacingPx)) continue;
 
-    const shortTitle = cand.headline.length > 24 ? cand.headline.slice(0, 23) + '…' : cand.headline;
+    const shortTitle = truncateClusterTitle(cand.headline, 26);
     const safeShort = shortTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const pillW = Math.max(118, Math.min(190, safeShort.length * 5.4 + 52));
+    const badgeW = cand.sourceCount >= 10 ? 34 : 28;
+    const textW = safeShort.length * 5.6;
+    const pillW = Math.max(124, Math.min(210, badgeW + textW + 22));
     const pillX = clamp(x, padding.left + pillW / 2 + 4, width - padding.right - pillW / 2 - 4);
     const pLeft = pillX - pillW / 2 - 6;
     const pRight = pillX + pillW / 2 + 6;
 
-    // Try preferred row first (alternating by count), then fallback to the other row; skip if both collide
     const preferredRow = selectedPins.length % 2;
     const rowsToTry = [preferredRow, 1 - preferredRow];
     let assignedRow = -1;
@@ -4909,6 +4951,7 @@ function renderSentimentTimeline() {
       x,
       y,
       pillW,
+      badgeW,
       pillX,
       safeShort,
       row: assignedRow
@@ -4919,7 +4962,7 @@ function renderSentimentTimeline() {
     const isPos = pin.meanSent > 0.12;
     const isNeg = pin.meanSent < -0.12;
     const pinColor = isPos ? '#10b981' : (isNeg ? '#ef4444' : '#6366f1');
-    const labelY = pin.row === 0 ? 14 : 36;
+    const labelY = pin.row === 0 ? 14 : 38;
 
     // Compute Event Zone bounding box around the cluster's constituent points + center beacon
     const xs = [pin.x, ...pin.memberPoints.map(p => p.x)];
@@ -4931,52 +4974,53 @@ function renderSentimentTimeline() {
 
     const zoneX1 = clamp(Math.min(pin.x - 16, rawMinX - 10), padding.left + 2, width - padding.right - 28);
     const zoneX2 = clamp(Math.max(pin.x + 16, rawMaxX + 10), zoneX1 + 28, width - padding.right - 2);
-    const zoneY1 = clamp(Math.min(pin.y - 16, rawMinY - 10), padding.top + 2, padding.top + chartH - 28);
-    const zoneY2 = clamp(Math.max(pin.y + 16, rawMaxY + 10), zoneY1 + 28, padding.top + chartH - 2);
+    const zoneY1 = clamp(Math.min(pin.y - 14, rawMinY - 10), padding.top + 2, padding.top + chartH - 28);
+    const zoneY2 = clamp(Math.max(pin.y + 14, rawMaxY + 10), zoneY1 + 28, padding.top + chartH - 2);
 
-    // Constellation spokes connecting the cluster Diamond Beacon to its constituent article dots
-    const spokesHTML = pin.memberPoints.map(pt => `
-      <line class="cluster-spoke" data-pin-idx="${pIdx}"
-            x1="${pin.x.toFixed(1)}" y1="${pin.y.toFixed(1)}"
-            x2="${pt.x.toFixed(1)}" y2="${pt.y.toFixed(1)}"
-            stroke="${pinColor}" stroke-width="1.3" stroke-dasharray="2,2" opacity="0.22"
-            style="pointer-events:none; transition: opacity 0.18s ease, stroke-width 0.18s ease;"/>
-    `).join('');
-
+    // Clean Event Zone (hidden by default so the timeline isn't cluttered; revealed on hover or click-lock, with zero internal lines)
     clusterZonesHTML += `
       <g class="timeline-cluster-zone-group" data-pin-idx="${pIdx}">
         <rect class="timeline-cluster-zone" data-pin-idx="${pIdx}"
               x="${zoneX1.toFixed(1)}" y="${zoneY1.toFixed(1)}"
               width="${(zoneX2 - zoneX1).toFixed(1)}" height="${(zoneY2 - zoneY1).toFixed(1)}"
-              rx="10" fill="${pinColor}" fill-opacity="0.06"
-              stroke="${pinColor}" stroke-opacity="0.28" stroke-width="1.2" stroke-dasharray="4,3"
-              style="cursor:pointer; transition: fill-opacity 0.18s ease, stroke-opacity 0.18s ease;"/>
-        ${spokesHTML}
+              rx="12" fill="${pinColor}" fill-opacity="0"
+              stroke="${pinColor}" stroke-opacity="0" stroke-width="1.4" stroke-dasharray="5,4"
+              style="pointer-events:none; transition: fill-opacity 0.2s ease, stroke-opacity 0.2s ease;"/>
       </g>
     `;
 
-    // Bent or vertical connector stem from top pill (pillX, labelY + 9) to beacon (pin.x, pin.y)
+    // Bent or vertical connector stem from top pill (pillX, labelY + 10) to beacon (pin.x, pin.y)
     const stemMidY = padding.top - 4;
     const stemPath = Math.abs(pin.pillX - pin.x) > 3
-      ? `M ${pin.pillX.toFixed(1)} ${labelY + 9} L ${pin.pillX.toFixed(1)} ${stemMidY} L ${pin.x.toFixed(1)} ${stemMidY} L ${pin.x.toFixed(1)} ${(pin.y - 9).toFixed(1)}`
-      : `M ${pin.x.toFixed(1)} ${labelY + 9} L ${pin.x.toFixed(1)} ${(pin.y - 9).toFixed(1)}`;
+      ? `M ${pin.pillX.toFixed(1)} ${labelY + 11} L ${pin.pillX.toFixed(1)} ${stemMidY} L ${pin.x.toFixed(1)} ${stemMidY} L ${pin.x.toFixed(1)} ${(pin.y - 9).toFixed(1)}`
+      : `M ${pin.x.toFixed(1)} ${labelY + 11} L ${pin.x.toFixed(1)} ${(pin.y - 9).toFixed(1)}`;
 
-    // Diamond Beacon (rotated square + outer pulse ring) so clusters look completely distinct from round article dots
+    const pillLeftX = pin.pillX - pin.pillW / 2;
+    const badgeX = pillLeftX + 3.5;
+    const titleX = badgeX + pin.badgeW + 6;
+
+    // Refined two-part pill banner (left tinted outlet count badge + clean whole-word title) + Diamond Beacon
     clusterPinsHTML += `
-      <g class="timeline-cluster-pin" data-pin-idx="${pIdx}" style="cursor:pointer;">
-        <path d="${stemPath}" fill="none" stroke="${pinColor}" stroke-width="1.4" stroke-dasharray="2,2" opacity="0.8"/>
-        <circle class="cluster-beacon-halo" cx="${pin.x.toFixed(1)}" cy="${pin.y.toFixed(1)}" r="10.5"
-                fill="${pinColor}" fill-opacity="0.18" stroke="${pinColor}" stroke-opacity="0.45" stroke-width="1"
+      <g class="timeline-cluster-pin" data-pin-idx="${pIdx}" style="cursor:pointer; transition: opacity 0.2s ease;">
+        <path class="cluster-pin-stem" d="${stemPath}" fill="none" stroke="${pinColor}" stroke-width="1.3" stroke-dasharray="2,2" opacity="0.65"/>
+        <circle class="cluster-beacon-halo" cx="${pin.x.toFixed(1)}" cy="${pin.y.toFixed(1)}" r="10"
+                fill="${pinColor}" fill-opacity="0.16" stroke="${pinColor}" stroke-opacity="0.45" stroke-width="1"
                 style="transition: r 0.18s ease, fill-opacity 0.18s ease;"/>
         <rect class="cluster-beacon-diamond"
-              x="${(pin.x - 5.5).toFixed(1)}" y="${(pin.y - 5.5).toFixed(1)}" width="11" height="11" rx="2"
+              x="${(pin.x - 5.2).toFixed(1)}" y="${(pin.y - 5.2).toFixed(1)}" width="10.4" height="10.4" rx="2"
               transform="rotate(45 ${pin.x.toFixed(1)} ${pin.y.toFixed(1)})"
               fill="${pinColor}" stroke="var(--bg-card)" stroke-width="2"/>
-        <rect x="${(pin.pillX - pin.pillW / 2).toFixed(1)}" y="${labelY - 9}" width="${pin.pillW}" height="19" rx="9.5"
-              fill="var(--bg-card)" stroke="${pinColor}" stroke-width="1.4"/>
-        <text x="${pin.pillX.toFixed(1)}" y="${labelY + 4}" text-anchor="middle"
-              font-family="var(--font-sans)" font-size="10" font-weight="700" fill="var(--text-primary)">
-          ◆ ${pin.sourceCount}src · ${pin.safeShort}
+        <rect class="cluster-pill-bg" x="${pillLeftX.toFixed(1)}" y="${labelY - 10}" width="${pin.pillW.toFixed(1)}" height="21" rx="10.5"
+              fill="var(--bg-card)" stroke="${pinColor}" stroke-opacity="0.65" stroke-width="1.25"/>
+        <rect x="${badgeX.toFixed(1)}" y="${labelY - 7}" width="${pin.badgeW}" height="15" rx="7.5"
+              fill="${pinColor}" fill-opacity="0.15"/>
+        <text x="${(badgeX + pin.badgeW / 2).toFixed(1)}" y="${labelY + 3.5}" text-anchor="middle"
+              font-family="var(--font-mono)" font-size="9.5" font-weight="800" fill="${pinColor}">
+          ◆${pin.sourceCount}
+        </text>
+        <text x="${titleX.toFixed(1)}" y="${labelY + 3.5}" text-anchor="start"
+              font-family="var(--font-sans)" font-size="10.2" font-weight="650" fill="var(--text-primary)">
+          ${pin.safeShort}
         </text>
       </g>
     `;
@@ -5005,41 +5049,94 @@ function renderSentimentTimeline() {
     ${clusterPinsHTML}
   `;
 
-  // Helper to highlight a Story Cluster's Event Zone, Spokes, and Constituent Article Dots on hover
-  const activateClusterPinHover = (idx, anchorEl) => {
-    const pin = selectedPins[idx];
-    if (!pin || !tooltip) return;
+  let lockedClusterIdx = null;
 
-    // Highlight this cluster's Event Zone & Spokes
-    chartSvg.querySelectorAll('.timeline-cluster-zone').forEach(z => {
-      const isMatch = parseInt(z.getAttribute('data-pin-idx')) === idx;
-      z.setAttribute('fill-opacity', isMatch ? '0.16' : '0.03');
-      z.setAttribute('stroke-opacity', isMatch ? '0.85' : '0.15');
-    });
-    chartSvg.querySelectorAll('.cluster-spoke').forEach(sp => {
-      const isMatch = parseInt(sp.getAttribute('data-pin-idx')) === idx;
-      sp.setAttribute('opacity', isMatch ? '0.85' : '0.05');
-      sp.setAttribute('stroke-width', isMatch ? '1.8' : '1.2');
-    });
-
-    // Highlight constituent article dots belonging to this cluster & dim unrelated dots
-    const memberSet = new Set(pin.memberArtIndices || []);
-    if (memberSet.size > 0) {
+  // Apply visual focus for a cluster (used by both hover preview and click-lock isolation)
+  const applyClusterVisualState = (activeIdx) => {
+    if (activeIdx === null || !selectedPins[activeIdx]) {
+      chartSvg.querySelectorAll('.timeline-cluster-zone').forEach(z => {
+        z.setAttribute('fill-opacity', '0');
+        z.setAttribute('stroke-opacity', '0');
+      });
+      chartSvg.querySelectorAll('.timeline-cluster-pin').forEach(p => {
+        p.style.opacity = '1';
+        const bg = p.querySelector('.cluster-pill-bg');
+        if (bg) bg.setAttribute('stroke-width', '1.25');
+      });
       chartSvg.querySelectorAll('.timeline-article-dot').forEach(dot => {
-        const artIdx = parseInt(dot.getAttribute('data-art-idx'));
-        if (memberSet.has(artIdx)) {
-          dot.setAttribute('r', '6.5');
-          dot.setAttribute('fill-opacity', '1');
+        dot.setAttribute('r', '4.2');
+        dot.setAttribute('fill-opacity', '0.88');
+        dot.style.pointerEvents = 'auto';
+      });
+      chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
+        const sId = l.getAttribute('data-source');
+        if (selectedSource) {
+          l.style.strokeOpacity = (sId === selectedSource) ? '1' : '0.12';
+          l.style.strokeWidth = (sId === selectedSource) ? '3.5' : '1.2';
         } else {
-          dot.setAttribute('fill-opacity', '0.16');
+          l.style.strokeOpacity = '0.35';
+          l.style.strokeWidth = '1.6';
+        }
+      });
+      return;
+    }
+
+    const pin = selectedPins[activeIdx];
+    const memberSet = new Set(pin.memberArtIndices || []);
+    const sourceSet = new Set(pin.memberSources || []);
+
+    // Show ONLY the active cluster's shaded zone
+    chartSvg.querySelectorAll('.timeline-cluster-zone').forEach(z => {
+      const isMatch = parseInt(z.getAttribute('data-pin-idx')) === activeIdx;
+      z.setAttribute('fill-opacity', isMatch ? '0.11' : '0');
+      z.setAttribute('stroke-opacity', isMatch ? '0.65' : '0');
+    });
+
+    // Dim unrelated cluster pills so the active cluster stands out
+    chartSvg.querySelectorAll('.timeline-cluster-pin').forEach(p => {
+      const isMatch = parseInt(p.getAttribute('data-pin-idx')) === activeIdx;
+      p.style.opacity = isMatch ? '1' : '0.32';
+      const bg = p.querySelector('.cluster-pill-bg');
+      if (bg) bg.setAttribute('stroke-width', isMatch ? '2.2' : '1.25');
+    });
+
+    // Highlight constituent article dots & ghost all other dots outside this cluster
+    chartSvg.querySelectorAll('.timeline-article-dot').forEach(dot => {
+      const artIdx = parseInt(dot.getAttribute('data-art-idx'));
+      if (memberSet.has(artIdx)) {
+        dot.setAttribute('r', '6.5');
+        dot.setAttribute('fill-opacity', '1');
+        dot.style.pointerEvents = 'auto';
+      } else {
+        dot.setAttribute('r', '3.5');
+        dot.setAttribute('fill-opacity', '0.07');
+        dot.style.pointerEvents = lockedClusterIdx !== null ? 'none' : 'auto';
+      }
+    });
+
+    // Highlight covering outlets' trendlines & ghost unrelated outlet lines
+    if (!selectedSource) {
+      chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
+        const sId = l.getAttribute('data-source');
+        if (sourceSet.has(sId)) {
+          l.style.strokeOpacity = '0.65';
+          l.style.strokeWidth = '2.2';
+        } else {
+          l.style.strokeOpacity = '0.05';
+          l.style.strokeWidth = '1.2';
         }
       });
     }
+  };
 
+  const showClusterPinTooltip = (idx, anchorEl) => {
+    const pin = selectedPins[idx];
+    if (!pin || !tooltip) return;
     const dateStr = new Date(pin.eventTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     const scoreColor = pin.meanSent > 0.12 ? 'var(--pos-color)' : (pin.meanSent < -0.12 ? 'var(--neg-color)' : 'var(--accent-color)');
     const safeTitle = (pin.headline || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const catMeta = categoryNames[pin.cl.topic] || { name: pin.cl.topic || 'World', icon: '🌐' };
+    const isLocked = lockedClusterIdx === idx;
 
     tooltip.innerHTML = `
       <div style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem; margin-bottom:0.25rem;">
@@ -5055,7 +5152,9 @@ function renderSentimentTimeline() {
         <span style="color:${scoreColor}; font-weight:700; font-family:var(--font-mono);">Cluster Tone: ${pin.meanSent > 0 ? '+' : ''}${pin.meanSent.toFixed(2)}</span>
         <span style="color:var(--text-secondary);">${catMeta.icon} ${catMeta.name}</span>
       </div>
-      <div style="color:var(--accent-color); font-size:0.66rem; font-weight:600; margin-top:0.2rem;">Click to inspect story cluster &rarr;</div>
+      <div style="color:var(--accent-color); font-size:0.66rem; font-weight:600; margin-top:0.2rem;">
+        ${isLocked ? '✓ Isolated on timeline (click again to clear)' : 'Click to isolate cluster stories on timeline'}
+      </div>
     `;
     tooltip.style.display = 'block';
 
@@ -5066,44 +5165,39 @@ function renderSentimentTimeline() {
     tooltip.style.top = `${Math.max(8, elRect.bottom - wrapRect.top + 8)}px`;
   };
 
-  const deactivateClusterPinHover = () => {
-    if (tooltip) tooltip.style.display = 'none';
-    chartSvg.querySelectorAll('.timeline-cluster-zone').forEach(z => {
-      z.setAttribute('fill-opacity', '0.06');
-      z.setAttribute('stroke-opacity', '0.28');
-    });
-    chartSvg.querySelectorAll('.cluster-spoke').forEach(sp => {
-      sp.setAttribute('opacity', '0.22');
-      sp.setAttribute('stroke-width', '1.3');
-    });
-    chartSvg.querySelectorAll('.timeline-article-dot').forEach(dot => {
-      dot.setAttribute('r', '4.2');
-      dot.setAttribute('fill-opacity', '0.88');
-    });
-  };
-
-  // Attach hover & click events to Story Cluster Event Pins & Zones
-  chartSvg.querySelectorAll('.timeline-cluster-pin, .timeline-cluster-zone').forEach(pinEl => {
+  // Attach hover & click events to Story Cluster Event Pins
+  chartSvg.querySelectorAll('.timeline-cluster-pin').forEach(pinEl => {
     pinEl.addEventListener('mouseenter', () => {
       const idx = parseInt(pinEl.getAttribute('data-pin-idx'));
-      activateClusterPinHover(idx, pinEl);
+      applyClusterVisualState(idx);
+      showClusterPinTooltip(idx, pinEl);
     });
 
-    pinEl.addEventListener('mouseleave', deactivateClusterPinHover);
+    pinEl.addEventListener('mouseleave', () => {
+      if (tooltip) tooltip.style.display = 'none';
+      applyClusterVisualState(lockedClusterIdx);
+    });
 
     pinEl.addEventListener('click', (e) => {
       e.stopPropagation();
       const idx = parseInt(pinEl.getAttribute('data-pin-idx'));
-      const pin = selectedPins[idx];
-      if (!pin) return;
-      deactivateClusterPinHover();
-      const slug = encodeURIComponent((pin.cl.story || '').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
-      switchTab('pulse');
-      setTimeout(() => {
-        const cardEl = document.getElementById(`compare-${slug}`) || document.getElementById(`pulse-top-${slug}`) || document.getElementById('clusters-section');
-        if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
+      lockedClusterIdx = (lockedClusterIdx === idx) ? null : idx;
+      applyClusterVisualState(lockedClusterIdx);
+      if (lockedClusterIdx !== null) {
+        showClusterPinTooltip(idx, pinEl);
+      } else if (tooltip) {
+        tooltip.style.display = 'none';
+      }
     });
+  });
+
+  // Clicking empty background of the chart clears any locked cluster isolation
+  chartSvg.addEventListener('click', () => {
+    if (lockedClusterIdx !== null) {
+      lockedClusterIdx = null;
+      applyClusterVisualState(null);
+      if (tooltip) tooltip.style.display = 'none';
+    }
   });
 
   // Attach hover & click events to actual posted article dots
@@ -5143,14 +5237,18 @@ function renderSentimentTimeline() {
       tooltip.style.left = `${ clamp(dotRect.left - wrapRect.left + (dotRect.width / 2) - (tipW / 2), 8, Math.max(12, wrapRect.width - tipW - 8)) }px`;
       const preferAbove = dotRect.top - wrapRect.top - tipH - 10;
       tooltip.style.top = `${ preferAbove >= 8 ? preferAbove : Math.min(wrapRect.height - tipH - 8, dotRect.bottom - wrapRect.top + 10) }px`;
-      dot.setAttribute('r', '7');
+      dot.setAttribute('r', '7.5');
       dot.setAttribute('fill-opacity', '1');
     });
 
     dot.addEventListener('mouseleave', () => {
       if (tooltip) tooltip.style.display = 'none';
-      dot.setAttribute('r', '4.2');
-      dot.setAttribute('fill-opacity', '0.88');
+      if (lockedClusterIdx !== null) {
+        applyClusterVisualState(lockedClusterIdx);
+      } else {
+        dot.setAttribute('r', '4.2');
+        dot.setAttribute('fill-opacity', '0.88');
+      }
     });
 
     dot.addEventListener('click', (e) => {
@@ -5223,7 +5321,10 @@ function renderSentimentTimeline() {
   };
 
   const deactivateOutletHover = () => {
-    if (!selectedSource) {
+    if (lockedClusterIdx !== null) {
+      chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => { l.style.filter = 'none'; });
+      applyClusterVisualState(lockedClusterIdx);
+    } else if (!selectedSource) {
       chartSvg.querySelectorAll('.timeline-outlet-line').forEach(l => {
         l.style.strokeOpacity = '0.35';
         l.style.strokeWidth = '1.6';
