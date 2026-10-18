@@ -4557,10 +4557,11 @@ function renderSentimentTimeline() {
     }
   }
 
-  // Sizing: 1060 x 360 to fill the card space cleanly
+  // Sizing: 1060 x 376 to fill the card space cleanly with room for 2 staggered cluster banner lanes
   const width = 1060;
-  const height = 360;
-  const padding = { top: 42, right: 35, bottom: 50, left: 65 };
+  const height = 376;
+  chartSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  const padding = { top: 56, right: 35, bottom: 50, left: 65 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
 
@@ -4765,8 +4766,10 @@ function renderSentimentTimeline() {
     `;
   });
 
-  // --- IDEA #3: STORY CLUSTER "EVENT PINS" ON THE TIMELINE ---
-  // Surface major cross-outlet story clusters driving sentiment peaks/troughs in this window
+  // --- IDEA #3: STORY CLUSTER "EVENT ZONES & DIAMOND BEACONS" ON THE TIMELINE ---
+  // Surface major cross-outlet story clusters with shaded Event Zones, distinct Diamond Beacons,
+  // non-overlapping top pill banners, and interactive constellation spokes linking to constituent article dots
+  let clusterZonesHTML = '';
   let clusterPinsHTML = '';
   const candidateClusters = [];
   const rawClusterList = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
@@ -4789,6 +4792,41 @@ function renderSentimentTimeline() {
     if (matchingArts.length === 0) return;
     if (!selectedSource && matchingArts.length < 2) return;
 
+    // Map each matching coverage dispatch to its plotted (x, y) coordinate & find matching plottedArticles indices
+    const memberPoints = [];
+    const memberArtIndices = new Set();
+    const covUrls = new Set(matchingArts.map(a => canonicalUrl(a.link)).filter(Boolean));
+    const covTitles = new Set(matchingArts.map(a => cleanHeadlineTitle(a.title)).filter(Boolean));
+
+    plottedArticles.forEach((pArt, pIdx) => {
+      const cUrl = canonicalUrl(pArt.link);
+      const cTitle = cleanHeadlineTitle(pArt.title);
+      if ((cUrl && covUrls.has(cUrl)) || (cTitle && covTitles.has(cTitle))) {
+        memberArtIndices.add(pIdx);
+        memberPoints.push({
+          x: getXByTime(pArt.time),
+          y: clamp(getY(pArt.score), padding.top + 8, padding.top + chartH - 8),
+          time: pArt.time,
+          score: pArt.score
+        });
+      }
+    });
+
+    // Include any cluster dispatches that weren't in the sampled plottedArticles array so the zone bounds are exact
+    if (memberPoints.length < matchingArts.length) {
+      matchingArts.forEach(a => {
+        const rawT = a.pubDate ? new Date(a.pubDate).getTime() : fallbackClusterTime;
+        const t = clamp(!isNaN(rawT) ? rawT : fallbackClusterTime, minTimeBound, maxTimeBound);
+        const sc = typeof a.sentiment === 'number' ? a.sentiment : (cl.averageSentiment || 0);
+        memberPoints.push({
+          x: getXByTime(t),
+          y: clamp(getY(sc), padding.top + 8, padding.top + chartH - 8),
+          time: t,
+          score: sc
+        });
+      });
+    }
+
     // Compute median timestamp of cluster dispatches in window
     const times = matchingArts.map(a => {
       const rawT = a.pubDate ? new Date(a.pubDate).getTime() : fallbackClusterTime;
@@ -4806,7 +4844,9 @@ function renderSentimentTimeline() {
       eventTime,
       meanSent: Number(meanSent.toFixed(2)),
       sourceCount: uniqueSrcs,
-      headline: cl.story || matchingArts[0]?.title || 'Developing Story'
+      headline: cl.story || matchingArts[0]?.title || 'Developing Story',
+      memberPoints,
+      memberArtIndices: Array.from(memberArtIndices)
     });
   });
 
@@ -4817,37 +4857,111 @@ function renderSentimentTimeline() {
     return weightB - weightA;
   });
 
+  // Select up to 5 clusters with strict 2-lane pill collision prevention so top banners NEVER overlap
   const selectedPins = [];
-  const minPinSpacingPx = 110;
+  const rowBoxes = [[], []]; // row 0 (y=14) and row 1 (y=36) occupied [left, right] intervals
+  const minBeaconSpacingPx = 72;
+
   for (const cand of candidateClusters) {
     if (selectedPins.length >= 5) break;
-    const x = clamp(getXByTime(cand.eventTime), padding.left + 8, width - padding.right - 8);
-    if (selectedPins.some(p => Math.abs(p.x - x) < minPinSpacingPx)) continue;
+    const x = clamp(getXByTime(cand.eventTime), padding.left + 10, width - padding.right - 10);
+    if (selectedPins.some(p => Math.abs(p.x - x) < minBeaconSpacingPx)) continue;
+
+    const shortTitle = cand.headline.length > 24 ? cand.headline.slice(0, 23) + '…' : cand.headline;
+    const safeShort = shortTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const pillW = Math.max(118, Math.min(190, safeShort.length * 5.4 + 52));
+    const pillX = clamp(x, padding.left + pillW / 2 + 4, width - padding.right - pillW / 2 - 4);
+    const pLeft = pillX - pillW / 2 - 6;
+    const pRight = pillX + pillW / 2 + 6;
+
+    // Try preferred row first (alternating by count), then fallback to the other row; skip if both collide
+    const preferredRow = selectedPins.length % 2;
+    const rowsToTry = [preferredRow, 1 - preferredRow];
+    let assignedRow = -1;
+    for (const r of rowsToTry) {
+      const collides = rowBoxes[r].some(box => !(pRight < box.left || pLeft > box.right));
+      if (!collides) {
+        assignedRow = r;
+        rowBoxes[r].push({ left: pLeft, right: pRight });
+        break;
+      }
+    }
+    if (assignedRow === -1) continue;
+
     const y = clamp(getY(cand.meanSent), padding.top + 14, padding.top + chartH - 14);
-    selectedPins.push({ ...cand, x, y });
+    selectedPins.push({
+      ...cand,
+      x,
+      y,
+      pillW,
+      pillX,
+      safeShort,
+      row: assignedRow
+    });
   }
 
   selectedPins.forEach((pin, pIdx) => {
     const isPos = pin.meanSent > 0.12;
     const isNeg = pin.meanSent < -0.12;
     const pinColor = isPos ? '#10b981' : (isNeg ? '#ef4444' : '#6366f1');
-    const labelY = pIdx % 2 === 0 ? 15 : 33;
-    const shortTitle = pin.headline.length > 25 ? pin.headline.slice(0, 24) + '…' : pin.headline;
-    const safeShort = shortTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const pillW = Math.max(116, Math.min(196, safeShort.length * 5.5 + 50));
-    const pillX = clamp(pin.x, padding.left + pillW / 2 + 4, width - padding.right - pillW / 2 - 4);
+    const labelY = pin.row === 0 ? 14 : 36;
 
+    // Compute Event Zone bounding box around the cluster's constituent points + center beacon
+    const xs = [pin.x, ...pin.memberPoints.map(p => p.x)];
+    const ys = [pin.y, ...pin.memberPoints.map(p => p.y)];
+    const rawMinX = Math.min(...xs);
+    const rawMaxX = Math.max(...xs);
+    const rawMinY = Math.min(...ys);
+    const rawMaxY = Math.max(...ys);
+
+    const zoneX1 = clamp(Math.min(pin.x - 16, rawMinX - 10), padding.left + 2, width - padding.right - 28);
+    const zoneX2 = clamp(Math.max(pin.x + 16, rawMaxX + 10), zoneX1 + 28, width - padding.right - 2);
+    const zoneY1 = clamp(Math.min(pin.y - 16, rawMinY - 10), padding.top + 2, padding.top + chartH - 28);
+    const zoneY2 = clamp(Math.max(pin.y + 16, rawMaxY + 10), zoneY1 + 28, padding.top + chartH - 2);
+
+    // Constellation spokes connecting the cluster Diamond Beacon to its constituent article dots
+    const spokesHTML = pin.memberPoints.map(pt => `
+      <line class="cluster-spoke" data-pin-idx="${pIdx}"
+            x1="${pin.x.toFixed(1)}" y1="${pin.y.toFixed(1)}"
+            x2="${pt.x.toFixed(1)}" y2="${pt.y.toFixed(1)}"
+            stroke="${pinColor}" stroke-width="1.3" stroke-dasharray="2,2" opacity="0.22"
+            style="pointer-events:none; transition: opacity 0.18s ease, stroke-width 0.18s ease;"/>
+    `).join('');
+
+    clusterZonesHTML += `
+      <g class="timeline-cluster-zone-group" data-pin-idx="${pIdx}">
+        <rect class="timeline-cluster-zone" data-pin-idx="${pIdx}"
+              x="${zoneX1.toFixed(1)}" y="${zoneY1.toFixed(1)}"
+              width="${(zoneX2 - zoneX1).toFixed(1)}" height="${(zoneY2 - zoneY1).toFixed(1)}"
+              rx="10" fill="${pinColor}" fill-opacity="0.06"
+              stroke="${pinColor}" stroke-opacity="0.28" stroke-width="1.2" stroke-dasharray="4,3"
+              style="cursor:pointer; transition: fill-opacity 0.18s ease, stroke-opacity 0.18s ease;"/>
+        ${spokesHTML}
+      </g>
+    `;
+
+    // Bent or vertical connector stem from top pill (pillX, labelY + 9) to beacon (pin.x, pin.y)
+    const stemMidY = padding.top - 4;
+    const stemPath = Math.abs(pin.pillX - pin.x) > 3
+      ? `M ${pin.pillX.toFixed(1)} ${labelY + 9} L ${pin.pillX.toFixed(1)} ${stemMidY} L ${pin.x.toFixed(1)} ${stemMidY} L ${pin.x.toFixed(1)} ${(pin.y - 9).toFixed(1)}`
+      : `M ${pin.x.toFixed(1)} ${labelY + 9} L ${pin.x.toFixed(1)} ${(pin.y - 9).toFixed(1)}`;
+
+    // Diamond Beacon (rotated square + outer pulse ring) so clusters look completely distinct from round article dots
     clusterPinsHTML += `
       <g class="timeline-cluster-pin" data-pin-idx="${pIdx}" style="cursor:pointer;">
-        <line x1="${pin.x.toFixed(1)}" y1="${labelY + 8}" x2="${pin.x.toFixed(1)}" y2="${pin.y.toFixed(1)}"
-              stroke="${pinColor}" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.85"/>
-        <circle cx="${pin.x.toFixed(1)}" cy="${pin.y.toFixed(1)}" r="6.5"
-                fill="${pinColor}" stroke="var(--bg-card)" stroke-width="2"/>
-        <rect x="${(pillX - pillW / 2).toFixed(1)}" y="${labelY - 9}" width="${pillW}" height="19" rx="9.5"
-              fill="var(--bg-card)" stroke="${pinColor}" stroke-width="1.35"/>
-        <text x="${pillX.toFixed(1)}" y="${labelY + 4}" text-anchor="middle"
+        <path d="${stemPath}" fill="none" stroke="${pinColor}" stroke-width="1.4" stroke-dasharray="2,2" opacity="0.8"/>
+        <circle class="cluster-beacon-halo" cx="${pin.x.toFixed(1)}" cy="${pin.y.toFixed(1)}" r="10.5"
+                fill="${pinColor}" fill-opacity="0.18" stroke="${pinColor}" stroke-opacity="0.45" stroke-width="1"
+                style="transition: r 0.18s ease, fill-opacity 0.18s ease;"/>
+        <rect class="cluster-beacon-diamond"
+              x="${(pin.x - 5.5).toFixed(1)}" y="${(pin.y - 5.5).toFixed(1)}" width="11" height="11" rx="2"
+              transform="rotate(45 ${pin.x.toFixed(1)} ${pin.y.toFixed(1)})"
+              fill="${pinColor}" stroke="var(--bg-card)" stroke-width="2"/>
+        <rect x="${(pin.pillX - pin.pillW / 2).toFixed(1)}" y="${labelY - 9}" width="${pin.pillW}" height="19" rx="9.5"
+              fill="var(--bg-card)" stroke="${pinColor}" stroke-width="1.4"/>
+        <text x="${pin.pillX.toFixed(1)}" y="${labelY + 4}" text-anchor="middle"
               font-family="var(--font-sans)" font-size="10" font-weight="700" fill="var(--text-primary)">
-          📍 ${pin.sourceCount}src · ${safeShort}
+          ◆ ${pin.sourceCount}src · ${pin.safeShort}
         </text>
       </g>
     `;
@@ -4868,6 +4982,7 @@ function renderSentimentTimeline() {
     </defs>
     ${gridHTML}
     ${xLabelsHTML}
+    ${clusterZonesHTML}
     ${outletLinesHTML}
     ${mainLineHTML}
     ${outletHitAreasHTML}
@@ -4875,52 +4990,98 @@ function renderSentimentTimeline() {
     ${clusterPinsHTML}
   `;
 
-  // Attach hover & click events to Story Cluster Event Pins
-  chartSvg.querySelectorAll('.timeline-cluster-pin').forEach(pinEl => {
+  // Helper to highlight a Story Cluster's Event Zone, Spokes, and Constituent Article Dots on hover
+  const activateClusterPinHover = (idx, anchorEl) => {
+    const pin = selectedPins[idx];
+    if (!pin || !tooltip) return;
+
+    // Highlight this cluster's Event Zone & Spokes
+    chartSvg.querySelectorAll('.timeline-cluster-zone').forEach(z => {
+      const isMatch = parseInt(z.getAttribute('data-pin-idx')) === idx;
+      z.setAttribute('fill-opacity', isMatch ? '0.16' : '0.03');
+      z.setAttribute('stroke-opacity', isMatch ? '0.85' : '0.15');
+    });
+    chartSvg.querySelectorAll('.cluster-spoke').forEach(sp => {
+      const isMatch = parseInt(sp.getAttribute('data-pin-idx')) === idx;
+      sp.setAttribute('opacity', isMatch ? '0.85' : '0.05');
+      sp.setAttribute('stroke-width', isMatch ? '1.8' : '1.2');
+    });
+
+    // Highlight constituent article dots belonging to this cluster & dim unrelated dots
+    const memberSet = new Set(pin.memberArtIndices || []);
+    if (memberSet.size > 0) {
+      chartSvg.querySelectorAll('.timeline-article-dot').forEach(dot => {
+        const artIdx = parseInt(dot.getAttribute('data-art-idx'));
+        if (memberSet.has(artIdx)) {
+          dot.setAttribute('r', '6.5');
+          dot.setAttribute('fill-opacity', '1');
+        } else {
+          dot.setAttribute('fill-opacity', '0.16');
+        }
+      });
+    }
+
+    const dateStr = new Date(pin.eventTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const scoreColor = pin.meanSent > 0.12 ? 'var(--pos-color)' : (pin.meanSent < -0.12 ? 'var(--neg-color)' : 'var(--accent-color)');
+    const safeTitle = (pin.headline || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const catMeta = categoryNames[pin.cl.topic] || { name: pin.cl.topic || 'World', icon: '🌐' };
+
+    tooltip.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem; margin-bottom:0.25rem;">
+        <span style="font-weight:700; color:var(--accent-color); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em;">
+          ◆ Story Cluster (${pin.sourceCount} Outlets)
+        </span>
+        <span style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono);">${dateStr}</span>
+      </div>
+      <div style="font-size:0.8rem; font-weight:700; color:var(--text-primary); line-height:1.38; margin-bottom:0.35rem; white-space:normal; word-wrap:break-word;">
+        ${safeTitle}
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-size:0.7rem; border-top:1px solid var(--border-color); padding-top:0.25rem;">
+        <span style="color:${scoreColor}; font-weight:700; font-family:var(--font-mono);">Cluster Tone: ${pin.meanSent > 0 ? '+' : ''}${pin.meanSent.toFixed(2)}</span>
+        <span style="color:var(--text-secondary);">${catMeta.icon} ${catMeta.name}</span>
+      </div>
+      <div style="color:var(--accent-color); font-size:0.66rem; font-weight:600; margin-top:0.2rem;">Click to inspect story cluster &rarr;</div>
+    `;
+    tooltip.style.display = 'block';
+
+    const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
+    const elRect = anchorEl.getBoundingClientRect();
+    const tipW = tooltip.offsetWidth || 275;
+    tooltip.style.left = `${clamp(elRect.left - wrapRect.left + (elRect.width / 2) - (tipW / 2), 8, Math.max(12, wrapRect.width - tipW - 8))}px`;
+    tooltip.style.top = `${Math.max(8, elRect.bottom - wrapRect.top + 8)}px`;
+  };
+
+  const deactivateClusterPinHover = () => {
+    if (tooltip) tooltip.style.display = 'none';
+    chartSvg.querySelectorAll('.timeline-cluster-zone').forEach(z => {
+      z.setAttribute('fill-opacity', '0.06');
+      z.setAttribute('stroke-opacity', '0.28');
+    });
+    chartSvg.querySelectorAll('.cluster-spoke').forEach(sp => {
+      sp.setAttribute('opacity', '0.22');
+      sp.setAttribute('stroke-width', '1.3');
+    });
+    chartSvg.querySelectorAll('.timeline-article-dot').forEach(dot => {
+      dot.setAttribute('r', '4.2');
+      dot.setAttribute('fill-opacity', '0.88');
+    });
+  };
+
+  // Attach hover & click events to Story Cluster Event Pins & Zones
+  chartSvg.querySelectorAll('.timeline-cluster-pin, .timeline-cluster-zone').forEach(pinEl => {
     pinEl.addEventListener('mouseenter', () => {
       const idx = parseInt(pinEl.getAttribute('data-pin-idx'));
-      const pin = selectedPins[idx];
-      if (!pin || !tooltip) return;
-
-      const dateStr = new Date(pin.eventTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-      const scoreColor = pin.meanSent > 0.12 ? 'var(--pos-color)' : (pin.meanSent < -0.12 ? 'var(--neg-color)' : 'var(--accent-color)');
-      const safeTitle = (pin.headline || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const catMeta = categoryNames[pin.cl.topic] || { name: pin.cl.topic || 'World', icon: '🌐' };
-
-      tooltip.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem; margin-bottom:0.25rem;">
-          <span style="font-weight:700; color:var(--accent-color); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em;">
-            📍 Developing Story (${pin.sourceCount} Outlets)
-          </span>
-          <span style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono);">${dateStr}</span>
-        </div>
-        <div style="font-size:0.8rem; font-weight:700; color:var(--text-primary); line-height:1.35; margin-bottom:0.35rem; max-width:270px;">
-          ${safeTitle}
-        </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-size:0.7rem; border-top:1px solid var(--border-color); padding-top:0.25rem;">
-          <span style="color:${scoreColor}; font-weight:700; font-family:var(--font-mono);">Cluster Tone: ${pin.meanSent > 0 ? '+' : ''}${pin.meanSent.toFixed(2)}</span>
-          <span style="color:var(--text-secondary);">${catMeta.icon} ${catMeta.name}</span>
-        </div>
-        <div style="color:var(--accent-color); font-size:0.66rem; font-weight:600; margin-top:0.2rem;">Click pin to view story cluster &rarr;</div>
-      `;
-      tooltip.style.display = 'block';
-
-      const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
-      const pinRect = pinEl.getBoundingClientRect();
-      tooltip.style.left = `${clamp(pinRect.left - wrapRect.left, 8, Math.max(12, wrapRect.width - 285))}px`;
-      tooltip.style.top = `${Math.max(8, pinRect.bottom - wrapRect.top + 6)}px`;
+      activateClusterPinHover(idx, pinEl);
     });
 
-    pinEl.addEventListener('mouseleave', () => {
-      if (tooltip) tooltip.style.display = 'none';
-    });
+    pinEl.addEventListener('mouseleave', deactivateClusterPinHover);
 
     pinEl.addEventListener('click', (e) => {
       e.stopPropagation();
       const idx = parseInt(pinEl.getAttribute('data-pin-idx'));
       const pin = selectedPins[idx];
       if (!pin) return;
-      if (tooltip) tooltip.style.display = 'none';
+      deactivateClusterPinHover();
       const slug = encodeURIComponent((pin.cl.story || '').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
       switchTab('pulse');
       setTimeout(() => {
@@ -4950,7 +5111,7 @@ function renderSentimentTimeline() {
           </span>
           <span style="font-size:0.68rem; color:var(--text-muted); font-family:var(--font-mono);">${dateStr}</span>
         </div>
-        <div style="font-size:0.78rem; font-weight:600; color:var(--text-primary); line-height:1.35; margin-bottom:0.3rem; max-width:260px;">
+        <div style="font-size:0.78rem; font-weight:600; color:var(--text-primary); line-height:1.38; margin-bottom:0.3rem; white-space:normal; word-wrap:break-word;">
           ${safeTitle}
         </div>
         <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; font-size:0.7rem; border-top:1px solid var(--border-color); padding-top:0.22rem;">
@@ -4962,8 +5123,11 @@ function renderSentimentTimeline() {
 
       const wrapRect = document.getElementById('timeline-chart-wrap').getBoundingClientRect();
       const dotRect = dot.getBoundingClientRect();
-      tooltip.style.left = `${ clamp(dotRect.left - wrapRect.left + 4, 8, Math.max(12, wrapRect.width - 270)) }px`;
-      tooltip.style.top = `${ Math.max(8, dotRect.top - wrapRect.top - 12) }px`;
+      const tipW = tooltip.offsetWidth || 265;
+      const tipH = tooltip.offsetHeight || 90;
+      tooltip.style.left = `${ clamp(dotRect.left - wrapRect.left + (dotRect.width / 2) - (tipW / 2), 8, Math.max(12, wrapRect.width - tipW - 8)) }px`;
+      const preferAbove = dotRect.top - wrapRect.top - tipH - 10;
+      tooltip.style.top = `${ preferAbove >= 8 ? preferAbove : Math.min(wrapRect.height - tipH - 8, dotRect.bottom - wrapRect.top + 10) }px`;
       dot.setAttribute('r', '7');
       dot.setAttribute('fill-opacity', '1');
     });
