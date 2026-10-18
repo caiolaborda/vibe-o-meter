@@ -77,7 +77,6 @@ const SOURCE_META = {
   smh: { name: 'Sydney Morning Herald', initials: 'SMH', color: '#0891b2', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
   scmp: { name: 'South China Morning Post', initials: 'SCM', color: '#4f46e5', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'hk', flag: '🇭🇰' },
   japantimes: { name: 'The Japan Times', initials: 'JPT', color: '#be123c', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'jp', flag: '🇯🇵' },
-  hindu: { name: 'The Hindu', initials: 'TH', color: '#1e3a8a', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'in', flag: '🇮🇳' },
   // Middle East
   aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
   // Global
