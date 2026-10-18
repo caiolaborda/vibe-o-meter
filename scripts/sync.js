@@ -401,25 +401,28 @@ function computeFourFactorScore(match) {
   const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
-  // Symmetric Reach-Anchored Magnitude Curve (1A + 2A):
-  // 1. Positive / Constructive progress (pol >= 0): Reach (R^0.78 * D^0.22, Hill midpoint 0.38, k = 2.0)
-  //    gates magnitude so 1-2 person human-interest features (Reach 5-28) and minor lifestyle pieces stay modest,
-  //    while national/global breakthroughs (Reach 55-95) scale cleanly across +0.35 to +0.90.
-  //    Positive framingMod is scaled by Reach and capped at 40% of |eventBase| so emotional adjectives cannot
-  //    carry a low-substance story into the top of Good News.
-  // 2. Negative / Destructive harm (pol < 0): Reach (R^0.78 * D^0.22, Hill midpoint 0.28, k = 1.9)
-  //    gates localized 1-2 person accidents (Reach 6-16) to -0.10..-0.24 while national/global crises scale to -0.45..-0.95.
+  // First-Principles Magnitude Curve:
+  // 1. Positive / Constructive progress (pol >= 0):
+  //    Uses non-linear polarity selectivity (pol^1.32) combined with R^0.62 * D^0.38 (Hill midpoint 0.32, k = 1.75)
+  //    so mundane macro/corporate statistics with low polarity (pol 15-26, e.g. rail traffic records, IPOs, routine winter funding)
+  //    stay in Neutral (< +0.15) even when national in reach, while genuine scientific, ecological, and medical breakthroughs
+  //    (pol >= 35, perm >= 50) scale cleanly from +0.20 to +0.88.
+  //    Positive framingMod is scaled by Reach and capped at 35% of |eventBase|.
+  // 2. Negative / Destructive harm (pol < 0):
+  //    Reach (R^0.78 * D^0.22, Hill midpoint 0.28, k = 1.9) gates localized 1-2 person accidents (Reach 6-16)
+  //    to -0.10..-0.24 while national/global crises scale to -0.45..-0.95.
   let eventBase;
   let framingMod;
   if (pol >= 0) {
-    const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);
-    const gPow = Math.pow(geoMag, 2.0);
-    const kPow = Math.pow(0.38, 2.0);
+    const polCurve = Math.pow(pol, 1.32);
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.62) * Math.pow(Math.max(0.01, perm), 0.38);
+    const gPow = Math.pow(geoMag, 1.75);
+    const kPow = Math.pow(0.32, 1.75);
     const hill = gPow / (gPow + kPow);
-    const impactScale = Math.min(1, 0.12 * reach + 0.88 * hill);
-    eventBase = Number((pol * impactScale).toFixed(3));
-    const rawFramingMod = frame * (0.10 + 0.25 * reach);
-    const maxFraming = Math.abs(eventBase) * 0.40;
+    const impactScale = Math.min(1, 0.12 * geoMag + 0.88 * hill);
+    eventBase = Number(Math.min(1, polCurve * impactScale * 1.12).toFixed(3));
+    const rawFramingMod = frame * (0.10 + 0.22 * reach);
+    const maxFraming = Math.abs(eventBase) * 0.35;
     framingMod = Number(Math.max(-maxFraming, Math.min(maxFraming, rawFramingMod)).toFixed(3));
   } else {
     const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);

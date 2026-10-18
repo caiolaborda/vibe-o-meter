@@ -195,10 +195,18 @@ function exportPublicJsonFeeds(fullPayload) {
   const seenGoodTitles = new Set();
   const goodStories7d = [];
 
-  // Map article links/titles to their parent cluster for multi-outlet consensus boost
+  // Map article links/titles/tokens to their parent cluster for multi-outlet consensus boost & deduplication
+  function tokenizeHeadline(str) {
+    const stop = new Set(['the','and','for','with','from','that','this','into','over','after','under','amid','says','said','new','how','why','what','who','its','his','her','are','was','were','has','have','had','will','can','may','out','off','set','gets','wins','hits','back','more','first','days','year','years']);
+    return String(str || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length >= 3 && !stop.has(w));
+  }
   const articleClusterMap = new Map();
+  const clusterTokenEntries = [];
   enrichedClusters.forEach(cl => {
     if (cl.averageSentiment < 0.10) return;
+    const titleTokens = new Set(tokenizeHeadline(cl.story));
+    const allTokens = new Set(tokenizeHeadline(`${cl.story || ''} ${(cl.coverage || []).map(c => c.title || '').join(' ')}`));
+    clusterTokenEntries.push({ cl, titleTokens, allTokens });
     (cl.coverage || []).forEach(cov => {
       const u = canonicalUrl(cov.link);
       const t = cleanHeadlineTitle(cov.title);
@@ -206,6 +214,21 @@ function exportPublicJsonFeeds(fullPayload) {
       if (t) articleClusterMap.set(t, cl);
     });
   });
+
+  function findClusterForArticle(art, cUrl, cTitle) {
+    const exact = (cUrl && articleClusterMap.get(cUrl)) || (cTitle && articleClusterMap.get(cTitle));
+    if (exact) return exact;
+    const aTokens = tokenizeHeadline(art.title);
+    if (aTokens.length < 2) return null;
+    for (const entry of clusterTokenEntries) {
+      const sharedTitle = aTokens.filter(t => entry.titleTokens.has(t)).length;
+      const sharedAll = aTokens.filter(t => entry.allTokens.has(t)).length;
+      if ((sharedTitle >= 2 && sharedAll >= 3) || (sharedAll >= 4 && sharedAll / aTokens.length >= 0.55)) {
+        return entry.cl;
+      }
+    }
+    return null;
+  }
 
   Object.entries(sources).forEach(([sourceId, src]) => {
     (src.articles || []).forEach(art => {
@@ -220,12 +243,10 @@ function exportPublicJsonFeeds(fullPayload) {
       if (cUrl) seenGoodUrls.add(cUrl);
       if (cTitle) seenGoodTitles.add(cTitle);
 
-      const matchedCl = (cUrl && articleClusterMap.get(cUrl)) || (cTitle && articleClusterMap.get(cTitle)) || null;
+      const matchedCl = findClusterForArticle(art, cUrl, cTitle);
       const outletCount = matchedCl ? matchedCl.outletCount : 1;
-      const reach = Array.isArray(art.factors) && art.factors.length >= 2 ? Number(art.factors[1]) || 40 : 40;
-      const clusterBoost = outletCount > 1 ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : -0.04;
-      const reachMod = reach >= 55 ? 0.04 : (reach < 30 ? -0.06 : 0);
-      const significanceScore = Number(Math.min(1, score + clusterBoost + reachMod).toFixed(3));
+      const clusterBoost = outletCount > 1 ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : 0;
+      const significanceScore = Number(Math.min(1, score + clusterBoost).toFixed(3));
 
       goodStories7d.push({
         title: art.title,
@@ -249,47 +270,56 @@ function exportPublicJsonFeeds(fullPayload) {
   });
 
   goodStories7d.sort((a, b) => (b.significanceScore - a.significanceScore) || (b.sentiment - a.sentiment));
-  const goodStories24h = goodStories7d.filter(s => s.isPast24h);
+  // Deduplicate by clusterId so a 21-outlet cluster appears once (represented by its highest-scoring dispatch)
+  const seenClusters7d = new Set();
+  const dedupedGood7d = goodStories7d.filter(s => {
+    if (!s.clusterId) return true;
+    if (seenClusters7d.has(s.clusterId)) return false;
+    seenClusters7d.add(s.clusterId);
+    return true;
+  });
+  const seenClusters24h = new Set();
+  const goodStories24h = goodStories7d.filter(s => {
+    if (!s.isPast24h) return false;
+    if (!s.clusterId) return true;
+    if (seenClusters24h.has(s.clusterId)) return false;
+    seenClusters24h.add(s.clusterId);
+    return true;
+  });
   const constructiveClusters = enrichedClusters
     .filter(c => c.averageSentiment >= 0.10)
     .sort((a, b) => (b.significanceScore - a.significanceScore) || (b.averageSentiment - a.averageSentiment));
 
-  // Build Top 5 Daily Antidote from 48h rolling window with gentle recency decay, cluster dedupe, and outlet diversity cap
+  // Build Top 5 Daily Antidote from 48h rolling window with gentle recency decay and cluster dedupe (no outlet cap)
+  const seenClusters48h = new Set();
   const antidoteCandidates = goodStories7d
     .filter(s => s.isPast48h)
     .map(s => {
       const hoursAgo = Math.max(0, (nowMs - new Date(s.pubDate).getTime()) / 3600000);
-      // Multi-outlet clusters decay slower over 48h than single-outlet stories
       const decayRate = (s.outletCount || 1) > 1 ? 0.035 : 0.07;
       const recencyDecay = hoursAgo > 24 ? ((hoursAgo - 24) / 24) * decayRate : 0;
       return { ...s, antidoteRank: Number((s.significanceScore - recencyDecay).toFixed(3)) };
     })
-    .sort((a, b) => b.antidoteRank - a.antidoteRank);
+    .sort((a, b) => b.antidoteRank - a.antidoteRank)
+    .filter(s => {
+      if (!s.clusterId) return true;
+      if (seenClusters48h.has(s.clusterId)) return false;
+      seenClusters48h.add(s.clusterId);
+      return true;
+    });
 
-  const top5DailyAntidote = [];
-  const seenAntidoteClusters = new Set();
-  const antidoteOutletCounts = {};
-  for (const cand of antidoteCandidates) {
-    if (cand.clusterId) {
-      if (seenAntidoteClusters.has(cand.clusterId)) continue;
-    }
-    if ((cand.outletCount || 1) === 1 && (antidoteOutletCounts[cand.sourceId] || 0) >= 1) continue;
-    if (cand.clusterId) seenAntidoteClusters.add(cand.clusterId);
-    antidoteOutletCounts[cand.sourceId] = (antidoteOutletCounts[cand.sourceId] || 0) + 1;
-    top5DailyAntidote.push(cand);
-    if (top5DailyAntidote.length >= 5) break;
-  }
+  const top5DailyAntidote = antidoteCandidates.slice(0, 5);
 
   const goodNewsPayload = {
     dataset: 'vibe-o-meter/good-news',
     lastUpdated: nowIso,
     count24h: goodStories24h.length,
-    count7d: goodStories7d.length,
+    count7d: dedupedGood7d.length,
     constructiveClusterCount: constructiveClusters.length,
     top5DailyAntidote,
     constructiveClusters,
     stories24h: goodStories24h,
-    stories7d: goodStories7d
+    stories7d: dedupedGood7d
   };
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'good-news.json'), JSON.stringify(goodNewsPayload, null, 2), 'utf8');
 

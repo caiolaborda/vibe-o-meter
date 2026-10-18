@@ -27,7 +27,7 @@ let state = {
   },
   edition: 'silver', // 'silver' (Some Good News - Default Home) or 'doom' (No Good News)
   silverTopic: 'all',
-  silverTime: '24h', // Decoupled timeframe for Some Good News
+  silverTime: '3d', // Default All Good News grid to Past 3 Days so multi-day breakthroughs are visible
   silverViewMode: 'antidote', // 'antidote' (5-Story Antidote Deck) or 'grid' (All Good News Grid)
   silverDeckIndex: 0,
   headlinesLimit: 20,
@@ -2537,7 +2537,7 @@ function renderSilverEdition() {
     controlsRight.style.display = activeMode === 'grid' ? 'flex' : 'none';
   }
 
-  const activeSilverTime = state.silverTime || '24h';
+  const activeSilverTime = state.silverTime || '3d';
   const silverTimeSelect = document.getElementById('silver-timeframe-select');
   if (silverTimeSelect) {
     silverTimeSelect.value = activeSilverTime;
@@ -2627,17 +2627,14 @@ function renderSilverEdition() {
   function computeSilverItemRank(item) {
     const isMulti = item.isCluster && !item.isBorderlineCluster && item.articles?.length > 1;
     const outletCount = isMulti ? item.articles.length : 1;
-    const clusterBoost = isMulti ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : -0.04;
-    const leadFactors = isMulti ? (item.leadArticle?.factors || item.articles?.[0]?.factors) : item.factors;
-    const reach = Array.isArray(leadFactors) && leadFactors.length >= 2 ? Number(leadFactors[1]) || 45 : 45;
-    const reachMod = reach >= 55 ? 0.04 : (reach < 30 ? -0.06 : 0);
+    const clusterBoost = isMulti ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : 0;
     let recencyDecay = 0;
     if (activeMode === 'antidote' && item.pubDate) {
       const hoursAgo = Math.max(0, (nowRenderMs - new Date(item.pubDate).getTime()) / 3600000);
       const decayRate = isMulti ? 0.035 : 0.07;
       recencyDecay = hoursAgo > 24 ? ((hoursAgo - 24) / 24) * decayRate : 0;
     }
-    return item.sentiment + clusterBoost + reachMod - recencyDecay - (isBackgroundSeriesOrMixedFeature(item) ? 0.22 : 0);
+    return item.sentiment + clusterBoost - recencyDecay - (isBackgroundSeriesOrMixedFeature(item) ? 0.22 : 0);
   }
   feedItems.sort((a, b) => {
     const rankA = computeSilverItemRank(a);
@@ -2687,19 +2684,9 @@ function renderSilverEdition() {
     return;
   }
 
-  // MODE A: DAILY 5 ANTIDOTE (PRE-RENDERED STACKED CARD DECK — ALWAYS TOP 5 OF LIVE FEED WITH OUTLET DIVERSITY CAP)
+  // MODE A: DAILY 5 ANTIDOTE (PRE-RENDERED STACKED CARD DECK — ALWAYS TOP 5 OF LIVE FEED)
   if (activeMode === 'antidote') {
-    const antidoteItems = [];
-    const antidoteSingleOutlets = new Set();
-    for (const item of feedItems) {
-      const isMulti = item.isCluster && !item.isBorderlineCluster && item.articles?.length > 1;
-      if (!isMulti && item.sourceId) {
-        if (antidoteSingleOutlets.has(item.sourceId)) continue;
-        antidoteSingleOutlets.add(item.sourceId);
-      }
-      antidoteItems.push(item);
-      if (antidoteItems.length >= 5) break;
-    }
+    const antidoteItems = feedItems.slice(0, 5);
     state.silverAntidoteCount = antidoteItems.length;
     const currentIdx = Math.max(0, Math.min(antidoteItems.length, state.silverDeckIndex || 0));
     state.silverDeckIndex = currentIdx;
