@@ -745,8 +745,6 @@ Rules:
 - If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how outlets are framing it.
-- Provide a "briefing" object with 3 crisp, neutral 1-sentence bullets: "whatHappened" (verified core event), "whyItMatters" (structural, geopolitical, scientific, or human significance), and "whatsNext" (upcoming milestone, vote, or ongoing watchpoint).
-- Provide "wikiEntities": an array of 1 to 3 exact English Wikipedia article titles for the key places, institutions, treaties, people, or scientific concepts central to understanding the story's background.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
 Dispatches:
@@ -754,17 +752,7 @@ ${promptLines}
 
 Return JSON array in format:
 [
-  {
-    "story": "Topic Title",
-    "summary": "1-2 sentence editorial summary of the event.",
-    "briefing": {
-      "whatHappened": "1 sentence on the verified event.",
-      "whyItMatters": "1 sentence on broader significance.",
-      "whatsNext": "1 sentence on what to watch next."
-    },
-    "wikiEntities": ["Entity One", "Entity Two"],
-    "ids": [0, 4, 12]
-  }
+  { "story": "Topic Title", "summary": "1-2 sentence editorial summary of the event.", "ids": [0, 4, 12] }
 ]`;
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
