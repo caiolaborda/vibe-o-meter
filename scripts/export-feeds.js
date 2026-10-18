@@ -14,8 +14,6 @@ const OUTLET_REGION_MAP = {
   reuters: 'GLOBAL', ap: 'GLOBAL', bloomberg: 'GLOBAL', newscientist: 'GLOBAL', nature: 'GLOBAL', UN: 'GLOBAL'
 };
 
-const ALL_REGIONS = ['NA', 'UK', 'EU', 'ME', 'APAC', 'LATAM', 'GLOBAL'];
-
 function canonicalUrl(url) {
   if (!url) return '';
   try {
@@ -82,106 +80,6 @@ function inferClusterTopic(cluster, sources) {
   return 'world';
 }
 
-function extractCandidateWikiEntities(cl) {
-  if (Array.isArray(cl.wikiEntities) && cl.wikiEntities.length > 0) {
-    // Filter out any stale non-entity verb/adjective pairs from previous fallback runs
-    const badFallback = /^(Oregon Elementary|Violent Protests|Kings Rallies|Houthi Missile|France Germany|Festival Stampede|Charges Filed|Deadly Fire|Wildfires Threaten|Deadly Midtown|Menopause Guidelines)$/i;
-    const cleanExisting = cl.wikiEntities.filter(e => e && !badFallback.test(e.trim()) && !(e === 'Iran' && /tirana/i.test(cl.story || '')));
-    if (cleanExisting.length > 0) return cleanExisting.slice(0, 3);
-  }
-  const text = `${cl.story || ''} ${cl.summary || ''}`;
-  const entityRules = [
-    { pattern: /\bBend,\s*Oregon\b/i, entity: 'Bend, Oregon' },
-    { pattern: /\bOregon\b/i, entity: 'Oregon' },
-    { pattern: /\bStrait of Hormuz\b/i, entity: 'Strait of Hormuz' },
-    { pattern: /\bStarlink\b/i, entity: 'Starlink' },
-    { pattern: /\bSpaceX\b/i, entity: 'SpaceX' },
-    { pattern: /\bWest Bank\b/i, entity: 'West Bank' },
-    { pattern: /\bGaza Strip\b|\bGaza\b/i, entity: 'Gaza Strip' },
-    { pattern: /\bHouthi\b/i, entity: 'Houthi movement' },
-    { pattern: /\bAden\b/i, entity: 'Aden' },
-    { pattern: /\bYemen\b/i, entity: 'Yemen' },
-    { pattern: /\bTirana\b/i, entity: 'Tirana' },
-    { pattern: /\bAlbania\b/i, entity: 'Albania' },
-    { pattern: /\bWaterford\b/i, entity: 'Waterford' },
-    { pattern: /\bCox's Bazar\b/i, entity: "Cox's Bazar" },
-    { pattern: /\bBangladesh\b|\bBangladeshi\b/i, entity: 'Bangladesh' },
-    { pattern: /\bAmazon rainforest\b|\bBrazil's Amazon\b|\bAmazon Deforestation\b/i, entity: 'Amazon rainforest' },
-    { pattern: /\bBrazil\b|\bBrazilian\b/i, entity: 'Brazil' },
-    { pattern: /\bSouthern California\b/i, entity: 'Southern California' },
-    { pattern: /\bMidtown Manhattan\b|\bManhattan\b/i, entity: 'Manhattan' },
-    { pattern: /\bNew York City Subway\b|\bsubway platform\b/i, entity: 'New York City Subway' },
-    { pattern: /\bIlhan Omar\b/i, entity: 'Ilhan Omar' },
-    { pattern: /\bAmerican College of Obstetricians and Gynecologists\b/i, entity: 'American College of Obstetricians and Gynecologists' },
-    { pattern: /\bMenopause\b/i, entity: 'Menopause' },
-    { pattern: /\bVatican\b/i, entity: 'Vatican City' },
-    { pattern: /\bGemelli\b/i, entity: 'Agostino Gemelli University Policlinic' },
-    { pattern: /\bPope Leo\b|\bPope\b/i, entity: 'Papacy' },
-    { pattern: /\bWhite House\b/i, entity: 'White House' },
-    { pattern: /\bUnited Nations\b|\bUN\b/i, entity: 'United Nations' },
-    { pattern: /\bEuropean Union\b|\bEU\b/i, entity: 'European Union' },
-    { pattern: /\bEuropean Central Bank\b|\bECB\b/i, entity: 'European Central Bank' },
-    { pattern: /\bBank of England\b/i, entity: 'Bank of England' },
-    { pattern: /\bFederal Reserve\b/i, entity: 'Federal Reserve' },
-    { pattern: /\bInternational Monetary Fund\b|\bIMF\b/i, entity: 'International Monetary Fund' },
-    { pattern: /\bSupreme Court of the United States\b|\bU\.S\. Supreme Court\b|\bSupreme Court\b/i, entity: 'Supreme Court of the United States' },
-    { pattern: /\bNATO\b/i, entity: 'NATO' },
-    { pattern: /\bWorld Health Organization\b|\bWHO\b/i, entity: 'World Health Organization' },
-    { pattern: /\bUkraine\b|\bUkrainian\b|\bKyiv\b/i, entity: 'Ukraine' },
-    { pattern: /\bRussia\b|\bRussian\b|\bKremlin\b|\bMoscow\b/i, entity: 'Russia' },
-    { pattern: /\bIran\b|\bIranian\b|\bTehran\b/i, entity: 'Iran' },
-    { pattern: /\bIsrael\b|\bIsraeli\b/i, entity: 'Israel' },
-    { pattern: /\bLebanon\b|\bLebanese\b|\bBeirut\b/i, entity: 'Lebanon' },
-    { pattern: /\bChina\b|\bChinese\b|\bBeijing\b/i, entity: 'China' },
-    { pattern: /\bTaiwan\b|\bTaiwanese\b|\bTaipei\b/i, entity: 'Taiwan' },
-    { pattern: /\bFrance\b|\bFrench\b|\bParis\b/i, entity: 'France' },
-    { pattern: /\bGermany\b|\bGerman\b|\bBerlin\b/i, entity: 'Germany' },
-    { pattern: /\bIndia\b|\bIndian\b|\bNew Delhi\b/i, entity: 'India' },
-    { pattern: /\bJapan\b|\bJapanese\b|\bTokyo\b/i, entity: 'Japan' },
-    { pattern: /\bSouth Korea\b|\bSeoul\b/i, entity: 'South Korea' },
-    { pattern: /\bUnited Kingdom\b|\bBritain\b|\bBritish\b|\bDowning Street\b|\bLondon\b/i, entity: 'United Kingdom' },
-    { pattern: /\bIreland\b|\bIrish\b|\bDublin\b/i, entity: 'Republic of Ireland' },
-    { pattern: /\bPakistan\b|\bIslamabad\b/i, entity: 'Pakistan' },
-    { pattern: /\bAustralia\b|\bAustralian\b/i, entity: 'Australia' },
-    { pattern: /\bCanada\b|\bCanadian\b|\bOttawa\b/i, entity: 'Canada' },
-    { pattern: /\bMexico\b|\bMexican\b/i, entity: 'Mexico' },
-    { pattern: /\bNASA\b/i, entity: 'NASA' },
-    { pattern: /\bArtemis\b/i, entity: 'Artemis program' },
-    { pattern: /\bJames Webb\b/i, entity: 'James Webb Space Telescope' },
-    { pattern: /\bNeanderthal\b/i, entity: 'Neanderthal' },
-    { pattern: /\bOpenAI\b/i, entity: 'OpenAI' },
-    { pattern: /\bGoogle\b/i, entity: 'Google' },
-    { pattern: /\bApple\b/i, entity: 'Apple Inc.' },
-    { pattern: /\bMicrosoft\b/i, entity: 'Microsoft' },
-    { pattern: /\bPentagon\b/i, entity: 'The Pentagon' },
-    { pattern: /\bSilicon Valley\b/i, entity: 'Silicon Valley' },
-    { pattern: /\bDonald Trump\b|\bPresident Trump\b|\bTrump\b/i, entity: 'Donald Trump' }
-  ];
-  const found = [];
-  for (const rule of entityRules) {
-    if (rule.pattern.test(text) && !found.includes(rule.entity)) {
-      found.push(rule.entity);
-      if (found.length >= 3) break;
-    }
-  }
-  if (found.length === 0 && cl.story) {
-    const stopWords = /^(The|And|For|With|Over|After|From|Into|Amid|Says|New|How|Why|What|More|Most|First|Global|World|Violent|Protests|Sweep|Deadly|Fire|Charges|Filed|Festival|Stampede|Wildfires|Threaten|Guidelines|Issued|Clashes|Strike|Strikes|Attack|Kills|Dozens|Historic|Low|Boost|Early|Voting|Pauses|Exits|Discharged|Hospital|Elementary|School|Shooting|Report|Update|Major|Crisis|Talks|Deal|Agreement|Faces|Sparks|Hits|Rises|Falls|Drops)$/i;
-    const words = cl.story
-      .split(/\s+/)
-      .map(w => w.replace(/[^a-zA-Z0-9-]/g, ''))
-      .filter(w => /^[A-Z][a-zA-Z]{2,}/.test(w) && !stopWords.test(w));
-    if (words.length > 0) found.push(words.slice(0, 2).join(' '));
-  }
-  return found;
-}
-
-function cleanExplanationText(exp) {
-  if (!exp) return '';
-  return String(exp)
-    .replace(/\s*\[Event Base:[^\]]*\]\s*$/i, '')
-    .trim();
-}
-
 function exportPublicJsonFeeds(fullPayload) {
   if (!fs.existsSync(PUBLIC_DATA_DIR)) {
     fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
@@ -242,109 +140,9 @@ function exportPublicJsonFeeds(fullPayload) {
     timestamps.sort((a, b) => a - b);
     const scores = enrichedCov.map(c => c.sentiment).filter(s => typeof s === 'number');
     const avgSent = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : (cl.averageSentiment || 0);
-    const minSent = scores.length > 0 ? Number(Math.min(...scores).toFixed(2)) : avgSent;
-    const maxSent = scores.length > 0 ? Number(Math.max(...scores).toFixed(2)) : avgSent;
-    const spread = scores.length > 1 ? Number((maxSent - minSent).toFixed(2)) : (typeof cl.sentimentSpread === 'number' ? cl.sentimentSpread : (cl.sentimentSpread?.range || 0));
-
-    // Collect all unique valid press images across covering outlets
-    const seenImgs = new Set();
-    const images = [];
-    enrichedCov.forEach(c => {
-      if (isValidImage(c.imageUrl) && !seenImgs.has(c.imageUrl)) {
-        seenImgs.add(c.imageUrl);
-        images.push({
-          url: c.imageUrl,
-          sourceId: c.sourceId,
-          sourceName: c.sourceName,
-          caption: c.title
-        });
-      }
-    });
-    const bestImg = images[0]?.url || null;
+    const spread = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : (typeof cl.sentimentSpread === 'number' ? cl.sentimentSpread : 0);
+    const bestImg = enrichedCov.find(c => isValidImage(c.imageUrl))?.imageUrl || null;
     const slug = String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-    // Regional breakdown & blindspot detection
-    const regionBreakdown = {};
-    enrichedCov.forEach(c => {
-      const reg = c.region || 'GLOBAL';
-      if (!regionBreakdown[reg]) {
-        regionBreakdown[reg] = { count: 0, sum: 0, leadHeadline: c.title, leadSource: c.sourceName };
-      }
-      regionBreakdown[reg].count++;
-      regionBreakdown[reg].sum += c.sentiment;
-    });
-    Object.keys(regionBreakdown).forEach(reg => {
-      regionBreakdown[reg].averageSentiment = Number((regionBreakdown[reg].sum / regionBreakdown[reg].count).toFixed(2));
-      delete regionBreakdown[reg].sum;
-    });
-    const regionsCovered = Object.keys(regionBreakdown);
-    const blindspotRegions = enrichedCov.length >= 4
-      ? ALL_REGIONS.filter(r => r !== 'GLOBAL' && !regionBreakdown[r])
-      : [];
-
-    // Smart Brevity triad (uses Gemini's briefing if present and non-boilerplate, or synthesizes from summary + coverage rationale)
-    const sortedByDateAsc = [...enrichedCov].sort((a, b) => new Date(a.pubDate || 0) - new Date(b.pubDate || 0));
-    const mostNeutralDispatch = [...enrichedCov].sort((a, b) => Math.abs(a.sentiment - avgSent) - Math.abs(b.sentiment - avgSent))[0];
-    const highestStakesDispatch = [...enrichedCov].sort((a, b) => {
-      const stakesA = Array.isArray(a.factors) ? (Math.abs(a.factors[1] || 0) + Math.abs(a.factors[2] || 0)) : 0;
-      const stakesB = Array.isArray(b.factors) ? (Math.abs(b.factors[1] || 0) + Math.abs(b.factors[2] || 0)) : 0;
-      return stakesB - stakesA;
-    })[0];
-    const latestDispatch = sortedByDateAsc[sortedByDateAsc.length - 1] || mostNeutralDispatch;
-
-    const hasCustomBriefing = cl.briefing && cl.briefing.whatHappened && cl.briefing.whyItMatters && !/^Covered across \d+ outlets/i.test(cl.briefing.whyItMatters);
-    const stakesInsight = cleanExplanationText(highestStakesDispatch?.explanation) || cleanExplanationText(mostNeutralDispatch?.explanation);
-    const briefing = hasCustomBriefing ? cl.briefing : {
-      whatHappened: cl.summary || mostNeutralDispatch?.description || mostNeutralDispatch?.title || cl.story,
-      whyItMatters: stakesInsight
-        ? `${stakesInsight} Verified across ${enrichedCov.length} global newsrooms spanning ${regionsCovered.join(', ')}.`
-        : `Tracked across ${enrichedCov.length} outlets in ${regionsCovered.length} region${regionsCovered.length === 1 ? '' : 's'} (${regionsCovered.join(', ')}) with an event baseline of ${avgSent >= 0 ? '+' : ''}${avgSent.toFixed(2)}.`,
-      whatsNext: latestDispatch && latestDispatch.title
-        ? `Latest dispatch from ${latestDispatch.sourceName}: "${latestDispatch.title}" (${spread >= 0.28 ? `wide ${spread.toFixed(2)} editorial framing spread across outlets` : `tight ${spread.toFixed(2)} cross-outlet consensus`}).`
-        : (spread >= 0.30
-          ? `Notable framing divergence (${spread.toFixed(2)} spread between ${minSent.toFixed(2)} and ${maxSent.toFixed(2)}) as newsrooms weigh competing impacts.`
-          : `High cross-outlet consensus (${spread.toFixed(2)} spread) across international desks.`)
-    };
-
-    // Longitudinal chapters: combine persisted chapters with chronological dispatch progression
-    const chapters = Array.isArray(cl.chapters) && cl.chapters.length > 0 && cl.chapters.some(ch => ch.stage)
-      ? cl.chapters
-      : (() => {
-          if (sortedByDateAsc.length < 2) return [];
-          const first = sortedByDateAsc[0];
-          const latest = sortedByDateAsc[sortedByDateAsc.length - 1];
-          const list = [
-            {
-              stage: 'Initial Dispatch',
-              timestamp: first.pubDate,
-              sourceName: first.sourceName,
-              headline: first.title,
-              sentiment: first.sentiment
-            }
-          ];
-          if (sortedByDateAsc.length >= 4) {
-            const mid = sortedByDateAsc[Math.floor(sortedByDateAsc.length / 2)];
-            list.push({
-              stage: 'Broadening Coverage',
-              timestamp: mid.pubDate,
-              sourceName: mid.sourceName,
-              headline: mid.title,
-              sentiment: mid.sentiment
-            });
-          }
-          if (latest && latest !== first) {
-            list.push({
-              stage: 'Latest Update',
-              timestamp: latest.pubDate,
-              sourceName: latest.sourceName,
-              headline: latest.title,
-              sentiment: latest.sentiment
-            });
-          }
-          return list;
-        })();
-
-    const wikiEntities = extractCandidateWikiEntities(cl);
 
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.topic = topic;
@@ -355,24 +153,13 @@ function exportPublicJsonFeeds(fullPayload) {
       id: slug,
       story: cl.story,
       summary: cl.summary || '',
-      briefing,
       topic,
       imageUrl: bestImg,
-      images,
-      wikiEntities,
       averageSentiment: avgSent,
-      sentimentSpread: {
-        range: spread,
-        min: minSent,
-        max: maxSent
-      },
+      sentimentSpread: spread,
       outletCount: enrichedCov.length,
-      regionsCovered,
-      blindspotRegions,
-      regionBreakdown,
       firstSeenAt: timestamps.length > 0 ? new Date(timestamps[0]).toISOString() : null,
       latestUpdateAt: timestamps.length > 0 ? new Date(timestamps[timestamps.length - 1]).toISOString() : null,
-      chapters,
       coverage: enrichedCov
     };
   });
@@ -518,7 +305,7 @@ function exportPublicJsonFeeds(fullPayload) {
     endpoints: {
       clusters: {
         path: 'data/clusters.json',
-        description: 'Cross-outlet story clusters with neutral headlines, Smart Brevity triads (whatHappened/whyItMatters/whatsNext), single-word topic tags, multi-photo galleries, Wikipedia entity keys, regional breakdowns/blindspots, longitudinal chapters, and per-outlet 4-factor spin metrics.',
+        description: 'Cross-outlet story clusters with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, and per-outlet coverage links.',
         count: enrichedClusters.length
       },
       goodNews: {

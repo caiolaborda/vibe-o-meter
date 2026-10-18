@@ -820,55 +820,18 @@ Return JSON array in format:
       }
 
       if (matchingArticles.length >= 2) {
-        const newUrls = new Set();
-        const newTitles = new Set();
         matchingArticles.forEach(m => {
-          if (m.link) {
-            const cu = canonicalUrl(m.link);
-            coveredUrls.add(cu);
-            newUrls.add(cu);
-          }
-          if (m.title) {
-            const ct = cleanHeadlineTitle(m.title);
-            coveredTitles.add(ct);
-            newTitles.add(ct);
-          }
+          if (m.link) coveredUrls.add(canonicalUrl(m.link));
+          if (m.title) coveredTitles.add(cleanHeadlineTitle(m.title));
         });
         const scores = matchingArticles.map(m => m.sentiment);
         const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
         const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
         const newestMs = matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : 0;
 
-        // Check if this cluster evolves an existing cluster from previousClusters to preserve longitudinal chapters
-        let priorChapters = [];
-        if (Array.isArray(previousClusters)) {
-          const matchingPrev = previousClusters.find(prev =>
-            Array.isArray(prev?.coverage) && prev.coverage.some(c =>
-              (c.link && newUrls.has(canonicalUrl(c.link))) ||
-              (c.title && newTitles.has(cleanHeadlineTitle(c.title)))
-            )
-          );
-          if (matchingPrev) {
-            priorChapters = Array.isArray(matchingPrev.chapters) ? [...matchingPrev.chapters] : [];
-            const prevSnapTime = matchingPrev.newestMs ? new Date(matchingPrev.newestMs).toISOString() : null;
-            if (prevSnapTime && (!priorChapters.length || priorChapters[priorChapters.length - 1].story !== matchingPrev.story)) {
-              priorChapters.push({
-                timestamp: prevSnapTime,
-                story: matchingPrev.story,
-                summary: matchingPrev.summary || '',
-                averageSentiment: matchingPrev.averageSentiment,
-                outletCount: matchingPrev.outletCount || matchingPrev.coverage.length
-              });
-            }
-          }
-        }
-
         formattedClusters.push({
           story: cl.story,
           summary: cl.summary || '',
-          ...(cl.briefing && typeof cl.briefing === 'object' ? { briefing: cl.briefing } : {}),
-          ...(Array.isArray(cl.wikiEntities) && cl.wikiEntities.length > 0 ? { wikiEntities: cl.wikiEntities.slice(0, 3) } : {}),
-          ...(priorChapters.length > 0 ? { chapters: priorChapters.slice(-8) } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
           outletCount: matchingArticles.length,
