@@ -415,14 +415,16 @@ function computeFourFactorScore(match) {
     eventBase = Number((pol * impactScale * 0.90).toFixed(2));
     framingMod = Number((frame * 0.10 * (0.4 + 0.6 * reach)).toFixed(2));
   } else {
-    const geoMag = Math.pow(Math.max(0.01, reach), 0.60) * Math.pow(Math.max(0.01, perm), 0.40);
-    const gPow = Math.pow(geoMag, 2.2);
-    const kPow = Math.pow(0.30, 2.2);
-    const hill = 0.22 + 0.78 * (gPow / (gPow + kPow));
-    const permFloor = 0.62 * Math.pow(perm, 0.55);
-    const impactScale = Math.min(1, Math.max(hill, permFloor));
+    // Reach (R^0.78) is the primary gatekeeper of global news significance on negative events:
+    // localized 1-2 person accidents (Reach 6-16) stay at -0.10 to -0.24 even when personally fatal,
+    // while national/geopolitical crises and mass-casualty shocks (Reach 35-85) scale to -0.40 to -0.92.
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);
+    const gPow = Math.pow(geoMag, 2.5);
+    const kPow = Math.pow(0.31, 2.5);
+    const hill = gPow / (gPow + kPow);
+    const impactScale = Math.min(1, 0.14 * reach + 0.86 * hill);
     eventBase = Number((pol * impactScale * 0.92).toFixed(2));
-    framingMod = Number((frame * 0.18 * (0.55 + 0.45 * impactScale)).toFixed(2));
+    framingMod = Number((frame * 0.18 * (0.45 + 0.55 * impactScale)).toFixed(2));
   }
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
 
@@ -507,10 +509,10 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
    - Concrete Action vs. Unsubstantiated Rhetoric (Symmetrical): Concrete actions, empirical findings, active clinical or scientific trials, physical discoveries, enacted policies, and verified acute events carry full positive or negative valence. Conversely, when a dispatch consists of unsubstantiated future predictions, preliminary or conditional proposals, political spending pledges, self-serving promotional claims, routine audience/market metrics, unverified rumors, or pure opinion commentary without a verified structural milestone, discount event polarity toward zero and attribute the directional spin primarily to "framing".
 
 2. "reach" (integer 0 to 100 — Proportional Scope of Affected Population, Society, or Knowledge Domain):
-   Measure the breadth of the affected population, societal shockwave, or knowledge domain along a continuous logarithmic scale from 0 (an isolated individual, celebrity/personal dispute, or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific and medical knowledge replicable worldwide). Routine municipal/provincial administrative announcements, local facility openings, and single-company operational updates have narrow localized reach (10–22), whereas national policies, mass-casualty tragedies/violent shocks, and replicable scientific or clinical discoveries carry broad national to global reach (35–100).
+   Measure the breadth of the affected population, societal shockwave, or knowledge domain along a continuous logarithmic scale from 0 (an isolated individual, celebrity/personal dispute, or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific and medical knowledge replicable worldwide). Isolated local accidents, routine municipal/provincial administrative announcements, local facility openings, and single-company operational updates have narrow localized reach (5–22), whereas national policies, mass-casualty tragedies/violent shocks, and replicable scientific or clinical discoveries carry broad national to global reach (35–100).
 
-3. "permanence" (integer 0 to 100 — Structural Depth & Temporal Horizon of Consequence):
-   Measure the durability and reversibility of the real-world consequence along a continuous scale from 0 (ephemeral, unverified, speculative, or routine administrative occurrences with no lasting structural shift) to 100 (irreversible, multi-generational, or permanent structural, clinical, ecological, or scientific transformation).
+3. "permanence" (integer 0 to 100 — Macro-Structural Depth & Societal Horizon of Consequence):
+   Measure the macro-structural durability of the consequence at the societal, institutional, ecological, or scientific level from 0 (ephemeral, speculative, routine administrative occurrences, or isolated local accidents with no lasting systemic change) to 100 (irreversible macro-structural, geopolitical, ecological, clinical, or scientific transformation). Do not assign high permanence (70–100) to an isolated local crime or small accident merely because individual injury is personally irreversible; evaluate permanence at the societal and structural level.
 
 4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
    Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, promotional, or agency-highlighting rhetoric).

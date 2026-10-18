@@ -141,11 +141,19 @@ function exportPublicJsonFeeds(fullPayload) {
     const scores = enrichedCov.map(c => c.sentiment).filter(s => typeof s === 'number');
     const avgSent = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : (cl.averageSentiment || 0);
     const spread = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : (typeof cl.sentimentSpread === 'number' ? cl.sentimentSpread : 0);
+    const eventBases = enrichedCov.map(c => c.eventBase).filter(eb => typeof eb === 'number');
+    const avgEventBase = eventBases.length > 0 ? Number((eventBases.reduce((a, b) => a + b, 0) / eventBases.length).toFixed(3)) : avgSent;
+    const validFactors = enrichedCov.map(c => c.factors).filter(f => Array.isArray(f) && f.length === 4);
+    const clusterFactors = validFactors.length > 0
+      ? [0, 1, 2, 3].map(i => Math.round(validFactors.reduce((sum, f) => sum + Number(f[i] || 0), 0) / validFactors.length))
+      : null;
     const bestImg = enrichedCov.find(c => isValidImage(c.imageUrl))?.imageUrl || null;
     const slug = String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.topic = topic;
+    cl.averageSentiment = avgSent;
+    cl.sentimentSpread = spread;
     if (bestImg) cl.imageUrl = bestImg;
     cl.coverage = enrichedCov;
 
@@ -156,6 +164,8 @@ function exportPublicJsonFeeds(fullPayload) {
       topic,
       imageUrl: bestImg,
       averageSentiment: avgSent,
+      eventBase: avgEventBase,
+      ...(clusterFactors ? { factors: clusterFactors } : {}),
       sentimentSpread: spread,
       outletCount: enrichedCov.length,
       firstSeenAt: timestamps.length > 0 ? new Date(timestamps[0]).toISOString() : null,
