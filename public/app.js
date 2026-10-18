@@ -4767,25 +4767,32 @@ function renderSentimentTimeline() {
   // Surface major cross-outlet story clusters driving sentiment peaks/troughs in this window
   let clusterPinsHTML = '';
   const candidateClusters = [];
-  (state.clusters || []).forEach((rawCl, clIdx) => {
-    if (!rawCl || !Array.isArray(rawCl.coverage) || rawCl.coverage.length < 3) return;
+  const rawClusterList = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
+  rawClusterList.forEach((rawCl, clIdx) => {
+    if (!rawCl || !Array.isArray(rawCl.coverage) || rawCl.coverage.length < 2) return;
     const cl = annotateStoryCluster(rawCl);
     if (selectedTopic && cl.topic !== selectedTopic) return;
+
+    const fallbackClusterTime = (typeof cl.maxTime === 'number' && isFinite(cl.maxTime)) ? cl.maxTime : maxTimeBound;
 
     // Filter cluster coverage dispatches by active source/region & time window
     const matchingArts = (cl.coverage || []).filter(a => {
       const sId = a.sourceId || a.source;
       if (selectedSource && sId !== selectedSource) return false;
       if (selectedRegion && (SOURCE_META[sId]?.region || 'GLOBAL') !== selectedRegion) return false;
-      const t = new Date(a.pubDate).getTime();
-      return !isNaN(t) && t >= minTimeBound && t <= maxTimeBound;
+      const rawT = a.pubDate ? new Date(a.pubDate).getTime() : fallbackClusterTime;
+      const t = !isNaN(rawT) ? rawT : fallbackClusterTime;
+      return t >= minTimeBound && t <= maxTimeBound;
     });
     if (matchingArts.length === 0) return;
     if (!selectedSource && matchingArts.length < 2) return;
 
     // Compute median timestamp of cluster dispatches in window
-    const times = matchingArts.map(a => new Date(a.pubDate).getTime()).sort((a, b) => a - b);
-    const eventTime = times[Math.floor(times.length / 2)];
+    const times = matchingArts.map(a => {
+      const rawT = a.pubDate ? new Date(a.pubDate).getTime() : fallbackClusterTime;
+      return !isNaN(rawT) ? rawT : fallbackClusterTime;
+    }).sort((a, b) => a - b);
+    const eventTime = clamp(times[Math.floor(times.length / 2)], minTimeBound, maxTimeBound);
     const meanSent = typeof cl.averageSentiment === 'number'
       ? cl.averageSentiment
       : (matchingArts.reduce((s, a) => s + (typeof a.sentiment === 'number' ? a.sentiment : 0), 0) / matchingArts.length);
@@ -4809,11 +4816,10 @@ function renderSentimentTimeline() {
   });
 
   const selectedPins = [];
-  const minPinSpacingPx = 155;
+  const minPinSpacingPx = 110;
   for (const cand of candidateClusters) {
     if (selectedPins.length >= 5) break;
-    const x = getXByTime(cand.eventTime);
-    if (x < padding.left + 60 || x > width - padding.right - 60) continue;
+    const x = clamp(getXByTime(cand.eventTime), padding.left + 8, width - padding.right - 8);
     if (selectedPins.some(p => Math.abs(p.x - x) < minPinSpacingPx)) continue;
     const y = clamp(getY(cand.meanSent), padding.top + 14, padding.top + chartH - 14);
     selectedPins.push({ ...cand, x, y });
@@ -4823,20 +4829,21 @@ function renderSentimentTimeline() {
     const isPos = pin.meanSent > 0.12;
     const isNeg = pin.meanSent < -0.12;
     const pinColor = isPos ? '#10b981' : (isNeg ? '#ef4444' : '#6366f1');
-    const labelY = pIdx % 2 === 0 ? 15 : 32;
+    const labelY = pIdx % 2 === 0 ? 15 : 33;
     const shortTitle = pin.headline.length > 25 ? pin.headline.slice(0, 24) + '…' : pin.headline;
     const safeShort = shortTitle.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const pillW = Math.max(112, Math.min(192, safeShort.length * 5.5 + 48));
+    const pillW = Math.max(116, Math.min(196, safeShort.length * 5.5 + 50));
+    const pillX = clamp(pin.x, padding.left + pillW / 2 + 4, width - padding.right - pillW / 2 - 4);
 
     clusterPinsHTML += `
       <g class="timeline-cluster-pin" data-pin-idx="${pIdx}" style="cursor:pointer;">
         <line x1="${pin.x.toFixed(1)}" y1="${labelY + 8}" x2="${pin.x.toFixed(1)}" y2="${pin.y.toFixed(1)}"
-              stroke="${pinColor}" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.8"/>
+              stroke="${pinColor}" stroke-width="1.5" stroke-dasharray="2,2" opacity="0.85"/>
         <circle cx="${pin.x.toFixed(1)}" cy="${pin.y.toFixed(1)}" r="6.5"
                 fill="${pinColor}" stroke="var(--bg-card)" stroke-width="2"/>
-        <rect x="${(pin.x - pillW / 2).toFixed(1)}" y="${labelY - 9}" width="${pillW}" height="19" rx="9.5"
+        <rect x="${(pillX - pillW / 2).toFixed(1)}" y="${labelY - 9}" width="${pillW}" height="19" rx="9.5"
               fill="var(--bg-card)" stroke="${pinColor}" stroke-width="1.35"/>
-        <text x="${pin.x.toFixed(1)}" y="${labelY + 4}" text-anchor="middle"
+        <text x="${pillX.toFixed(1)}" y="${labelY + 4}" text-anchor="middle"
               font-family="var(--font-sans)" font-size="10" font-weight="700" fill="var(--text-primary)">
           📍 ${pin.sourceCount}src · ${safeShort}
         </text>
@@ -4912,10 +4919,10 @@ function renderSentimentTimeline() {
       const pin = selectedPins[idx];
       if (!pin) return;
       if (tooltip) tooltip.style.display = 'none';
-      const clusterDomId = `cluster-${encodeURIComponent((pin.cl.story || '').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase())}`;
+      const slug = encodeURIComponent((pin.cl.story || '').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase());
       switchTab('pulse');
       setTimeout(() => {
-        const cardEl = document.getElementById(clusterDomId) || document.getElementById('clusters-section');
+        const cardEl = document.getElementById(`compare-${slug}`) || document.getElementById(`pulse-top-${slug}`) || document.getElementById('clusters-section');
         if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
     });
@@ -5074,17 +5081,27 @@ function renderSentimentTimeline() {
     const topicAllTimeCounts = {};
     const scopedSources = selectedSource ? { [selectedSource]: activeSourceMap[selectedSource] } : activeSourceMap;
 
+    // 1. All-Time Baseline per topic from unfiltered state.sources (respecting source/region filter)
+    Object.entries(state.sources || {}).forEach(([sId, s]) => {
+      if (!s) return;
+      if (selectedSource && sId !== selectedSource) return;
+      if (selectedRegion && (SOURCE_META[sId]?.region || 'GLOBAL') !== selectedRegion) return;
+      (s.articles || []).forEach(a => {
+        const cat = a.category || 'other';
+        const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
+        if (typeof sc !== 'number') return;
+        topicAllTimeAvgs[cat] = (topicAllTimeAvgs[cat] || 0) + sc;
+        topicAllTimeCounts[cat] = (topicAllTimeCounts[cat] || 0) + 1;
+      });
+    });
+
+    // 2. Current Timeframe Average per topic from scopedSources
     Object.entries(scopedSources || {}).forEach(([sId, s]) => {
       if (!s) return;
       (s.articles || []).forEach(a => {
         const cat = a.category || 'other';
         const sc = typeof a.sentiment === 'number' ? a.sentiment : (a.sentimentGemini ?? a.sentimentLocal);
         if (typeof sc !== 'number') return;
-
-        // Track all-time baseline for this topic
-        topicAllTimeAvgs[cat] = (topicAllTimeAvgs[cat] || 0) + sc;
-        topicAllTimeCounts[cat] = (topicAllTimeCounts[cat] || 0) + 1;
-
         if (cutoff > 0) {
           const pub = new Date(a.pubDate).getTime();
           if (!isNaN(pub) && pub < cutoff) return;
@@ -5100,7 +5117,8 @@ function renderSentimentTimeline() {
       const cleanAvg = Math.abs(avg) < 0.005 ? 0 : avg;
       const allTimeCount = topicAllTimeCounts[catKey] || 0;
       const baseAvg = allTimeCount > 0 ? (topicAllTimeAvgs[catKey] / allTimeCount) : 0;
-      const catDelta = cleanAvg - baseAvg;
+      const rawDelta = cleanAvg - baseAvg;
+      const catDelta = Math.abs(rawDelta) < 0.005 ? 0 : rawDelta;
 
       const meta = categoryNames[catKey];
       const scoreClass = cleanAvg > 0.12 ? 'pos' : (cleanAvg < -0.12 ? 'neg' : 'neu');
@@ -5113,7 +5131,7 @@ function renderSentimentTimeline() {
         ? `left: 50%; width: ${count > 0 ? spanPct.toFixed(1) : 0}%; background-color: ${fillColor}; border-radius: 0 4px 4px 0;`
         : `right: 50%; width: ${count > 0 ? spanPct.toFixed(1) : 0}%; background-color: ${fillColor}; border-radius: 4px 0 0 4px;`;
 
-      const deltaSign = catDelta >= 0 ? '+' : '';
+      const deltaSign = catDelta > 0 ? '+' : '';
 
       return `
         <div class="topic-trajectory-card ${isSelected ? 'topic-traj-card-active' : ''}" 
