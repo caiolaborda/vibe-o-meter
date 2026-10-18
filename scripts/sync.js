@@ -1426,7 +1426,13 @@ async function main() {
     timeSeries
   };
 
-  // 7. Save outputs
+  // 7. Export dedicated public JSON feeds & enrich clusters with imageUrl/topic
+  const { exportPublicJsonFeeds } = require('./export-feeds');
+  const { enrichedClusters } = exportPublicJsonFeeds(fullPayload);
+  fullPayload.sharedStoryClusters = enrichedClusters;
+  summaryPayload.sharedStoryClusters = enrichedClusters;
+
+  // Save primary outputs
   fs.writeFileSync(DATA_FILE, JSON.stringify(fullPayload, null, 2), 'utf8');
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'data.json'), JSON.stringify(fullPayload), 'utf8');
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'summary.json'), JSON.stringify(summaryPayload), 'utf8');
@@ -1436,6 +1442,7 @@ async function main() {
   console.log(`📁 Historical archive: data/vibe-data.json (${(fs.statSync(DATA_FILE).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`⚡ Public baked data: public/data/data.json (${(fs.statSync(path.join(PUBLIC_DATA_DIR, 'data.json')).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`🚀 Ultra-light summary: public/data/summary.json (${(fs.statSync(path.join(PUBLIC_DATA_DIR, 'summary.json')).size / 1024).toFixed(1)} KB)`);
+  console.log(`📡 Public JSON API feeds: public/data/{index,clusters,good-news,outlets,timeseries}.json`);
   console.log('==============================================');
 
   // 8. Optional On-Demand Auto-Push (for instant Antigravity or local CLI trigger)

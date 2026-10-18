@@ -3608,7 +3608,7 @@ const CLUSTER_TOPIC_LABELS = {
   other: '📰 General'
 };
 
-// Annotate a raw cluster with calculated metrics, date range, and editorial summaries
+// Annotate a raw cluster with calculated metrics, date range, editorial summaries, and lead image
 function annotateStoryCluster(c) {
   const topic = getClusterTopic(c);
   const validTimestamps = [];
@@ -3616,10 +3616,14 @@ function annotateStoryCluster(c) {
     const src = state.sources && state.sources[cov.sourceId];
     let liveScore = cov.sentiment;
     let livePubDate = cov.pubDate;
+    let liveImageUrl = cov.imageUrl || null;
     if (src && src.articles) {
       const match = src.articles.find(a => (a.link && a.link === cov.link) || (a.title && a.title === cov.title));
       if (match) {
         if (typeof match.sentiment === 'number') liveScore = match.sentiment;
+        if (match.imageUrl && isValidEditorialImage(match.imageUrl)) {
+          liveImageUrl = match.imageUrl;
+        }
         if (match.pubDate) {
           livePubDate = match.pubDate;
           const t = new Date(match.pubDate).getTime();
@@ -3627,7 +3631,7 @@ function annotateStoryCluster(c) {
         }
       }
     }
-    return { ...cov, sentiment: liveScore, pubDate: livePubDate };
+    return { ...cov, sentiment: liveScore, pubDate: livePubDate, imageUrl: liveImageUrl };
   });
   const sentiments = coverage.map(cov => cov.sentiment).filter(s => typeof s === 'number');
   const maxS = sentiments.length > 0 ? Math.max(...sentiments) : 0;
@@ -3669,6 +3673,12 @@ function annotateStoryCluster(c) {
     }
   }
 
+  // Resolve best real RSS photo from covering outlets (or semantic topic fallback)
+  const covWithPhoto = coverage.find(cov => isValidEditorialImage(cov.imageUrl));
+  const clusterImageUrl = (c.imageUrl && isValidEditorialImage(c.imageUrl))
+    ? c.imageUrl
+    : (covWithPhoto ? covWithPhoto.imageUrl : getStoryImage({ title: c.story, summary: summaryText, category: topic }));
+
   return {
     ...c,
     topic,
@@ -3677,6 +3687,7 @@ function annotateStoryCluster(c) {
     averageSentiment: avgSentiment,
     dateRangeStr,
     summaryText,
+    imageUrl: clusterImageUrl,
     minTime,
     maxTime
   };
@@ -3779,8 +3790,13 @@ function buildClusterCardHTML(cluster, prefix = 'cluster') {
     `;
   }).join('');
 
+  const bgArtHTML = cluster.imageUrl
+    ? `<div class="cluster-card-bg-art" style="background-image: url('${cluster.imageUrl.replace(/'/g, "\\'")}');" aria-hidden="true"></div>`
+    : '';
+
   return `
     <article class="cluster-card card" id="${clusterId}" onclick="handleClusterCardClick(event, '${clusterId}')">
+      ${bgArtHTML}
       <div class="cluster-header">
         <div class="cluster-header-left">
           <div class="cluster-badges-strip">

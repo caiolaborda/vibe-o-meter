@@ -2199,6 +2199,8 @@ body[data-edition="doom"] .silver-controls-bar {
 }
 
 .cluster-card {
+  position: relative;
+  overflow: hidden;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -2211,15 +2213,50 @@ body[data-edition="doom"] .silver-controls-bar {
   transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+.cluster-card > *:not(.cluster-card-bg-art) {
+  position: relative;
+  z-index: 1;
+}
+
+.cluster-card-bg-art {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 60%;
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.22;
+  filter: saturate(0.85) contrast(1.05);
+  -webkit-mask-image: linear-gradient(112deg, transparent 24%, rgba(0, 0, 0, 0.08) 48%, rgba(0, 0, 0, 0.5) 76%, rgba(0, 0, 0, 0.9) 100%), linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.65) 68%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(112deg, transparent 24%, rgba(0, 0, 0, 0.08) 48%, rgba(0, 0, 0, 0.5) 76%, rgba(0, 0, 0, 0.9) 100%), linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.65) 68%, transparent 100%);
+  mask-composite: intersect;
+  transition: opacity 0.35s ease, transform 0.45s ease;
+}
+
 .cluster-card:hover {
   border-color: rgba(99, 102, 241, 0.45);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.cluster-card:hover .cluster-card-bg-art {
+  opacity: 0.32;
+  transform: scale(1.03);
 }
 
 .cluster-card.is-expanded {
   grid-column: 1 / -1;
   border-color: var(--accent-color);
   box-shadow: 0 12px 32px -4px rgba(99, 102, 241, 0.2);
+}
+
+.cluster-card.is-expanded .cluster-card-bg-art {
+  bottom: auto;
+  height: 210px;
+  width: 46%;
 }
 
 .cluster-summary-text {
