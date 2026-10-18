@@ -401,32 +401,36 @@ function computeFourFactorScore(match) {
   const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
-  // Asymmetric First-Principles Magnitude Curve:
-  // 1. Positive / Constructive progress (pol >= 0) requires BOTH broad Reach AND lasting Permanence
-  //    (R^0.60 * D^0.40, k = 0.90) so ephemeral corporate PR, routine earnings, and local micro-stories stay < +0.15.
-  // 2. Negative / Destructive harm (pol < 0) is acute (riots, attacks, shootings, disasters are severe immediately
-  //    even if a clash lasts days rather than centuries), using a Hill saturation curve (g = R^0.72 * D^0.28, k = 0.335)
-  //    so regional/national crises utilize the full [-1.0, 0.0] scale while palace intrigue (R < 28) stays near 0.
+  // Symmetric Reach-Anchored Magnitude Curve (1A + 2A):
+  // 1. Positive / Constructive progress (pol >= 0): Reach (R^0.78 * D^0.22, Hill midpoint 0.38, k = 2.0)
+  //    gates magnitude so 1-2 person human-interest features (Reach 5-28) and minor lifestyle pieces stay modest,
+  //    while national/global breakthroughs (Reach 55-95) scale cleanly across +0.35 to +0.90.
+  //    Positive framingMod is scaled by Reach and capped at 40% of |eventBase| so emotional adjectives cannot
+  //    carry a low-substance story into the top of Good News.
+  // 2. Negative / Destructive harm (pol < 0): Reach (R^0.78 * D^0.22, Hill midpoint 0.28, k = 1.9)
+  //    gates localized 1-2 person accidents (Reach 6-16) to -0.10..-0.24 while national/global crises scale to -0.45..-0.95.
   let eventBase;
   let framingMod;
   if (pol >= 0) {
-    const geoMag = Math.pow(Math.max(0.01, reach), 0.60) * Math.pow(Math.max(0.01, perm), 0.40);
-    const impactScale = Math.pow(geoMag, 0.90);
-    eventBase = Number((pol * impactScale * 0.90).toFixed(2));
-    framingMod = Number((frame * 0.10 * (0.4 + 0.6 * reach)).toFixed(2));
-  } else {
-    // Reach (R^0.78) is the primary gatekeeper of global news significance on negative events:
-    // localized 1-2 person accidents (Reach 6-16) stay at -0.10 to -0.24 even when personally fatal,
-    // while national/geopolitical crises and mass-casualty shocks (Reach 35-85) scale to -0.40 to -0.92.
     const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);
-    const gPow = Math.pow(geoMag, 2.5);
-    const kPow = Math.pow(0.31, 2.5);
+    const gPow = Math.pow(geoMag, 2.0);
+    const kPow = Math.pow(0.38, 2.0);
+    const hill = gPow / (gPow + kPow);
+    const impactScale = Math.min(1, 0.12 * reach + 0.88 * hill);
+    eventBase = Number((pol * impactScale).toFixed(3));
+    const rawFramingMod = frame * (0.10 + 0.25 * reach);
+    const maxFraming = Math.abs(eventBase) * 0.40;
+    framingMod = Number(Math.max(-maxFraming, Math.min(maxFraming, rawFramingMod)).toFixed(3));
+  } else {
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);
+    const gPow = Math.pow(geoMag, 1.9);
+    const kPow = Math.pow(0.28, 1.9);
     const hill = gPow / (gPow + kPow);
     const impactScale = Math.min(1, 0.14 * reach + 0.86 * hill);
-    eventBase = Number((pol * impactScale * 0.92).toFixed(2));
-    framingMod = Number((frame * 0.18 * (0.45 + 0.55 * impactScale)).toFixed(2));
+    eventBase = Number((pol * impactScale).toFixed(3));
+    framingMod = Number((frame * 0.45).toFixed(3));
   }
-  const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
+  const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(3));
 
   return {
     score,
@@ -505,14 +509,14 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 1. "polarity" (integer -100 to 100 — Net Real-World Valence & Causal Direction):
    Evaluate the inherent net valence of the primary real-world change along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, or offsetting mixed outcomes) to +100 (maximum net constructive advancement).
    - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, clinical or scientific advance, discovery, or systemic aid that builds durable capacity or resolves a major deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, or acute economic/harm shock and merely highlights a procedural concession, secondary byproduct, or risk catalog, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
-   - Frontier Advancement vs. Routine Institutional Maintenance: Distinguish genuine human progress from ordinary civic, governmental, or corporate administration. Routine municipal or provincial facility openings, ceremonial inaugurations, standard administrative policy launches, local infrastructure upkeep, and routine corporate capital expenditures represent baseline institutional maintenance (keeping society or commerce operating as expected) and belong near neutral (0 to +15). Reserve strong positive polarity for verified scientific, medical, ecological, or humanitarian breakthroughs and major structural resolutions.
-   - Concrete Action vs. Unsubstantiated Rhetoric (Symmetrical): Concrete actions, empirical findings, active clinical or scientific trials, physical discoveries, enacted policies, and verified acute events carry full positive or negative valence. Conversely, when a dispatch consists of unsubstantiated future predictions, preliminary or conditional proposals, political spending pledges, self-serving promotional claims, routine audience/market metrics, unverified rumors, or pure opinion commentary without a verified structural milestone, discount event polarity toward zero and attribute the directional spin primarily to "framing".
+   - Frontier Advancement vs. Routine Maintenance or Minor Comfort Tips: Distinguish genuine breakthroughs from ordinary civic/corporate administration and minor symptom-comfort studies. Routine municipal/provincial facility openings, ceremonial inaugurations, local charity award profiles, and routine corporate capital expenditures belong near neutral (0 to +15). Similarly, minor symptom-comfort, ergonomic, or lifestyle studies (e.g., wearing headphones to reduce post-op nausea, minor dietary tips) warrant only modest positive polarity (+15 to +28), whereas life-saving medical cures, disease eradication, major conservation milestones, and fundamental scientific discoveries warrant high positive polarity (+55 to +95).
+   - Concrete Action vs. Speculative Claims (Symmetrical): Concrete actions, empirical findings, active clinical trials, physical discoveries, enacted policies, and verified acute events carry full positive or negative valence. Conversely, when a dispatch consists of unsubstantiated future predictions, a politician or executive claiming a stalled project is "finally happening", preliminary proposals, political spending pledges, or opinion commentary without a verified completed milestone, discount event polarity toward zero (0 to +18) and permanence (10–25), attributing directional spin primarily to "framing".
 
 2. "reach" (integer 0 to 100 — Proportional Scope of Affected Population, Society, or Knowledge Domain):
-   Measure the breadth of the affected population, societal shockwave, or knowledge domain along a continuous logarithmic scale from 0 (an isolated individual, celebrity/personal dispute, or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific and medical knowledge replicable worldwide). Isolated local accidents, routine municipal/provincial administrative announcements, local facility openings, and single-company operational updates have narrow localized reach (5–22), whereas national policies, mass-casualty tragedies/violent shocks, and replicable scientific or clinical discoveries carry broad national to global reach (35–100).
+   Measure the breadth of the affected population, societal shockwave, or knowledge domain along a continuous logarithmic scale from 0 (an isolated individual, 1–2 person medical recovery, celebrity/personal dispute, or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific and medical breakthroughs replicable worldwide). Human-interest profiles of 1–2 individuals (e.g., a single child's surgery or rehabilitation), isolated local accidents, local community/zoo features, and single-company operational updates have narrow localized reach (5–22); minor clinical comfort tips have moderate reach (25–42); national policies, mass-casualty tragedies/violent shocks, and transformative scientific or life-saving clinical discoveries carry broad national to global reach (45–100).
 
 3. "permanence" (integer 0 to 100 — Macro-Structural Depth & Societal Horizon of Consequence):
-   Measure the macro-structural durability of the consequence at the societal, institutional, ecological, or scientific level from 0 (ephemeral, speculative, routine administrative occurrences, or isolated local accidents with no lasting systemic change) to 100 (irreversible macro-structural, geopolitical, ecological, clinical, or scientific transformation). Do not assign high permanence (70–100) to an isolated local crime or small accident merely because individual injury is personally irreversible; evaluate permanence at the societal and structural level.
+   Measure the macro-structural durability of the consequence at the societal, institutional, ecological, or scientific level from 0 (ephemeral, speculative, routine administrative occurrences, or isolated 1–2 person events with no lasting systemic change) to 100 (irreversible macro-structural, geopolitical, ecological, clinical, or scientific transformation). Do not assign high permanence (65–100) to an isolated 1–2 person accident, local crime, or individual patient surgery merely because it is personally irreversible for those individuals; evaluate permanence strictly at the societal and macro-structural level (15–30 for isolated individual cases).
 
 4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
    Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, promotional, or agency-highlighting rhetoric).

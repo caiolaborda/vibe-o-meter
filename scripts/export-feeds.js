@@ -149,10 +149,15 @@ function exportPublicJsonFeeds(fullPayload) {
       : null;
     const bestImg = enrichedCov.find(c => isValidImage(c.imageUrl))?.imageUrl || null;
     const slug = String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const outletCount = enrichedCov.length;
+    const sign = avgSent >= 0 ? 1 : -1;
+    const consensusBoost = outletCount > 1 ? sign * Math.min(0.25, 0.075 * Math.log2(outletCount)) : 0;
+    const significanceScore = Number(Math.max(-1, Math.min(1, avgSent + consensusBoost)).toFixed(3));
 
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.topic = topic;
     cl.averageSentiment = avgSent;
+    cl.significanceScore = significanceScore;
     cl.sentimentSpread = spread;
     if (bestImg) cl.imageUrl = bestImg;
     cl.coverage = enrichedCov;
@@ -165,9 +170,10 @@ function exportPublicJsonFeeds(fullPayload) {
       imageUrl: bestImg,
       averageSentiment: avgSent,
       eventBase: avgEventBase,
+      significanceScore,
       ...(clusterFactors ? { factors: clusterFactors } : {}),
       sentimentSpread: spread,
-      outletCount: enrichedCov.length,
+      outletCount,
       firstSeenAt: timestamps.length > 0 ? new Date(timestamps[0]).toISOString() : null,
       latestUpdateAt: timestamps.length > 0 ? new Date(timestamps[timestamps.length - 1]).toISOString() : null,
       coverage: enrichedCov
@@ -184,9 +190,22 @@ function exportPublicJsonFeeds(fullPayload) {
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'clusters.json'), JSON.stringify(clustersPayload, null, 2), 'utf8');
 
   // 2. Build & Export Rescued Constructive News -> public/data/good-news.json
+  const cutoff48h = nowMs - 48 * 3600 * 1000;
   const seenGoodUrls = new Set();
   const seenGoodTitles = new Set();
   const goodStories7d = [];
+
+  // Map article links/titles to their parent cluster for multi-outlet consensus boost
+  const articleClusterMap = new Map();
+  enrichedClusters.forEach(cl => {
+    if (cl.averageSentiment < 0.10) return;
+    (cl.coverage || []).forEach(cov => {
+      const u = canonicalUrl(cov.link);
+      const t = cleanHeadlineTitle(cov.title);
+      if (u) articleClusterMap.set(u, cl);
+      if (t) articleClusterMap.set(t, cl);
+    });
+  });
 
   Object.entries(sources).forEach(([sourceId, src]) => {
     (src.articles || []).forEach(art => {
@@ -201,26 +220,65 @@ function exportPublicJsonFeeds(fullPayload) {
       if (cUrl) seenGoodUrls.add(cUrl);
       if (cTitle) seenGoodTitles.add(cTitle);
 
+      const matchedCl = (cUrl && articleClusterMap.get(cUrl)) || (cTitle && articleClusterMap.get(cTitle)) || null;
+      const outletCount = matchedCl ? matchedCl.outletCount : 1;
+      const reach = Array.isArray(art.factors) && art.factors.length >= 2 ? Number(art.factors[1]) || 40 : 40;
+      const clusterBoost = outletCount > 1 ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : -0.04;
+      const reachMod = reach >= 55 ? 0.04 : (reach < 30 ? -0.06 : 0);
+      const significanceScore = Number(Math.min(1, score + clusterBoost + reachMod).toFixed(3));
+
       goodStories7d.push({
         title: art.title,
         description: art.description || '',
         sentiment: Number(score.toFixed(3)),
+        significanceScore,
+        ...(Array.isArray(art.factors) ? { factors: art.factors } : {}),
+        ...(matchedCl ? { clusterId: matchedCl.id, clusterStory: matchedCl.story, outletCount } : { outletCount: 1 }),
         explanation: art.explanation || art.explanationGemini || '',
         category: (art.category && art.category !== 'other') ? art.category : 'world',
-        imageUrl: isValidImage(art.imageUrl) ? art.imageUrl : null,
+        imageUrl: isValidImage(art.imageUrl) ? art.imageUrl : (matchedCl?.imageUrl || null),
         sourceId,
         sourceName: src.name || sourceId,
         region: OUTLET_REGION_MAP[sourceId] || 'GLOBAL',
         link: art.link,
         pubDate: art.pubDate,
-        isPast24h: pubMs >= cutoff24h
+        isPast24h: pubMs >= cutoff24h,
+        isPast48h: pubMs >= cutoff48h
       });
     });
   });
 
-  goodStories7d.sort((a, b) => b.sentiment - a.sentiment);
+  goodStories7d.sort((a, b) => (b.significanceScore - a.significanceScore) || (b.sentiment - a.sentiment));
   const goodStories24h = goodStories7d.filter(s => s.isPast24h);
-  const constructiveClusters = enrichedClusters.filter(c => c.averageSentiment >= 0.10);
+  const constructiveClusters = enrichedClusters
+    .filter(c => c.averageSentiment >= 0.10)
+    .sort((a, b) => (b.significanceScore - a.significanceScore) || (b.averageSentiment - a.averageSentiment));
+
+  // Build Top 5 Daily Antidote from 48h rolling window with gentle recency decay, cluster dedupe, and outlet diversity cap
+  const antidoteCandidates = goodStories7d
+    .filter(s => s.isPast48h)
+    .map(s => {
+      const hoursAgo = Math.max(0, (nowMs - new Date(s.pubDate).getTime()) / 3600000);
+      // Multi-outlet clusters decay slower over 48h than single-outlet stories
+      const decayRate = (s.outletCount || 1) > 1 ? 0.035 : 0.07;
+      const recencyDecay = hoursAgo > 24 ? ((hoursAgo - 24) / 24) * decayRate : 0;
+      return { ...s, antidoteRank: Number((s.significanceScore - recencyDecay).toFixed(3)) };
+    })
+    .sort((a, b) => b.antidoteRank - a.antidoteRank);
+
+  const top5DailyAntidote = [];
+  const seenAntidoteClusters = new Set();
+  const antidoteOutletCounts = {};
+  for (const cand of antidoteCandidates) {
+    if (cand.clusterId) {
+      if (seenAntidoteClusters.has(cand.clusterId)) continue;
+    }
+    if ((cand.outletCount || 1) === 1 && (antidoteOutletCounts[cand.sourceId] || 0) >= 1) continue;
+    if (cand.clusterId) seenAntidoteClusters.add(cand.clusterId);
+    antidoteOutletCounts[cand.sourceId] = (antidoteOutletCounts[cand.sourceId] || 0) + 1;
+    top5DailyAntidote.push(cand);
+    if (top5DailyAntidote.length >= 5) break;
+  }
 
   const goodNewsPayload = {
     dataset: 'vibe-o-meter/good-news',
@@ -228,7 +286,7 @@ function exportPublicJsonFeeds(fullPayload) {
     count24h: goodStories24h.length,
     count7d: goodStories7d.length,
     constructiveClusterCount: constructiveClusters.length,
-    top5DailyAntidote: goodStories24h.slice(0, 5),
+    top5DailyAntidote,
     constructiveClusters,
     stories24h: goodStories24h,
     stories7d: goodStories7d
