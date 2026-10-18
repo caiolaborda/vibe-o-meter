@@ -415,12 +415,14 @@ function computeFourFactorScore(match) {
     eventBase = Number((pol * impactScale * 0.90).toFixed(2));
     framingMod = Number((frame * 0.10 * (0.4 + 0.6 * reach)).toFixed(2));
   } else {
-    const geoMag = Math.pow(Math.max(0.01, reach), 0.72) * Math.pow(Math.max(0.01, perm), 0.28);
-    const gPow = Math.pow(geoMag, 3.4);
-    const kPow = Math.pow(0.335, 3.4);
-    const impactScale = gPow / (gPow + kPow);
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.60) * Math.pow(Math.max(0.01, perm), 0.40);
+    const gPow = Math.pow(geoMag, 2.2);
+    const kPow = Math.pow(0.30, 2.2);
+    const hill = 0.22 + 0.78 * (gPow / (gPow + kPow));
+    const permFloor = 0.62 * Math.pow(perm, 0.55);
+    const impactScale = Math.min(1, Math.max(hill, permFloor));
     eventBase = Number((pol * impactScale * 0.92).toFixed(2));
-    framingMod = Number((frame * 0.18 * (0.35 + 0.65 * impactScale)).toFixed(2));
+    framingMod = Number((frame * 0.18 * (0.55 + 0.45 * impactScale)).toFixed(2));
   }
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(2));
 
