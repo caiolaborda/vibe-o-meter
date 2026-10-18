@@ -63,7 +63,7 @@ jobs:
             echo "No new data changes to commit."
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
-            git commit -m "chore(data): auto-update vibe sentiment data [skip ci]"
+            git commit -m "chore(data): auto-update vibe sentiment data"
             git push origin HEAD:${{ github.ref }}
           fi
 

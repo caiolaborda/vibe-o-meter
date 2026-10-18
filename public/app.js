@@ -1693,7 +1693,7 @@ async function fetchData() {
     if (!data || !data.sources || Object.keys(data.sources).length === 0) {
       try {
         const cacheBuster = `?v=${Date.now()}`;
-        const staticRes = await fetch(`data/data.json${cacheBuster}`);
+        const staticRes = await fetch(`data/data.json${cacheBuster}`, { cache: 'no-store' });
         if (staticRes.ok) {
           data = await staticRes.json();
         }
@@ -1704,7 +1704,7 @@ async function fetchData() {
     if (!data || !data.sources || Object.keys(data.sources).length === 0) {
       try {
         const cacheBuster = `?v=${Date.now()}`;
-        const summaryRes = await fetch(`data/summary.json${cacheBuster}`);
+        const summaryRes = await fetch(`data/summary.json${cacheBuster}`, { cache: 'no-store' });
         if (summaryRes.ok) {
           data = await summaryRes.json();
         }
