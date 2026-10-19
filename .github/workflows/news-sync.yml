@@ -57,13 +57,14 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/vibe-data.json public/data/
+          git add data/vibe-data.json data/cluster-updates-log.json public/data/
           if git diff --staged --quiet; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No new data changes to commit."
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
             git commit -m "chore(data): auto-update vibe sentiment data"
+            git pull --rebase origin ${{ github.ref_name }} || true
             git push origin HEAD:${{ github.ref }}
           fi
 
