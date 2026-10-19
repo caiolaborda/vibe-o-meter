@@ -59,6 +59,7 @@ const SOURCE_META = {
   batimes: { name: 'Buenos Aires Times', initials: 'BAT', color: '#0284c7', region: 'LATAM', regionName: 'Latin America', countryCode: 'ar', flag: '🇦🇷' },
   mexiconews: { name: 'Mexico News Daily', initials: 'MND', color: '#15803d', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🇲🇽' },
   mercopress: { name: 'MercoPress', initials: 'MCP', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'uy', flag: '🇺🇾' },
+  agenciabrasil: { name: 'Agência Brasil', initials: 'AGB', color: '#16a34a', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
   // United Kingdom
   bbc: { name: 'BBC News', initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   guardian: { name: 'The Guardian', initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
@@ -77,12 +78,16 @@ const SOURCE_META = {
   smh: { name: 'Sydney Morning Herald', initials: 'SMH', color: '#0891b2', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
   scmp: { name: 'South China Morning Post', initials: 'SCM', color: '#4f46e5', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'hk', flag: '🇭🇰' },
   japantimes: { name: 'The Japan Times', initials: 'JPT', color: '#be123c', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'jp', flag: '🇯🇵' },
-  // Middle East
-  aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East', countryCode: 'qa', flag: '🇶🇦' },
+  cna: { name: 'CNA', initials: 'CNA', color: '#e11d48', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'sg', flag: '🇸🇬' },
+  // Middle East & Africa
+  aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East & Africa', countryCode: 'qa', flag: '🇶🇦' },
+  thenational: { name: 'The National', initials: 'NAT', color: '#0284c7', region: 'ME', regionName: 'Middle East & Africa', countryCode: 'ae', flag: '🇦🇪' },
+  africanews: { name: 'Africanews', initials: 'AFR', color: '#d97706', region: 'ME', regionName: 'Middle East & Africa', countryCode: 'za', flag: '🌍' },
   // Global
   reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
   ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
   newscientist: { name: 'New Scientist', initials: 'NSC', color: '#10b981', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🔬' },
+  physorg: { name: 'Phys.org', initials: 'PHY', color: '#06b6d4', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🔬' },
   arstechnica: { name: 'Ars Technica', initials: 'ARS', color: '#f97316', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '⚡' }
 };
 
@@ -5639,8 +5644,8 @@ const REGION_LABELS = {
   UK: 'United Kingdom',
   EU: 'Europe',
   APAC: 'Asia-Pacific',
-  ME: 'Middle East',
-  MENA: 'Middle East',
+  ME: 'Middle East & Africa',
+  MENA: 'Middle East & Africa',
   GLOBAL: 'Global'
 };
 

@@ -57,6 +57,7 @@ const NEWS_SOURCES = [
   { id: 'batimes', name: 'Buenos Aires Times', feedUrl: 'https://www.batimes.com.ar/feed' },
   { id: 'mexiconews', name: 'Mexico News Daily', feedUrl: 'https://mexiconewsdaily.com/feed/' },
   { id: 'mercopress', name: 'MercoPress', feedUrl: 'https://en.mercopress.com/rss/' },
+  { id: 'agenciabrasil', name: 'Agência Brasil', feedUrl: 'https://agenciabrasil.ebc.com.br/en/rss/ultimasnoticias/feed.xml' },
   // United Kingdom
   { id: 'bbc', name: 'BBC News', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
   { id: 'guardian', name: 'The Guardian', feedUrl: 'https://www.theguardian.com/uk/rss' },
@@ -75,12 +76,16 @@ const NEWS_SOURCES = [
   { id: 'smh', name: 'Sydney Morning Herald', feedUrl: 'https://www.smh.com.au/rss/feed.xml' },
   { id: 'scmp', name: 'South China Morning Post', feedUrl: 'https://www.scmp.com/rss/91/feed' },
   { id: 'japantimes', name: 'The Japan Times', feedUrl: 'https://www.japantimes.co.jp/feed/' },
-  // Middle East
+  { id: 'cna', name: 'CNA', feedUrl: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511' },
+  // Middle East & Africa
   { id: 'aljazeera', name: 'Al Jazeera', feedUrl: 'https://www.aljazeera.com/xml/rss/all.xml' },
+  { id: 'thenational', name: 'The National', feedUrl: 'https://www.thenationalnews.com/arc/outboundfeeds/rss/?outputType=xml' },
+  { id: 'africanews', name: 'Africanews', feedUrl: 'https://www.africanews.com/feed/rss' },
   // Global Agencies & Science/Tech
   { id: 'reuters', name: 'Reuters', feedUrl: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'newscientist', name: 'New Scientist', feedUrl: 'https://www.newscientist.com/feed/home/' },
+  { id: 'physorg', name: 'Phys.org', feedUrl: 'https://phys.org/rss-feed/breaking/' },
   { id: 'arstechnica', name: 'Ars Technica', feedUrl: 'https://feeds.arstechnica.com/arstechnica/index' }
 ];
 
@@ -114,7 +119,7 @@ function cleanHeadlineTitle(title) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|pbs|pbs newshour|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|global news|abc news|sydney morning herald|smh|scmp|south china morning post|the japan times|japan times|the hindu|le monde|el pais|el país|rte|rté|buenos aires times|mexico news daily|mercopress|new scientist|ars technica).*$/i, '')
+    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|pbs|pbs newshour|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|global news|abc news|sydney morning herald|smh|scmp|south china morning post|the japan times|japan times|cna|channel newsasia|the national|africanews|agencia brasil|agência brasil|phys\.org|le monde|el pais|el país|rte|rté|buenos aires times|mexico news daily|mercopress|new scientist|ars technica).*$/i, '')
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
     .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
     .replace(/[\u2013\u2014-]/g, ' ')
@@ -1311,14 +1316,17 @@ async function main() {
     try {
       console.log(`[RSS] Fetching ${source.name}...`);
       const feed = await parser.parseURL(source.feedUrl);
-      const items = (feed.items || []).slice(0, 25).map(item => ({
-        sourceId: source.id,
-        title: sanitizeText(item.title),
-        description: extractBestDescription(item),
-        link: item.link || '',
-        imageUrl: extractImageUrl(item),
-        pubDate: item.pubDate || item.isoDate || new Date().toISOString()
-      }));
+      const items = (feed.items || [])
+        .filter(item => !/^cartoon for\s+/i.test(sanitizeText(item.title)))
+        .slice(0, 25)
+        .map(item => ({
+          sourceId: source.id,
+          title: sanitizeText(item.title),
+          description: extractBestDescription(item),
+          link: item.link || '',
+          imageUrl: extractImageUrl(item),
+          pubDate: item.pubDate || item.isoDate || new Date().toISOString()
+        }));
 
       const sourceArticles = [];
       const seenBatchUrls = new Set();
