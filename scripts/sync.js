@@ -338,6 +338,7 @@ function getHeadlineTopicTokens(title) {
   ]);
   return cleanHeadlineTitle(title)
     .toLowerCase()
+    .replace(/\b(ex|anti|non|pre|post|pro|co)\s+(?=[a-z0-9]{4,})/g, '')
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length >= 4 && !stop.has(w));
@@ -417,6 +418,7 @@ function computeFourFactorScore(match) {
   //    to -0.10..-0.24 while national/global crises scale to -0.45..-0.95.
   let eventBase;
   let framingMod;
+
   if (pol >= 0) {
     const polCurve = Math.pow(pol, 1.32);
     const geoMag = Math.pow(Math.max(0.01, reach), 0.62) * Math.pow(Math.max(0.01, perm), 0.38);
@@ -484,30 +486,41 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
-  // Pre-tokenize recent 4-factor articles from the last 36 hours for soft Macro-Scale [reach, permanence] calibration
+  // Pre-tokenize recent 4-factor articles from the last 36 hours for verified same-incident calibration
   const recentCutoffMs = Date.now() - (36 * 60 * 60 * 1000);
+  const broadGeoOrConflictTokens = new Set([
+    'saudi', 'arabia', 'iran', 'israel', 'israeli', 'gaza', 'ukraine', 'ukrainian', 'russia', 'russian',
+    'china', 'chinese', 'united', 'states', 'american', 'trump', 'biden', 'europe', 'european', 'british',
+    'houthi', 'houthis', 'attack', 'attacks', 'strike', 'strikes', 'military', 'forces', 'war', 'conflict'
+  ]);
   const anchorCandidates = existingEvaluatedPool
     .filter(a => Array.isArray(a.factors) && a.factors.length === 4 && (!a.pubDate || new Date(a.pubDate).getTime() >= recentCutoffMs))
     .map(a => ({
-      scale: [a.factors[1], a.factors[2]], // ONLY [reach, permanence] — never lock polarity or framing!
+      headline: a.title,
+      factors: [a.factors[0], a.factors[1], a.factors[2]], // [polarity, reach, permanence] of prior dispatch
       tokens: new Set(getHeadlineTopicTokens(a.title))
     }))
     .filter(a => a.tokens.size >= 2);
 
-  function findPriorScaleHint(title) {
+  function findPriorEventAnchor(title) {
     const tokens = getHeadlineTopicTokens(title);
     if (tokens.length < 2) return null;
     let best = null;
     let bestShared = 0;
     for (const cand of anchorCandidates) {
       let shared = 0;
+      let specificShared = 0;
       for (const t of tokens) {
-        if (cand.tokens.has(t)) shared++;
+        if (cand.tokens.has(t)) {
+          shared++;
+          if (!broadGeoOrConflictTokens.has(t)) specificShared++;
+        }
       }
       const minLen = Math.min(tokens.length, cand.tokens.size);
-      if ((shared >= 3 || (shared >= 2 && shared / minLen >= 0.6)) && shared > bestShared) {
+      // Require at least 1 specific non-broad token (e.g. 'openai', 'accused', 'egypt', 'postpones') so generic 'saudi + houthi + attacks' never cross-matches unrelated stories
+      if (specificShared >= 1 && (shared >= 3 || (shared >= 2 && shared / minLen >= 0.55)) && shared > bestShared) {
         bestShared = shared;
-        best = cand.scale;
+        best = { headline: cand.headline, factors: cand.factors };
       }
     }
     return best;
@@ -523,13 +536,13 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
     const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
     const promptData = chunk.map((item, index) => {
-      const priorScale = findPriorScaleHint(item.title);
+      const priorAnchor = findPriorEventAnchor(item.title);
       return {
         index,
         outlet: item.sourceId,
         headline: item.title,
         description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || ''),
-        ...(priorScale ? { priorScaleHint: priorScale } : {})
+        ...(priorAnchor ? { priorAnchor } : {})
       };
     });
 
@@ -552,9 +565,11 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
    Measure the linguistic, emotional, and promotional spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally celebratory, promotional, speculative-hype, or agency-highlighting rhetoric).
 
-SCALE CALIBRATION & FREE POLARITY PRINCIPLE:
-If a dispatch includes a "priorScaleHint" [reach, permanence] from an earlier article on the exact same specific incident, use it only as a rough reference for macro societal scale ("reach" and "permanence") IF AND ONLY IF this dispatch is about the exact same incident.
-NEVER lock "polarity" or "framing": always evaluate "polarity" and "framing" independently for every single headline from the principles above.
+CROSS-BATCH & INTRA-BATCH SAME-INCIDENT CALIBRATION:
+- For dispatches within the same batch covering the exact same real-world incident, keep "reach" and "permanence" consistent and vary "polarity" only in proportion to genuine differences in substantive angle, while scoring "framing" independently for each headline's rhetoric.
+- If an item includes "priorAnchor" { headline, factors: [polarity, reach, permanence] } from an earlier batch:
+  1. First verify whether this article and "priorAnchor.headline" describe the EXACT same specific real-world incident. If they are different events that merely share a country or actor, IGNORE "priorAnchor" completely.
+  2. If they ARE the exact same incident, use "priorAnchor.factors" [polarity, reach, permanence] as your baseline anchor so cross-batch scoring stays coherent—adjusting "polarity" only if this outlet foregrounds a materially different substantive angle or new development, and scoring "framing" 100% independently.
 
 Return ONLY a JSON array of objects with:
 - index: integer matching input index
@@ -624,11 +639,12 @@ Return ONLY valid JSON.`;
                   explanation: rawExp + expSuffix,
                   ...(cleanSummary ? { summary: cleanSummary } : {})
                 });
-                // Feed only soft Macro-Scale [reach, permanence] hint into anchorCandidates for subsequent batches in this run
+                // Feed verified [polarity, reach, permanence] + headline into anchorCandidates for subsequent batches in this run
                 const itemTokens = getHeadlineTopicTokens(item.title);
                 if (itemTokens.length >= 2) {
                   anchorCandidates.push({
-                    scale: [calc.reach, calc.permanence],
+                    headline: item.title,
+                    factors: [calc.polarity, calc.reach, calc.permanence],
                     tokens: new Set(itemTokens)
                   });
                 }
@@ -1348,23 +1364,25 @@ When new dispatches arrive on a story, or when two clusters relate to the same s
 1. "none" (Redundant / Syndication Catch-Up — Omit):
    - The new dispatches merely restate milestones already present in the cluster's existing headline, summary, or [PRIOR RECORDED HISTORY] (e.g. reporting a hospital discharge when the summary already states the patient left the hospital and resumed public duties, or repeating a casualty tally of 53 when the headline already says "Kills 53"). Omit these completely!
 
-2. "clarification" (Intra-State Resolution — Sharpening Facts Within the Existing Envelope):
-   - The new dispatches increase factual precision, granularity, or post-event texture WITHOUT crossing a boundary of the existing State Envelope:
+2. "clarification" (In-Phase Factual Delta — Sharpening Facts, Proposals, or Sub-Events Within the Existing Envelope):
+   - The new dispatches add factual precision, granularity, pre-decision deliberations, or localized sub-incidents WITHOUT executing an irreversible boundary crossing of the State Envelope:
      • Refining a metric or tally of an already-reported action (e.g. "thousands arrested" -> "nearly 2,400 arrested"; "large drone barrage" -> "over 1,000 drones and 1 fatality"),
-     • Identifying or profiling already-counted victims/participants (e.g. releasing the names of the 4 deceased soldiers; noting a US photojournalist was among the diplomats attacked),
-     • Forensic or technical mechanics of how the original incident unfolded (e.g. how fast a grass fire moved; aftermath property damage assessments),
-     • Routine rhetorical reactions, blame-trading, or an official publicly defending their own already-announced decision ("Trump defends his sanctions waiver").
-   - For "clarification": we refine the cluster's "summary" so readers get the sharper facts, but we DO NOT bump the version or rename the headline as a new breaking phase.
+     • Pre-decision proposals, deliberations, or warnings BEFORE formal enactment (e.g. officials "weighing", "pushing for", "debating", or "threatening" curfews, sanctions, or charges — deliberating a measure is an In-Phase Update; only FORMAL ENACTMENT is a Shift),
+     • Localized tactical flashpoints within an already-established nationwide/regional phenomenon (e.g. protesters blockading a specific museum or highway during ongoing nationwide unrest),
+     • Identifying or profiling already-counted victims/participants, forensic mechanics, property damage assessments, or routine rhetorical reactions/blame-trading.
+   - For "clarification": we refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version or renaming the headline.
 
-3. "material_shift" (State-Envelope Crossing — Structural Step-Change):
-   - At least ONE fact in the new dispatches crosses the boundary of the prior State Envelope:
-     • Spatial / Jurisdictional Boundary: The active phenomenon physically enters ANY new sovereign country, state, or distinct theatre not yet named in the prior summary (even if the prior summary already used plural phrasing like "neighboring countries" or had previously crossed one border, every newly entered country/jurisdiction is a State-Envelope Shift),
-     • Institutional / Legal / Timeline Regime Change: Authorities invoke or formally weigh extraordinary legal/coercive regimes (curfews, state of emergency, criminal indictments), a suspect is released without charges, or an actor overrides/accelerates an established operational timeline (e.g. moving a November start date to begin immediately despite a court order),
-     • Outcome / Premise Reversal: A critical threat or premise is resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses).
+3. "material_shift" (Irreversible Phase Pivot — Structural Step-Change):
+   - At least ONE fact in the new dispatches executes an IRREVERSIBLE crossing of the prior State Envelope:
+     • Spatial / Sovereign Border Crossing: The active physical phenomenon crosses into a NEW sovereign country or international theatre not yet named in the prior summary (e.g. domestic French unrest spreading into Italy and Belgium; an outbreak crossing into Kenya),
+     • Executed Institutional / Legal Regime Change: Authorities FORMALLY ENACT, SIGN, RULE, OR EXECUTE an extraordinary legal/coercive measure (e.g. curfews formally imposed in Paris and Nice, criminal charges/indictments formally filed, a suspect released without charges, or construction ordered to begin despite a court injunction — NEVER merely "weighing" or "pushing for" it),
+     • Outcome / Premise Reversal: A critical threat or premise is definitively resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses).
 
-DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE & AUTOREGRESSIVE ORDERING:
-- When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that cross a State Envelope boundary, you must NEVER average the batch into "clarification". The presence of ANY single State-Envelope crossing makes the update a "material_shift".
-- If a batch crosses MULTIPLE boundaries at once (e.g. unrest spreads to a new country AND officials weigh emergency powers/curfews), synthesize ALL boundary-crossing shifts in "developmentNote" and "summary".
+DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE & PURE CHRONOLOGICAL DELTA RULE:
+- When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that execute a true State-Envelope crossing, classify as "material_shift".
+- PURE CHRONOLOGICAL DELTA ("developmentNote"): Every "developmentNote" (for BOTH "clarification" and "material_shift") appears as a timestamped row in a progression timeline right below the cumulative summary. Therefore, "developmentNote" must state STRICTLY the net-new delta at this timestamp (8–16 words max) and NEVER recap prior background ("following the weekend of...", "after earlier clashes in...", "in response to...").
+  • BAD Shift note: "French authorities formally enacted localized curfews in Paris and Nice following the weekend of nearly 2,400 arrests and cross-border spillover into Italy and Belgium." (Repeats old timeline steps!)
+  • GOOD Shift note: "Localized curfews formally enacted in Paris, Nice, and other cities; officials acknowledge intelligence failures."
 - Always generate "developmentNote" and "stateBoundaryCrossed" FIRST before deciding "updateType".
 - HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor AND prior geographic scope from the existing headline while appending/reflecting the new shift so readers never lose the thread (e.g. "French Cost-of-Living Protests Spread to Italy and Belgium").
 - CUMULATIVE SUMMARY INVARIANT (NO RECENCY AMNESIA): A cluster's "summary" represents the complete cumulative story arc to date—NEVER just the latest batch of headlines. Whenever you output "summary" (for either "clarification" or "material_shift"), you MUST retain the concrete figures (e.g. arrest or casualty counts), key actions (e.g. museum blockades), and multi-country/multi-city geographic scope (e.g. spillover into Milan and Brussels) already established in the cluster's existing summary and [PRIOR RECORDED HISTORY], while integrating the new development (e.g. localized curfews enacted in Paris and Nice). Never drop earlier verified milestones or secondary countries just because the newest headlines focus on the latest reaction or measure!
@@ -1396,8 +1414,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
     {
       "indices": [13, 14],
       "sharedSpecificIncident": "Name the single specific incident/bill/study both clusters report on (never a broad country or election campaign)",
-      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' (5-10 words each). For material_shift: 1 crisp sentence synthesizing all boundary-crossing shifts.",
-      "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — duplicate/clarification'",
+      "developmentNote": "Pure chronological delta (8-16 words max, NO 'following/after...' recap of prior steps). For clarification: 1-2 telegraphic fragments separated by '; '. For material_shift: 1 crisp delta sentence.",
+      "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
       "updateType": "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence cumulative synthesis integrating the new development while preserving prior verified figures and geographic scope."
@@ -1406,8 +1424,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
   "inPlaceDevelopments": [
     {
       "index": 4,
-      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' stating strictly what fact changed (5-10 words each, e.g. 'First official Vatican photos released; greeted St. Peter\\'s Square crowd' — no filler like 'New dispatches reported'). For material_shift: 1 crisp sentence synthesizing all boundary-crossing shifts in this batch.",
-      "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — intra-state detail/rhetoric'",
+      "developmentNote": "Pure chronological delta stating ONLY what changed at this timestamp (8-16 words max, NO 'following/after...' recap of earlier milestones). For clarification: 1-2 telegraphic fragments separated by '; '. For material_shift: 1 crisp delta sentence.",
+      "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
       "updateType": "none" | "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence cumulative synthesis integrating the new development into the existing summary without dropping prior verified figures or geographic scope."
@@ -1482,9 +1500,17 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
 
     for (const [idx, dev] of inPlaceByIdx.entries()) {
       const c = clusters[idx];
-      const uType = dev.updateType === 'material_shift' ? 'material_shift' : 'clarification';
+      let noteText = (dev.developmentNote && dev.developmentNote.trim()) || '';
+      // Strip trailing backstory recap clauses ("following the weekend of...", "after earlier clashes...")
+      noteText = noteText
+        .replace(/\s+(?:following|after|amid|in the wake of)\s+(?:the\s+)?(?:weekend|days|weeks|earlier|initial|widespread|ongoing)\s+[^.;]+$/i, '')
+        .trim();
+
+      // Programmatic Commitment Gate: if noteText only describes weighing/pushing/considering a measure without enacting/crossing borders, downgrade to clarification
+      const isPreludeOnly = /\b(weigh(?:s|ed|ing)?|push(?:es|ed|ing)?\s+for|consider(?:s|ed|ing)?|mull(?:s|ed|ing)?|debate(?:s|d)?|propose(?:s|d)?)\b/i.test(noteText) &&
+        !/\b(spread|expand|cross|enact|impos|arrest|indict|charg|releas|struck|launch|clear)\w*/i.test(noteText);
+      const uType = (dev.updateType === 'material_shift' && !isPreludeOnly) ? 'material_shift' : 'clarification';
       const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
-      const noteText = (dev.developmentNote && dev.developmentNote.trim()) || '';
 
       // Skip routine restatements ("Re-emphasizes...", "Reaffirms...") that add no new factual detail
       if (uType === 'clarification' && /^(re-?emphasiz|reaffirm|reiterat|continu(es|ed) to report)/i.test(noteText)) {
@@ -1533,6 +1559,20 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         c.lastDevelopedAt = ts;
         c.developmentNote = noteText || `Story developed: ${newStory}`;
         if (evolvedIds.size > 0) c.evolvedFromIds = Array.from(evolvedIds);
+
+        // Retroactive Prelude Demotion: if an earlier step in `hist` was marked `material_shift` while "weighing/pushing for"
+        // the exact same measure now formally enacted in `noteText`, demote that earlier prelude step to `clarification`!
+        const newNoteStems = new Set(extractCoherenceStems(c.developmentNote));
+        for (let hi = 1; hi < hist.length; hi++) {
+          const prevH = hist[hi];
+          if (prevH.type === 'material_shift' && /\b(weigh|push|consider|mull|propos|prepar)/i.test(prevH.note || '')) {
+            const prevStems = extractCoherenceStems(prevH.note || '');
+            const shared = prevStems.filter(s => newNoteStems.has(s));
+            if (shared.length >= 2) {
+              prevH.type = 'clarification';
+            }
+          }
+        }
 
         const afterSnapshot = {
           id: c.id,
