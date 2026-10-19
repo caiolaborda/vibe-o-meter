@@ -1072,15 +1072,26 @@ Return JSON array in format:
         const newTitles = new Set(matchingArticles.map(m => m.title ? cleanHeadlineTitle(m.title) : '').filter(Boolean));
 
         if (Array.isArray(previousClusters)) {
+          let bestPrevScore = -1;
           for (const prev of previousClusters) {
             if (!prev || !Array.isArray(prev.coverage)) continue;
             const prevSlug = prev.id || String(prev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            const sharedCount = prev.coverage.filter(c =>
+            const prevSeenSet = new Set(Array.isArray(prev.seenArticleKeys) ? prev.seenArticleKeys : []);
+            const sharedCovCount = prev.coverage.filter(c =>
               (c.link && newUrls.has(canonicalUrl(c.link))) ||
               (c.title && newTitles.has(cleanHeadlineTitle(c.title)))
             ).length;
+            const sharedSeenCount = matchingArticles.filter(m =>
+              (m.link && prevSeenSet.has(canonicalUrl(m.link))) ||
+              (m.title && prevSeenSet.has(cleanHeadlineTitle(m.title)))
+            ).length;
+            const sharedCount = Math.max(sharedCovCount, sharedSeenCount);
             if (sharedCount >= 2 || (sharedCount >= 1 && prev.coverage.length <= 2 && matchingArticles.length <= 2)) {
-              if (!matchedPrev) matchedPrev = prev;
+              const candidateScore = sharedCount * 100 + ((prev.version || 1) * 10) + (prev.coverage.length || 0);
+              if (candidateScore > bestPrevScore) {
+                bestPrevScore = candidateScore;
+                matchedPrev = prev;
+              }
               if (prevSlug) evolvedIds.add(prevSlug);
               if (Array.isArray(prev.evolvedFromIds)) {
                 prev.evolvedFromIds.forEach(id => evolvedIds.add(id));
@@ -1103,13 +1114,20 @@ Return JSON array in format:
         let pendingUpdate = null;
 
         if (matchedPrev) {
-          // Self-heal check: if matchedPrev previously merged two separate clusters that the primary clusterer has now split apart,
-          // use the clean primary cluster title/summary rather than carrying over a polluted multi-story summary.
+          // Self-heal check: only reset if matchedPrev's title+summary share virtually zero stems with the current article bag
+          // (e.g. a previously corrupted merge of unrelated events that was split apart). Never reset an evolved story just because
+          // earlier stage words (like secondary spillover countries or prior verbs) aged out of the newest 1-per-outlet headlines!
           const articleBagStems = new Set();
           matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => articleBagStems.add(s)));
           const prevStoryStems = extractCoherenceStems(matchedPrev.story || '');
-          const supportedStemCount = prevStoryStems.filter(s => articleBagStems.has(s)).length;
-          const prevStorySupported = prevStoryStems.length === 0 || (supportedStemCount / prevStoryStems.length) >= 0.65;
+          const prevSummaryStems = extractCoherenceStems(matchedPrev.summary || '');
+          const supportedStoryStems = prevStoryStems.filter(s => articleBagStems.has(s)).length;
+          const supportedSummaryStems = prevSummaryStems.filter(s => articleBagStems.has(s)).length;
+          const prevStorySupported =
+            prevStoryStems.length === 0 ||
+            supportedStoryStems >= 2 ||
+            (supportedStoryStems / prevStoryStems.length) >= 0.35 ||
+            (supportedStoryStems >= 1 && supportedSummaryStems >= 2);
 
           const prevSlug = prevStorySupported
             ? (matchedPrev.id || String(matchedPrev.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
@@ -1143,11 +1161,17 @@ Return JSON array in format:
           prevSeenKeys = Array.from(historicalKeys).slice(-120);
 
           if (prevStorySupported && Array.isArray(matchedPrev.evolutionHistory) && matchedPrev.evolutionHistory.length > 0) {
-            // Strip any contaminated evolutionHistory entry that shares zero content stems with the cluster's articles
+            // Strip any contaminated evolutionHistory entry that shares zero content stems with the cluster's articles OR lineage
+            const lineageStems = new Set([
+              ...articleBagStems,
+              ...prevStoryStems,
+              ...prevSummaryStems,
+              ...extractCoherenceStems(`${matchedPrev.evolutionHistory[0]?.headline || ''} ${matchedPrev.evolutionHistory[0]?.summary || ''}`)
+            ]);
             const coherentHistory = matchedPrev.evolutionHistory.filter((h, idx) => {
               if (idx === 0) return true;
               const hStems = extractCoherenceStems(`${h.headline || ''} ${h.note || ''} ${h.summary || ''}`);
-              return hStems.length === 0 || hStems.some(s => articleBagStems.has(s));
+              return hStems.length === 0 || hStems.some(s => lineageStems.has(s));
             });
             prevEvolutionHistory = coherentHistory.length > 0 ? coherentHistory : [...matchedPrev.evolutionHistory.slice(0, 1)];
           } else {
@@ -1343,6 +1367,7 @@ DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE & AUTOREGRESSIVE ORDERING:
 - If a batch crosses MULTIPLE boundaries at once (e.g. unrest spreads to a new country AND officials weigh emergency powers/curfews), synthesize ALL boundary-crossing shifts in "developmentNote" and "summary".
 - Always generate "developmentNote" and "stateBoundaryCrossed" FIRST before deciding "updateType".
 - HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor AND prior geographic scope from the existing headline while appending/reflecting the new shift so readers never lose the thread (e.g. "French Cost-of-Living Protests Spread to Italy and Belgium").
+- CUMULATIVE SUMMARY INVARIANT (NO RECENCY AMNESIA): A cluster's "summary" represents the complete cumulative story arc to date—NEVER just the latest batch of headlines. Whenever you output "summary" (for either "clarification" or "material_shift"), you MUST retain the concrete figures (e.g. arrest or casualty counts), key actions (e.g. museum blockades), and multi-country/multi-city geographic scope (e.g. spillover into Milan and Brussels) already established in the cluster's existing summary and [PRIOR RECORDED HISTORY], while integrating the new development (e.g. localized curfews enacted in Paris and Nice). Never drop earlier verified milestones or secondary countries just because the newest headlines focus on the latest reaction or measure!
 
 You have THREE jobs in this single pass:
 
@@ -1375,7 +1400,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — duplicate/clarification'",
       "updateType": "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
-      "summary": "1-2 sentence synthesis with organic temporal grounding."
+      "summary": "1-2 sentence cumulative synthesis integrating the new development while preserving prior verified figures and geographic scope."
     }
   ],
   "inPlaceDevelopments": [
@@ -1385,7 +1410,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — intra-state detail/rhetoric'",
       "updateType": "none" | "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
-      "summary": "1-2 sentence synthesis reflecting the clarified facts or new development."
+      "summary": "1-2 sentence cumulative synthesis integrating the new development into the existing summary without dropping prior verified figures or geographic scope."
     }
   ],
   "lateralConnections": [
