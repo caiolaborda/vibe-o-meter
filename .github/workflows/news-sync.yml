@@ -2,8 +2,8 @@ name: Autonomous News Ingestion & Sentiment Audit
 
 on:
   schedule:
-    # Runs twice an hour (every 30 minutes)
-    - cron: '*/30 * * * *'
+    # Staggered off-peak minutes (:07, :27, :47) to avoid GitHub Actions :00/:30 cron congestion drops
+    - cron: '7,27,47 * * * *'
   workflow_dispatch:
   push:
     branches:

@@ -2144,7 +2144,7 @@ async function main() {
     const { execSync } = require('child_process');
     try {
       console.log('[Git] Staging updated vibe datasets...');
-      execSync('git add data/vibe-data.json public/data/', { stdio: 'inherit' });
+      execSync('git add data/vibe-data.json data/cluster-updates-log.json public/data/', { stdio: 'inherit' });
       const status = execSync('git status --porcelain', { encoding: 'utf8' });
       if (status.includes('data/')) {
         console.log('[Git] Committing fresh vibe data...');
