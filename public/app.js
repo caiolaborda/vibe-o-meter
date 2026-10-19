@@ -782,9 +782,6 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       } else {
         matched.forEach(m => used.delete(m.idx));
       }
-    } else if (matched.length >= 1 && cl.averageSentiment < 0.10) {
-      // Suppress false-positive outliers belonging to predominantly negative/neutral clusters
-      matched.forEach(m => used.add(m.idx));
     }
   });
 

@@ -233,6 +233,7 @@ function exportPublicJsonFeeds(fullPayload) {
   const articleClusterMap = new Map();
   const clusterTokenEntries = [];
   enrichedClusters.forEach(cl => {
+    if (cl.averageSentiment < 0.10) return;
     const titleTokens = new Set(tokenizeHeadline(cl.story));
     const allTokens = new Set(tokenizeHeadline(`${cl.story || ''} ${(cl.coverage || []).map(c => c.title || '').join(' ')}`));
     clusterTokenEntries.push({ cl, titleTokens, allTokens });
@@ -268,14 +269,11 @@ function exportPublicJsonFeeds(fullPayload) {
 
       const cUrl = canonicalUrl(art.link);
       const cTitle = cleanHeadlineTitle(art.title);
-      const matchedCl = findClusterForArticle(art, cUrl, cTitle);
-      // Suppress false-positive outliers belonging to predominantly negative/neutral clusters
-      if (matchedCl && matchedCl.averageSentiment < 0.10) return;
-
       if ((cUrl && seenGoodUrls.has(cUrl)) || (cTitle && seenGoodTitles.has(cTitle))) return;
       if (cUrl) seenGoodUrls.add(cUrl);
       if (cTitle) seenGoodTitles.add(cTitle);
 
+      const matchedCl = findClusterForArticle(art, cUrl, cTitle);
       const outletCount = matchedCl ? matchedCl.outletCount : 1;
       const clusterBoost = outletCount > 1 ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : 0;
       const significanceScore = Number(Math.min(1, score + clusterBoost).toFixed(3));

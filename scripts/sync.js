@@ -485,17 +485,17 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
-  // Pre-tokenize recent 4-factor articles from the last 36 hours for same-incident [polarity, reach, permanence] calibration
+  // Pre-tokenize recent 4-factor articles from the last 36 hours for soft Macro-Scale [reach, permanence] calibration
   const recentCutoffMs = Date.now() - (36 * 60 * 60 * 1000);
   const anchorCandidates = existingEvaluatedPool
     .filter(a => Array.isArray(a.factors) && a.factors.length === 4 && (!a.pubDate || new Date(a.pubDate).getTime() >= recentCutoffMs))
     .map(a => ({
-      eventFactors: [a.factors[0], a.factors[1], a.factors[2]], // [polarity, reach, permanence] so same-incident coverage never flips sign!
+      scale: [a.factors[1], a.factors[2]], // ONLY [reach, permanence] — never lock polarity or framing!
       tokens: new Set(getHeadlineTopicTokens(a.title))
     }))
     .filter(a => a.tokens.size >= 2);
 
-  function findPriorEventHint(title) {
+  function findPriorScaleHint(title) {
     const tokens = getHeadlineTopicTokens(title);
     if (tokens.length < 2) return null;
     let best = null;
@@ -508,7 +508,7 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
       const minLen = Math.min(tokens.length, cand.tokens.size);
       if ((shared >= 3 || (shared >= 2 && shared / minLen >= 0.6)) && shared > bestShared) {
         bestShared = shared;
-        best = cand.eventFactors;
+        best = cand.scale;
       }
     }
     return best;
@@ -524,39 +524,37 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
     const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
     const promptData = chunk.map((item, index) => {
-      const priorEvent = findPriorEventHint(item.title);
+      const priorScale = findPriorScaleHint(item.title);
       return {
         index,
         outlet: item.sourceId,
         headline: item.title,
         description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || ''),
-        ...(priorEvent ? { priorEventHint: priorEvent } : {})
+        ...(priorScale ? { priorScaleHint: priorScale } : {})
       };
     });
 
     const prompt = `You are an impartial, senior media analyst evaluating global news dispatches from first principles.
 Evaluate each article across FOUR continuous higher-order dimensions using precise integers (avoid rounding to multiples of 5 or 10):
 
-1. "polarity" (integer -100 to 100 — Net Real-World Valence & Substantive Editorial Angle):
-   Evaluate the inherent net valence of the primary real-world change and substantive angle foregrounded by the dispatch along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, or offsetting mixed outcomes) to +100 (maximum net constructive advancement).
-   - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, clinical or scientific advance, discovery, or systemic aid that builds durable capacity or resolves a major deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, violent attack, or acute harm shock and merely highlights survival, a procedural concession, or a secondary silver lining, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
-   - Criminal Trials, Convictions, Verdicts & Atrocities (STRICT NEGATIVE POLARITY): Guilty verdicts, convictions, sentencing, arrests, or indictments for murder, mass casualties, starvation cults, terrorism, sexual assault, or violent crime MUST be scored with NEGATIVE polarity (-35 to -85) reflecting the underlying atrocity, violence, and loss of life—NEVER score a murder, assault, or atrocity conviction as positive polarity (+1 to +100) merely because a court delivered a guilty verdict or legal accountability.
-   - Commercial Affiliate Copy & Sportsbook Promo Codes (ZERO CONSTRUCTIVE VALUE): Sponsored or affiliate articles promoting sportsbook promo codes, betting bonuses (e.g., Fanatics, Underdog, BetMGM, FanDuel, DraftKings, Betr), or retail discount codes have zero constructive societal value and must be scored near zero (polarity -10 to 0, reach 5 to 15, permanence 5, framing 0).
-   - Frontier Advancement vs. Routine Maintenance or Minor Comfort Tips: Distinguish genuine breakthroughs from ordinary civic/corporate administration and minor symptom-comfort studies. Routine municipal/provincial facility openings, ceremonial inaugurations, local charity award profiles, and routine corporate capital expenditures belong near neutral (0 to +15). Similarly, minor symptom-comfort, ergonomic, or lifestyle studies (e.g., wearing headphones to reduce post-op nausea, minor dietary tips) warrant only modest positive polarity (+15 to +28), whereas life-saving medical cures, disease eradication, major conservation milestones, and fundamental scientific discoveries warrant high positive polarity (+55 to +95).
-   - Concrete Action vs. Speculative Claims (Symmetrical): Concrete actions, empirical findings, active clinical trials, physical discoveries, enacted policies, and verified acute events carry full positive or negative valence. Conversely, when a dispatch consists of unsubstantiated future predictions, a politician or executive claiming a stalled project is "finally happening", preliminary proposals, political spending pledges, or opinion commentary without a verified completed milestone, discount event polarity toward zero (0 to +18) and permanence (10–25), attributing directional spin primarily to "framing".
+1. "polarity" (integer -100 to 100 — Whole-Event Counterfactual Valence & Substantive Angle):
+   Evaluate the net human and societal valence of the reality described in the dispatch along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, commercial/transactional, or offsetting outcomes) to +100 (maximum net constructive advancement).
+   - Whole-Event Baseline vs. Isolated Verb Delta: Evaluate the net state of the entire situation described in the dispatch against a normal, unharmed baseline—never score the isolated delta of a final procedural verb while ignoring the underlying subject. When a dispatch reports a downstream judicial verdict, conviction, sentencing, arrest, or survival response following an atrocity, violent attack, or irreversible loss of life, the net valence of the complete event remains negative in proportion to the underlying harm; score polarity positively only when the event produces a net advance above an unharmed baseline (such as curing disease, advancing knowledge, or building durable capacity).
+   - Contested Policy & Polarized Perspectives: When an event is a contested political, economic, regulatory, or social development (rather than an objective physical tragedy or atrocity), evaluate the substantive causal outcome foregrounded by this specific outlet's angle so genuine cross-outlet perspective differences are preserved.
+   - Structural Advancement vs. Routine Administration, Minor Comfort, Speculation, or Commercial Solicitation: Reserve high positive polarity for verified, life-saving, ecological, or fundamental scientific breakthroughs. Discount routine administrative maintenance, minor symptom-comfort or lifestyle tips, unverified future claims or political pledges, and commercial/wagering promotional copy toward zero, attributing promotional hype or spin to "framing".
 
-2. "reach" (integer 0 to 100 — Proportional Scope of Affected Population, Society, or Knowledge Domain):
-   Measure the breadth of the affected population, societal shockwave, or knowledge domain along a continuous logarithmic scale from 0 (an isolated individual, 1–2 person medical recovery, celebrity/personal dispute, or single micro-location) to 100 (humanity at large, planetary ecosystems, or universal scientific and medical breakthroughs replicable worldwide). Human-interest profiles of 1–2 individuals (e.g., a single child's surgery or rehabilitation), isolated local accidents, local community/zoo features, and single-company operational updates have narrow localized reach (5–22); minor clinical comfort tips have moderate reach (25–42); national policies, mass-casualty tragedies/violent shocks, and transformative scientific or life-saving clinical discoveries carry broad national to global reach (45–100).
+2. "reach" (integer 0 to 100 — Logarithmic Scope of Direct Real-World Impact):
+   Measure the proportional breadth of the population, societal system, or universal knowledge domain directly impacted by the event along a continuous logarithmic scale from an isolated individual, 1–2 person medical/accident case, or single micro-location at the low end up to humanity at large, planetary ecosystems, or universally replicable scientific breakthroughs at the high end. Measure the population directly affected by the event itself, not the media audience reading about it.
 
-3. "permanence" (integer 0 to 100 — Macro-Structural Depth & Societal Horizon of Consequence):
-   Measure the macro-structural durability of the consequence at the societal, institutional, ecological, or scientific level from 0 (ephemeral, speculative, routine administrative occurrences, or isolated 1–2 person events with no lasting systemic change) to 100 (irreversible macro-structural, geopolitical, ecological, clinical, or scientific transformation). Do not assign high permanence (65–100) to an isolated 1–2 person accident, local crime, or individual patient surgery merely because it is personally irreversible for those individuals; evaluate permanence strictly at the societal and macro-structural level (15–30 for isolated individual cases).
+3. "permanence" (integer 0 to 100 — Macro-Structural Horizon of Consequence):
+   Measure the macro-structural durability of the consequence at the societal, institutional, ecological, or scientific level from ephemeral, speculative, commercial, or isolated 1–2 person occurrences at the low end up to irreversible macro-structural, geopolitical, ecological, or scientific transformations at the high end. Do not conflate personal irreversibility for an isolated individual with macro-societal permanence.
 
 4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
-   Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, promotional, or agency-highlighting rhetoric).
+   Measure the linguistic, emotional, and promotional spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally celebratory, promotional, or agency-highlighting rhetoric).
 
-SAME-INCIDENT COHERENCE & EDITORIAL VARIATION PRINCIPLE:
-1. If a dispatch includes a "priorEventHint" [polarity, reach, permanence] from an earlier article on the exact same specific incident, keep the SAME polarity sign and stay within ±10 points of that anchor's [polarity, reach, permanence] (reflecting only minor differences in which facts this outlet foregrounds)—NEVER flip a negative-polarity event (like a murder trial or attack) into positive polarity!
-2. Evaluate "framing" (-100 to +100) 100% independently for every single headline so each outlet's distinct tone and rhetoric produce natural score variation across outlets covering the same story.
+SCALE CALIBRATION & FREE POLARITY PRINCIPLE:
+If a dispatch includes a "priorScaleHint" [reach, permanence] from an earlier article on the exact same specific incident, use it only as a rough reference for macro societal scale ("reach" and "permanence") IF AND ONLY IF this dispatch is about the exact same incident.
+NEVER lock "polarity" or "framing": always evaluate "polarity" and "framing" independently for every single headline from the principles above.
 
 Return ONLY a JSON array of objects with:
 - index: integer matching input index
@@ -2252,64 +2250,19 @@ async function main() {
   }
 
   // Always synchronize cluster coverage sentiment scores with the latest article scores in finalSources
-  // and harmonize any sign-flipped outlier dispatches inside strongly negative/positive multi-outlet clusters
   if (Array.isArray(sharedStoryClusters) && sharedStoryClusters.length > 0) {
     sharedStoryClusters.forEach(cl => {
       if (!Array.isArray(cl.coverage)) return;
-      const matchedPairs = [];
       cl.coverage.forEach(cov => {
         const srcArts = finalSources[cov.sourceId]?.articles || [];
         const match = srcArts.find(a =>
           (cov.link && a.link && canonicalUrl(a.link) === canonicalUrl(cov.link)) ||
           (cov.title && a.title && cleanHeadlineTitle(a.title) === cleanHeadlineTitle(cov.title))
         );
-        if (match) matchedPairs.push({ cov, match });
-      });
-
-      const factorMatches = matchedPairs.filter(p => Array.isArray(p.match.factors) && p.match.factors.length === 4);
-      if (factorMatches.length >= 3) {
-        const pols = factorMatches.map(p => p.match.factors[0]).sort((a, b) => a - b);
-        const reaches = factorMatches.map(p => p.match.factors[1]).sort((a, b) => a - b);
-        const perms = factorMatches.map(p => p.match.factors[2]).sort((a, b) => a - b);
-        const mid = Math.floor(factorMatches.length / 2);
-        const medPol = pols[mid];
-        const medReach = reaches[mid];
-        const medPerm = perms[mid];
-        const negCount = pols.filter(x => x <= -20).length;
-
-        // If the cluster is a clear negative event (median polarity <= -25 and majority <= -20),
-        // never allow an outlier article in the same cluster to have positive polarity (> 0)
-        if (medPol <= -25 && negCount >= 2) {
-          factorMatches.forEach(({ match }) => {
-            if (match.factors[0] > 0) {
-              const frame = match.factors[3];
-              const calc = computeFourFactorScore({
-                polarity: medPol,
-                reach: medReach,
-                permanence: medPerm,
-                framing: frame
-              });
-              match.factors = [calc.polarity, calc.reach, calc.permanence, calc.framing];
-              match.sentiment = calc.score;
-              match.sentimentGemini = calc.score;
-              if (typeof match.explanation === 'string') {
-                match.explanation = match.explanation.replace(
-                  /\[Event Base:[^\]]+\]/,
-                  `[Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`
-                );
-                match.explanationGemini = match.explanation;
-              }
-            }
-          });
-        }
-      }
-
-      matchedPairs.forEach(({ cov, match }) => {
-        if (typeof match.sentiment === 'number') {
+        if (match && typeof match.sentiment === 'number') {
           cov.sentiment = match.sentiment;
         }
       });
-
       const validScores = cl.coverage.map(c => c.sentiment).filter(s => typeof s === 'number');
       if (validScores.length > 0) {
         cl.averageSentiment = Number((validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(2));
