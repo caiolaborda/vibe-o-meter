@@ -1251,9 +1251,13 @@ When new dispatches arrive on a story, or when two clusters relate to the same s
    - For "clarification": we refine the cluster's "summary" so readers get the sharper facts, but we DO NOT bump the version or rename the headline as a new breaking phase.
 3. "material_shift" (Worthy Update Status — Causal Step-Change / Outcome Reversal):
    - Strictly reserved for a CONCRETE STEP-CHANGE in the real-world state of the story that is NOT already in the existing summary or [PRIOR RECORDED HISTORY]:
-     a) An outcome reversal or formal legal/institutional decision (e.g., detained driver is released without charges; suspects are formally charged in court; a judge blocks or greenlights an action; a treaty/ceasefire collapses),
-     b) A major geographic or jurisdictional expansion (e.g., protests in France spread across the border into Italy; an Ebola outbreak crosses into a neighboring country),
-     c) A distinct new physical act or major escalation (never routine rhetoric, blame-trading, or tally updates).
+     a) An outcome reversal or formal legal/institutional decision (e.g., detained driver is released without charges; suspects are formally charged in court; a judge blocks or greenlights an action; a treaty/ceasefire collapses; work begins immediately despite a court order),
+     b) A major geographic or jurisdictional expansion into ANY new country, state, or major city not yet explicitly named in the prior headline/summary (e.g., protests in France spread to Italy, or after spreading to Italy they spread further into Belgium/Brussels — even if the prior summary already used plural words like "neighboring countries", every newly affected country is ALWAYS a "material_shift"!),
+     c) A distinct new physical act, emergency powers/curfew mobilization, or major escalation (never routine rhetoric, blame-trading, or tally updates).
+
+MIXED-BATCH DOMINANCE RULE (CRITICAL):
+- Often, a batch of incoming dispatches will contain 4-5 routine reaction/commentary headlines alongside 1-2 headlines reporting a genuine material shift (for example: several outlets covering French officials debating riots, while Financial Times reports "Violent protests spread from France to Italy and Belgium" and the PM weighs curfews/emergency powers).
+- Whenever ANY single dispatch in the candidate update introduces a material shift (such as spreading to an additional country like Belgium), the entire update MUST be classified as "material_shift" (NEVER downgrade it to "clarification" just because other headlines in the batch are commentary!). Lead the "developmentNote" sentence with the material shift, and update "story" to reflect the new scope while keeping the origin anchor (e.g., "French Cost-of-Living Protests Spread to Italy and Belgium").
 
 You have THREE jobs in this single pass:
 
@@ -1263,13 +1267,13 @@ Identify any groups of 2 or more clusters that represent the EXACT SAME underlyi
 - Set "updateType": "none" if the clusters are simply duplicates of the exact same event/phase.
 - Set "updateType": "clarification" if one cluster just adds sharper detail/numbers to the same event phase.
 - Set "updateType": "material_shift" ONLY if the newer cluster represents a genuine causal step-change, outcome flip, or cross-border expansion over the earlier cluster.
-- HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor from the initial headline while reflecting the key change so readers never lose the thread (e.g., if "Violent Protests Across France" spreads to Italy, write "French Cost-of-Living Protests Spread to Italy" — NEVER drop "France/French" from the title).
+- HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor from the initial headline while reflecting the key change so readers never lose the thread (e.g., if "Violent Protests Across France" spreads to Italy, write "French Cost-of-Living Protests Spread to Italy"; if it then spreads to Belgium, write "French Cost-of-Living Protests Spread to Italy and Belgium" — NEVER drop "France/French" from the title).
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
 Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line:
 - If the new dispatches are redundant with the existing summary or [PRIOR RECORDED HISTORY], omit the cluster.
-- If the new dispatches sharpen numbers, name victims, or add routine reaction/aftermath without a causal phase shift, include it with "updateType": "clarification".
-- If and ONLY if the new dispatches introduce a genuine causal step-change, outcome flip, or cross-border expansion not yet in the summary or [PRIOR RECORDED HISTORY], include it with "updateType": "material_shift" and follow the HEADLINE CONTINUITY RULE (retain the origin anchor while reflecting the key shift).
+- If the new dispatches ONLY sharpen numbers, name victims, or add routine reaction/aftermath without any causal phase shift or new country expansion, include it with "updateType": "clarification".
+- If ANY of the new dispatches introduce a genuine causal step-change, outcome flip, or expansion into a newly named country/jurisdiction not yet in the summary or [PRIOR RECORDED HISTORY], include it with "updateType": "material_shift" and follow the HEADLINE CONTINUITY RULE (retain the origin anchor while reflecting the key shift).
 
 JOB 3 — "lateralConnections" (Interacting Clusters That Must NOT Collapse):
 Identify pairs of DISTINCT clusters that causally influence, react to, or directly interact with each other in this week's news without being the same incident (e.g., a US Russia-sanctions policy cluster and a major Ukrainian refinery strike cluster; or a regional diplomatic summit and a parallel border clash):
@@ -1349,9 +1353,12 @@ Return ONLY valid JSON in this exact format:
 
     for (const [idx, dev] of inPlaceByIdx.entries()) {
       const c = clusters[idx];
-      const uType = dev.updateType === 'material_shift' ? 'material_shift' : 'clarification';
       const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
       const noteText = (dev.developmentNote && dev.developmentNote.trim()) || '';
+      // Deterministic safety net: if the LLM labeled an update 'clarification' in a mixed batch,
+      // but the note itself explicitly states geographic spread, cross-border expansion, or emergency powers, promote to 'material_shift'
+      const hasImplicitShiftInNote = /\b(spreads? to|expanded? (into|to)|spilled over into|crossed (into|borders)|declares? state of emergency|emergency powers)\b/i.test(noteText);
+      const uType = (dev.updateType === 'material_shift' || hasImplicitShiftInNote) ? 'material_shift' : 'clarification';
 
       // Guard against no-op or duplicate note already in evolutionHistory
       const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
