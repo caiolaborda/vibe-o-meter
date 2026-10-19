@@ -1335,7 +1335,7 @@ JOB 1 — "merges" (Strict Duplicate-Incident Consolidation — Return [] If Non
 Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME specific physical incident, legislative bill, court ruling, or scientific study (e.g. two clusters that both report on the exact same train crash, or an earlier cluster on a protest and a newer cluster on that exact same protest spreading):
 - CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, debates, or studies that merely involve the same country, leader, election campaign, or war!
   • Example of FORBIDDEN merge: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
-- If no two clusters report the exact same specific incident, return `"merges": []`.
+- If no two clusters report the exact same specific incident, return "merges": [].
 - For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary; otherwise set "updateType": "clarification" (deduplication).
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
@@ -1350,7 +1350,7 @@ Identify pairs of DISTINCT clusters that share a political campaign, country bac
 Clusters:
 ${lines}
 
-Return ONLY valid JSON in this exact field order (use `"merges": []` if no two clusters are the exact same incident):
+Return ONLY valid JSON in this exact field order (use "merges": [] if no two clusters are the exact same incident):
 {
   "merges": [
     {
