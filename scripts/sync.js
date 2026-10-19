@@ -85,7 +85,6 @@ const NEWS_SOURCES = [
   { id: 'reuters', name: 'Reuters', feedUrl: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'newscientist', name: 'New Scientist', feedUrl: 'https://www.newscientist.com/feed/home/' },
-  { id: 'physorg', name: 'Phys.org', feedUrl: 'https://phys.org/rss-feed/breaking/' },
   { id: 'arstechnica', name: 'Ars Technica', feedUrl: 'https://feeds.arstechnica.com/arstechnica/index' }
 ];
 
@@ -119,7 +118,7 @@ function cleanHeadlineTitle(title) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|pbs|pbs newshour|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|global news|abc news|sydney morning herald|smh|scmp|south china morning post|the japan times|japan times|cna|channel newsasia|the national|africanews|agencia brasil|agência brasil|phys\.org|le monde|el pais|el país|rte|rté|buenos aires times|mexico news daily|mercopress|new scientist|ars technica).*$/i, '')
+    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|pbs|pbs newshour|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|global news|abc news|sydney morning herald|smh|scmp|south china morning post|the japan times|japan times|cna|channel newsasia|the national|africanews|agencia brasil|agência brasil|le monde|el pais|el país|rte|rté|buenos aires times|mexico news daily|mercopress|new scientist|ars technica).*$/i, '')
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
     .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
     .replace(/[\u2013\u2014-]/g, ' ')

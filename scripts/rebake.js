@@ -17,33 +17,40 @@ function computeFourFactorScore(item) {
   const perm = Math.max(0, Math.min(100, Number(item.permanence) ?? 20)) / 100;
   const frame = Math.max(-100, Math.min(100, Number(item.framing) || 0)) / 100;
 
-  let impactScale;
   let eventBase;
   let framingMod;
 
   if (pol >= 0) {
-    const geoMag = Math.pow(reach, 0.60) * Math.pow(perm, 0.40);
-    impactScale = Math.pow(geoMag, 0.90);
-    eventBase = pol * impactScale * 0.90;
-    const framingWeight = 0.10 * (0.4 + 0.6 * reach);
-    framingMod = frame * framingWeight;
+    const polCurve = Math.pow(pol, 1.32);
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.62) * Math.pow(Math.max(0.01, perm), 0.38);
+    const gPow = Math.pow(geoMag, 1.75);
+    const kPow = Math.pow(0.32, 1.75);
+    const hill = gPow / (gPow + kPow);
+    const impactScale = Math.min(1, 0.12 * geoMag + 0.88 * hill);
+    eventBase = Number(Math.min(1, polCurve * impactScale * 1.12).toFixed(3));
+    const rawFramingMod = frame * (0.10 + 0.22 * reach);
+    const maxFraming = Math.abs(eventBase) * 0.35;
+    framingMod = Number(Math.max(-maxFraming, Math.min(maxFraming, rawFramingMod)).toFixed(3));
   } else {
-    const geoMag = Math.pow(reach, 0.72) * Math.pow(perm, 0.28);
-    const k = 0.335;
-    const p = 3.4;
-    const gPow = Math.pow(geoMag, p);
-    const kPow = Math.pow(k, p);
-    impactScale = gPow > 0 ? gPow / (gPow + kPow) : 0;
-    eventBase = pol * impactScale * 0.92;
-    const framingWeight = 0.18 * (0.35 + 0.65 * impactScale);
-    framingMod = frame * framingWeight;
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);
+    const gPow = Math.pow(geoMag, 1.9);
+    const kPow = Math.pow(0.28, 1.9);
+    const hill = gPow / (gPow + kPow);
+    const impactScale = Math.min(1, 0.14 * reach + 0.86 * hill);
+    eventBase = Number((pol * impactScale).toFixed(3));
+    if (frame <= 0) {
+      framingMod = Number((frame * 0.45).toFixed(3));
+    } else {
+      const rawFramingMod = frame * (0.10 + 0.22 * reach);
+      const maxFraming = Math.abs(eventBase) * 0.35;
+      framingMod = Number(Math.min(maxFraming, rawFramingMod).toFixed(3));
+    }
   }
-
-  const rawTotal = Math.max(-1.0, Math.min(1.0, eventBase + framingMod));
+  const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(3));
   return {
-    score: Number(rawTotal.toFixed(2)),
-    eventBase: Number(eventBase.toFixed(2)),
-    framingMod: Number(framingMod.toFixed(2))
+    score,
+    eventBase,
+    framingMod
   };
 }
 
@@ -74,6 +81,21 @@ function cleanHeadlineTitle(title) {
 
 function rebakeOffline() {
   const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  const { OUTLET_REGION_MAP } = require('./export-feeds');
+  if (data.sources && data.sources.physorg) {
+    delete data.sources.physorg;
+  }
+  if (Array.isArray(data.sharedStoryClusters)) {
+    data.sharedStoryClusters = data.sharedStoryClusters
+      .map(c => ({ ...c, coverage: (c.coverage || []).filter(cov => cov.sourceId !== 'physorg') }))
+      .filter(c => c.coverage.length >= 2);
+  }
+  if (Array.isArray(data.timeSeries)) {
+    data.timeSeries.forEach(pt => {
+      if (pt.outlets) delete pt.outlets.physorg;
+      if (pt.scores) delete pt.scores.physorg;
+    });
+  }
   let updatedCount = 0;
 
   Object.values(data.sources || {}).forEach(src => {

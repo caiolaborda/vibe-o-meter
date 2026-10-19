@@ -11,7 +11,7 @@ const OUTLET_REGION_MAP = {
   spiegel: 'EU', dw: 'EU', france24: 'EU', euronews: 'EU', politicoeu: 'EU', lemonde: 'EU', elpais: 'EU', rte: 'EU', irishtimes: 'EU', swissinfo: 'EU',
   aljazeera: 'ME', thenational: 'ME', africanews: 'ME',
   scmp: 'APAC', abcau: 'APAC', smh: 'APAC', japantimes: 'APAC', CNA: 'APAC', cna: 'APAC', koreaherald: 'APAC',
-  reuters: 'GLOBAL', ap: 'GLOBAL', bloomberg: 'GLOBAL', newscientist: 'GLOBAL', physorg: 'GLOBAL', arstechnica: 'GLOBAL', nature: 'GLOBAL', UN: 'GLOBAL'
+  reuters: 'GLOBAL', ap: 'GLOBAL', bloomberg: 'GLOBAL', newscientist: 'GLOBAL', arstechnica: 'GLOBAL', nature: 'GLOBAL', UN: 'GLOBAL'
 };
 
 function canonicalUrl(url) {

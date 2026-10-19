@@ -87,7 +87,6 @@ const SOURCE_META = {
   reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
   ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
   newscientist: { name: 'New Scientist', initials: 'NSC', color: '#10b981', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🔬' },
-  physorg: { name: 'Phys.org', initials: 'PHY', color: '#06b6d4', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🔬' },
   arstechnica: { name: 'Ars Technica', initials: 'ARS', color: '#f97316', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '⚡' }
 };
 
