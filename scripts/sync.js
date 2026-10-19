@@ -1116,7 +1116,7 @@ Return ONLY valid JSON in this exact format:
       "updateType": "none" | "clarification" | "material_shift",
       "story": "Updated 4-7 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence synthesis with organic temporal grounding.",
-      "developmentNote": "1-sentence summary of what changed or was clarified (or null if duplicate merge)."
+      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' (5-10 words each, e.g. 'Arrest tally updated to 2,400; Milan damage assessed'). For material_shift: 1 crisp sentence."
     }
   ],
   "inPlaceDevelopments": [
@@ -1125,7 +1125,7 @@ Return ONLY valid JSON in this exact format:
       "updateType": "clarification" | "material_shift",
       "story": "Updated 4-7 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence synthesis reflecting the clarified facts or new development.",
-      "developmentNote": "1-sentence summary of the specific new development or clarification."
+      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' stating strictly what fact changed (5-10 words each, e.g. 'First official Vatican photos released; greeted St. Peter\\'s Square crowd' — no filler like 'New dispatches reported'). For material_shift: 1 crisp sentence."
     }
   ],
   "lateralConnections": [
