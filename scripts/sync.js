@@ -990,9 +990,51 @@ Return JSON array in format:
     const coveredUrls = new Set();
     const coveredTitles = new Set();
 
+    const extractCoherenceStems = (str) => {
+      const stop = new Set([
+        'after','amid','also','back','been','before','between','both','call','calls','city','come','comes','could',
+        'days','down','during','early','earlier','even','first','five','four','from','good','government','great',
+        'group','have','head','help','helped','here','high','into','just','keep','last','late','latest','lead',
+        'left','less','life','like','live','long','look','made','make','many','month','more','most','move','much',
+        'must','near','need','never','news','next','nine','official','officials','once','only','open','other',
+        'over','part','past','people','plan','plans','play','point','public','push','report','reports','return',
+        'right','rise','risk','said','says','second','secure','secured','seen','send','seven','show','side','sign',
+        'since','some','soon','spark','state','states','still','stop','story','study','support','take','talk',
+        'team','tell','test','than','that','their','them','then','there','these','they','thing','think','three',
+        'through','time','times','today','told','took','turn','under','until','update','used','very','view','vote',
+        'wait','wants','warn','watch','week','weeks','well','were','what','when','where','which','while','will',
+        'with','within','without','work','world','would','year','years','reuters','bloomberg','guardian'
+      ]);
+      return String(str || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 4 && !stop.has(w))
+        .map(w => w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
+        .filter(w => w.length >= 3);
+    };
+
     clusters.forEach(cl => {
       if (!cl.ids || cl.ids.length < 2) return;
-      const rawMatching = cl.ids.map(id => candidates[id]).filter(Boolean);
+      const rawCandidates = cl.ids.map(id => candidates[id]).filter(Boolean);
+      if (rawCandidates.length < 2) return;
+
+      // Reject LLM integer-index digit slips (e.g. [847] instead of [645]): every member must share at least 1 stem
+      // with either the cluster's story+summary OR at least 1 peer headline in the cluster
+      const anchorStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''}`));
+      const rawMatching = rawCandidates.filter((art, idx) => {
+        const myStems = extractCoherenceStems(`${art.title || ''} ${(art.description || '').slice(0, 125)}`);
+        if (myStems.some(s => anchorStems.has(s))) return true;
+        const peerTitleStems = new Set();
+        rawCandidates.forEach((other, j) => {
+          if (j !== idx) extractCoherenceStems(other.title).forEach(s => peerTitleStems.add(s));
+        });
+        const keep = myStems.some(s => peerTitleStems.has(s));
+        if (!keep) {
+          console.warn(`[Clusters] Dropped zero-overlap index outlier from "${cl.story}": [${art.sourceId}] "${art.title}"`);
+        }
+        return keep;
+      });
       if (rawMatching.length < 2) return;
 
       rawMatching.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -1053,13 +1095,22 @@ Return JSON array in format:
         let pendingUpdate = null;
 
         if (matchedPrev) {
-          const prevSlug = matchedPrev.id || String(matchedPrev.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          // Self-heal check: if matchedPrev previously merged two separate clusters that the primary clusterer has now split apart,
+          // use the clean primary cluster title/summary rather than carrying over a polluted multi-story summary.
+          const articleBagStems = new Set();
+          matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => articleBagStems.add(s)));
+          const prevStoryStems = extractCoherenceStems(matchedPrev.story || '');
+          const prevStorySupported = prevStoryStems.length === 0 || prevStoryStems.every(s => articleBagStems.has(s));
+
+          const prevSlug = prevStorySupported
+            ? (matchedPrev.id || String(matchedPrev.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+            : String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
           finalId = prevSlug;
-          finalStory = matchedPrev.story || cl.story;
-          finalSummary = matchedPrev.summary || cl.summary || '';
-          prevVersion = typeof matchedPrev.version === 'number' ? matchedPrev.version : 1;
-          prevLastDevelopedAt = matchedPrev.lastDevelopedAt || null;
-          prevDevelopmentNote = matchedPrev.developmentNote || null;
+          finalStory = prevStorySupported ? (matchedPrev.story || cl.story) : cl.story;
+          finalSummary = prevStorySupported ? (matchedPrev.summary || cl.summary || '') : (cl.summary || matchedPrev.summary || '');
+          prevVersion = prevStorySupported && typeof matchedPrev.version === 'number' ? matchedPrev.version : 1;
+          prevLastDevelopedAt = prevStorySupported ? (matchedPrev.lastDevelopedAt || null) : null;
+          prevDevelopmentNote = prevStorySupported ? (matchedPrev.developmentNote || null) : null;
 
           const currentCovUrls = (matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean);
           const currentCovTitles = (matchedPrev.coverage || []).map(c => c.title ? cleanHeadlineTitle(c.title) : '').filter(Boolean);
@@ -1082,7 +1133,7 @@ Return JSON array in format:
           });
           prevSeenKeys = Array.from(historicalKeys).slice(-120);
 
-          if (Array.isArray(matchedPrev.evolutionHistory) && matchedPrev.evolutionHistory.length > 0) {
+          if (prevStorySupported && Array.isArray(matchedPrev.evolutionHistory) && matchedPrev.evolutionHistory.length > 0) {
             prevEvolutionHistory = [...matchedPrev.evolutionHistory];
           } else {
             prevEvolutionHistory = [{
@@ -1097,9 +1148,11 @@ Return JSON array in format:
           }
 
           if (addedArticles.length > 0) {
+            const newestAddedMs = Math.max(...addedArticles.map(a => a.pubDate ? new Date(a.pubDate).getTime() : 0).filter(Boolean));
             pendingUpdate = {
               candidateStory: cl.story,
               candidateSummary: cl.summary || '',
+              newestAddedMs: newestAddedMs > 0 ? newestAddedMs : newestMs,
               addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
             };
           }
@@ -1225,7 +1278,11 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   const lines = clusters.map((c, idx) => {
     const id = c.id || slugify(c.story);
     const sampleOutlets = (c.coverage || []).slice(0, 4).map(a => a.sourceId).join(',');
+    const sampleHeadlines = (c.coverage || []).slice(0, 3).map(a => `${a.sourceId}: "${a.title}"`).join(' | ');
     let line = `[${idx}] id="${id}" (v${c.version || 1}) | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+    if (sampleHeadlines) {
+      line += `\n    [PRIMARY HEADLINES: ${sampleHeadlines}]`;
+    }
     if (c.developmentNote || (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 1)) {
       const priorNotes = (c.evolutionHistory || [])
         .slice(1)
@@ -1240,7 +1297,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   }).join('\n');
 
   const prompt = `You are the Executive Editor of a global news intelligence wire.
-Below are ${clusters.length} story clusters currently active across our rolling 7-day window, including each cluster's current summary, any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
+Below are ${clusters.length} story clusters currently active across our rolling 7-day window, including each cluster's current summary, [PRIMARY HEADLINES], any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
 
 FIRST-PRINCIPLES META-RULE — INTRA-STATE RESOLUTION ("clarification") vs. STATE-ENVELOPE SHIFT ("material_shift"):
 Every news story has a current State Envelope defined by:
@@ -1250,7 +1307,7 @@ Every news story has a current State Envelope defined by:
 
 When new dispatches arrive on a story, or when two clusters relate to the same story, distinguish between THREE states:
 1. "none" (Redundant / Syndication Catch-Up — Omit):
-   - The new dispatches merely restate milestones already present in the cluster's existing summary or [PRIOR RECORDED HISTORY] (e.g. reporting a hospital discharge when the summary already states the patient left the hospital and resumed public duties). Omit these completely!
+   - The new dispatches merely restate milestones already present in the cluster's existing headline, summary, or [PRIOR RECORDED HISTORY] (e.g. reporting a hospital discharge when the summary already states the patient left the hospital and resumed public duties, or repeating a casualty tally of 53 when the headline already says "Kills 53"). Omit these completely!
 
 2. "clarification" (Intra-State Resolution — Sharpening Facts Within the Existing Envelope):
    - The new dispatches increase factual precision, granularity, or post-event texture WITHOUT crossing a boundary of the existing State Envelope:
@@ -1274,31 +1331,34 @@ DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE & AUTOREGRESSIVE ORDERING:
 
 You have THREE jobs in this single pass:
 
-JOB 1 — "merges" (Cross-Cluster Consolidation):
-Identify any groups of 2 or more clusters that represent the EXACT SAME underlying incident/thread:
-- NEVER merge distinct events that merely share a broad topic, country, leader, or war. If two independently significant events influence or react to each other (e.g., "Ukrainian Drones Strike St. Petersburg" vs. "Trump Waives Russia Sanctions"), DO NOT merge them — put them in "lateralConnections" (Job 3) instead!
-- Generate "developmentNote" and "stateBoundaryCrossed" first, then set "updateType": "none" | "clarification" | "material_shift" using the State-Envelope Meta-Rule above.
+JOB 1 — "merges" (Strict Duplicate-Incident Consolidation — Return [] If None):
+Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME specific physical incident, legislative bill, court ruling, or scientific study (e.g. two clusters that both report on the exact same train crash, or an earlier cluster on a protest and a newer cluster on that exact same protest spreading):
+- CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, debates, or studies that merely involve the same country, leader, election campaign, or war!
+  • Example of FORBIDDEN merge: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
+- If no two clusters report the exact same specific incident, return `"merges": []`.
+- For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary; otherwise set "updateType": "clarification" (deduplication).
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
 Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line:
-- If the new dispatches are redundant with the existing summary or [PRIOR RECORDED HISTORY], omit the cluster (or set "updateType": "none").
+- If the new dispatches are redundant with the existing headline, summary, or [PRIOR RECORDED HISTORY], omit the cluster (or set "updateType": "none").
 - Otherwise, generate "developmentNote" and "stateBoundaryCrossed" first, then set "updateType": "clarification" | "material_shift" using the State-Envelope Meta-Rule and Disjunctive Batch Principle.
 
-JOB 3 — "lateralConnections" (Interacting Clusters That Must NOT Collapse):
-Identify pairs of DISTINCT clusters that causally influence, react to, or directly interact with each other in this week's news without being the same incident:
-- Keep them as separate clusters (do NOT put them in "merges"), and record their interaction here.
+JOB 3 — "lateralConnections" (Interacting / Same-Campaign / Same-Theatre Clusters That Must Stay Separate):
+Identify pairs of DISTINCT clusters that share a political campaign, country backdrop, or causal interaction without being the same specific incident (e.g. separate policy milestones ahead of Brazil's runoff election, or international leaders commenting on another country's unrest):
+- Keep them as separate clusters (NEVER put them in "merges"), and record their connection here.
 
 Clusters:
 ${lines}
 
-Return ONLY valid JSON in this exact field order:
+Return ONLY valid JSON in this exact field order (use `"merges": []` if no two clusters are the exact same incident):
 {
   "merges": [
     {
       "indices": [13, 14],
-      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' (5-10 words each, e.g. 'Arrest tally updated to 2,400; Milan damage assessed'). For material_shift: 1 crisp sentence synthesizing all boundary-crossing shifts.",
-      "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — intra-state detail/rhetoric'",
-      "updateType": "none" | "clarification" | "material_shift",
+      "sharedSpecificIncident": "Name the single specific incident/bill/study both clusters report on (never a broad country or election campaign)",
+      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' (5-10 words each). For material_shift: 1 crisp sentence synthesizing all boundary-crossing shifts.",
+      "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — duplicate/clarification'",
+      "updateType": "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence synthesis with organic temporal grounding."
     }
@@ -1346,10 +1406,27 @@ Return ONLY valid JSON in this exact field order:
         }
       }
     }
-    const merges = Array.isArray(parsed?.merges) ? parsed.merges : [];
+    const rawMerges = Array.isArray(parsed?.merges) ? parsed.merges : [];
     const inPlaceDevs = Array.isArray(parsed?.inPlaceDevelopments) ? parsed.inPlaceDevelopments : [];
     const lateralLinks = Array.isArray(parsed?.lateralConnections) ? parsed.lateralConnections : [];
     const auditLogEntries = [];
+
+    // Build set of laterally connected index pairs so a pair in lateralConnections can never also be merged
+    const lateralPairKeys = new Set();
+    for (const link of lateralLinks) {
+      const idxs = (link?.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
+      if (idxs.length >= 2) {
+        lateralPairKeys.add(`${Math.min(idxs[0], idxs[1])}:${Math.max(idxs[0], idxs[1])}`);
+      }
+    }
+    const merges = rawMerges.filter(m => {
+      if (!m || m.updateType === 'none') return false;
+      const idxs = (m.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
+      if (idxs.length < 2) return false;
+      const pairKey = `${Math.min(idxs[0], idxs[1])}:${Math.max(idxs[0], idxs[1])}`;
+      if (lateralPairKeys.has(pairKey)) return false;
+      return true;
+    });
 
     // Apply verified in-place developments & clarifications first
     const inPlaceByIdx = new Map();
@@ -1385,7 +1462,7 @@ Return ONLY valid JSON in this exact field order:
         outletCount: c.outletCount || (c.coverage || []).length || 1
       };
 
-      const ts = new Date(c.newestMs || Date.now()).toISOString();
+      const ts = new Date(c._pendingUpdate?.newestAddedMs || c.newestMs || Date.now()).toISOString();
 
       if (uType === 'material_shift') {
         materialInPlaceCount++;
@@ -1520,8 +1597,19 @@ Return ONLY valid JSON in this exact field order:
       let bestLastDevelopedAt = null;
       let bestDevelopmentNote = null;
 
-      // Pick the most established cluster in the group as the anchor for duplicate/clarification merges
-      const anchor = [...group].sort((a, b) => (b.outletCount || 0) - (a.outletCount || 0))[0] || group[0];
+      // Helper to find the earliest article timestamp in a cluster
+      const getEarliestMs = (cl) => {
+        const times = (cl.coverage || []).map(a => a.pubDate ? new Date(a.pubDate).getTime() : NaN).filter(t => !isNaN(t) && t > 0);
+        if (times.length > 0) return Math.min(...times);
+        const h0 = cl.evolutionHistory?.[0]?.timestamp ? new Date(cl.evolutionHistory[0].timestamp).getTime() : NaN;
+        return !isNaN(h0) ? h0 : Infinity;
+      };
+
+      // Pick the chronologically earliest cluster as the historical origin anchor, and largest for fallback metadata
+      const originAnchor = [...group].sort((a, b) => getEarliestMs(a) - getEarliestMs(b))[0] || group[0];
+      const largestAnchor = [...group].sort((a, b) => (b.outletCount || 0) - (a.outletCount || 0))[0] || group[0];
+      const latestCluster = [...group].sort((a, b) => (b.newestMs || 0) - (a.newestMs || 0))[0] || group[0];
+      const chronologicalSpanMs = Math.max(0, (latestCluster.newestMs || 0) - getEarliestMs(originAnchor));
 
       for (const g of group) {
         const gSlug = g.id || slugify(g.story);
@@ -1556,11 +1644,16 @@ Return ONLY valid JSON in this exact field order:
       const avgScore = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : 0;
       const spreadRange = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : 0;
 
-      const mergeType = m.updateType === 'material_shift' || m.isNewDevelopment === true
+      // A merge is only a chronological material_shift if the newer cluster broke at least 2 hours after the origin
+      const rawMergeType = m.updateType === 'material_shift' || m.isNewDevelopment === true
         ? 'material_shift'
         : (m.updateType === 'clarification' ? 'clarification' : 'none');
+      const mergeType = (rawMergeType === 'material_shift' && chronologicalSpanMs < 2 * 3600000)
+        ? 'clarification'
+        : rawMergeType;
       const isDev = mergeType === 'material_shift';
 
+      const anchor = isDev ? originAnchor : largestAnchor;
       const finalStory = isDev ? ((m.story && m.story.trim()) || anchor.story) : (anchor.story || (m.story && m.story.trim()));
       const finalSlug = isDev ? slugify(finalStory) : (anchor.id || slugify(finalStory));
       const finalSummary = (m.summary && m.summary.trim()) || anchor.summary;
@@ -1573,23 +1666,23 @@ Return ONLY valid JSON in this exact field order:
         ? ((m.developmentNote && m.developmentNote.trim()) || `Story evolved: ${finalStory}`)
         : bestDevelopmentNote;
 
-      const hist = Array.isArray(anchor.evolutionHistory) ? [...anchor.evolutionHistory] : [{
+      const hist = Array.isArray(originAnchor.evolutionHistory) ? [...originAnchor.evolutionHistory] : [{
         version: 1,
         type: 'initial',
-        timestamp: anchor.firstSeenAt || ts,
-        headline: anchor.story,
-        summary: anchor.summary,
-        outletCount: anchor.outletCount || 2,
+        timestamp: originAnchor.firstSeenAt || new Date(getEarliestMs(originAnchor) < Infinity ? getEarliestMs(originAnchor) : (maxNewestMs || Date.now())).toISOString(),
+        headline: originAnchor.story,
+        summary: originAnchor.summary,
+        outletCount: originAnchor.outletCount || 2,
         note: 'Initial cluster formation on the wire'
       }];
 
       if (mergeType === 'material_shift' || mergeType === 'clarification') {
         const beforeSnapshot = {
-          id: anchor.id || slugify(anchor.story),
+          id: originAnchor.id || slugify(originAnchor.story),
           version: maxVersion,
-          story: anchor.story,
-          summary: anchor.summary,
-          outletCount: anchor.outletCount || 2
+          story: originAnchor.story,
+          summary: originAnchor.summary,
+          outletCount: originAnchor.outletCount || 2
         };
         const afterSnapshot = {
           id: finalSlug,
@@ -1605,8 +1698,8 @@ Return ONLY valid JSON in this exact field order:
           timestamp: ts,
           headline: finalStory,
           summary: finalSummary,
-          beforeStory: anchor.story,
-          beforeSummary: anchor.summary,
+          beforeStory: originAnchor.story,
+          beforeSummary: originAnchor.summary,
           outletCount: dedupedCov.length,
           note: entryNote
         });
