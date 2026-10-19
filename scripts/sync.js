@@ -695,6 +695,128 @@ Return ONLY valid JSON array.`;
   return { results, modelUsed: modelName };
 }
 
+// Structural region mapping of the 39 news sources (feed metadata only — zero topic hardcoding)
+const SOURCE_REGION_MAP = {
+  nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', pbs: 'NA', cnbc: 'NA', bloomberg: 'NA', wsj: 'NA', politico: 'NA', cbc: 'NA', globalnews: 'NA',
+  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM',
+  bbc: 'UK', guardian: 'UK', skynews: 'UK', ft: 'UK',
+  spiegel: 'EU', dw: 'EU', france24: 'EU', euronews: 'EU', lemonde: 'EU', elpais: 'EU', rte: 'EU',
+  abcau: 'APAC', smh: 'APAC', scmp: 'APAC', japantimes: 'APAC', cna: 'APAC',
+  aljazeera: 'MEA', thenational: 'MEA', africanews: 'MEA',
+  reuters: 'WIRE', ap: 'WIRE', newscientist: 'SCI', physorg: 'SCI', arstechnica: 'SCI'
+};
+
+// Pure grammatical/function words only (zero hardcoded topic keywords)
+const BURST_GRAMMAR_STOPWORDS = new Set([
+  'the', 'and', 'for', 'that', 'this', 'with', 'from', 'after', 'over', 'into', 'amid', 'have', 'were', 'been', 'their',
+  'about', 'more', 'most', 'news', 'says', 'said', 'will', 'what', 'when', 'where', 'which', 'while', 'under', 'between',
+  'first', 'found', 'years', 'world', 'early', 'near', 'report', 'reports', 'new', 'how', 'why', 'who', 'its', 'his',
+  'her', 'they', 'them', 'are', 'was', 'has', 'had', 'not', 'but', 'can', 'out', 'all', 'one', 'two', 'three', 'four',
+  'five', 'six', 'may', 'now', 'just', 'like', 'than', 'other', 'some', 'time', 'year', 'week', 'day', 'days', 'make',
+  'made', 'take', 'took', 'get', 'gets', 'got', 'back', 'down', 'off', 'still', 'even', 'also', 'could', 'would', 'should',
+  'see', 'seen', 'look', 'looks', 'live', 'updates', 'update', 'latest', 'watch', 'video', 'photos', 'opinion', 'analysis',
+  'review', 'podcast', 'briefing', 'morning', 'evening', 'daily'
+]);
+
+function stemBurstWord(w) {
+  return w.replace(/(ian|ians|an|ans|ish|ese|ing|ed|es|s)$/, '');
+}
+
+/**
+ * Zero-LLM, Zero-Keyword Breaking Burst Detector:
+ * Fires when >=4 distinct outlets across >=3 global regions converge on a stemmed token pair
+ * within a 90-minute rolling window, and at least 2 of those dispatches are new/unclustered
+ * since the previous clustering pass.
+ */
+function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], lastClusteredAt = null, nowMs = Date.now()) {
+  const WIN_MS = 90 * 60 * 1000; // 90-minute rolling window
+  const cutoffMs = nowMs - WIN_MS;
+  const lastClusterMs = lastClusteredAt ? new Date(lastClusteredAt).getTime() : 0;
+
+  // Build set of already-clustered article URLs/titles so an already-clustered burst doesn't re-trigger on the next 30m tick
+  const alreadyClusteredKeys = new Set();
+  if (Array.isArray(previousClusters)) {
+    for (const cl of previousClusters) {
+      if (Array.isArray(cl?.seenArticleKeys)) {
+        cl.seenArticleKeys.forEach(k => alreadyClusteredKeys.add(k));
+      }
+      if (Array.isArray(cl?.coverage)) {
+        cl.coverage.forEach(c => {
+          if (c.link) alreadyClusteredKeys.add(canonicalUrl(c.link));
+          if (c.title) alreadyClusteredKeys.add(cleanHeadlineTitle(c.title));
+        });
+      }
+    }
+  }
+
+  const recentArticles = [];
+  for (const [sourceId, src] of Object.entries(finalSources || {})) {
+    const region = SOURCE_REGION_MAP[sourceId] || 'OTHER';
+    for (const art of (src.articles || [])) {
+      const pubMs = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
+      if (isNaN(pubMs) || pubMs < cutoffMs || pubMs > nowMs + 5 * 60 * 1000) continue;
+
+      const rawWords = cleanHeadlineTitle(art.title || '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length >= 4 && !BURST_GRAMMAR_STOPWORDS.has(w) && !/^\d+$/.test(w));
+      const stems = [...new Set(rawWords.map(stemBurstWord).filter(w => w.length >= 4))];
+      if (stems.length < 2) continue;
+
+      const cUrl = art.link ? canonicalUrl(art.link) : '';
+      const cTitle = cleanHeadlineTitle(art.title || '');
+      const isFreshSinceLastCluster = (pubMs > lastClusterMs) || (!alreadyClusteredKeys.has(cUrl) && !alreadyClusteredKeys.has(cTitle));
+
+      recentArticles.push({
+        sourceId,
+        region,
+        title: art.title,
+        pubMs,
+        stems,
+        isFreshSinceLastCluster
+      });
+    }
+  }
+
+  if (recentArticles.length < 4) return null;
+
+  const pairMap = new Map();
+  for (const a of recentArticles) {
+    const ws = a.stems;
+    for (let i = 0; i < ws.length; i++) {
+      for (let j = i + 1; j < ws.length; j++) {
+        const key = ws[i] < ws[j] ? `${ws[i]}+${ws[j]}` : `${ws[j]}+${ws[i]}`;
+        let entry = pairMap.get(key);
+        if (!entry) {
+          entry = { outlets: new Set(), regions: new Set(), freshOutlets: new Set(), articles: [] };
+          pairMap.set(key, entry);
+        }
+        entry.outlets.add(a.sourceId);
+        entry.regions.add(a.region);
+        if (a.isFreshSinceLastCluster) entry.freshOutlets.add(a.sourceId);
+        entry.articles.push(a);
+      }
+    }
+  }
+
+  const candidates = [...pairMap.entries()]
+    .filter(([, info]) => info.outlets.size >= 4 && info.regions.size >= 3 && info.freshOutlets.size >= 2)
+    .sort((a, b) => b[1].outlets.size - a[1].outlets.size || b[1].regions.size - a[1].regions.size);
+
+  if (candidates.length === 0) return null;
+
+  const [bestPair, bestInfo] = candidates[0];
+  bestInfo.articles.sort((a, b) => b.pubMs - a.pubMs);
+  return {
+    pair: bestPair,
+    outlets: bestInfo.outlets.size,
+    regions: bestInfo.regions.size,
+    freshOutlets: bestInfo.freshOutlets.size,
+    regionList: Array.from(bestInfo.regions),
+    sampleTitle: bestInfo.articles[0]?.title || ''
+  };
+}
+
 // Cross-Outlet Story Clustering (100% Pure AI Semantic Clustering with 7-Day Constructive Window & Rolling Cluster Memory)
 async function clusterCrossOutletStories(finalSources, apiKey, previousClusters = []) {
   if (!apiKey) return previousClusters;
@@ -1888,23 +2010,28 @@ async function main() {
   }
 
   // 5.7 Cross-Outlet Story Clustering (Method A: Single Aggregation Pass)
-  // Runs on a regular interval (default: every 6 hours, or via --force / --cluster)
-  // using GEMINI_PAID_API_KEY if configured (falling back to GEMINI_API_KEY with a brief rate-limit cooldown).
+  // Runs on a regular interval (default: every 3 hours, or via --force / --cluster)
+  // OR immediately when the zero-LLM Cross-Region Burst Detector spots >=4 outlets across >=3 global regions
+  // converging on a stemmed token pair within a 90-minute rolling window.
   let sharedStoryClusters = currentCache.sharedStoryClusters || [];
   let lastClusteredAt = currentCache.lastClusteredAt || (currentCache.globalStats && currentCache.globalStats.lastClusteredAt) || null;
   const clusterIntervalHours = Number(process.env.CLUSTER_INTERVAL_HOURS || 3);
   const hoursSinceLastCluster = lastClusteredAt ? (now.getTime() - new Date(lastClusteredAt).getTime()) / (1000 * 60 * 60) : Infinity;
   const forceCluster = process.argv.includes('--force') || process.argv.includes('--cluster') || process.argv.includes('--recalc-24h');
-  const shouldRunClustering = forceCluster || sharedStoryClusters.length === 0 || hoursSinceLastCluster >= clusterIntervalHours || (newlyAnalyzedCount >= 10 && hoursSinceLastCluster >= 1);
+  const breakingBurst = detectCrossRegionBreakingBurst(finalSources, sharedStoryClusters, lastClusteredAt, now.getTime());
+  const shouldRunClustering = forceCluster || sharedStoryClusters.length === 0 || hoursSinceLastCluster >= clusterIntervalHours || Boolean(breakingBurst);
 
   if (shouldRunClustering) {
     try {
+      if (breakingBurst && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
+        console.log(`[Burst Signal] ⚡ Breaking cross-region convergence detected ("${breakingBurst.pair}" across ${breakingBurst.outlets} outlets / ${breakingBurst.regions} regions: ${breakingBurst.regionList.join(', ')}) — "${breakingBurst.sampleTitle}"`);
+      }
       const usingSeparatePaidKey = Boolean(process.env.GEMINI_PAID_API_KEY || config.paidApiKey);
       if (!usingSeparatePaidKey && newlyAnalyzedCount > 0) {
         console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
         await new Promise(r => setTimeout(r, 6000));
       }
-      console.log(`[Sync] Running cross-outlet story clustering (key: ${usingSeparatePaidKey ? 'PAID' : 'PRIMARY'}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
+      console.log(`[Sync] Running cross-outlet story clustering (key: ${usingSeparatePaidKey ? 'PAID' : 'PRIMARY'}, reason: ${forceCluster ? 'forced' : (breakingBurst && hoursSinceLastCluster < clusterIntervalHours ? 'breaking-burst' : 'scheduled')}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
       const clusters = await clusterCrossOutletStories(finalSources, geminiPaidKey, currentCache.sharedStoryClusters);
       if (clusters && clusters.length > 0) {
         sharedStoryClusters = clusters;
@@ -1915,7 +2042,7 @@ async function main() {
       console.warn('[Sync] Non-blocking story clustering notice:', clusterErr.message);
     }
   } else {
-    console.log(`[Sync] Skipping story clustering (last clustered ${hoursSinceLastCluster.toFixed(1)}h ago; interval is ${clusterIntervalHours}h).`);
+    console.log(`[Sync] Skipping story clustering (last clustered ${hoursSinceLastCluster.toFixed(1)}h ago; interval is ${clusterIntervalHours}h; no cross-region burst).`);
   }
 
   // Always synchronize cluster coverage sentiment scores with the latest article scores in finalSources
