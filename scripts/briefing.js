@@ -92,8 +92,14 @@ async function generateDailyBriefing(options = {}) {
   // Filter out mass-casualty / acute tragedy stories so the witty mood kicker never punches down on victims
   const rawTragedyRegex = /\b(mass shooting|elementary school|killed|dead|deaths|murdered|massacre|rape|sexual assault|child abuse|suicide|funeral|grief|mourning|casualties)\b/i;
 
-  // 1. Major Multi-Outlet Story Clusters (up to 12) with full summary + sample headlines for rich context
-  const topClusterLines = clustersList
+  // 1. Major Multi-Outlet Story Clusters (up to 12, active within 48h) with full summary + sample headlines for rich context
+  const cutoff48h = now - (48 * 60 * 60 * 1000);
+  const activeClusters48h = clustersList.filter(c => {
+    const newestMs = Math.max(...(c.coverage || []).map(a => new Date(a.pubDate).getTime() || 0), 0);
+    return newestMs >= cutoff48h;
+  });
+  const briefingClusterPool = activeClusters48h.length >= 6 ? activeClusters48h : clustersList;
+  const topClusterLines = briefingClusterPool
     .filter(c => !rawTragedyRegex.test(c.story + ' ' + (c.summary || '')))
     .slice(0, 12)
     .map(c => {

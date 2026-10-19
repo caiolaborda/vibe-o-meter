@@ -4099,9 +4099,15 @@ function renderPulseTopStories() {
 
   // Filter by topic if active
   const activeTopic = state.filters.category || 'all';
-  const filtered = activeTopic === 'all' 
+  const topicFiltered = activeTopic === 'all' 
     ? annotated 
     : annotated.filter(c => c.topic === activeTopic);
+
+  // Keep Daily Pulse Top 6 Developing Stories focused on active stories updated within the past 48h (fallback to 7d if < 6)
+  const nowMs = Date.now();
+  const cutoff48h = nowMs - (48 * 3600 * 1000);
+  const active48h = topicFiltered.filter(c => (c.maxTime || 0) >= cutoff48h);
+  const filtered = active48h.length >= 6 ? active48h : (active48h.length > 0 && activeTopic !== 'all' ? active48h : topicFiltered);
 
   // Update Topic Indicator
   if (elements.pulseClusterTopicIndicator && elements.pulseClusterTopicName) {
@@ -4114,11 +4120,15 @@ function renderPulseTopStories() {
     }
   }
 
-  // Sort by coverage breadth (most covering outlets first), then by divergence spread
+  // Sort by recency-weighted coverage breadth (fresh 24h stories lead over older 24-48h stories of similar size), then divergence spread
   filtered.sort((a, b) => {
-    const covA = a.coverage?.length || 0;
-    const covB = b.coverage?.length || 0;
-    if (covB !== covA) return covB - covA;
+    const ageHoursA = a.maxTime ? Math.max(0, (nowMs - a.maxTime) / 3600000) : 48;
+    const ageHoursB = b.maxTime ? Math.max(0, (nowMs - b.maxTime) / 3600000) : 48;
+    const boostA = ageHoursA <= 24 ? 1.25 : (ageHoursA <= 48 ? 1.0 : 0.65);
+    const boostB = ageHoursB <= 24 ? 1.25 : (ageHoursB <= 48 ? 1.0 : 0.65);
+    const scoreA = (a.coverage?.length || 0) * boostA;
+    const scoreB = (b.coverage?.length || 0) * boostB;
+    if (Math.abs(scoreB - scoreA) > 0.5) return scoreB - scoreA;
     return b.computedSpread - a.computedSpread;
   });
 
@@ -4813,7 +4823,45 @@ function renderSentimentTimeline() {
   let clusterZonesHTML = '';
   let clusterPinsHTML = '';
   const candidateClusters = [];
-  const rawClusterList = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
+
+  // Lazy-load permanent historical cluster archive when viewing multi-day/all-time windows (or while summary.json is active)
+  if ((timeframe === '7d' || timeframe === '30d' || timeframe === 'all') && !state.archivedClustersLoaded && !state.archivedClustersLoading) {
+    state.archivedClustersLoading = true;
+    fetch('data/clusters-archive.json')
+      .then(r => r.ok ? r.json() : null)
+      .then(arch => {
+        state.archivedClustersLoaded = true;
+        state.archivedClustersLoading = false;
+        const list = Array.isArray(arch) ? arch : (Array.isArray(arch?.clusters) ? arch.clusters : []);
+        if (list.length > 0) {
+          state.archivedStoryClusters = list;
+          renderSentimentTimeline();
+        }
+      })
+      .catch(() => {
+        state.archivedClustersLoaded = true;
+        state.archivedClustersLoading = false;
+      });
+  }
+
+  const liveClusterList = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
+  const archiveClusterList = Array.isArray(state.archivedStoryClusters) ? state.archivedStoryClusters : [];
+  const mergedClusterMap = new Map();
+  const supersededIds = new Set();
+  liveClusterList.forEach(cl => {
+    if (!cl) return;
+    const cid = cl.id || String(cl.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    if (cid) mergedClusterMap.set(cid, cl);
+    if (Array.isArray(cl.evolvedFromIds)) cl.evolvedFromIds.forEach(oldId => supersededIds.add(oldId));
+  });
+  archiveClusterList.forEach(cl => {
+    if (!cl) return;
+    const cid = cl.id || String(cl.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    if (cid && !mergedClusterMap.has(cid) && !supersededIds.has(cid)) {
+      mergedClusterMap.set(cid, cl);
+    }
+  });
+  const rawClusterList = Array.from(mergedClusterMap.values());
   rawClusterList.forEach((rawCl, clIdx) => {
     if (!rawCl || !Array.isArray(rawCl.coverage) || rawCl.coverage.length < 2) return;
     const cl = annotateStoryCluster(rawCl);

@@ -219,6 +219,85 @@ function exportPublicJsonFeeds(fullPayload) {
   };
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'clusters.json'), JSON.stringify(clustersPayload, null, 2), 'utf8');
 
+  // 1b. Maintain Permanent Historical Cluster Archive -> data/clusters-archive.json & public/data/clusters-archive.json
+  const dataArchivePath = path.join(__dirname, '..', 'data', 'clusters-archive.json');
+  const publicArchivePath = path.join(PUBLIC_DATA_DIR, 'clusters-archive.json');
+  const archiveMap = new Map();
+  try {
+    const existingSource = fs.existsSync(dataArchivePath)
+      ? dataArchivePath
+      : (fs.existsSync(publicArchivePath) ? publicArchivePath : null);
+    if (existingSource) {
+      const rawArch = JSON.parse(fs.readFileSync(existingSource, 'utf8'));
+      const list = Array.isArray(rawArch) ? rawArch : (Array.isArray(rawArch?.clusters) ? rawArch.clusters : []);
+      for (const item of list) {
+        if (item && item.id && Array.isArray(item.coverage) && item.coverage.length >= 2) {
+          archiveMap.set(item.id, item);
+        }
+      }
+    }
+  } catch (archReadErr) {
+    console.warn('[Export] Could not read existing clusters-archive.json:', archReadErr.message);
+  }
+
+  // Upsert current enrichedClusters into archiveMap and remove any superseded evolvedFromIds slugs
+  for (const cl of enrichedClusters) {
+    if (!cl || !cl.id || !Array.isArray(cl.coverage) || cl.coverage.length < 2) continue;
+    if (Array.isArray(cl.evolvedFromIds)) {
+      cl.evolvedFromIds.forEach(oldId => {
+        if (oldId && oldId !== cl.id) archiveMap.delete(oldId);
+      });
+    }
+    // Keep lightweight coverage entries in the long-term archive so 30d/All timelines & Isobar longitudinal lookups stay fast
+    archiveMap.set(cl.id, {
+      id: cl.id,
+      story: cl.story,
+      summary: cl.summary || '',
+      version: cl.version || 1,
+      ...(cl.lastDevelopedAt ? { lastDevelopedAt: cl.lastDevelopedAt } : {}),
+      ...(cl.developmentNote ? { developmentNote: cl.developmentNote } : {}),
+      ...(cl.evolvedFromIds ? { evolvedFromIds: cl.evolvedFromIds } : {}),
+      ...(cl.evolutionHistory ? { evolutionHistory: cl.evolutionHistory } : {}),
+      ...(cl.lateralConnections ? { lateralConnections: cl.lateralConnections } : {}),
+      topic: cl.topic || 'world',
+      imageUrl: cl.imageUrl || null,
+      averageSentiment: cl.averageSentiment,
+      eventBase: cl.eventBase,
+      significanceScore: cl.significanceScore,
+      sentimentSpread: cl.sentimentSpread,
+      outletCount: cl.outletCount,
+      firstSeenAt: cl.firstSeenAt,
+      latestUpdateAt: cl.latestUpdateAt,
+      coverage: (cl.coverage || []).map(c => ({
+        sourceId: c.sourceId,
+        sourceName: c.sourceName,
+        region: c.region,
+        title: c.title,
+        sentiment: c.sentiment,
+        category: c.category,
+        link: c.link,
+        pubDate: c.pubDate
+      }))
+    });
+  }
+
+  const archivedClustersList = Array.from(archiveMap.values())
+    .sort((a, b) => new Date(b.latestUpdateAt || b.firstSeenAt || 0) - new Date(a.latestUpdateAt || a.firstSeenAt || 0))
+    .slice(0, 2500);
+
+  const archivePayload = {
+    dataset: 'vibe-o-meter/clusters-archive',
+    lastUpdated: nowIso,
+    count: archivedClustersList.length,
+    clusters: archivedClustersList
+  };
+  try {
+    fs.writeFileSync(dataArchivePath, JSON.stringify(archivePayload, null, 2), 'utf8');
+    fs.writeFileSync(publicArchivePath, JSON.stringify(archivePayload), 'utf8');
+  } catch (archWriteErr) {
+    console.warn('[Export] Could not write clusters-archive.json:', archWriteErr.message);
+  }
+
   // 2. Build & Export Rescued Constructive News -> public/data/good-news.json
   const cutoff48h = nowMs - 48 * 3600 * 1000;
   const seenGoodUrls = new Set();
@@ -433,8 +512,13 @@ function exportPublicJsonFeeds(fullPayload) {
     endpoints: {
       clusters: {
         path: 'data/clusters.json',
-        description: 'Cross-outlet story clusters with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, and per-outlet coverage links.',
+        description: 'Cross-outlet story clusters (rolling 7-day window across all sentiments) with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, and per-outlet coverage links.',
         count: enrichedClusters.length
+      },
+      clustersArchive: {
+        path: 'data/clusters-archive.json',
+        description: 'Permanent long-term historical archive of deduplicated cross-outlet story clusters for 30d/All timeline overlays and longitudinal precedent lookups.',
+        count: archivedClustersList.length
       },
       goodNews: {
         path: 'data/good-news.json',
@@ -454,7 +538,7 @@ function exportPublicJsonFeeds(fullPayload) {
       },
       summary: {
         path: 'data/summary.json',
-        description: 'Lightweight 24h dashboard payload combining global stats, story clusters, and recent outlet dispatches.'
+        description: 'Lightweight 24h/48h dashboard payload combining global stats, active story clusters, and recent outlet dispatches.'
       },
       fullArchive: {
         path: 'data/data.json',
@@ -464,9 +548,17 @@ function exportPublicJsonFeeds(fullPayload) {
   };
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'index.json'), JSON.stringify(indexManifest, null, 2), 'utf8');
 
+  const active48h = rawClusters.filter(cl => {
+    const newestMs = Math.max(...(cl.coverage || []).map(c => new Date(c.pubDate).getTime() || 0), 0);
+    return newestMs >= cutoff48h;
+  });
+  const activeClusters48h = active48h.length >= 12 ? active48h : rawClusters.slice(0, 24);
+
   return {
     enrichedClusters: rawClusters,
+    activeClusters48h,
     clustersCount: enrichedClusters.length,
+    archivedClustersCount: archivedClustersList.length,
     goodNews24hCount: goodStories24h.length,
     goodNews7dCount: goodStories7d.length,
     outletsCount: outletsList.length
@@ -487,12 +579,13 @@ if (require.main === module) {
   const summaryPath = path.join(PUBLIC_DATA_DIR, 'summary.json');
   if (fs.existsSync(summaryPath)) {
     const sumPayload = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
-    sumPayload.sharedStoryClusters = payload.sharedStoryClusters;
-    if (sumPayload.globalStats) sumPayload.globalStats.sharedStoryClusters = payload.sharedStoryClusters;
+    sumPayload.sharedStoryClusters = stats.activeClusters48h;
+    if (sumPayload.globalStats) sumPayload.globalStats.sharedStoryClusters = stats.activeClusters48h;
     fs.writeFileSync(summaryPath, JSON.stringify(sumPayload), 'utf8');
   }
   console.log('✅ Exported public JSON feeds to public/data/:', {
     clustersCount: stats.clustersCount,
+    archivedClustersCount: stats.archivedClustersCount,
     goodNews24hCount: stats.goodNews24hCount,
     goodNews7dCount: stats.goodNews7dCount,
     outletsCount: stats.outletsCount

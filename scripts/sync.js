@@ -878,12 +878,37 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
   };
 }
 
-// Cross-Outlet Story Clustering (100% Pure AI Semantic Clustering with 7-Day Constructive Window & Rolling Cluster Memory)
+function extractCoherenceStems(str) {
+  const stop = new Set([
+    'after','amid','also','back','been','before','between','both','call','calls','city','come','comes','could',
+    'days','down','during','early','earlier','even','first','five','four','from','good','government','great',
+    'group','have','head','help','helped','here','high','into','just','keep','last','late','latest','lead',
+    'left','less','life','like','live','long','look','made','make','many','month','more','most','move','much',
+    'must','near','need','never','news','next','nine','official','officials','once','only','open','other',
+    'over','part','past','people','plan','plans','play','point','public','push','report','reports','return',
+    'right','rise','risk','said','says','second','secure','secured','seen','send','seven','show','side','sign',
+    'since','some','soon','spark','state','states','still','stop','story','study','support','take','talk',
+    'team','tell','test','than','that','their','them','then','there','these','they','thing','think','three',
+    'through','time','times','today','told','took','turn','under','until','update','used','very','view','vote',
+    'wait','wants','warn','watch','week','weeks','well','were','what','when','where','which','while','will',
+    'with','within','without','work','world','would','year','years','reuters','bloomberg','guardian','country',
+    'countries','minister','president','leader','leaders','national','global','international','million','billion'
+  ]);
+  return String(str || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 4 && !stop.has(w))
+    .map(w => w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
+    .filter(w => w.length >= 3);
+}
+
+// Cross-Outlet Story Clustering (100% Pure AI Semantic Clustering with Uniform 7-Day Rolling Cluster Memory)
 async function clusterCrossOutletStories(finalSources, apiKey, previousClusters = []) {
   if (!apiKey) return previousClusters;
   
-  // Gather fresh breaking headlines from the past 36h (up to 25 per outlet)
-  // PLUS all constructive stories (sentiment >= 0.15) from the past 7 DAYS so slow-burn discoveries reported days apart cluster together
+  // Gather recent headlines from the past 72h uniformly across all sentiments (up to 25 per outlet)
+  // while existing multi-outlet clusters of all sentiments persist for a uniform 7-day rolling window.
   const candidates = [];
   const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
   const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
@@ -891,28 +916,23 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
 
   Object.entries(finalSources).forEach(([sourceId, src]) => {
     const articles = src.articles || [];
-    let addedBreakingForSource = 0;
-    let addedConstructiveForSource = 0;
+    let addedForSource = 0;
+    let addedOlderForSource = 0;
     for (let i = 0; i < articles.length; i++) {
       const art = articles[i];
       if (!art || !art.title || art.title.trim().length <= 10) continue;
       const t = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
-      if (isNaN(t) || t < sevenDaysAgo) continue;
+      if (isNaN(t) || t < threeDaysAgo) continue;
 
       const score = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0);
       const isRecent36h = t >= thirtySixHoursAgo;
-      const isRecent72h = t >= threeDaysAgo;
-      const isConstructive7d = score >= 0.15;
 
-      if (isConstructive7d) {
-        if (addedConstructiveForSource >= 15) continue;
-        addedConstructiveForSource++;
-      } else {
-        if (!isRecent72h) continue;
-        if (addedBreakingForSource >= 24) continue;
-        if (!isRecent36h && addedBreakingForSource >= 8) continue;
-        addedBreakingForSource++;
+      if (addedForSource >= 25) continue;
+      if (!isRecent36h) {
+        if (addedOlderForSource >= 10) continue;
+        addedOlderForSource++;
       }
+      addedForSource++;
 
       candidates.push({
         sourceId,
@@ -1013,30 +1033,7 @@ Return JSON array in format:
     const formattedClusters = [];
     const coveredUrls = new Set();
     const coveredTitles = new Set();
-
-    const extractCoherenceStems = (str) => {
-      const stop = new Set([
-        'after','amid','also','back','been','before','between','both','call','calls','city','come','comes','could',
-        'days','down','during','early','earlier','even','first','five','four','from','good','government','great',
-        'group','have','head','help','helped','here','high','into','just','keep','last','late','latest','lead',
-        'left','less','life','like','live','long','look','made','make','many','month','more','most','move','much',
-        'must','near','need','never','news','next','nine','official','officials','once','only','open','other',
-        'over','part','past','people','plan','plans','play','point','public','push','report','reports','return',
-        'right','rise','risk','said','says','second','secure','secured','seen','send','seven','show','side','sign',
-        'since','some','soon','spark','state','states','still','stop','story','study','support','take','talk',
-        'team','tell','test','than','that','their','them','then','there','these','they','thing','think','three',
-        'through','time','times','today','told','took','turn','under','until','update','used','very','view','vote',
-        'wait','wants','warn','watch','week','weeks','well','were','what','when','where','which','while','will',
-        'with','within','without','work','world','would','year','years','reuters','bloomberg','guardian'
-      ]);
-      return String(str || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length >= 4 && !stop.has(w))
-        .map(w => w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
-        .filter(w => w.length >= 3);
-    };
+    const matchedPrevIds = new Set();
 
     clusters.forEach(cl => {
       if (!cl.ids || cl.ids.length < 2) return;
@@ -1072,26 +1069,20 @@ Return JSON array in format:
       }
 
       if (matchingArticles.length >= 2) {
-        matchingArticles.forEach(m => {
-          if (m.link) coveredUrls.add(canonicalUrl(m.link));
-          if (m.title) coveredTitles.add(cleanHeadlineTitle(m.title));
-        });
-        const scores = matchingArticles.map(m => m.sentiment);
-        const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
-        const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
-        const newestMs = matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : 0;
-
-        // Check if this cluster matches a previous cluster by shared article URLs/titles
+        // Check if this cluster matches a previous cluster by shared article URLs/titles OR high-specificity entity/title stems
         let matchedPrev = null;
         const evolvedIds = new Set();
         const newUrls = new Set(matchingArticles.map(m => m.link ? canonicalUrl(m.link) : '').filter(Boolean));
         const newTitles = new Set(matchingArticles.map(m => m.title ? cleanHeadlineTitle(m.title) : '').filter(Boolean));
+        const newTitleStems = new Set(extractCoherenceStems(cl.story || ''));
+        const newAllStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''} ${matchingArticles.slice(0, 5).map(m => m.title || '').join(' ')}`));
 
         if (Array.isArray(previousClusters)) {
           let bestPrevScore = -1;
           for (const prev of previousClusters) {
             if (!prev || !Array.isArray(prev.coverage)) continue;
             const prevSlug = prev.id || String(prev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            if (matchedPrevIds.has(prevSlug)) continue;
             const prevSeenSet = new Set(Array.isArray(prev.seenArticleKeys) ? prev.seenArticleKeys : []);
             const sharedCovCount = prev.coverage.filter(c =>
               (c.link && newUrls.has(canonicalUrl(c.link))) ||
@@ -1102,8 +1093,17 @@ Return JSON array in format:
               (m.title && prevSeenSet.has(cleanHeadlineTitle(m.title)))
             ).length;
             const sharedCount = Math.max(sharedCovCount, sharedSeenCount);
-            if (sharedCount >= 2 || (sharedCount >= 1 && prev.coverage.length <= 2 && matchingArticles.length <= 2)) {
-              const candidateScore = sharedCount * 100 + ((prev.version || 1) * 10) + (prev.coverage.length || 0);
+
+            const prevTitleStems = extractCoherenceStems(prev.story || '');
+            const prevAllStems = extractCoherenceStems(`${prev.story || ''} ${prev.summary || ''} ${(prev.coverage || []).slice(0, 5).map(c => c.title || '').join(' ')}`);
+            const sharedTitleStemCount = [...new Set(prevTitleStems)].filter(s => newTitleStems.has(s)).length;
+            const sharedAllStemCount = [...new Set(prevAllStems)].filter(s => newAllStems.has(s)).length;
+
+            const isUrlTitleMatch = sharedCount >= 2 || (sharedCount >= 1 && ((prev.coverage.length <= 2 && matchingArticles.length <= 2) || sharedTitleStemCount >= 1));
+            const isHighSpecificityStemMatch = sharedCount >= 1 && sharedTitleStemCount >= 2 && sharedAllStemCount >= 4;
+
+            if (isUrlTitleMatch || isHighSpecificityStemMatch) {
+              const candidateScore = sharedCount * 100 + sharedTitleStemCount * 25 + sharedAllStemCount * 5 + ((prev.version || 1) * 10) + (prev.coverage.length || 0);
               if (candidateScore > bestPrevScore) {
                 bestPrevScore = candidateScore;
                 matchedPrev = prev;
@@ -1123,16 +1123,19 @@ Return JSON array in format:
         let finalStory = cl.story;
         let finalSummary = cl.summary || '';
         let prevVersion = 1;
+        let prevFirstSeenAt = null;
         let prevLastDevelopedAt = null;
         let prevDevelopmentNote = null;
         let prevEvolutionHistory = null;
         let prevSeenKeys = null;
+        let prevLateralConnections = null;
         let pendingUpdate = null;
 
         if (matchedPrev) {
+          const matchedPrevSlug = matchedPrev.id || String(matchedPrev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          if (matchedPrevSlug) matchedPrevIds.add(matchedPrevSlug);
+
           // Self-heal check: only reset if matchedPrev's title+summary share virtually zero stems with the current article bag
-          // (e.g. a previously corrupted merge of unrelated events that was split apart). Never reset an evolved story just because
-          // earlier stage words (like secondary spillover countries or prior verbs) aged out of the newest 1-per-outlet headlines!
           const articleBagStems = new Set();
           matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => articleBagStems.add(s)));
           const prevStoryStems = extractCoherenceStems(matchedPrev.story || '');
@@ -1152,8 +1155,10 @@ Return JSON array in format:
           finalStory = prevStorySupported ? (matchedPrev.story || cl.story) : cl.story;
           finalSummary = prevStorySupported ? (matchedPrev.summary || cl.summary || '') : (cl.summary || matchedPrev.summary || '');
           prevVersion = prevStorySupported && typeof matchedPrev.version === 'number' ? matchedPrev.version : 1;
+          prevFirstSeenAt = prevStorySupported ? (matchedPrev.firstSeenAt || matchedPrev.evolutionHistory?.[0]?.timestamp || null) : null;
           prevLastDevelopedAt = prevStorySupported ? (matchedPrev.lastDevelopedAt || null) : null;
           prevDevelopmentNote = prevStorySupported ? (matchedPrev.developmentNote || null) : null;
+          prevLateralConnections = prevStorySupported && Array.isArray(matchedPrev.lateralConnections) ? matchedPrev.lateralConnections : null;
 
           const currentCovUrls = (matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean);
           const currentCovTitles = (matchedPrev.coverage || []).map(c => c.title ? cleanHeadlineTitle(c.title) : '').filter(Boolean);
@@ -1169,12 +1174,30 @@ Return JSON array in format:
             return (!u || !historicalKeys.has(u)) && (!t || !historicalKeys.has(t));
           });
 
+          // Preserve prior outlets from matchedPrev.coverage that didn't publish a newer dispatch in this batch
+          // so evolving multi-day clusters never shrink from 21 outlets down to 3 when a subset of outlets posts a follow-up!
+          if (prevStorySupported && Array.isArray(matchedPrev.coverage)) {
+            for (const prevArt of matchedPrev.coverage) {
+              if (!prevArt || !prevArt.sourceId || seenOutlets.has(prevArt.sourceId)) continue;
+              seenOutlets.add(prevArt.sourceId);
+              matchingArticles.push({
+                sourceId: prevArt.sourceId,
+                sourceName: prevArt.sourceName || prevArt.sourceId,
+                title: prevArt.title,
+                sentiment: typeof prevArt.sentiment === 'number' ? prevArt.sentiment : 0,
+                link: prevArt.link || '',
+                pubDate: prevArt.pubDate || ''
+              });
+            }
+            matchingArticles.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+          }
+
           // Record all current articles into historicalKeys so re-clustered articles never re-trigger pendingUpdate
           matchingArticles.forEach(m => {
             if (m.link) historicalKeys.add(canonicalUrl(m.link));
             if (m.title) historicalKeys.add(cleanHeadlineTitle(m.title));
           });
-          prevSeenKeys = Array.from(historicalKeys).slice(-120);
+          prevSeenKeys = Array.from(historicalKeys).slice(-140);
 
           if (prevStorySupported && Array.isArray(matchedPrev.evolutionHistory) && matchedPrev.evolutionHistory.length > 0) {
             // Strip any contaminated evolutionHistory entry that shares zero content stems with the cluster's articles OR lineage
@@ -1194,10 +1217,10 @@ Return JSON array in format:
             prevEvolutionHistory = [{
               version: 1,
               type: 'initial',
-              timestamp: matchedPrev.firstSeenAt || matchedPrev.lastDevelopedAt || new Date(newestMs || Date.now()).toISOString(),
+              timestamp: matchedPrev.firstSeenAt || matchedPrev.lastDevelopedAt || new Date(matchingArticles[0]?.pubDate || Date.now()).toISOString(),
               headline: finalStory,
               summary: finalSummary,
-              outletCount: (matchedPrev.coverage || []).length || matchingArticles.length,
+              outletCount: matchingArticles.length,
               note: 'Initial cluster formation on the wire'
             }];
           }
@@ -1207,7 +1230,7 @@ Return JSON array in format:
             pendingUpdate = {
               candidateStory: cl.story,
               candidateSummary: cl.summary || '',
-              newestAddedMs: newestAddedMs > 0 ? newestAddedMs : newestMs,
+              newestAddedMs: newestAddedMs > 0 ? newestAddedMs : (matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : Date.now()),
               addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
             };
           }
@@ -1218,16 +1241,27 @@ Return JSON array in format:
             if (m.title) initKeys.add(cleanHeadlineTitle(m.title));
           });
           prevSeenKeys = Array.from(initKeys);
+          const earliestMs = Math.min(...matchingArticles.map(m => m.pubDate ? new Date(m.pubDate).getTime() : Infinity));
+          prevFirstSeenAt = new Date(earliestMs < Infinity ? earliestMs : Date.now()).toISOString();
           prevEvolutionHistory = [{
             version: 1,
             type: 'initial',
-            timestamp: new Date(newestMs || Date.now()).toISOString(),
+            timestamp: prevFirstSeenAt,
             headline: finalStory,
             summary: finalSummary,
             outletCount: matchingArticles.length,
             note: 'Initial cluster formation on the wire'
           }];
         }
+
+        matchingArticles.forEach(m => {
+          if (m.link) coveredUrls.add(canonicalUrl(m.link));
+          if (m.title) coveredTitles.add(cleanHeadlineTitle(m.title));
+        });
+        const scores = matchingArticles.map(m => m.sentiment);
+        const avgScore = Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2));
+        const spreadRange = Number((Math.max(...scores) - Math.min(...scores)).toFixed(2));
+        const newestMs = matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : 0;
 
         const currentSlug = finalId || String(finalStory || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         evolvedIds.delete(currentSlug);
@@ -1237,11 +1271,13 @@ Return JSON array in format:
           story: finalStory,
           summary: finalSummary,
           version: prevVersion,
+          ...(prevFirstSeenAt ? { firstSeenAt: prevFirstSeenAt } : {}),
           ...(prevLastDevelopedAt ? { lastDevelopedAt: prevLastDevelopedAt } : {}),
           ...(prevDevelopmentNote ? { developmentNote: prevDevelopmentNote } : {}),
           ...(evolvedIds.size > 0 ? { evolvedFromIds: Array.from(evolvedIds) } : {}),
           ...(prevEvolutionHistory ? { evolutionHistory: prevEvolutionHistory } : {}),
           ...(prevSeenKeys ? { seenArticleKeys: prevSeenKeys } : {}),
+          ...(prevLateralConnections ? { lateralConnections: prevLateralConnections } : {}),
           ...(pendingUpdate ? { _pendingUpdate: pendingUpdate } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
@@ -1259,15 +1295,15 @@ Return JSON array in format:
       }
     });
 
-    // Rolling 7-Day Cluster Memory: preserve any valid multi-outlet cluster from the previous run (< 7 days old)
-    // whose articles weren't already superseded by a new cluster in this pass
+    // Uniform Rolling 7-Day Cluster Memory: preserve any valid multi-outlet cluster from the previous run (< 7 days old)
+    // regardless of sentiment, whose articles weren't already superseded by a new cluster in this pass
     if (Array.isArray(previousClusters)) {
       previousClusters.forEach(prev => {
         if (!prev || !Array.isArray(prev.coverage) || prev.coverage.length < 2) return;
+        const prevSlug = prev.id || String(prev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        if (matchedPrevIds.has(prevSlug)) return;
         const newestPrevMs = Math.max(...prev.coverage.map(c => new Date(c.pubDate).getTime() || 0));
         if (newestPrevMs < sevenDaysAgo) return;
-        const isBreakingNeg = (prev.averageSentiment || 0) < 0.10;
-        if (isBreakingNeg && newestPrevMs < threeDaysAgo) return;
 
         const alreadyCovered = prev.coverage.some(c =>
           (c.link && coveredUrls.has(canonicalUrl(c.link))) ||
@@ -1286,13 +1322,13 @@ Return JSON array in format:
     // Longitudinal Cluster Consolidation & Development Verification Pass
     const consolidatedClusters = await consolidateEvolvingClusters(formattedClusters, apiKey);
 
-    // Weight recent 24h stories higher so fresh breaking stories rank above multi-day stories
+    // Smooth 4-tier recency curve across the 7-day rolling window so fresh breaking stories lead while major developing stories stay visible
     const nowMs = Date.now();
     consolidatedClusters.sort((a, b) => {
       const ageHoursA = a.newestMs ? Math.max(0, (nowMs - a.newestMs) / 3600000) : 48;
       const ageHoursB = b.newestMs ? Math.max(0, (nowMs - b.newestMs) / 3600000) : 48;
-      const recencyBoostA = ageHoursA <= 24 ? 1.35 : 0.75;
-      const recencyBoostB = ageHoursB <= 24 ? 1.35 : 0.75;
+      const recencyBoostA = ageHoursA <= 24 ? 1.45 : (ageHoursA <= 48 ? 1.05 : (ageHoursA <= 72 ? 0.65 : 0.35));
+      const recencyBoostB = ageHoursB <= 24 ? 1.45 : (ageHoursB <= 48 ? 1.05 : (ageHoursB <= 72 ? 0.65 : 0.35));
       const scoreA = a.outletCount * (a.sentimentSpread + 0.15) * recencyBoostA;
       const scoreB = b.outletCount * (b.sentimentSpread + 0.15) * recencyBoostB;
       return scoreB - scoreA;
@@ -1330,11 +1366,55 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   if (!apiKey || !Array.isArray(clusters) || clusters.length < 4) return clusters;
 
   const slugify = (str) => String(str || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const lines = clusters.map((c, idx) => {
+  const nowMs = Date.now();
+
+  // Precompute stems and age for each cluster across the 7-day window
+  const meta = clusters.map((c, origIdx) => {
+    const newestMs = c.newestMs || Math.max(...(c.coverage || []).map(a => new Date(a.pubDate).getTime() || 0), 0);
+    const ageHours = newestMs > 0 ? Math.max(0, (nowMs - newestMs) / 3600000) : 999;
+    const titleStems = new Set(extractCoherenceStems(c.story || ''));
+    const allStems = new Set(extractCoherenceStems(`${c.story || ''} ${c.summary || ''} ${(c.coverage || []).slice(0, 4).map(a => a.title || '').join(' ')}`));
+    return { origIdx, c, ageHours, titleStems, allStems };
+  });
+
+  // Smart 7-Day Entity-Gated Pool:
+  // Include any cluster that (a) has a _pendingUpdate, (b) is active (<= 48h), OR
+  // (c) is an older 2-7d cluster that shares specific entity/title stems with at least one recent (<= 72h) cluster.
+  // This preserves 100% of multi-day evolving arcs across all 7 days while trimming isolated background noise by ~40-50%.
+  const includedOrigIndices = new Set();
+  const candidatePairHints = [];
+
+  for (let i = 0; i < meta.length; i++) {
+    if (meta[i].c._pendingUpdate || meta[i].ageHours <= 48) {
+      includedOrigIndices.add(i);
+    }
+  }
+
+  for (let i = 0; i < meta.length; i++) {
+    for (let j = i + 1; j < meta.length; j++) {
+      // At least one of the pair should be within 72h (or have a pending update)
+      if (meta[i].ageHours > 72 && meta[j].ageHours > 72 && !meta[i].c._pendingUpdate && !meta[j].c._pendingUpdate) continue;
+      const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
+      const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
+      if (sharedTitle.length >= 2 || (sharedTitle.length >= 1 && sharedAll.length >= 4)) {
+        includedOrigIndices.add(i);
+        includedOrigIndices.add(j);
+        candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll });
+      }
+    }
+  }
+
+  const activeOrigIndices = Array.from(includedOrigIndices).sort((a, b) => a - b);
+  if (activeOrigIndices.length < 2) return clusters;
+  const origToPromptIdx = new Map();
+  activeOrigIndices.forEach((origIdx, pIdx) => origToPromptIdx.set(origIdx, pIdx));
+
+  const lines = activeOrigIndices.map((origIdx, pIdx) => {
+    const c = clusters[origIdx];
     const id = c.id || slugify(c.story);
     const sampleOutlets = (c.coverage || []).slice(0, 4).map(a => a.sourceId).join(',');
     const sampleHeadlines = (c.coverage || []).slice(0, 3).map(a => `${a.sourceId}: "${a.title}"`).join(' | ');
-    let line = `[${idx}] id="${id}" (v${c.version || 1}) | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+    let line = `[${pIdx}] id="${id}" (v${c.version || 1}) | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
     if (sampleHeadlines) {
       line += `\n    [PRIMARY HEADLINES: ${sampleHeadlines}]`;
     }
@@ -1351,8 +1431,17 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     return line;
   }).join('\n');
 
+  const pairHintBlock = candidatePairHints.length > 0
+    ? `\n\n[HIGH-OVERLAP CANDIDATE PAIRS TO EVALUATE FOR JOB 1 (MERGE IF SAME SPECIFIC EVENT) OR JOB 3 (LATERAL CONNECTION IF SEPARATE EVENTS IN SAME THEATRE)]:\n` +
+      candidatePairHints.slice(0, 20).map(p => {
+        const pA = origToPromptIdx.get(p.origA);
+        const pB = origToPromptIdx.get(p.origB);
+        return `- Compare [${pA}] "${clusters[p.origA].story}" <-> [${pB}] "${clusters[p.origB].story}" (shared stems: ${p.sharedAll.slice(0, 6).join(', ')})`;
+      }).join('\n')
+    : '';
+
   const prompt = `You are the Executive Editor of a global news intelligence wire.
-Below are ${clusters.length} story clusters currently active across our rolling 7-day window, including each cluster's current summary, [PRIMARY HEADLINES], any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
+Below are ${activeOrigIndices.length} active or overlapping story clusters from our rolling 7-day window, including each cluster's current summary, [PRIMARY HEADLINES], any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
 
 FIRST-PRINCIPLES META-RULE — INTRA-STATE RESOLUTION ("clarification") vs. STATE-ENVELOPE SHIFT ("material_shift"):
 Every news story has a current State Envelope defined by:
@@ -1390,7 +1479,7 @@ DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE & PURE CHRONOLOGICAL DELTA RULE:
 You have THREE jobs in this single pass:
 
 JOB 1 — "merges" (Strict Duplicate-Incident Consolidation — Return [] If None):
-Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME specific physical incident, legislative bill, court ruling, or scientific study (e.g. two clusters that both report on the exact same train crash, or an earlier cluster on a protest and a newer cluster on that exact same protest spreading):
+Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME specific physical incident, referendum, legislative bill, court ruling, or scientific study (e.g. two clusters that both report on the exact same train crash, or an earlier cluster on a referendum/protest and a newer cluster on that exact same referendum/protest):
 - CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, debates, or studies that merely involve the same country, leader, election campaign, or war!
   • Example of FORBIDDEN merge: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
 - If no two clusters report the exact same specific incident, return "merges": [].
@@ -1406,7 +1495,7 @@ Identify pairs of DISTINCT clusters that share a political campaign, country bac
 - Keep them as separate clusters (NEVER put them in "merges"), and record their connection here.
 
 Clusters:
-${lines}
+${lines}${pairHintBlock}
 
 Return ONLY valid JSON in this exact field order (use "merges": [] if no two clusters are the exact same incident):
 {
@@ -1464,9 +1553,21 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         }
       }
     }
-    const rawMerges = Array.isArray(parsed?.merges) ? parsed.merges : [];
-    const inPlaceDevs = Array.isArray(parsed?.inPlaceDevelopments) ? parsed.inPlaceDevelopments : [];
-    const lateralLinks = Array.isArray(parsed?.lateralConnections) ? parsed.lateralConnections : [];
+
+    const mapPromptIdx = (pIdx) => (Number.isInteger(pIdx) && pIdx >= 0 && pIdx < activeOrigIndices.length) ? activeOrigIndices[pIdx] : -1;
+
+    const rawMerges = (Array.isArray(parsed?.merges) ? parsed.merges : []).map(m => ({
+      ...m,
+      indices: Array.isArray(m?.indices) ? m.indices.map(mapPromptIdx).filter(i => i >= 0) : []
+    }));
+    const inPlaceDevs = (Array.isArray(parsed?.inPlaceDevelopments) ? parsed.inPlaceDevelopments : []).map(d => ({
+      ...d,
+      index: mapPromptIdx(d?.index)
+    }));
+    const lateralLinks = (Array.isArray(parsed?.lateralConnections) ? parsed.lateralConnections : []).map(l => ({
+      ...l,
+      indices: Array.isArray(l?.indices) ? l.indices.map(mapPromptIdx).filter(i => i >= 0) : []
+    }));
     const auditLogEntries = [];
 
     // Build set of laterally connected index pairs so a pair in lateralConnections can never also be merged
@@ -1483,6 +1584,17 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       if (idxs.length < 2) return false;
       const pairKey = `${Math.min(idxs[0], idxs[1])}:${Math.max(idxs[0], idxs[1])}`;
       if (lateralPairKeys.has(pairKey)) return false;
+      // Deterministic stem-overlap guard: reject any LLM index slip where merged clusters share zero content stems
+      const metaA = meta[idxs[0]];
+      const metaB = meta[idxs[1]];
+      if (metaA && metaB) {
+        const sharedTitle = [...metaA.titleStems].filter(s => metaB.titleStems.has(s)).length;
+        const sharedAll = [...metaA.allStems].filter(s => metaB.allStems.has(s)).length;
+        if (sharedTitle < 1 && sharedAll < 2) {
+          console.warn(`[Clusters] Rejected low-overlap merge slip between [${idxs[0]}] "${clusters[idxs[0]]?.story}" and [${idxs[1]}] "${clusters[idxs[1]]?.story}"`);
+          return false;
+        }
+      }
       return true;
     });
 
@@ -2391,9 +2503,12 @@ async function main() {
 
   // 7. Export dedicated public JSON feeds & enrich clusters with imageUrl/topic
   const { exportPublicJsonFeeds } = require('./export-feeds');
-  const { enrichedClusters } = exportPublicJsonFeeds(fullPayload);
+  const { enrichedClusters, activeClusters48h } = exportPublicJsonFeeds(fullPayload);
   fullPayload.sharedStoryClusters = enrichedClusters;
-  summaryPayload.sharedStoryClusters = enrichedClusters;
+  summaryPayload.sharedStoryClusters = activeClusters48h || enrichedClusters;
+  if (summaryPayload.globalStats) {
+    summaryPayload.globalStats = { ...summaryPayload.globalStats, sharedStoryClusters: summaryPayload.sharedStoryClusters };
+  }
 
   // Save primary outputs
   fs.writeFileSync(DATA_FILE, JSON.stringify(fullPayload, null, 2), 'utf8');
@@ -2405,7 +2520,7 @@ async function main() {
   console.log(`📁 Historical archive: data/vibe-data.json (${(fs.statSync(DATA_FILE).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`⚡ Public baked data: public/data/data.json (${(fs.statSync(path.join(PUBLIC_DATA_DIR, 'data.json')).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`🚀 Ultra-light summary: public/data/summary.json (${(fs.statSync(path.join(PUBLIC_DATA_DIR, 'summary.json')).size / 1024).toFixed(1)} KB)`);
-  console.log(`📡 Public JSON API feeds: public/data/{index,clusters,good-news,outlets,timeseries}.json`);
+  console.log(`📡 Public JSON API feeds: public/data/{index,clusters,clusters-archive,good-news,outlets,timeseries}.json`);
   console.log('==============================================');
 
   // 8. Optional On-Demand Auto-Push (for instant Antigravity or local CLI trigger)
@@ -2413,7 +2528,7 @@ async function main() {
     const { execSync } = require('child_process');
     try {
       console.log('[Git] Staging updated vibe datasets...');
-      execSync('git add data/vibe-data.json data/cluster-updates-log.json public/data/', { stdio: 'inherit' });
+      execSync('git add data/vibe-data.json data/clusters-archive.json data/cluster-updates-log.json public/data/', { stdio: 'inherit' });
       const status = execSync('git status --porcelain', { encoding: 'utf8' });
       if (status.includes('data/')) {
         console.log('[Git] Committing fresh vibe data...');
