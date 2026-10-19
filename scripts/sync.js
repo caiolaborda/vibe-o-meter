@@ -1431,6 +1431,14 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     return line;
   }).join('\n');
 
+  const pendingPromptIndices = [];
+  activeOrigIndices.forEach((origIdx, pIdx) => {
+    const c = clusters[origIdx];
+    if (c._pendingUpdate && Array.isArray(c._pendingUpdate.addedHeadlines) && c._pendingUpdate.addedHeadlines.length > 0) {
+      pendingPromptIndices.push(pIdx);
+    }
+  });
+
   const pairHintBlock = candidatePairHints.length > 0
     ? `\n\n[HIGH-OVERLAP CANDIDATE PAIRS TO EVALUATE FOR JOB 1 (MERGE IF SAME SPECIFIC EVENT) OR JOB 3 (LATERAL CONNECTION IF SEPARATE EVENTS IN SAME THEATRE)]:\n` +
       candidatePairHints.slice(0, 20).map(p => {
@@ -1485,8 +1493,9 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
 - If no two clusters report the exact same specific incident, return "merges": [].
 - For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary; otherwise set "updateType": "clarification" (deduplication).
 
-JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
-Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line:
+JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches — Eligible Indices: ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : 'NONE (return "inPlaceDevelopments": [])'}):
+Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly limited to indices ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : '[]'}):
+- NEVER include any cluster index that does not have a "[CANDIDATE IN-PLACE UPDATE]" line!
 - If the new dispatches are redundant with the existing headline, summary, or [PRIOR RECORDED HISTORY], omit the cluster (or set "updateType": "none").
 - Otherwise, generate "developmentNote" and "stateBoundaryCrossed" first, then set "updateType": "clarification" | "material_shift" using the State-Envelope Meta-Rule and Disjunctive Batch Principle.
 
@@ -1598,11 +1607,15 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       return true;
     });
 
-    // Apply verified in-place developments & clarifications first
+    // Apply verified in-place developments & clarifications first (ONLY for clusters that actually have a _pendingUpdate!)
     const inPlaceByIdx = new Map();
     for (const dev of inPlaceDevs) {
       if (dev?.updateType === 'none') continue;
       if (Number.isInteger(dev?.index) && dev.index >= 0 && dev.index < clusters.length && (dev.summary || dev.story)) {
+        const targetCl = clusters[dev.index];
+        if (!targetCl || !targetCl._pendingUpdate || !Array.isArray(targetCl._pendingUpdate.addedHeadlines) || targetCl._pendingUpdate.addedHeadlines.length === 0) {
+          continue;
+        }
         inPlaceByIdx.set(dev.index, dev);
       }
     }
@@ -1637,12 +1650,22 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         continue;
       }
 
-      // Guard against no-op or duplicate note already in evolutionHistory
+      const ts = new Date(c._pendingUpdate?.newestAddedMs || c.newestMs || Date.now()).toISOString();
+
+      // Guard against no-op, duplicate timestamp, or paraphrased note already in evolutionHistory
       const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
-      const alreadyRecorded = hist.some(h =>
-        (noteText && h.note && h.note.toLowerCase() === noteText.toLowerCase()) ||
-        (newSummary && h.summary && h.summary.toLowerCase() === newSummary.toLowerCase())
-      );
+      const noteStems = extractCoherenceStems(noteText);
+      const alreadyRecorded = hist.some(h => {
+        if (h.timestamp && h.timestamp === ts) return true;
+        if (noteText && h.note && h.note.toLowerCase() === noteText.toLowerCase()) return true;
+        if (newSummary && h.summary && h.summary.toLowerCase() === newSummary.toLowerCase()) return true;
+        if (noteStems.length >= 2 && h.note && h.type !== 'initial') {
+          const hStems = new Set(extractCoherenceStems(h.note));
+          const shared = noteStems.filter(s => hStems.has(s)).length;
+          if (shared >= 3 || (shared / Math.min(noteStems.length, hStems.size || 1)) >= 0.5) return true;
+        }
+        return false;
+      });
       if (alreadyRecorded) continue;
 
       const beforeSnapshot = {
@@ -1652,8 +1675,6 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         summary: c.summary,
         outletCount: c.outletCount || (c.coverage || []).length || 1
       };
-
-      const ts = new Date(c._pendingUpdate?.newestAddedMs || c.newestMs || Date.now()).toISOString();
 
       if (uType === 'material_shift') {
         materialInPlaceCount++;

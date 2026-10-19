@@ -90,6 +90,105 @@ function inferClusterTopic(cluster, sources) {
   return 'world';
 }
 
+function deduplicateAndSanitizeClusters(rawClusters) {
+  if (!Array.isArray(rawClusters) || rawClusters.length === 0) return [];
+  const slugify = (s) => String(s || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  // 1. Deduplicate clusters sharing the exact same ID (e.g. if a git merge spliced two arrays)
+  const byId = new Map();
+  for (const cl of rawClusters) {
+    if (!cl || !Array.isArray(cl.coverage) || cl.coverage.length < 2) continue;
+    const id = cl.id || slugify(cl.story);
+    const existing = byId.get(id);
+    if (!existing) {
+      byId.set(id, { ...cl, id });
+    } else {
+      const vCurr = typeof cl.version === 'number' ? cl.version : 1;
+      const vExist = typeof existing.version === 'number' ? existing.version : 1;
+      const ocCurr = cl.coverage.length || cl.outletCount || 0;
+      const ocExist = existing.coverage.length || existing.outletCount || 0;
+      const primary = (vCurr > vExist || (vCurr === vExist && ocCurr > ocExist)) ? cl : existing;
+      const secondary = primary === cl ? existing : cl;
+
+      const seenOutlets = new Set();
+      const mergedCov = [];
+      for (const art of [...(primary.coverage || []), ...(secondary.coverage || [])]) {
+        if (!art?.sourceId || seenOutlets.has(art.sourceId)) continue;
+        seenOutlets.add(art.sourceId);
+        mergedCov.push(art);
+      }
+      mergedCov.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+
+      const evolvedSet = new Set([
+        ...(Array.isArray(primary.evolvedFromIds) ? primary.evolvedFromIds : []),
+        ...(Array.isArray(secondary.evolvedFromIds) ? secondary.evolvedFromIds : [])
+      ]);
+      evolvedSet.delete(id);
+
+      byId.set(id, {
+        ...primary,
+        id,
+        coverage: mergedCov,
+        outletCount: mergedCov.length,
+        ...(evolvedSet.size > 0 ? { evolvedFromIds: Array.from(evolvedSet) } : {})
+      });
+    }
+  }
+
+  // 2. Suppress any ancestor cluster whose ID is listed in another active cluster's evolvedFromIds
+  const supersededToSuccessor = new Map();
+  for (const [id, cl] of byId.entries()) {
+    if (Array.isArray(cl.evolvedFromIds)) {
+      for (const oldId of cl.evolvedFromIds) {
+        if (oldId && oldId !== id && byId.has(oldId)) {
+          supersededToSuccessor.set(oldId, id);
+        }
+      }
+    }
+  }
+  for (const [oldId, succId] of supersededToSuccessor.entries()) {
+    const oldCl = byId.get(oldId);
+    const succCl = byId.get(succId);
+    if (oldCl && succCl) {
+      const seenOutlets = new Set((succCl.coverage || []).map(a => a.sourceId));
+      for (const art of (oldCl.coverage || [])) {
+        if (art?.sourceId && !seenOutlets.has(art.sourceId)) {
+          seenOutlets.add(art.sourceId);
+          succCl.coverage.push(art);
+        }
+      }
+      succCl.coverage.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+      succCl.outletCount = succCl.coverage.length;
+      byId.delete(oldId);
+    }
+  }
+
+  // 3. Deduplicate same-timestamp or paraphrased evolutionHistory entries
+  const result = [];
+  for (const cl of byId.values()) {
+    if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1) {
+      const cleanHist = [];
+      for (const h of cl.evolutionHistory) {
+        if (!h) continue;
+        const dupIdx = cleanHist.findIndex((prev, idx) => {
+          if (idx === 0 && h.type !== 'initial') return false;
+          if (prev.timestamp && h.timestamp && prev.timestamp === h.timestamp) return true;
+          if (prev.note && h.note && prev.note.toLowerCase() === h.note.toLowerCase()) return true;
+          return false;
+        });
+        if (dupIdx === -1) {
+          cleanHist.push(h);
+        } else if (h.type === 'material_shift' && cleanHist[dupIdx].type === 'clarification') {
+          cleanHist[dupIdx] = h;
+        }
+      }
+      cl.evolutionHistory = cleanHist;
+    }
+    result.push(cl);
+  }
+  return result;
+}
+
 function exportPublicJsonFeeds(fullPayload) {
   if (!fs.existsSync(PUBLIC_DATA_DIR)) {
     fs.mkdirSync(PUBLIC_DATA_DIR, { recursive: true });
@@ -102,7 +201,9 @@ function exportPublicJsonFeeds(fullPayload) {
   const sources = fullPayload.sources || {};
 
   // 1. Enrich & Export Story Clusters -> public/data/clusters.json
-  const rawClusters = fullPayload.sharedStoryClusters || fullPayload.globalStats?.sharedStoryClusters || [];
+  const rawClusters = deduplicateAndSanitizeClusters(
+    fullPayload.sharedStoryClusters || fullPayload.globalStats?.sharedStoryClusters || []
+  );
   const enrichedClusters = rawClusters.map(cl => {
     const topic = inferClusterTopic(cl, sources);
     const timestamps = [];
