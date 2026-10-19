@@ -451,9 +451,23 @@ function computeFourFactorScore(match) {
   };
 }
 
+// Track if the Free Tier key hit a quota/rate-limit during this process run so subsequent calls skip straight to Paid fallback
+let freeKeyExhaustedThisRun = false;
+
+function getOrderedKeyTiers(apiKeyOrTiers) {
+  if (Array.isArray(apiKeyOrTiers)) {
+    const valid = apiKeyOrTiers.filter(t => t && t.key);
+    if (freeKeyExhaustedThisRun && valid.length > 1) {
+      return valid.filter(t => t.tier !== 'FREE').concat(valid.filter(t => t.tier === 'FREE'));
+    }
+    return valid;
+  }
+  return apiKeyOrTiers ? [{ key: apiKeyOrTiers, tier: 'PRIMARY' }] : [];
+}
+
 // Structured Gemini sentiment analysis with cross-outlet batching & 4-Factor First-Principles Formula
-async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchSize, existingEvaluatedPool = []) {
-  const genAI = new GoogleGenerativeAI(apiKey);
+async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, customBatchSize, existingEvaluatedPool = []) {
+  const keyTiers = getOrderedKeyTiers(apiKeyOrTiers);
   const modelsToTry = [
     requestedModel,
     process.env.GEMINI_MODEL,
@@ -497,6 +511,7 @@ async function analyzeWithGemini(headlines, apiKey, requestedModel, customBatchS
   const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || 50;
   const allResults = [];
   let modelUsed = modelsToTry[0];
+  let tierUsed = keyTiers[0]?.tier || 'PRIMARY';
 
   for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
     const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
@@ -548,68 +563,90 @@ ${JSON.stringify(promptData, null, 2)}
 Return ONLY valid JSON.`;
 
     let batchSuccess = false;
+    const activeTiers = getOrderedKeyTiers(apiKeyOrTiers);
     for (const modelName of modelsToTry) {
       if (batchSuccess) break;
-      const maxAttempts = modelName.includes('lite') ? 2 : 3;
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-          console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} (attempt ${attempt}/${maxAttempts})...`);
-          const model = genAI.getGenerativeModel({
-            model: modelName,
-            generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
-          });
-
-          const generatePromise = model.generateContent(prompt);
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Gemini API call timed out after 120s')), 120000)
-          );
-          const response = await Promise.race([generatePromise, timeoutPromise]);
-          let text = response.response.text().trim();
-          if (text.startsWith('```json')) text = text.substring(7);
-          else if (text.startsWith('```')) text = text.substring(3);
-          if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-          text = tryRepairJsonArray(text.trim());
-
-          const parsed = JSON.parse(text);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            let matchedInBatch = 0;
-            chunk.forEach((item, idx) => {
-              const match = parsed.find(r => r && r.index === idx);
-              // Never fabricate a 0.00 fallback if an item was omitted or truncated
-              if (!match || typeof match.polarity !== 'number' || !match.explanation) {
-                return;
-              }
-              matchedInBatch++;
-              const calc = computeFourFactorScore(match);
-              const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
-              const rawExp = String(match.explanation).replace(/\s*\[Event Base:.*$/, '');
-              const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
-              allResults.push({
-                sourceId: item.sourceId,
-                title: item.title,
-                link: item.link,
-                sentiment: calc.score,
-                eventBase: calc.eventBase,
-                framingMod: calc.framingMod,
-                factors: [calc.polarity, calc.reach, calc.permanence, calc.framing],
-                category: match.category || 'other',
-                explanation: rawExp + expSuffix,
-                ...(cleanSummary ? { summary: cleanSummary } : {})
-              });
+      for (const keyObj of activeTiers) {
+        if (batchSuccess) break;
+        const genAI = new GoogleGenerativeAI(keyObj.key);
+        const maxAttempts = keyObj.tier === 'FREE' && activeTiers.length > 1 ? 1 : (modelName.includes('lite') ? 2 : 3);
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} [${keyObj.tier} key] (attempt ${attempt}/${maxAttempts})...`);
+            const model = genAI.getGenerativeModel({
+              model: modelName,
+              generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
             });
-            if (matchedInBatch < chunk.length) {
-              console.warn(`[Gemini] Partial batch: ${matchedInBatch}/${chunk.length} items returned (${chunk.length - matchedInBatch} left queued).`);
+
+            const generatePromise = model.generateContent(prompt);
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Gemini API call timed out after 120s')), 120000)
+            );
+            const response = await Promise.race([generatePromise, timeoutPromise]);
+            let text = response.response.text().trim();
+            if (text.startsWith('```json')) text = text.substring(7);
+            else if (text.startsWith('```')) text = text.substring(3);
+            if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+            text = tryRepairJsonArray(text.trim());
+
+            const parsed = JSON.parse(text);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              let matchedInBatch = 0;
+              chunk.forEach((item, idx) => {
+                const match = parsed.find(r => r && r.index === idx);
+                // Never fabricate a 0.00 fallback if an item was omitted or truncated
+                if (!match || typeof match.polarity !== 'number' || !match.explanation) {
+                  return;
+                }
+                matchedInBatch++;
+                const calc = computeFourFactorScore(match);
+                const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
+                const rawExp = String(match.explanation).replace(/\s*\[Event Base:.*$/, '');
+                const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
+                allResults.push({
+                  sourceId: item.sourceId,
+                  title: item.title,
+                  link: item.link,
+                  sentiment: calc.score,
+                  eventBase: calc.eventBase,
+                  framingMod: calc.framingMod,
+                  factors: [calc.polarity, calc.reach, calc.permanence, calc.framing],
+                  category: match.category || 'other',
+                  explanation: rawExp + expSuffix,
+                  ...(cleanSummary ? { summary: cleanSummary } : {})
+                });
+                // 3.2 Intra-run cross-batch Event Base anchoring: immediately feed newly evaluated items into anchorCandidates
+                // so subsequent batches in this same sync run lock onto the exact same [polarity, reach, permanence] Event Base.
+                const itemTokens = getHeadlineTopicTokens(item.title);
+                if (itemTokens.length >= 2) {
+                  anchorCandidates.push({
+                    factors: [calc.polarity, calc.reach, calc.permanence],
+                    tokens: new Set(itemTokens)
+                  });
+                }
+              });
+              if (matchedInBatch < chunk.length) {
+                console.warn(`[Gemini] Partial batch: ${matchedInBatch}/${chunk.length} items returned (${chunk.length - matchedInBatch} left queued).`);
+              }
+              modelUsed = modelName;
+              tierUsed = keyObj.tier;
+              batchSuccess = true;
+              break;
             }
-            modelUsed = modelName;
-            batchSuccess = true;
-            break;
-          }
-        } catch (err) {
-          const isDemandSpike = err.message && (err.message.includes('503') || err.message.includes('429') || err.message.includes('high demand') || err.message.includes('timed out'));
-          console.warn(`[Gemini] Model ${modelName} attempt ${attempt}/${maxAttempts} warning:`, err.message || err);
-          if (attempt < maxAttempts) {
-            const waitMs = isDemandSpike ? (attempt === 1 ? 5000 : 12000) : 2500;
-            await new Promise(r => setTimeout(r, waitMs));
+          } catch (err) {
+            const msg = String(err.message || err);
+            const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+            const isDemandSpike = isQuotaOrRateLimit || msg.includes('503') || msg.includes('high demand') || msg.includes('timed out');
+            console.warn(`[Gemini] Model ${modelName} [${keyObj.tier} key] attempt ${attempt}/${maxAttempts} warning:`, msg);
+            if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
+              freeKeyExhaustedThisRun = true;
+              console.log('[Gemini] Free tier key reached rate/quota limit — switching to PAID fallback key...');
+              break;
+            }
+            if (attempt < maxAttempts) {
+              const waitMs = isDemandSpike ? (attempt === 1 ? 5000 : 12000) : 2500;
+              await new Promise(r => setTimeout(r, waitMs));
+            }
           }
         }
       }
@@ -624,7 +661,7 @@ Return ONLY valid JSON.`;
     }
   }
 
-  return { results: allResults, modelUsed };
+  return { results: allResults, modelUsed, tierUsed };
 }
 
 // Structured Groq sentiment analysis
@@ -894,7 +931,6 @@ Return JSON array in format:
 ]`;
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
-  const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     'gemini-3.5-flash-lite',
     process.env.GEMINI_MODEL,
@@ -904,34 +940,46 @@ Return JSON array in format:
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   let clusters = null;
+  const activeTiers = getOrderedKeyTiers(apiKey);
   for (const modelName of modelsToTry) {
     if (clusters) break;
-    const maxAttempts = 1;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
-        });
-        const generatePromise = model.generateContent(prompt);
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Clustering call timed out after 150s')), 150000)
-        );
-        const resp = await Promise.race([generatePromise, timeoutPromise]);
-        let text = resp.response.text().trim();
-        if (text.startsWith('```json')) text = text.substring(7);
-        else if (text.startsWith('```')) text = text.substring(3);
-        if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-        const parsed = JSON.parse(tryRepairJsonArray(text.trim()));
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          clusters = parsed;
-          console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName}.`);
-          break;
-        }
-      } catch (err) {
-        console.warn(`[Sync] Clustering attempt ${attempt}/${maxAttempts} with ${modelName} failed: ${err.message}`);
-        if (attempt < maxAttempts) {
-          await new Promise(r => setTimeout(r, 5000));
+    for (const keyObj of activeTiers) {
+      if (clusters) break;
+      const genAI = new GoogleGenerativeAI(keyObj.key);
+      const maxAttempts = 1;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
+          });
+          const generatePromise = model.generateContent(prompt);
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Clustering call timed out after 150s')), 150000)
+          );
+          const resp = await Promise.race([generatePromise, timeoutPromise]);
+          let text = resp.response.text().trim();
+          if (text.startsWith('```json')) text = text.substring(7);
+          else if (text.startsWith('```')) text = text.substring(3);
+          if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+          const parsed = JSON.parse(tryRepairJsonArray(text.trim()));
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            clusters = parsed;
+            console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName} [${keyObj.tier} key].`);
+            break;
+          }
+        } catch (err) {
+          const msg = String(err.message || err);
+          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+          console.warn(`[Sync] Clustering attempt ${attempt}/${maxAttempts} with ${modelName} [${keyObj.tier} key] failed: ${msg}`);
+          if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
+            freeKeyExhaustedThisRun = true;
+            console.log('[Clusters] Free tier key reached rate/quota limit — switching to PAID fallback key...');
+            break;
+          }
+          if (attempt < maxAttempts) {
+            await new Promise(r => setTimeout(r, 5000));
+          }
         }
       }
     }
@@ -1260,13 +1308,29 @@ Return ONLY valid JSON in this exact format:
 
   try {
     const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash-lite',
-      generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-    });
-    const resp = await model.generateContent(prompt);
-    const parsed = JSON.parse(resp.response.text().trim());
+    const activeTiers = getOrderedKeyTiers(apiKey);
+    let parsed = null;
+    for (const keyObj of activeTiers) {
+      try {
+        const genAI = new GoogleGenerativeAI(keyObj.key);
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-3.5-flash-lite',
+          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
+        });
+        const resp = await model.generateContent(prompt);
+        parsed = JSON.parse(resp.response.text().trim());
+        break;
+      } catch (tierErr) {
+        const msg = String(tierErr.message || tierErr);
+        console.warn(`[Clusters] Consolidation pass warning [${keyObj.tier} key]: ${msg}`);
+        if (keyObj.tier === 'FREE' && activeTiers.length > 1) {
+          freeKeyExhaustedThisRun = true;
+          console.log('[Clusters] Switching consolidation pass to PAID fallback key...');
+        } else {
+          throw tierErr;
+        }
+      }
+    }
     const merges = Array.isArray(parsed?.merges) ? parsed.merges : [];
     const inPlaceDevs = Array.isArray(parsed?.inPlaceDevelopments) ? parsed.inPlaceDevelopments : [];
     const lateralLinks = Array.isArray(parsed?.lateralConnections) ? parsed.lateralConnections : [];
@@ -1691,6 +1755,9 @@ async function main() {
 
   const geminiKey = process.env.GEMINI_API_KEY || config.apiKey;
   const geminiPaidKey = process.env.GEMINI_PAID_API_KEY || config.paidApiKey || geminiKey;
+  const geminiKeyTiers = [];
+  if (geminiKey) geminiKeyTiers.push({ key: geminiKey, tier: 'FREE' });
+  if (geminiPaidKey && geminiPaidKey !== geminiKey) geminiKeyTiers.push({ key: geminiPaidKey, tier: 'PAID' });
   const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
   // Build lookup of already analyzed articles
@@ -1820,10 +1887,10 @@ async function main() {
   let aiSuccess = false;
 
   if (unanalyzedArticles.length > 0) {
-    if (geminiPaidKey) {
+    if (geminiKeyTiers.length > 0) {
       try {
-        console.log(`[AI] Processing ${unanalyzedArticles.length} articles with Gemini (${geminiModel})...`);
-        const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiPaidKey, geminiModel, undefined, sortedExisting);
+        console.log(`[AI] Processing ${unanalyzedArticles.length} articles with Gemini (${geminiModel}, tiers: ${geminiKeyTiers.map(t => t.tier).join(' -> ')})...`);
+        const geminiRes = await analyzeWithGemini(unanalyzedArticles, geminiKeyTiers, geminiModel, undefined, sortedExisting);
         
         const articleMap = new Map();
         unanalyzedArticles.forEach(a => articleMap.set(`${a.sourceId}_${a.title.trim().toLowerCase()}`, a));
@@ -2026,13 +2093,13 @@ async function main() {
       if (breakingBurst && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
         console.log(`[Burst Signal] ⚡ Breaking cross-region convergence detected ("${breakingBurst.pair}" across ${breakingBurst.outlets} outlets / ${breakingBurst.regions} regions: ${breakingBurst.regionList.join(', ')}) — "${breakingBurst.sampleTitle}"`);
       }
-      const usingSeparatePaidKey = Boolean(process.env.GEMINI_PAID_API_KEY || config.paidApiKey);
-      if (!usingSeparatePaidKey && newlyAnalyzedCount > 0) {
+      if (!freeKeyExhaustedThisRun && newlyAnalyzedCount > 0) {
         console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
         await new Promise(r => setTimeout(r, 6000));
       }
-      console.log(`[Sync] Running cross-outlet story clustering (key: ${usingSeparatePaidKey ? 'PAID' : 'PRIMARY'}, reason: ${forceCluster ? 'forced' : (breakingBurst && hoursSinceLastCluster < clusterIntervalHours ? 'breaking-burst' : 'scheduled')}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
-      const clusters = await clusterCrossOutletStories(finalSources, geminiPaidKey, currentCache.sharedStoryClusters);
+      const orderedTiersLabel = getOrderedKeyTiers(geminiKeyTiers).map(t => t.tier).join(' -> ');
+      console.log(`[Sync] Running cross-outlet story clustering (tiers: ${orderedTiersLabel}, reason: ${forceCluster ? 'forced' : (breakingBurst && hoursSinceLastCluster < clusterIntervalHours ? 'breaking-burst' : 'scheduled')}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
+      const clusters = await clusterCrossOutletStories(finalSources, geminiKeyTiers, currentCache.sharedStoryClusters);
       if (clusters && clusters.length > 0) {
         sharedStoryClusters = clusters;
         lastClusteredAt = now.toISOString();
