@@ -477,17 +477,17 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
-  // Pre-tokenize recent 4-factor articles from the last 36 hours for cross-sync Event Base anchoring
+  // Pre-tokenize recent 4-factor articles from the last 36 hours for soft Macro-Scale [reach, permanence] calibration
   const recentCutoffMs = Date.now() - (36 * 60 * 60 * 1000);
   const anchorCandidates = existingEvaluatedPool
     .filter(a => Array.isArray(a.factors) && a.factors.length === 4 && (!a.pubDate || new Date(a.pubDate).getTime() >= recentCutoffMs))
     .map(a => ({
-      factors: a.factors.slice(0, 3),
+      scale: [a.factors[1], a.factors[2]], // ONLY [reach, permanence] — never lock polarity or framing!
       tokens: new Set(getHeadlineTopicTokens(a.title))
     }))
     .filter(a => a.tokens.size >= 2);
 
-  function findPriorEventAnchor(title) {
+  function findPriorScaleHint(title) {
     const tokens = getHeadlineTopicTokens(title);
     if (tokens.length < 2) return null;
     let best = null;
@@ -500,7 +500,7 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
       const minLen = Math.min(tokens.length, cand.tokens.size);
       if ((shared >= 3 || (shared >= 2 && shared / minLen >= 0.6)) && shared > bestShared) {
         bestShared = shared;
-        best = cand.factors;
+        best = cand.scale;
       }
     }
     return best;
@@ -516,21 +516,21 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
     const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
     const promptData = chunk.map((item, index) => {
-      const priorAnchor = findPriorEventAnchor(item.title);
+      const priorScale = findPriorScaleHint(item.title);
       return {
         index,
         outlet: item.sourceId,
         headline: item.title,
         description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || ''),
-        ...(priorAnchor ? { priorEventFactors: priorAnchor } : {})
+        ...(priorScale ? { priorScaleHint: priorScale } : {})
       };
     });
 
     const prompt = `You are an impartial, senior media analyst evaluating global news dispatches from first principles.
 Evaluate each article across FOUR continuous higher-order dimensions using precise integers (avoid rounding to multiples of 5 or 10):
 
-1. "polarity" (integer -100 to 100 — Net Real-World Valence & Causal Direction):
-   Evaluate the inherent net valence of the primary real-world change along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, or offsetting mixed outcomes) to +100 (maximum net constructive advancement).
+1. "polarity" (integer -100 to 100 — Net Real-World Valence & Substantive Editorial Angle):
+   Evaluate the inherent net valence of the primary real-world change and substantive angle foregrounded by the dispatch along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, or offsetting mixed outcomes) to +100 (maximum net constructive advancement).
    - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, clinical or scientific advance, discovery, or systemic aid that builds durable capacity or resolves a major deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, or acute economic/harm shock and merely highlights a procedural concession, secondary byproduct, or risk catalog, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
    - Frontier Advancement vs. Routine Maintenance or Minor Comfort Tips: Distinguish genuine breakthroughs from ordinary civic/corporate administration and minor symptom-comfort studies. Routine municipal/provincial facility openings, ceremonial inaugurations, local charity award profiles, and routine corporate capital expenditures belong near neutral (0 to +15). Similarly, minor symptom-comfort, ergonomic, or lifestyle studies (e.g., wearing headphones to reduce post-op nausea, minor dietary tips) warrant only modest positive polarity (+15 to +28), whereas life-saving medical cures, disease eradication, major conservation milestones, and fundamental scientific discoveries warrant high positive polarity (+55 to +95).
    - Concrete Action vs. Speculative Claims (Symmetrical): Concrete actions, empirical findings, active clinical trials, physical discoveries, enacted policies, and verified acute events carry full positive or negative valence. Conversely, when a dispatch consists of unsubstantiated future predictions, a politician or executive claiming a stalled project is "finally happening", preliminary proposals, political spending pledges, or opinion commentary without a verified completed milestone, discount event polarity toward zero (0 to +18) and permanence (10–25), attributing directional spin primarily to "framing".
@@ -544,8 +544,9 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
    Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, promotional, or agency-highlighting rhetoric).
 
-COHERENCE PRINCIPLE:
-If multiple dispatches in this batch cover the same underlying real-world event (or match a provided "priorEventFactors" [polarity, reach, permanence] anchor from an earlier dispatch on the exact same event), assign them identical "polarity", "reach", and "permanence", differentiating them only via "framing".
+SCALE CALIBRATION & FREE POLARITY PRINCIPLE:
+If a dispatch includes a "priorScaleHint" [reach, permanence] from an earlier article on the exact same specific incident, use it only as a rough reference for macro societal scale ("reach" and "permanence") IF AND ONLY IF this dispatch is about the exact same incident.
+NEVER lock "polarity" or "framing": always evaluate "polarity" (the substantive valence/angle of the facts foregrounded by this outlet) and "framing" (its rhetorical spin) independently for every single headline so subtle editorial variations are fully preserved.
 
 Return ONLY a JSON array of objects with:
 - index: integer matching input index
@@ -615,12 +616,11 @@ Return ONLY valid JSON.`;
                   explanation: rawExp + expSuffix,
                   ...(cleanSummary ? { summary: cleanSummary } : {})
                 });
-                // 3.2 Intra-run cross-batch Event Base anchoring: immediately feed newly evaluated items into anchorCandidates
-                // so subsequent batches in this same sync run lock onto the exact same [polarity, reach, permanence] Event Base.
+                // Feed only soft Macro-Scale [reach, permanence] hint into anchorCandidates for subsequent batches in this run
                 const itemTokens = getHeadlineTopicTokens(item.title);
                 if (itemTokens.length >= 2) {
                   anchorCandidates.push({
-                    factors: [calc.polarity, calc.reach, calc.permanence],
+                    scale: [calc.reach, calc.permanence],
                     tokens: new Set(itemTokens)
                   });
                 }
