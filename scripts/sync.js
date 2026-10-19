@@ -774,26 +774,26 @@ Return JSON array in format:
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
+    'gemini-3.5-flash-lite',
     process.env.GEMINI_MODEL,
     'gemini-3.8-flash',
     'gemini-2.5-flash',
-    'gemini-3.5-flash',
-    'gemini-3.5-flash-lite'
+    'gemini-3.5-flash'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   let clusters = null;
   for (const modelName of modelsToTry) {
     if (clusters) break;
-    const maxAttempts = modelName.includes('lite') ? 1 : 2;
+    const maxAttempts = 1;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
-          generationConfig: { temperature: 0.1, maxOutputTokens: 16384, responseMimeType: 'application/json' }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
         });
         const generatePromise = model.generateContent(prompt);
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Clustering call timed out after 90s')), 90000)
+          setTimeout(() => reject(new Error('Clustering call timed out after 150s')), 150000)
         );
         const resp = await Promise.race([generatePromise, timeoutPromise]);
         let text = resp.response.text().trim();
