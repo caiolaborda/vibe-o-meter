@@ -878,6 +878,8 @@ Return JSON array in format:
         let prevVersion = 1;
         let prevLastDevelopedAt = null;
         let prevDevelopmentNote = null;
+        let prevEvolutionHistory = null;
+        let prevSeenKeys = null;
         let pendingUpdate = null;
 
         if (matchedPrev) {
@@ -889,12 +891,40 @@ Return JSON array in format:
           prevLastDevelopedAt = matchedPrev.lastDevelopedAt || null;
           prevDevelopmentNote = matchedPrev.developmentNote || null;
 
-          const prevUrls = new Set((matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean));
-          const prevTitles = new Set((matchedPrev.coverage || []).map(c => c.title ? cleanHeadlineTitle(c.title) : '').filter(Boolean));
-          const addedArticles = matchingArticles.filter(m =>
-            (!m.link || !prevUrls.has(canonicalUrl(m.link))) &&
-            (!m.title || !prevTitles.has(cleanHeadlineTitle(m.title)))
-          );
+          const currentCovUrls = (matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean);
+          const currentCovTitles = (matchedPrev.coverage || []).map(c => c.title ? cleanHeadlineTitle(c.title) : '').filter(Boolean);
+          const historicalKeys = new Set([
+            ...(Array.isArray(matchedPrev.seenArticleKeys) ? matchedPrev.seenArticleKeys : []),
+            ...currentCovUrls,
+            ...currentCovTitles
+          ]);
+
+          const addedArticles = matchingArticles.filter(m => {
+            const u = m.link ? canonicalUrl(m.link) : '';
+            const t = m.title ? cleanHeadlineTitle(m.title) : '';
+            return (!u || !historicalKeys.has(u)) && (!t || !historicalKeys.has(t));
+          });
+
+          // Record all current articles into historicalKeys so re-clustered articles never re-trigger pendingUpdate
+          matchingArticles.forEach(m => {
+            if (m.link) historicalKeys.add(canonicalUrl(m.link));
+            if (m.title) historicalKeys.add(cleanHeadlineTitle(m.title));
+          });
+          prevSeenKeys = Array.from(historicalKeys).slice(-120);
+
+          if (Array.isArray(matchedPrev.evolutionHistory) && matchedPrev.evolutionHistory.length > 0) {
+            prevEvolutionHistory = [...matchedPrev.evolutionHistory];
+          } else {
+            prevEvolutionHistory = [{
+              version: 1,
+              type: 'initial',
+              timestamp: matchedPrev.firstSeenAt || matchedPrev.lastDevelopedAt || new Date(newestMs || Date.now()).toISOString(),
+              headline: finalStory,
+              summary: finalSummary,
+              outletCount: (matchedPrev.coverage || []).length || matchingArticles.length,
+              note: 'Initial cluster formation on the wire'
+            }];
+          }
 
           if (addedArticles.length > 0) {
             pendingUpdate = {
@@ -903,6 +933,22 @@ Return JSON array in format:
               addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
             };
           }
+        } else {
+          const initKeys = new Set();
+          matchingArticles.forEach(m => {
+            if (m.link) initKeys.add(canonicalUrl(m.link));
+            if (m.title) initKeys.add(cleanHeadlineTitle(m.title));
+          });
+          prevSeenKeys = Array.from(initKeys);
+          prevEvolutionHistory = [{
+            version: 1,
+            type: 'initial',
+            timestamp: new Date(newestMs || Date.now()).toISOString(),
+            headline: finalStory,
+            summary: finalSummary,
+            outletCount: matchingArticles.length,
+            note: 'Initial cluster formation on the wire'
+          }];
         }
 
         const currentSlug = finalId || String(finalStory || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -916,6 +962,8 @@ Return JSON array in format:
           ...(prevLastDevelopedAt ? { lastDevelopedAt: prevLastDevelopedAt } : {}),
           ...(prevDevelopmentNote ? { developmentNote: prevDevelopmentNote } : {}),
           ...(evolvedIds.size > 0 ? { evolvedFromIds: Array.from(evolvedIds) } : {}),
+          ...(prevEvolutionHistory ? { evolutionHistory: prevEvolutionHistory } : {}),
+          ...(prevSeenKeys ? { seenArticleKeys: prevSeenKeys } : {}),
           ...(pendingUpdate ? { _pendingUpdate: pendingUpdate } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
@@ -980,6 +1028,25 @@ Return JSON array in format:
   return previousClusters;
 }
 
+function appendClusterUpdateAuditLog(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return;
+  try {
+    const logPath = path.join(DATA_DIR, 'cluster-updates-log.json');
+    let existing = [];
+    if (fs.existsSync(logPath)) {
+      existing = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+      if (!Array.isArray(existing)) existing = [];
+    }
+    existing.push(...entries);
+    if (existing.length > 250) {
+      existing = existing.slice(-250);
+    }
+    fs.writeFileSync(logPath, JSON.stringify(existing, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[Clusters] Could not write cluster-updates-log.json:', e.message);
+  }
+}
+
 // Single-pass Longitudinal Cluster Consolidation & Substantive Development Verifier
 async function consolidateEvolvingClusters(clusters, apiKey) {
   if (!apiKey || !Array.isArray(clusters) || clusters.length < 4) return clusters;
@@ -988,7 +1055,14 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   const lines = clusters.map((c, idx) => {
     const id = c.id || slugify(c.story);
     const sampleOutlets = (c.coverage || []).slice(0, 4).map(a => a.sourceId).join(',');
-    let line = `[${idx}] id="${id}" | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+    let line = `[${idx}] id="${id}" (v${c.version || 1}) | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+    if (c.developmentNote || (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 1)) {
+      const priorNotes = (c.evolutionHistory || [])
+        .slice(1)
+        .map(h => `[v${h.version || '?'} ${h.type || 'shift'}: "${h.headline}" — ${h.note}]`)
+        .join(' ; ');
+      line += `\n    [PRIOR RECORDED HISTORY: ${priorNotes || c.developmentNote}]`;
+    }
     if (c._pendingUpdate && Array.isArray(c._pendingUpdate.addedHeadlines) && c._pendingUpdate.addedHeadlines.length > 0) {
       line += `\n    [CANDIDATE IN-PLACE UPDATE: +${c._pendingUpdate.addedHeadlines.length} new dispatches -> ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
     }
@@ -996,24 +1070,35 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   }).join('\n');
 
   const prompt = `You are the Executive Editor of a global news intelligence wire.
-Below are ${clusters.length} story clusters currently active across our rolling 7-day window.
+Below are ${clusters.length} story clusters currently active across our rolling 7-day window, including each cluster's current summary, any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
+
+CRITICAL EDITORIAL PRINCIPLE — DISTINGUISHING "CLARIFICATION" vs. "MATERIAL SHIFT":
+When new dispatches arrive on a story, or when two clusters relate to the same story, you must distinguish between THREE states:
+1. "none" (Redundant / Syndication Catch-Up):
+   - The new dispatches merely repeat facts already present in the existing summary or [PRIOR RECORDED HISTORY] (e.g., another outlet reporting that the Pope left the hospital when the summary already states he returned to the Vatican, or repeating that victims were identified when [PRIOR RECORDED HISTORY] already recorded that). Ignore these completely!
+2. "clarification" (Evolution Without a State Change — Silent Fact Sharpening):
+   - The underlying event has NOT changed phase or outcome, but facts have become clearer or more specific: e.g., casualty or arrest tallies updated ("thousands of arrests" -> "nearly 2,400 arrests"), deceased victims' names released, minor anatomical/location specifics clarified ("officer shot" -> "officer shot in foot"), aftermath damage assessments, or a politician/official publicly defending or reacting to their own already-announced decision ("Trump defends his sanctions waiver").
+   - For "clarification": we refine the cluster's "summary" so readers get the sharper facts, but we DO NOT bump the version or rename the headline as a new breaking phase.
+3. "material_shift" (Worthy Update Status — Causal Step-Change / Outcome Reversal):
+   - Strictly reserved for a CONCRETE STEP-CHANGE in the real-world state of the story that is NOT already in the existing summary or [PRIOR RECORDED HISTORY]:
+     a) An outcome reversal or formal legal/institutional decision (e.g., detained driver is released without charges; suspects are formally charged in court; a judge blocks or greenlights an action; a treaty/ceasefire collapses),
+     b) A major geographic or jurisdictional expansion (e.g., protests in France spread across the border into Italy; an Ebola outbreak crosses into a neighboring country),
+     c) A distinct new physical act or major escalation (never routine rhetoric, blame-trading, or tally updates).
 
 You have TWO jobs in this single pass:
 
 JOB 1 — "merges" (Cross-Cluster Consolidation):
-Identify any groups of 2 or more clusters that represent EITHER:
-- Duplicate clusters of the exact same real-world event/announcement ("isNewDevelopment": false), OR
-- Direct sequential phases/evolutions of the exact same specific incident/protest/case/person over recent days ("isNewDevelopment": true, e.g., "Talks Begin" -> "Talks Collapse", "Leader Detained" -> "Leader Released").
-Strict Guardrails for merges:
-- NEVER merge distinct events that merely share a broad topic or country.
-- Set "isNewDevelopment": true ONLY when the newer cluster introduces a concrete new factual development, outcome flip, or material escalation beyond the earlier cluster. If they are just duplicates of the same event, set "isNewDevelopment": false.
+Identify any groups of 2 or more clusters that represent the exact same underlying story:
+- NEVER merge distinct events that merely share a broad topic, country, or war. In particular, NEVER merge physical military attacks/strikes (e.g., "Ukrainian Drones Strike St. Petersburg") into diplomatic/sanctions policy stories (e.g., "Trump Waives Russia Sanctions").
+- Set "updateType": "none" if the clusters are simply duplicates of the exact same event/phase.
+- Set "updateType": "clarification" if one cluster just adds sharper detail/numbers to the same event phase.
+- Set "updateType": "material_shift" ONLY if the newer cluster represents a genuine causal step-change, outcome flip, or cross-border expansion over the earlier cluster.
 
-JOB 2 — "inPlaceDevelopments" (Evaluating New Dispatches on Existing Clusters):
-Some clusters below have a "[CANDIDATE IN-PLACE UPDATE: +N new dispatches -> ...]" line showing articles that just joined that existing cluster.
-- Most of the time, new dispatches are simply "syndication catch-up" (additional outlets reporting the exact same initial event). Ignore those!
-- ONLY include a cluster in "inPlaceDevelopments" if its newly added dispatches report a CONCRETE NEW FACTUAL DEVELOPMENT, OUTCOME FLIP (e.g. proposed -> passed, talks -> collapse), or MATERIAL ESCALATION that was NOT already present in the cluster's existing headline & summary.
-
-For every merge or inPlaceDevelopment, weave timing (day, date span, or time-of-day cue) organically and variedly into "summary" rather than starting with a rigid "On [Day], [Date]," formula, and provide a crisp 1-sentence "developmentNote" when a genuine new development occurred.
+JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
+Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line:
+- If the new dispatches are redundant with the existing summary or [PRIOR RECORDED HISTORY], omit the cluster.
+- If the new dispatches sharpen numbers, name victims, or add routine reaction/aftermath without a causal phase shift, include it with "updateType": "clarification".
+- If and ONLY if the new dispatches introduce a genuine causal step-change, outcome flip, or cross-border expansion not yet in the summary or [PRIOR RECORDED HISTORY], include it with "updateType": "material_shift".
 
 Clusters:
 ${lines}
@@ -1023,18 +1108,19 @@ Return ONLY valid JSON in this exact format:
   "merges": [
     {
       "indices": [13, 14],
-      "isNewDevelopment": true,
-      "story": "Updated Authoritative 3-6 Word Title",
-      "summary": "1-2 sentence synthesis with organic, varied temporal grounding.",
-      "developmentNote": "1-sentence summary of what newly developed (or null if duplicate merge)."
+      "updateType": "none" | "clarification" | "material_shift",
+      "story": "Updated Authoritative 3-6 Word Title (only used if material_shift)",
+      "summary": "1-2 sentence synthesis with organic temporal grounding.",
+      "developmentNote": "1-sentence summary of what changed or was clarified (or null if duplicate merge)."
     }
   ],
   "inPlaceDevelopments": [
     {
       "index": 4,
-      "story": "Updated Authoritative 3-6 Word Title",
-      "summary": "1-2 sentence synthesis reflecting the new development.",
-      "developmentNote": "1-sentence summary of the new factual development."
+      "updateType": "clarification" | "material_shift",
+      "story": "Updated Authoritative 3-6 Word Title (only used if material_shift)",
+      "summary": "1-2 sentence synthesis reflecting the clarified facts or new development.",
+      "developmentNote": "1-sentence summary of the specific new development or clarification."
     }
   ]
 }`;
@@ -1050,36 +1136,132 @@ Return ONLY valid JSON in this exact format:
     const parsed = JSON.parse(resp.response.text().trim());
     const merges = Array.isArray(parsed?.merges) ? parsed.merges : [];
     const inPlaceDevs = Array.isArray(parsed?.inPlaceDevelopments) ? parsed.inPlaceDevelopments : [];
+    const auditLogEntries = [];
 
-    // Apply verified in-place developments first
+    // Apply verified in-place developments & clarifications first
     const inPlaceByIdx = new Map();
     for (const dev of inPlaceDevs) {
-      if (Number.isInteger(dev?.index) && dev.index >= 0 && dev.index < clusters.length && dev.story) {
+      if (Number.isInteger(dev?.index) && dev.index >= 0 && dev.index < clusters.length && (dev.summary || dev.story)) {
         inPlaceByIdx.set(dev.index, dev);
       }
     }
 
+    let materialInPlaceCount = 0;
+    let clarificationInPlaceCount = 0;
+
     for (const [idx, dev] of inPlaceByIdx.entries()) {
       const c = clusters[idx];
-      const oldSlug = c.id || slugify(c.story);
-      const newStory = dev.story.trim();
-      const newSlug = slugify(newStory);
-      const evolvedIds = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
-      if (oldSlug && oldSlug !== newSlug) evolvedIds.add(oldSlug);
-      evolvedIds.delete(newSlug);
+      const uType = dev.updateType === 'material_shift' ? 'material_shift' : 'clarification';
+      const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
+      const noteText = (dev.developmentNote && dev.developmentNote.trim()) || '';
 
-      c.id = newSlug;
-      c.story = newStory;
-      if (dev.summary) c.summary = dev.summary.trim();
-      c.version = (typeof c.version === 'number' ? c.version : 1) + 1;
-      c.lastDevelopedAt = new Date(c.newestMs || Date.now()).toISOString();
-      c.developmentNote = (dev.developmentNote && dev.developmentNote.trim()) || `Story developed: ${newStory}`;
-      if (evolvedIds.size > 0) c.evolvedFromIds = Array.from(evolvedIds);
+      // Guard against no-op or duplicate note already in evolutionHistory
+      const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
+      const alreadyRecorded = hist.some(h =>
+        (noteText && h.note && h.note.toLowerCase() === noteText.toLowerCase()) ||
+        (newSummary && h.summary && h.summary.toLowerCase() === newSummary.toLowerCase())
+      );
+      if (alreadyRecorded) continue;
+
+      const beforeSnapshot = {
+        id: c.id || slugify(c.story),
+        version: typeof c.version === 'number' ? c.version : 1,
+        story: c.story,
+        summary: c.summary,
+        outletCount: c.outletCount || (c.coverage || []).length || 1
+      };
+
+      const ts = new Date(c.newestMs || Date.now()).toISOString();
+
+      if (uType === 'material_shift') {
+        materialInPlaceCount++;
+        const oldSlug = c.id || slugify(c.story);
+        const newStory = (dev.story && dev.story.trim()) || c.story;
+        const newSlug = slugify(newStory);
+        const evolvedIds = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
+        if (oldSlug && oldSlug !== newSlug) evolvedIds.add(oldSlug);
+        evolvedIds.delete(newSlug);
+
+        c.id = newSlug;
+        c.story = newStory;
+        c.summary = newSummary;
+        c.version = beforeSnapshot.version + 1;
+        c.lastDevelopedAt = ts;
+        c.developmentNote = noteText || `Story developed: ${newStory}`;
+        if (evolvedIds.size > 0) c.evolvedFromIds = Array.from(evolvedIds);
+
+        const afterSnapshot = {
+          id: c.id,
+          version: c.version,
+          story: c.story,
+          summary: c.summary,
+          outletCount: beforeSnapshot.outletCount
+        };
+
+        hist.push({
+          version: c.version,
+          type: 'material_shift',
+          timestamp: ts,
+          headline: c.story,
+          summary: c.summary,
+          beforeStory: beforeSnapshot.story,
+          beforeSummary: beforeSnapshot.summary,
+          outletCount: afterSnapshot.outletCount,
+          note: c.developmentNote
+        });
+        c.evolutionHistory = hist.slice(-8);
+
+        auditLogEntries.push({
+          timestamp: new Date().toISOString(),
+          eventTimestamp: ts,
+          updateType: 'material_shift',
+          source: 'inPlaceDevelopment',
+          before: beforeSnapshot,
+          after: afterSnapshot,
+          note: c.developmentNote,
+          addedHeadlines: c._pendingUpdate?.addedHeadlines || []
+        });
+      } else {
+        // 'clarification': silent summary refinement without bumping version or triggering unread alert
+        clarificationInPlaceCount++;
+        c.summary = newSummary;
+        const afterSnapshot = {
+          id: c.id || slugify(c.story),
+          version: beforeSnapshot.version,
+          story: c.story,
+          summary: c.summary,
+          outletCount: beforeSnapshot.outletCount
+        };
+        hist.push({
+          version: beforeSnapshot.version,
+          type: 'clarification',
+          timestamp: ts,
+          headline: c.story,
+          summary: c.summary,
+          beforeStory: beforeSnapshot.story,
+          beforeSummary: beforeSnapshot.summary,
+          outletCount: afterSnapshot.outletCount,
+          note: noteText || 'Factual details and figures clarified across incoming dispatches'
+        });
+        c.evolutionHistory = hist.slice(-8);
+
+        auditLogEntries.push({
+          timestamp: new Date().toISOString(),
+          eventTimestamp: ts,
+          updateType: 'clarification',
+          source: 'inPlaceClarification',
+          before: beforeSnapshot,
+          after: afterSnapshot,
+          note: noteText || 'Factual details clarified without phase change',
+          addedHeadlines: c._pendingUpdate?.addedHeadlines || []
+        });
+      }
     }
 
     if (merges.length === 0) {
-      if (inPlaceByIdx.size > 0) {
-        console.log(`[Clusters] Verified ${inPlaceByIdx.size} in-place story developments.`);
+      appendClusterUpdateAuditLog(auditLogEntries);
+      if (materialInPlaceCount > 0 || clarificationInPlaceCount > 0) {
+        console.log(`[Clusters] Verified ${materialInPlaceCount} material shifts and ${clarificationInPlaceCount} silent clarifications.`);
       }
       return clusters;
     }
@@ -1094,13 +1276,14 @@ Return ONLY valid JSON in this exact format:
 
       const group = validIdx.map(i => clusters[i]);
       const evolvedIds = new Set();
+      const mergedSeenKeys = new Set();
       const rawCov = [];
       let maxNewestMs = 0;
       let maxVersion = 1;
       let bestLastDevelopedAt = null;
       let bestDevelopmentNote = null;
 
-      // Pick the most established cluster in the group as the anchor for duplicate merges
+      // Pick the most established cluster in the group as the anchor for duplicate/clarification merges
       const anchor = [...group].sort((a, b) => (b.outletCount || 0) - (a.outletCount || 0))[0] || group[0];
 
       for (const g of group) {
@@ -1108,6 +1291,9 @@ Return ONLY valid JSON in this exact format:
         if (gSlug) evolvedIds.add(gSlug);
         if (Array.isArray(g.evolvedFromIds)) {
           g.evolvedFromIds.forEach(id => evolvedIds.add(id));
+        }
+        if (Array.isArray(g.seenArticleKeys)) {
+          g.seenArticleKeys.forEach(k => mergedSeenKeys.add(k));
         }
         if (g.newestMs && g.newestMs > maxNewestMs) maxNewestMs = g.newestMs;
         if (typeof g.version === 'number' && g.version > maxVersion) maxVersion = g.version;
@@ -1125,32 +1311,91 @@ Return ONLY valid JSON in this exact format:
         if (!art.sourceId || seenOutlets.has(art.sourceId)) continue;
         seenOutlets.add(art.sourceId);
         dedupedCov.push(art);
+        if (art.link) mergedSeenKeys.add(canonicalUrl(art.link));
+        if (art.title) mergedSeenKeys.add(cleanHeadlineTitle(art.title));
       }
 
       const scores = dedupedCov.map(a => a.sentiment).filter(s => typeof s === 'number');
       const avgScore = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : 0;
       const spreadRange = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : 0;
 
-      const isDev = Boolean(m.isNewDevelopment);
+      const mergeType = m.updateType === 'material_shift' || m.isNewDevelopment === true
+        ? 'material_shift'
+        : (m.updateType === 'clarification' ? 'clarification' : 'none');
+      const isDev = mergeType === 'material_shift';
+
       const finalStory = isDev ? ((m.story && m.story.trim()) || anchor.story) : (anchor.story || (m.story && m.story.trim()));
       const finalSlug = isDev ? slugify(finalStory) : (anchor.id || slugify(finalStory));
+      const finalSummary = (m.summary && m.summary.trim()) || anchor.summary;
       evolvedIds.delete(finalSlug);
 
       const nextVersion = isDev ? (maxVersion + 1) : maxVersion;
-      const nextDevelopedAt = isDev ? new Date(maxNewestMs || Date.now()).toISOString() : bestLastDevelopedAt;
+      const ts = new Date(maxNewestMs || Date.now()).toISOString();
+      const nextDevelopedAt = isDev ? ts : bestLastDevelopedAt;
       const nextDevNote = isDev
         ? ((m.developmentNote && m.developmentNote.trim()) || `Story evolved: ${finalStory}`)
         : bestDevelopmentNote;
+
+      const hist = Array.isArray(anchor.evolutionHistory) ? [...anchor.evolutionHistory] : [{
+        version: 1,
+        type: 'initial',
+        timestamp: anchor.firstSeenAt || ts,
+        headline: anchor.story,
+        summary: anchor.summary,
+        outletCount: anchor.outletCount || 2,
+        note: 'Initial cluster formation on the wire'
+      }];
+
+      if (mergeType === 'material_shift' || mergeType === 'clarification') {
+        const beforeSnapshot = {
+          id: anchor.id || slugify(anchor.story),
+          version: maxVersion,
+          story: anchor.story,
+          summary: anchor.summary,
+          outletCount: anchor.outletCount || 2
+        };
+        const afterSnapshot = {
+          id: finalSlug,
+          version: nextVersion,
+          story: finalStory,
+          summary: finalSummary,
+          outletCount: dedupedCov.length
+        };
+        const entryNote = (m.developmentNote && m.developmentNote.trim()) || (isDev ? `Story evolved: ${finalStory}` : 'Merged clarifying dispatches');
+        hist.push({
+          version: nextVersion,
+          type: mergeType,
+          timestamp: ts,
+          headline: finalStory,
+          summary: finalSummary,
+          beforeStory: anchor.story,
+          beforeSummary: anchor.summary,
+          outletCount: dedupedCov.length,
+          note: entryNote
+        });
+        auditLogEntries.push({
+          timestamp: new Date().toISOString(),
+          eventTimestamp: ts,
+          updateType: mergeType,
+          source: 'clusterMerge',
+          mergedClusterIds: group.map(g => g.id || slugify(g.story)),
+          before: beforeSnapshot,
+          after: afterSnapshot,
+          note: entryNote
+        });
+      }
 
       result.push({
         ...anchor,
         id: finalSlug,
         story: finalStory,
-        summary: (m.summary && m.summary.trim()) || anchor.summary,
+        summary: finalSummary,
         version: nextVersion,
         ...(nextDevelopedAt ? { lastDevelopedAt: nextDevelopedAt } : {}),
         ...(nextDevNote ? { developmentNote: nextDevNote } : {}),
         evolvedFromIds: Array.from(evolvedIds),
+        evolutionHistory: hist.slice(-8),
+        seenArticleKeys: Array.from(mergedSeenKeys).slice(-120),
         averageSentiment: avgScore,
         sentimentSpread: spreadRange,
         outletCount: dedupedCov.length,
@@ -1163,7 +1408,8 @@ Return ONLY valid JSON in this exact format:
       if (!consumed.has(idx)) result.push(c);
     });
 
-    console.log(`[Clusters] Consolidated ${merges.length} cluster groups (${inPlaceByIdx.size} in-place developments, ${clusters.length} -> ${result.length} clusters).`);
+    appendClusterUpdateAuditLog(auditLogEntries);
+    console.log(`[Clusters] Consolidated ${merges.length} cluster groups (${materialInPlaceCount} material shifts, ${clarificationInPlaceCount} silent clarifications, ${clusters.length} -> ${result.length} clusters).`);
     return result;
   } catch (e) {
     console.warn('[Clusters] Consolidation pass skipped:', e.message);
