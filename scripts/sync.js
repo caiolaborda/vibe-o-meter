@@ -1242,64 +1242,75 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   const prompt = `You are the Executive Editor of a global news intelligence wire.
 Below are ${clusters.length} story clusters currently active across our rolling 7-day window, including each cluster's current summary, any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
 
-CRITICAL EDITORIAL PRINCIPLE — DISTINGUISHING "CLARIFICATION" vs. "MATERIAL SHIFT":
-When new dispatches arrive on a story, or when two clusters relate to the same story, you must distinguish between THREE states:
-1. "none" (Redundant / Syndication Catch-Up):
-   - The new dispatches merely repeat facts already present in the existing summary or [PRIOR RECORDED HISTORY] (e.g., another outlet reporting that the Pope left the hospital when the summary already states he returned to the Vatican, or repeating that victims were identified when [PRIOR RECORDED HISTORY] already recorded that). Ignore these completely!
-2. "clarification" (Evolution Without a State Change — Silent Fact Sharpening):
-   - The underlying event has NOT changed phase or outcome, but facts have become clearer or more specific: e.g., casualty or arrest tallies updated ("thousands of arrests" -> "nearly 2,400 arrests"), deceased victims' names released, minor anatomical/location specifics clarified ("officer shot" -> "officer shot in foot"), aftermath damage assessments, or a politician/official publicly defending or reacting to their own already-announced decision ("Trump defends his sanctions waiver").
-   - For "clarification": we refine the cluster's "summary" so readers get the sharper facts, but we DO NOT bump the version or rename the headline as a new breaking phase.
-3. "material_shift" (Worthy Update Status — Causal Step-Change / Outcome Reversal):
-   - Strictly reserved for a CONCRETE STEP-CHANGE in the real-world state of the story that is NOT already in the existing summary or [PRIOR RECORDED HISTORY]:
-     a) An outcome reversal or formal legal/institutional decision (e.g., detained driver is released without charges; suspects are formally charged in court; a judge blocks or greenlights an action; a treaty/ceasefire collapses; work begins immediately despite a court order),
-     b) A major geographic or jurisdictional expansion into ANY new country, state, or major city not yet explicitly named in the prior headline/summary (e.g., protests in France spread to Italy, or after spreading to Italy they spread further into Belgium/Brussels — even if the prior summary already used plural words like "neighboring countries", every newly affected country is ALWAYS a "material_shift"!),
-     c) A distinct new physical act, emergency powers/curfew mobilization, or major escalation (never routine rhetoric, blame-trading, or tally updates).
+FIRST-PRINCIPLES META-RULE — INTRA-STATE RESOLUTION ("clarification") vs. STATE-ENVELOPE SHIFT ("material_shift"):
+Every news story has a current State Envelope defined by:
+  (A) Active Jurisdictions & Actors (where and between whom the active phenomenon is occurring),
+  (B) Institutional / Legal / Operational Regime (what formal powers, legal statuses, or operational timelines are in force),
+  (C) Causal Phase & Outcome Direction (whether the situation is escalating, reversing, or resolved).
 
-MIXED-BATCH DOMINANCE RULE (CRITICAL):
-- Often, a batch of incoming dispatches will contain 4-5 routine reaction/commentary headlines alongside 1-2 headlines reporting a genuine material shift (for example: several outlets covering French officials debating riots, while Financial Times reports "Violent protests spread from France to Italy and Belgium" and the PM weighs curfews/emergency powers).
-- Whenever ANY single dispatch in the candidate update introduces a material shift (such as spreading to an additional country like Belgium), the entire update MUST be classified as "material_shift" (NEVER downgrade it to "clarification" just because other headlines in the batch are commentary!). Lead the "developmentNote" sentence with the material shift, and update "story" to reflect the new scope while keeping the origin anchor (e.g., "French Cost-of-Living Protests Spread to Italy and Belgium").
+When new dispatches arrive on a story, or when two clusters relate to the same story, distinguish between THREE states:
+1. "none" (Redundant / Syndication Catch-Up — Omit):
+   - The new dispatches merely restate milestones already present in the cluster's existing summary or [PRIOR RECORDED HISTORY] (e.g. reporting a hospital discharge when the summary already states the patient left the hospital and resumed public duties). Omit these completely!
+
+2. "clarification" (Intra-State Resolution — Sharpening Facts Within the Existing Envelope):
+   - The new dispatches increase factual precision, granularity, or post-event texture WITHOUT crossing a boundary of the existing State Envelope:
+     • Refining a metric or tally of an already-reported action (e.g. "thousands arrested" -> "nearly 2,400 arrested"; "large drone barrage" -> "over 1,000 drones and 1 fatality"),
+     • Identifying or profiling already-counted victims/participants (e.g. releasing the names of the 4 deceased soldiers; noting a US photojournalist was among the diplomats attacked),
+     • Forensic or technical mechanics of how the original incident unfolded (e.g. how fast a grass fire moved; aftermath property damage assessments),
+     • Routine rhetorical reactions, blame-trading, or an official publicly defending their own already-announced decision ("Trump defends his sanctions waiver").
+   - For "clarification": we refine the cluster's "summary" so readers get the sharper facts, but we DO NOT bump the version or rename the headline as a new breaking phase.
+
+3. "material_shift" (State-Envelope Crossing — Structural Step-Change):
+   - At least ONE fact in the new dispatches crosses the boundary of the prior State Envelope:
+     • Spatial / Jurisdictional Boundary: The active phenomenon physically enters ANY new sovereign country, state, or distinct theatre not yet named in the prior summary (even if the prior summary already used plural phrasing like "neighboring countries" or had previously crossed one border, every newly entered country/jurisdiction is a State-Envelope Shift),
+     • Institutional / Legal / Timeline Regime Change: Authorities invoke or formally weigh extraordinary legal/coercive regimes (curfews, state of emergency, criminal indictments), a suspect is released without charges, or an actor overrides/accelerates an established operational timeline (e.g. moving a November start date to begin immediately despite a court order),
+     • Outcome / Premise Reversal: A critical threat or premise is resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses).
+
+DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE & AUTOREGRESSIVE ORDERING:
+- When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that cross a State Envelope boundary, you must NEVER average the batch into "clarification". The presence of ANY single State-Envelope crossing makes the update a "material_shift".
+- If a batch crosses MULTIPLE boundaries at once (e.g. unrest spreads to a new country AND officials weigh emergency powers/curfews), synthesize ALL boundary-crossing shifts in "developmentNote" and "summary".
+- Always generate "developmentNote" and "stateBoundaryCrossed" FIRST before deciding "updateType".
+- HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor AND prior geographic scope from the existing headline while appending/reflecting the new shift so readers never lose the thread (e.g. "French Cost-of-Living Protests Spread to Italy and Belgium").
 
 You have THREE jobs in this single pass:
 
 JOB 1 — "merges" (Cross-Cluster Consolidation):
 Identify any groups of 2 or more clusters that represent the EXACT SAME underlying incident/thread:
 - NEVER merge distinct events that merely share a broad topic, country, leader, or war. If two independently significant events influence or react to each other (e.g., "Ukrainian Drones Strike St. Petersburg" vs. "Trump Waives Russia Sanctions"), DO NOT merge them — put them in "lateralConnections" (Job 3) instead!
-- Set "updateType": "none" if the clusters are simply duplicates of the exact same event/phase.
-- Set "updateType": "clarification" if one cluster just adds sharper detail/numbers to the same event phase.
-- Set "updateType": "material_shift" ONLY if the newer cluster represents a genuine causal step-change, outcome flip, or cross-border expansion over the earlier cluster.
-- HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor from the initial headline while reflecting the key change so readers never lose the thread (e.g., if "Violent Protests Across France" spreads to Italy, write "French Cost-of-Living Protests Spread to Italy"; if it then spreads to Belgium, write "French Cost-of-Living Protests Spread to Italy and Belgium" — NEVER drop "France/French" from the title).
+- Generate "developmentNote" and "stateBoundaryCrossed" first, then set "updateType": "none" | "clarification" | "material_shift" using the State-Envelope Meta-Rule above.
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
 Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line:
-- If the new dispatches are redundant with the existing summary or [PRIOR RECORDED HISTORY], omit the cluster.
-- If the new dispatches ONLY sharpen numbers, name victims, or add routine reaction/aftermath without any causal phase shift or new country expansion, include it with "updateType": "clarification".
-- If ANY of the new dispatches introduce a genuine causal step-change, outcome flip, or expansion into a newly named country/jurisdiction not yet in the summary or [PRIOR RECORDED HISTORY], include it with "updateType": "material_shift" and follow the HEADLINE CONTINUITY RULE (retain the origin anchor while reflecting the key shift).
+- If the new dispatches are redundant with the existing summary or [PRIOR RECORDED HISTORY], omit the cluster (or set "updateType": "none").
+- Otherwise, generate "developmentNote" and "stateBoundaryCrossed" first, then set "updateType": "clarification" | "material_shift" using the State-Envelope Meta-Rule and Disjunctive Batch Principle.
 
 JOB 3 — "lateralConnections" (Interacting Clusters That Must NOT Collapse):
-Identify pairs of DISTINCT clusters that causally influence, react to, or directly interact with each other in this week's news without being the same incident (e.g., a US Russia-sanctions policy cluster and a major Ukrainian refinery strike cluster; or a regional diplomatic summit and a parallel border clash):
+Identify pairs of DISTINCT clusters that causally influence, react to, or directly interact with each other in this week's news without being the same incident:
 - Keep them as separate clusters (do NOT put them in "merges"), and record their interaction here.
 
 Clusters:
 ${lines}
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON in this exact field order:
 {
   "merges": [
     {
       "indices": [13, 14],
+      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' (5-10 words each, e.g. 'Arrest tally updated to 2,400; Milan damage assessed'). For material_shift: 1 crisp sentence synthesizing all boundary-crossing shifts.",
+      "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — intra-state detail/rhetoric'",
       "updateType": "none" | "clarification" | "material_shift",
-      "story": "Updated 4-7 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
-      "summary": "1-2 sentence synthesis with organic temporal grounding.",
-      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' (5-10 words each, e.g. 'Arrest tally updated to 2,400; Milan damage assessed'). For material_shift: 1 crisp sentence."
+      "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
+      "summary": "1-2 sentence synthesis with organic temporal grounding."
     }
   ],
   "inPlaceDevelopments": [
     {
       "index": 4,
+      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' stating strictly what fact changed (5-10 words each, e.g. 'First official Vatican photos released; greeted St. Peter\\'s Square crowd' — no filler like 'New dispatches reported'). For material_shift: 1 crisp sentence synthesizing all boundary-crossing shifts in this batch.",
+      "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — intra-state detail/rhetoric'",
       "updateType": "clarification" | "material_shift",
-      "story": "Updated 4-7 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
-      "summary": "1-2 sentence synthesis reflecting the clarified facts or new development.",
-      "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' stating strictly what fact changed (5-10 words each, e.g. 'First official Vatican photos released; greeted St. Peter\\'s Square crowd' — no filler like 'New dispatches reported'). For material_shift: 1 crisp sentence."
+      "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
+      "summary": "1-2 sentence synthesis reflecting the clarified facts or new development."
     }
   ],
   "lateralConnections": [
@@ -1343,6 +1354,7 @@ Return ONLY valid JSON in this exact format:
     // Apply verified in-place developments & clarifications first
     const inPlaceByIdx = new Map();
     for (const dev of inPlaceDevs) {
+      if (dev?.updateType === 'none') continue;
       if (Number.isInteger(dev?.index) && dev.index >= 0 && dev.index < clusters.length && (dev.summary || dev.story)) {
         inPlaceByIdx.set(dev.index, dev);
       }
@@ -1353,12 +1365,9 @@ Return ONLY valid JSON in this exact format:
 
     for (const [idx, dev] of inPlaceByIdx.entries()) {
       const c = clusters[idx];
+      const uType = dev.updateType === 'material_shift' ? 'material_shift' : 'clarification';
       const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
       const noteText = (dev.developmentNote && dev.developmentNote.trim()) || '';
-      // Deterministic safety net: if the LLM labeled an update 'clarification' in a mixed batch,
-      // but the note itself explicitly states geographic spread, cross-border expansion, or emergency powers, promote to 'material_shift'
-      const hasImplicitShiftInNote = /\b(spreads? to|expanded? (into|to)|spilled over into|crossed (into|borders)|declares? state of emergency|emergency powers)\b/i.test(noteText);
-      const uType = (dev.updateType === 'material_shift' || hasImplicitShiftInNote) ? 'material_shift' : 'clarification';
 
       // Guard against no-op or duplicate note already in evolutionHistory
       const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
