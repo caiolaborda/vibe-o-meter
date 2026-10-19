@@ -1,10 +1,36 @@
 {
   "dataset": "vibe-o-meter/good-news",
-  "lastUpdated": "2026-10-19T16:36:50.216Z",
+  "lastUpdated": "2026-10-19T16:44:40.547Z",
   "count24h": 49,
   "count7d": 204,
-  "constructiveClusterCount": 31,
+  "constructiveClusterCount": 30,
   "top5DailyAntidote": [
+    {
+      "title": "Amazon records lowest deforestation level in 41 years",
+      "description": "The Amazon recorded its lowest level of deforestation in 2025 in 41 years. The deforested area totaled 693,000 hectares over the period covered by the data. The figures are part of MapBiomas Collection 11, which compiles information on land cover and land use in Brazil between 1985 and 2025. Most of the deforestation - 639,000 hectares - occurred in primary vegetation, meaning areas where native vegetation remained intact. Another 54,000 hecta...",
+      "sentiment": 0.588,
+      "significanceScore": 0.799,
+      "factors": [
+        68,
+        86,
+        63,
+        14
+      ],
+      "clusterId": "brazil-approves-shorter-workweek-and-amazon-deforestation-low",
+      "clusterStory": "Brazil Approves Shorter Workweek and Amazon Deforestation Low",
+      "outletCount": 7,
+      "explanation": "Reports verified empirical data documenting a 41-year record low in Amazonian rainforest deforestation. [Event Base: +0.55 | Editorial Framing: +0.04]",
+      "category": "climate",
+      "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
+      "sourceId": "agenciabrasil",
+      "sourceName": "Agência Brasil",
+      "region": "LATAM",
+      "link": "https://agenciabrasil.ebc.com.br/en/meio-ambiente/noticia/2026-10/amazon-records-lowest-deforestation-level-41-years",
+      "pubDate": "Sun, 18 Oct 2026 09:00:00 -0300",
+      "isPast24h": false,
+      "isPast48h": true,
+      "antidoteRank": 0.792
+    },
     {
       "title": "Are we about to solve the greatest mystery of the neutrino?",
       "description": "We have long had a seemingly simple question about neutrinos: how much do they weigh? Now, a gigantic experiment in China is poised to find out – and the answer could transform particle physics forever",
@@ -28,32 +54,6 @@
       "isPast24h": true,
       "isPast48h": true,
       "antidoteRank": 0.774
-    },
-    {
-      "title": "Amazon records lowest deforestation level in 41 years",
-      "description": "The Amazon recorded its lowest level of deforestation in 2025 in 41 years. The deforested area totaled 693,000 hectares over the period covered by the data. The figures are part of MapBiomas Collection 11, which compiles information on land cover and land use in Brazil between 1985 and 2025. Most of the deforestation - 639,000 hectares - occurred in primary vegetation, meaning areas where native vegetation remained intact. Another 54,000 hecta...",
-      "sentiment": 0.588,
-      "significanceScore": 0.762,
-      "factors": [
-        68,
-        86,
-        63,
-        14
-      ],
-      "clusterId": "amazon-deforestation-falls-to-record-low",
-      "clusterStory": "Amazon Deforestation Falls to Record Low",
-      "outletCount": 5,
-      "explanation": "Reports verified empirical data documenting a 41-year record low in Amazonian rainforest deforestation. [Event Base: +0.55 | Editorial Framing: +0.04]",
-      "category": "climate",
-      "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-      "sourceId": "agenciabrasil",
-      "sourceName": "Agência Brasil",
-      "region": "LATAM",
-      "link": "https://agenciabrasil.ebc.com.br/en/meio-ambiente/noticia/2026-10/amazon-records-lowest-deforestation-level-41-years",
-      "pubDate": "Sun, 18 Oct 2026 09:00:00 -0300",
-      "isPast24h": false,
-      "isPast48h": true,
-      "antidoteRank": 0.755
     },
     {
       "title": "Plasmonic coating on bacterial surfaces paves the way for rapid sepsis diagnosis",
@@ -132,12 +132,16 @@
   ],
   "constructiveClusters": [
     {
-      "id": "amazon-deforestation-falls-to-record-low",
-      "story": "Amazon Deforestation Falls to Record Low",
-      "summary": "Ahead of key national elections, President Luiz Inácio Lula da Silva secured major policy milestones as satellite data revealed Amazon deforestation dropped to a record low and Congress passed landmark legislation to reduce the workweek from 44 to 40 hours.",
-      "version": 1,
+      "id": "brazil-approves-shorter-workweek-and-amazon-deforestation-low",
+      "story": "Brazil Approves Shorter Workweek and Amazon Deforestation Low",
+      "summary": "Ahead of national elections, Brazilian authorities secured major policy milestones as Congress approved a constitutional amendment shortening the standard workweek to 40 hours while satellite data revealed Amazon deforestation dropped to a record low.",
+      "version": 2,
+      "lastDevelopedAt": "2026-10-19T10:00:00.000Z",
+      "developmentNote": "Brazilian Congress approves shorter workweek; Lula secures record-low Amazon deforestation.",
       "evolvedFromIds": [
-        "brazil-approves-shorter-workweek"
+        "amazon-deforestation-falls-to-record-low",
+        "brazil-approves-shorter-workweek",
+        "brazil-approves-shorter-workweek-measure"
       ],
       "evolutionHistory": [
         {
@@ -148,24 +152,56 @@
           "summary": "Ahead of key national elections, President Luiz Inácio Lula da Silva secured major policy milestones as satellite data revealed Amazon deforestation dropped to a record low and Congress passed landmark legislation to reduce the workweek from 44 to 40 hours.",
           "outletCount": 6,
           "note": "Initial cluster formation on the wire"
+        },
+        {
+          "version": 2,
+          "type": "material_shift",
+          "timestamp": "2026-10-19T10:00:00.000Z",
+          "headline": "Brazil Approves Shorter Workweek and Amazon Deforestation Low",
+          "summary": "Ahead of national elections, Brazilian authorities secured major policy milestones as Congress approved a constitutional amendment shortening the standard workweek to 40 hours while satellite data revealed Amazon deforestation dropped to a record low.",
+          "beforeStory": "Amazon Deforestation Falls to Record Low",
+          "beforeSummary": "Ahead of key national elections, President Luiz Inácio Lula da Silva secured major policy milestones as satellite data revealed Amazon deforestation dropped to a record low and Congress passed landmark legislation to reduce the workweek from 44 to 40 hours.",
+          "outletCount": 7,
+          "note": "Brazilian Congress approves shorter workweek; Lula secures record-low Amazon deforestation."
         }
       ],
       "topic": "climate",
-      "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-      "averageSentiment": 0.59,
-      "eventBase": 0.548,
-      "significanceScore": 0.764,
+      "imageUrl": "https://www.thenationalnews.com/resizer/v2/EYUEOPZM2ZGEVEUZLADZPIXZ6U.jpg?auth=477fa31351e8822dbac1573f1e0c3567fda52ea16cac67237fac89a762b2c385&smart=true&width=4051&height=2279",
+      "averageSentiment": 0.42,
+      "eventBase": 0.39,
+      "significanceScore": 0.631,
       "factors": [
-        68,
-        86,
-        63,
+        52,
+        72,
+        59,
         15
       ],
-      "sentimentSpread": 0.01,
-      "outletCount": 5,
-      "firstSeenAt": "2026-10-16T22:30:00.000Z",
-      "latestUpdateAt": "2026-10-18T12:00:00.000Z",
+      "sentimentSpread": 0.56,
+      "outletCount": 7,
+      "firstSeenAt": "2026-10-15T10:05:17.000Z",
+      "latestUpdateAt": "2026-10-19T10:00:00.000Z",
       "coverage": [
+        {
+          "sourceId": "thenational",
+          "sourceName": "The National",
+          "region": "ME",
+          "title": "Sheikha Latifa on her 20 years of Asian Games success and new Olympic dream",
+          "description": "Sheikha Latifa bint Ahmed bin Juma Al Maktoum does not remember the first time she got on a horse.Riding to her is like speaking, or walking – a skill a child picks up without even realising, and just keeps on doing it forever, or for as long as they possibly can.Earlier this month, Sheikha Latifa, riding her bay coat stallion Cornet XL, helped the UAE secure a silver medal in team jumping at the Asian Games in Aichi-Nagoya, Japan.It was her f...",
+          "sentiment": 0.043,
+          "eventBase": 0.032,
+          "framingMod": 0.011,
+          "factors": [
+            16,
+            22,
+            21,
+            24
+          ],
+          "explanation": "An Olympic equestrian profile chronicles two decades of Asian Games achievements and the rider's continuing competitive aspirations. [Event Base: +0.03 | Editorial Framing: +0.01]",
+          "category": "sports",
+          "imageUrl": "https://www.thenationalnews.com/resizer/v2/EYUEOPZM2ZGEVEUZLADZPIXZ6U.jpg?auth=477fa31351e8822dbac1573f1e0c3567fda52ea16cac67237fac89a762b2c385&smart=true&width=4051&height=2279",
+          "link": "https://www.thenationalnews.com/sport/2026/10/19/sheikha-latifa-on-her-20-years-of-asian-games-success-and-new-olympic-dream/",
+          "pubDate": "Mon, 19 Oct 2026 10:00:00 +0000"
+        },
         {
           "sourceId": "agenciabrasil",
           "sourceName": "Agência Brasil",
@@ -230,27 +266,6 @@
           "pubDate": "Sat, 17 Oct 2026 02:49:21 +0000"
         },
         {
-          "sourceId": "rte",
-          "sourceName": "RTÉ News",
-          "region": "EU",
-          "title": "Deforestation in Brazil's Amazon falls to all-time low",
-          "description": "Deforestation in ⁠Brazil's Amazon rainforest declined to the lowest level on record in the 12 months through July, according to data released by Brazilian space research agency Inpe.",
-          "sentiment": 0.594,
-          "eventBase": 0.548,
-          "framingMod": 0.046,
-          "factors": [
-            68,
-            86,
-            63,
-            16
-          ],
-          "explanation": "Deforestation in the Brazilian Amazon dropped to historic lows according to satellite data, marking a vital ecological achievement. [Event Base: +0.55 | Editorial Framing: +0.05]",
-          "category": "climate",
-          "imageUrl": "https://www.rte.ie/images/00252fd7-800.jpg",
-          "link": "https://www.rte.ie/news/world/2026/1017/1595733-amazon-deforestation/",
-          "pubDate": "Sat, 17 Oct 2026 02:34:12 +0100"
-        },
-        {
           "sourceId": "dw",
           "sourceName": "DW News",
           "region": "EU",
@@ -270,128 +285,48 @@
           "imageUrl": "https://static.dw.com/image/79684767_6.jpg",
           "link": "https://www.dw.com/en/brazil-amazon-deforestation-lowest-in-nearly-40-years/a-79684906?maca=en-rss-en-all-1573-rdf",
           "pubDate": "2026-10-16T22:30:00.000Z"
-        }
-      ]
-    },
-    {
-      "id": "world-s-oldest-shipwreck-found-off-turkey",
-      "story": "World's Oldest Shipwreck Found Off Turkey",
-      "summary": "Archaeologists discovered what is believed to be the world's oldest shipwreck off the Turkish coast, dating the Bronze Age vessel and its cargo to nearly 5,000 years ago.",
-      "version": 1,
-      "evolvedFromIds": [
-        "world-s-oldest-shipwreck-found-in-turkey",
-        "world-s-oldest-shipwreck-discovered-in-turkey"
-      ],
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-10-14T19:17:48.000Z",
-          "headline": "World's Oldest Shipwreck Found Off Turkey",
-          "summary": "Archaeologists discovered what is believed to be the world's oldest shipwreck off the Turkish coast, dating the Bronze Age vessel and its cargo to nearly 5,000 years ago.",
-          "outletCount": 4,
-          "note": "Initial cluster formation on the wire"
-        }
-      ],
-      "topic": "science",
-      "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/AA-20261014-42749826-42749822-4700YEAROLD_AMPHORAE_DISCOVERED_IN_UNDERWATER_EXCAVATIONS_OFF_TURKIYES_ANTALYA-1792007300.jpg?resize=1200%2C630",
-      "averageSentiment": 0.43,
-      "eventBase": 0.414,
-      "significanceScore": 0.58,
-      "factors": [
-        56,
-        64,
-        87,
-        7
-      ],
-      "sentimentSpread": 0.02,
-      "outletCount": 4,
-      "firstSeenAt": "2026-10-14T05:00:35.000Z",
-      "latestUpdateAt": "2026-10-14T20:33:20.000Z",
-      "coverage": [
-        {
-          "sourceId": "aljazeera",
-          "sourceName": "Al Jazeera",
-          "region": "ME",
-          "title": "World’s oldest shipwreck found off coast of Turkiye",
-          "description": "Clay analysis traces recovered storage jars to early history workshops operating across the Jordan Valley.",
-          "sentiment": 0.44,
-          "eventBase": 0.414,
-          "framingMod": 0.026,
-          "factors": [
-            56,
-            64,
-            87,
-            11
-          ],
-          "explanation": "The discovery of a 4,700-year-old shipwreck yields permanent archaeological insights into ancient maritime commerce. [Event Base: +0.41 | Editorial Framing: +0.03]",
-          "category": "science",
-          "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/AA-20261014-42749826-42749822-4700YEAROLD_AMPHORAE_DISCOVERED_IN_UNDERWATER_EXCAVATIONS_OFF_TURKIYES_ANTALYA-1792007300.jpg?resize=1200%2C630",
-          "link": "https://www.aljazeera.com/news/2026/10/14/worlds-oldest-shipwreck-found-off-coast-of-turkiye?traffic_source=rss",
-          "pubDate": "Wed, 14 Oct 2026 20:33:20 +0000"
         },
         {
-          "sourceId": "cnn",
-          "sourceName": "CNN",
-          "region": "NA",
-          "title": "World’s oldest shipwreck found off coast of Turkey - CNN",
-          "description": "Archaeologists have discovered what is believed to be the world's oldest known shipwreck off the coast of Turkey. The submerged vessel offers an unprecedented window into ancient maritime trade routes and seafaring technology.",
-          "sentiment": 0.433,
-          "eventBase": 0.414,
-          "framingMod": 0.019,
+          "sourceId": "batimes",
+          "sourceName": "Buenos Aires Times",
+          "region": "LATAM",
+          "title": "No more '6x1': Brazil's Congress approves shorter workweek",
+          "description": "Lula pledge secured ahead of October 25 run-off; Incumbent will face Flávio Bolsonaro in battle for presidency. Leer más",
+          "sentiment": 0.233,
+          "eventBase": 0.195,
+          "framingMod": 0.038,
           "factors": [
-            56,
-            64,
-            87,
-            8
+            32,
+            71,
+            67,
+            15
           ],
-          "explanation": "Account highlights the exceptional historical significance of the newly discovered Bronze Age vessel. [Event Base: +0.41 | Editorial Framing: +0.02]",
-          "category": "science",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNYkU2cGNqTWdfNHZYQXhyNVVNejJ0b21nVmZKRzllYUYwWmNrMEFzZlZpSk03aUhsR3VPTnJBUmZJTUlnRnhQUmNCRzljSUQ5czVxNU9wVXhCRUVVSWZFN201Tm5kei1kUS1RY1J6QlVTa2FzQW1aLUctVEUyVXFRNG5kaVpoZw?oc=5",
-          "pubDate": "Wed, 14 Oct 2026 14:50:30 GMT"
-        },
-        {
-          "sourceId": "skynews",
-          "sourceName": "Sky News",
-          "region": "UK",
-          "title": "World's oldest shipwreck found off Turkish coast",
-          "description": "The world's oldest shipwreck has been discovered off the coast of Turkey, according to archaeologists.",
-          "sentiment": 0.428,
-          "eventBase": 0.414,
-          "framingMod": 0.014,
-          "factors": [
-            56,
-            64,
-            87,
-            6
-          ],
-          "explanation": "Neutral wire-style headline notes the unprecedented antiquity of the submerged maritime wreck. [Event Base: +0.41 | Editorial Framing: +0.01]",
-          "category": "science",
-          "imageUrl": "https://e3.365dm.com/26/10/1920x1080/skynews-hakan-oniz-turkey_7376922.jpg?20261014154604",
-          "link": "https://news.sky.com/story/worlds-oldest-shipwreck-found-off-turkish-coast-archaeologists-say-13599286",
-          "pubDate": "Wed, 14 Oct 2026 15:26:00 +0100"
+          "explanation": "Brazilian Congress approves structural legislation shortening standard weekly work hours, marking a significant labor reform. [Event Base: +0.20 | Editorial Framing: +0.04]",
+          "category": "politics",
+          "imageUrl": "https://fotos.perfil.com/2026/08/20/trim/540/304/luiz-inacio-lula-da-silva-stock-2308208.jpg",
+          "link": "https://www.batimes.com.ar/news/latin-america/no-more-6x1-brazils-congress-approves-shorter-workweek.phtml",
+          "pubDate": "Thu, 15 Oct 2026 22:16:03 GMT"
         },
         {
           "sourceId": "bbc",
           "sourceName": "BBC News",
           "region": "UK",
-          "title": "Shipwreck thought to be 4,700 years old found off coast of Turkey",
-          "description": "Archaeologists say the wreck is up to 4,700 years old, dating to the Early Bronze Age.",
-          "sentiment": 0.421,
-          "eventBase": 0.414,
-          "framingMod": 0.007,
+          "title": "Brazil's Congress approves shorter working week in win for Lula",
+          "description": "Lula's supporters hope the measure will boost his popularity ahead of a presidential run-off in 10 days.",
+          "sentiment": 0.329,
+          "eventBase": 0.312,
+          "framingMod": 0.017,
           "factors": [
-            56,
-            64,
-            87,
-            3
+            46,
+            66,
+            72,
+            7
           ],
-          "explanation": "Dispassionate reporting focuses on the estimated historical age and academic classification of the shipwreck. [Event Base: +0.41 | Editorial Framing: +0.01]",
-          "category": "science",
-          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/19d5/live/72e7aa00-c71d-11f1-a82f-35874a3aae81.jpg",
-          "link": "https://www.bbc.co.uk/news/articles/c6gr80rk1yyko?at_medium=RSS&at_campaign=rss",
-          "pubDate": "Wed, 14 Oct 2026 05:00:35 GMT"
+          "explanation": "Legislative approval of a reduced standard workweek in Brazil provides broad labor benefits, framed through its domestic political implications. [Event Base: +0.31 | Editorial Framing: +0.02]",
+          "category": "politics",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/de61/live/a7661b70-c87d-11f1-8101-e3c2ed61ec71.jpg",
+          "link": "https://www.bbc.co.uk/news/articles/cmwy43pp08elo?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Thu, 15 Oct 2026 10:05:17 GMT"
         }
       ]
     },
@@ -437,20 +372,41 @@
       ],
       "topic": "science",
       "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/43e5/live/791ac150-c8ad-11f1-9c75-6ff1271de385.jpg",
-      "averageSentiment": 0.36,
-      "eventBase": 0.322,
-      "significanceScore": 0.554,
+      "averageSentiment": 0.34,
+      "eventBase": 0.298,
+      "significanceScore": 0.551,
       "factors": [
-        46,
-        74,
-        74,
-        15
+        43,
+        73,
+        73,
+        16
       ],
-      "sentimentSpread": 0.28,
-      "outletCount": 6,
+      "sentimentSpread": 0.37,
+      "outletCount": 7,
       "firstSeenAt": "2026-10-16T17:00:00.000Z",
-      "latestUpdateAt": "2026-10-19T08:03:49.000Z",
+      "latestUpdateAt": "2026-10-19T12:33:07.000Z",
       "coverage": [
+        {
+          "sourceId": "cnn",
+          "sourceName": "CNN",
+          "region": "NA",
+          "title": "Mars’ two tiny moons shouldn’t exist. A new mission will reveal why they do - CNN",
+          "description": "Scientists are preparing a pioneering space mission designed to investigate the anomalous origins of Mars' two small moons, Phobos and Deimos. The upcoming exploration aims to uncover whether the enigmatic celestial bodies are captured asteroids or the remnants of an ancient planetary impact.",
+          "sentiment": 0.196,
+          "eventBase": 0.153,
+          "framingMod": 0.043,
+          "factors": [
+            27,
+            64,
+            71,
+            18
+          ],
+          "explanation": "Explores a scientific mission to study Mars' moons, framed around an engaging scientific mystery. [Event Base: +0.15 | Editorial Framing: +0.04]",
+          "category": "science",
+          "imageUrl": null,
+          "link": "https://news.google.com/rss/articles/CBMidkFVX3lxTFAtOEFRWExjbXdtazRGRlV2UFdfbnY1SjdyaThydGE3VUVBOWs1dEdUVTFLWkFZMElVY0pIdUdBMlAxQm45T2VBd1NkeXVYc1owa3d4RTlsXzFzRkFYZ1FLTWJONGRZdUlSSlBla1lDSHNIbkRHM0E?oc=5",
+          "pubDate": "Mon, 19 Oct 2026 12:33:07 GMT"
+        },
         {
           "sourceId": "bbc",
           "sourceName": "BBC News",
@@ -576,6 +532,128 @@
           "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/10/SEI_316887487.jpg",
           "link": "https://www.newscientist.com/article/2594332-japan-is-launching-a-mission-to-marss-largest-moon-phobos/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
           "pubDate": "Fri, 16 Oct 2026 17:00:00 +0000"
+        }
+      ]
+    },
+    {
+      "id": "world-s-oldest-shipwreck-found-off-turkey",
+      "story": "World's Oldest Shipwreck Found Off Turkey",
+      "summary": "Archaeologists discovered what is believed to be the world's oldest shipwreck off the Turkish coast, dating the Bronze Age vessel and its cargo to nearly 5,000 years ago.",
+      "version": 1,
+      "evolvedFromIds": [
+        "world-s-oldest-shipwreck-found-in-turkey",
+        "world-s-oldest-shipwreck-discovered-in-turkey"
+      ],
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-10-14T19:17:48.000Z",
+          "headline": "World's Oldest Shipwreck Found Off Turkey",
+          "summary": "Archaeologists discovered what is believed to be the world's oldest shipwreck off the Turkish coast, dating the Bronze Age vessel and its cargo to nearly 5,000 years ago.",
+          "outletCount": 4,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "topic": "science",
+      "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/image-1792005439.jpg?resize=1920%2C1080&amp;quality=80",
+      "averageSentiment": 0.4,
+      "eventBase": 0.388,
+      "significanceScore": 0.55,
+      "factors": [
+        54,
+        63,
+        87,
+        6
+      ],
+      "sentimentSpread": 0.1,
+      "outletCount": 4,
+      "firstSeenAt": "2026-10-14T05:00:35.000Z",
+      "latestUpdateAt": "2026-10-14T19:17:48.000Z",
+      "coverage": [
+        {
+          "sourceId": "aljazeera",
+          "sourceName": "Al Jazeera",
+          "region": "ME",
+          "title": "World’s oldest known shipwreck found in Turkiye",
+          "description": "The world’s oldest known shipwreck has been discovered off Turkiye’s coast, dating back nearly 5,000 years.",
+          "sentiment": 0.328,
+          "eventBase": 0.312,
+          "framingMod": 0.016,
+          "factors": [
+            46,
+            59,
+            86,
+            7
+          ],
+          "explanation": "Archaeologists uncover the world's oldest known shipwreck off Turkiye, pushing back the timeline of maritime trade by centuries. [Event Base: +0.31 | Editorial Framing: +0.02]",
+          "category": "science",
+          "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/image-1792005439.jpg?resize=1920%2C1080&amp;quality=80",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/10/14/worlds-oldest-known-shipwreck-found-in-turkiye?traffic_source=rss",
+          "pubDate": "Wed, 14 Oct 2026 19:17:48 +0000"
+        },
+        {
+          "sourceId": "cnn",
+          "sourceName": "CNN",
+          "region": "NA",
+          "title": "World’s oldest shipwreck found off coast of Turkey - CNN",
+          "description": "Archaeologists have discovered what is believed to be the world's oldest known shipwreck off the coast of Turkey. The submerged vessel offers an unprecedented window into ancient maritime trade routes and seafaring technology.",
+          "sentiment": 0.433,
+          "eventBase": 0.414,
+          "framingMod": 0.019,
+          "factors": [
+            56,
+            64,
+            87,
+            8
+          ],
+          "explanation": "Account highlights the exceptional historical significance of the newly discovered Bronze Age vessel. [Event Base: +0.41 | Editorial Framing: +0.02]",
+          "category": "science",
+          "imageUrl": null,
+          "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxNYkU2cGNqTWdfNHZYQXhyNVVNejJ0b21nVmZKRzllYUYwWmNrMEFzZlZpSk03aUhsR3VPTnJBUmZJTUlnRnhQUmNCRzljSUQ5czVxNU9wVXhCRUVVSWZFN201Tm5kei1kUS1RY1J6QlVTa2FzQW1aLUctVEUyVXFRNG5kaVpoZw?oc=5",
+          "pubDate": "Wed, 14 Oct 2026 14:50:30 GMT"
+        },
+        {
+          "sourceId": "skynews",
+          "sourceName": "Sky News",
+          "region": "UK",
+          "title": "World's oldest shipwreck found off Turkish coast",
+          "description": "The world's oldest shipwreck has been discovered off the coast of Turkey, according to archaeologists.",
+          "sentiment": 0.428,
+          "eventBase": 0.414,
+          "framingMod": 0.014,
+          "factors": [
+            56,
+            64,
+            87,
+            6
+          ],
+          "explanation": "Neutral wire-style headline notes the unprecedented antiquity of the submerged maritime wreck. [Event Base: +0.41 | Editorial Framing: +0.01]",
+          "category": "science",
+          "imageUrl": "https://e3.365dm.com/26/10/1920x1080/skynews-hakan-oniz-turkey_7376922.jpg?20261014154604",
+          "link": "https://news.sky.com/story/worlds-oldest-shipwreck-found-off-turkish-coast-archaeologists-say-13599286",
+          "pubDate": "Wed, 14 Oct 2026 15:26:00 +0100"
+        },
+        {
+          "sourceId": "bbc",
+          "sourceName": "BBC News",
+          "region": "UK",
+          "title": "Shipwreck thought to be 4,700 years old found off coast of Turkey",
+          "description": "Archaeologists say the wreck is up to 4,700 years old, dating to the Early Bronze Age.",
+          "sentiment": 0.421,
+          "eventBase": 0.414,
+          "framingMod": 0.007,
+          "factors": [
+            56,
+            64,
+            87,
+            3
+          ],
+          "explanation": "Dispassionate reporting focuses on the estimated historical age and academic classification of the shipwreck. [Event Base: +0.41 | Editorial Framing: +0.01]",
+          "category": "science",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/19d5/live/72e7aa00-c71d-11f1-a82f-35874a3aae81.jpg",
+          "link": "https://www.bbc.co.uk/news/articles/c6gr80rk1yyko?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Wed, 14 Oct 2026 05:00:35 GMT"
         }
       ]
     },
@@ -948,113 +1026,6 @@
       ]
     },
     {
-      "id": "brazil-approves-shorter-workweek-measure",
-      "story": "Brazil Approves Shorter Workweek Measure",
-      "summary": "Brazil's Congress approved a constitutional amendment abolishing the six-day workweek schedule, shortening standard working hours across the country.",
-      "version": 1,
-      "topic": "politics",
-      "imageUrl": "https://fotos.perfil.com/2026/08/20/trim/540/304/luiz-inacio-lula-da-silva-stock-2308208.jpg",
-      "averageSentiment": 0.31,
-      "eventBase": 0.294,
-      "significanceScore": 0.46,
-      "factors": [
-        44,
-        66,
-        71,
-        8
-      ],
-      "sentimentSpread": 0.13,
-      "outletCount": 4,
-      "firstSeenAt": "2026-10-15T03:29:00.000Z",
-      "latestUpdateAt": "2026-10-15T22:16:03.000Z",
-      "coverage": [
-        {
-          "sourceId": "batimes",
-          "sourceName": "Buenos Aires Times",
-          "region": "LATAM",
-          "title": "No more '6x1': Brazil's Congress approves shorter workweek",
-          "description": "Lula pledge secured ahead of October 25 run-off; Incumbent will face Flávio Bolsonaro in battle for presidency. Leer más",
-          "sentiment": 0.233,
-          "eventBase": 0.195,
-          "framingMod": 0.038,
-          "factors": [
-            32,
-            71,
-            67,
-            15
-          ],
-          "explanation": "Brazilian Congress approves structural legislation shortening standard weekly work hours, marking a significant labor reform. [Event Base: +0.20 | Editorial Framing: +0.04]",
-          "category": "politics",
-          "imageUrl": "https://fotos.perfil.com/2026/08/20/trim/540/304/luiz-inacio-lula-da-silva-stock-2308208.jpg",
-          "link": "https://www.batimes.com.ar/news/latin-america/no-more-6x1-brazils-congress-approves-shorter-workweek.phtml",
-          "pubDate": "Thu, 15 Oct 2026 22:16:03 GMT"
-        },
-        {
-          "sourceId": "agenciabrasil",
-          "sourceName": "Agência Brasil",
-          "region": "LATAM",
-          "title": "Congress approves changes to Brazil’s working hours",
-          "description": "On Wednesday (Oct. 14), Brazil’s Senate approved a proposed constitutional amendment to abolish the 6x1 work schedule, under which employees work six days and have one day off. Under the new rules, workers will be entitled to two paid days off per week for every five days worked, with no reduction in pay. The bill also provides for a reduction in the maximum workweek from the current 44 hours to 40 hours. The constitutional amendment must now ...",
-          "sentiment": 0.363,
-          "eventBase": 0.358,
-          "framingMod": 0.005,
-          "factors": [
-            52,
-            59,
-            74,
-            2
-          ],
-          "explanation": "Objectively reports constitutional labor reform improving statutory rest days and working limits in Brazil. [Event Base: +0.36 | Editorial Framing: +0.01]",
-          "category": "politics",
-          "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-          "link": "https://agenciabrasil.ebc.com.br/en/economia/noticia/2026-10/congress-approves-changes-brazils-working-hours",
-          "pubDate": "Thu, 15 Oct 2026 13:30:00 -0300"
-        },
-        {
-          "sourceId": "bbc",
-          "sourceName": "BBC News",
-          "region": "UK",
-          "title": "Brazil's Congress approves shorter working week in win for Lula",
-          "description": "Lula's supporters hope the measure will boost his popularity ahead of a presidential run-off in 10 days.",
-          "sentiment": 0.329,
-          "eventBase": 0.312,
-          "framingMod": 0.017,
-          "factors": [
-            46,
-            66,
-            72,
-            7
-          ],
-          "explanation": "Legislative approval of a reduced standard workweek in Brazil provides broad labor benefits, framed through its domestic political implications. [Event Base: +0.31 | Editorial Framing: +0.02]",
-          "category": "politics",
-          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/de61/live/a7661b70-c87d-11f1-8101-e3c2ed61ec71.jpg",
-          "link": "https://www.bbc.co.uk/news/articles/cmwy43pp08elo?at_medium=RSS&at_campaign=rss",
-          "pubDate": "Thu, 15 Oct 2026 10:05:17 GMT"
-        },
-        {
-          "sourceId": "dw",
-          "sourceName": "DW News",
-          "region": "EU",
-          "title": "Brazil to shorten workweek in win for Lula ahead of runoff",
-          "description": "Brazil's Senate approved cutting the workweek from 44 to 40 hours. The move could give President Luiz Inacio Lula da Silva an edge over his opponent, Flavio Bolsonaro, ahead of the October 25 runoff.",
-          "sentiment": 0.327,
-          "eventBase": 0.312,
-          "framingMod": 0.015,
-          "factors": [
-            46,
-            66,
-            72,
-            6
-          ],
-          "explanation": "DW details the statutory reduction from 44 to 40 hours, highlighting the political momentum it affords President Lula. [Event Base: +0.31 | Editorial Framing: +0.01]",
-          "category": "politics",
-          "imageUrl": "https://static.dw.com/image/79645001_6.jpg",
-          "link": "https://www.dw.com/en/brazil-to-shorten-workweek-in-win-for-lula-ahead-of-runoff/a-79664991?maca=en-rss-en-all-1573-rdf",
-          "pubDate": "2026-10-15T03:29:00.000Z"
-        }
-      ]
-    },
-    {
       "id": "two-americans-win-economics-nobel",
       "story": "Two Americans Win Economics Nobel",
       "summary": "Economists Robert Hall and Michael Woodford were jointly awarded the Nobel Memorial Prize in Economic Sciences for their work on macroeconomic models that help policymakers smooth economic cycles and manage crises. Reports note the global relevance of their research for central banking and fiscal stability.",
@@ -1264,551 +1235,6 @@
       ]
     },
     {
-      "id": "pope-leo-resumes-duties-after-surgery",
-      "story": "Pope Leo Resumes Duties After Surgery",
-      "summary": "Following successful lung cancer surgery, Pope Leo XIV was discharged from the hospital and returned to the Vatican to resume scheduled duties.",
-      "version": 1,
-      "lastDevelopedAt": "2026-10-19T04:42:13.000Z",
-      "developmentNote": "Pope Leo made his first major public appearance in St. Peter's Square just a day after leaving the hospital following lung cancer surgery.",
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-10-18T14:00:00.000Z",
-          "headline": "Pope Leo Resumes Duties After Surgery",
-          "summary": "Pope Leo returned to the Vatican and resumed official duties after being discharged from Gemelli Hospital in Rome following lung surgery.",
-          "outletCount": 5,
-          "note": "Initial cluster formation on the wire"
-        },
-        {
-          "version": 1,
-          "type": "clarification",
-          "timestamp": "2026-10-19T04:42:13.000Z",
-          "headline": "Pope Leo Resumes Duties After Surgery",
-          "summary": "Following successful lung cancer surgery and a brief hospital stay, Pope Leo made his first major public appearance in St. Peter's Square, as the Vatican released initial photos marking his return to scheduled duties.",
-          "beforeStory": "Pope Leo Resumes Duties After Surgery",
-          "beforeSummary": "Returning to the Vatican just a day after leaving the hospital following successful lung cancer surgery, Pope Leo made his first major public appearance to greet crowds in St. Peter's Square and gradually resume his scheduled papal activities.",
-          "outletCount": 23,
-          "note": "Greeted crowds in St. Peter Square in first post-surgery appearance; First official Vatican photos released following lung surgery",
-          "bullets": [
-            "Greeted crowds in St. Peter Square in first post-surgery appearance",
-            "First official Vatican photos released following lung surgery"
-          ]
-        },
-        {
-          "version": 1,
-          "type": "clarification",
-          "timestamp": "2026-10-19T01:01:00.000Z",
-          "headline": "Pope Leo Resumes Duties After Surgery",
-          "summary": "Following successful lung cancer surgery, Pope Leo was discharged from the hospital and made his first major public appearance in St. Peter's Square to resume scheduled Vatican duties.",
-          "beforeStory": "Pope Leo Resumes Duties After Surgery",
-          "beforeSummary": "Following successful lung cancer surgery and a brief hospital stay, Pope Leo made his first major public appearance in St. Peter's Square, as the Vatican released initial photos marking his return to scheduled duties.",
-          "outletCount": 22,
-          "note": "Pope Leo discharged from hospital; First post-surgery public appearance in St. Peter's Square"
-        }
-      ],
-      "topic": "world",
-      "imageUrl": "https://www.japantimes.co.jp/japantimes/uploads/images/2026/10/19/569197.JPG",
-      "averageSentiment": 0.18,
-      "eventBase": 0.155,
-      "significanceScore": 0.43,
-      "factors": [
-        28,
-        75,
-        44,
-        11
-      ],
-      "sentimentSpread": 0.06,
-      "outletCount": 23,
-      "firstSeenAt": "2026-10-15T12:44:00.000Z",
-      "latestUpdateAt": "2026-10-19T04:42:13.000Z",
-      "coverage": [
-        {
-          "sourceId": "aljazeera",
-          "sourceName": "Al Jazeera",
-          "region": "ME",
-          "title": "Pope greeted by crowds in first major appearance since lung cancer surgery",
-          "description": "Pope Leo pledges a gradual return to duties in an address to the Catholic faithful in St Peter's Square at the Vatican.",
-          "sentiment": 0.182,
-          "eventBase": 0.155,
-          "framingMod": 0.027,
-          "factors": [
-            28,
-            76,
-            44,
-            10
-          ],
-          "explanation": "The Pope's first major public appearance following lung care recovery brings reassurance to global followers. [Event Base: +0.15 | Editorial Framing: +0.03]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://www.aljazeera.com/news/2026/10/19/pope-greeted-by-crowds-in-first-major-appearance-since-lung-cancer-surgery?traffic_source=rss",
-          "pubDate": "Mon, 19 Oct 2026 04:42:13 +0000"
-        },
-        {
-          "sourceId": "japantimes",
-          "sourceName": "The Japan Times",
-          "region": "APAC",
-          "title": "Pope Leo pledges gradual return to duties in first event since cancer surgery",
-          "description": "Pope Leo, who was only elected in May 2025, has been diagnosed with lung adenocarcinoma, the most common form of lung cancer.",
-          "sentiment": 0.187,
-          "eventBase": 0.155,
-          "framingMod": 0.032,
-          "factors": [
-            28,
-            76,
-            44,
-            12
-          ],
-          "explanation": "The pontiff's gradual return to public duties following lung cancer surgery marks an institutional stabilization for the Catholic Church, framed reassuringly. [Event Base: +0.15 | Editorial Framing: +0.03]",
-          "category": "world",
-          "imageUrl": "https://www.japantimes.co.jp/japantimes/uploads/images/2026/10/19/569197.JPG",
-          "link": "https://www.japantimes.co.jp/news/2026/10/19/world/pope-leo-cancer-surgery-duties/",
-          "pubDate": "Mon, 19 Oct 2026 10:01:00 +0900"
-        },
-        {
-          "sourceId": "pbs",
-          "sourceName": "PBS NewsHour",
-          "region": "NA",
-          "title": "Pope Leo tells faithful in St. Peter's Square he will gradually resume duties after cancer surgery",
-          "description": "\"Now that this delicate phase is behind me, I will gradually resume my activities, always with God's help and your prayers,\" Leo said, his voice sounding strong four days after the lower lobe of his right lung was removed.",
-          "sentiment": 0.187,
-          "eventBase": 0.155,
-          "framingMod": 0.032,
-          "factors": [
-            28,
-            76,
-            44,
-            12
-          ],
-          "explanation": "The Pope's recovery from lung surgery and announced return to duties stabilizes leadership for the global Catholic Church. [Event Base: +0.15 | Editorial Framing: +0.03]",
-          "category": "world",
-          "imageUrl": "https://d3i6fh83elv35t.cloudfront.net/static/2026/10/2026-10-18T111310Z_301354690_RC2N5OAMRNUJ_RTRMADP_3_POPE-HEALTH-PRAYER-1024x683.jpg",
-          "link": "https://www.pbs.org/newshour/world/pope-leo-tells-faithful-in-st-peters-square-he-will-gradually-resume-duties-after-cancer-surgery",
-          "pubDate": "Sun, 18 Oct 2026 12:34:03 -0400"
-        },
-        {
-          "sourceId": "africanews",
-          "sourceName": "Africanews",
-          "region": "ME",
-          "title": "Pope Leo XIV thanks faithful for prayers at first appearance since surgery",
-          "description": "Pope Leo XIV thanked the thousands of faithful in the Vatican’s Saint Peter’s Square on Sunday for their prayers while he was hospitalised earlier this week.",
-          "sentiment": 0.19,
-          "eventBase": 0.155,
-          "framingMod": 0.035,
-          "factors": [
-            28,
-            76,
-            44,
-            13
-          ],
-          "explanation": "Documents the public recovery and first post-operative appearance of the Catholic pontiff before pilgrims. [Event Base: +0.15 | Editorial Framing: +0.04]",
-          "category": "world",
-          "imageUrl": "http://images.euronews.com/articles/stories/09/95/72/43/640x360_cmsv2_14b480f2-dede-5924-bfa7-0b7fb4828f54-9957243.jpg?1792325778",
-          "link": "http://www.africanews.com/2026/10/18/pope-leo-xiv-thanks-faithful-for-prayers-at-first-appearance-since-surgery/",
-          "pubDate": "Sun, 18 Oct 2026 14:45:55 +0000"
-        },
-        {
-          "sourceId": "dw",
-          "sourceName": "DW News",
-          "region": "EU",
-          "title": "Pope appears in public for first time since surgery",
-          "description": "After undergoing a lung operation, the pope said he will resume his duties gradually. There is no \"clinical reason\" for his South America trip not to go ahead, his surgeon said.",
-          "sentiment": 0.187,
-          "eventBase": 0.155,
-          "framingMod": 0.032,
-          "factors": [
-            28,
-            76,
-            44,
-            12
-          ],
-          "explanation": "The pontiff makes his first public appearance post-surgery, with physicians clearing his travel schedule. [Event Base: +0.15 | Editorial Framing: +0.03]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://www.dw.com/en/pope-appears-in-public-for-first-time-since-surgery/a-79692583?maca=en-rss-en-all-1573-rdf",
-          "pubDate": "2026-10-18T14:14:00.000Z"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Pope Leo pledges gradual return to duties in first event since cancer surgery - Reuters",
-          "description": "Pope Leo XIV made his first public appearance since undergoing lung cancer surgery, greeting thousands of faithful gathered in St. Peter's Square from the Apostolic Palace. The pontiff expressed heartfelt gratitude for global prayers and announced plans to gradually resume his regular official duties.",
-          "sentiment": 0.171,
-          "eventBase": 0.155,
-          "framingMod": 0.016,
-          "factors": [
-            28,
-            76,
-            44,
-            6
-          ],
-          "explanation": "Reuters delivers a neutral wire account of the Pope's public return and plans to resume official duties following major surgery. [Event Base: +0.15 | Editorial Framing: +0.02]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxQajlwczZReXZXSkQ1X1JuZWNGWlNjX2VXcW9hNVdlNXYybU00b3NkSFdpdXo4ZXFLZ184OENSdTZRbE9DdDF2ejZIRVpXUWk2MjdJbWM2Y0JMNzVfcGFvYzRxUU5LYUhpTTB6QWpQWHgwR0tEUXZkNnhBMkxJYkd4dTBydU1OWFpVd3lSNjRSSmF3QW9TUmFocVJVa1QyVUtJcFFHeUwwTGg?oc=5",
-          "pubDate": "Sun, 18 Oct 2026 14:09:12 GMT"
-        },
-        {
-          "sourceId": "npr",
-          "sourceName": "NPR News",
-          "region": "NA",
-          "title": "Pope Leo says he will gradually resume duties after cancer surgery",
-          "description": "Pope Leo XIV thanked thousands of faithful in St. Peter's Square on Sunday for their prayers while he was hospitalized, and said he plans to gradually return to his usual duties.",
-          "sentiment": 0.198,
-          "eventBase": 0.155,
-          "framingMod": 0.043,
-          "factors": [
-            28,
-            76,
-            44,
-            16
-          ],
-          "explanation": "Pope Leo announces a gradual return to pastoral duties following successful cancer surgery. [Event Base: +0.15 | Editorial Framing: +0.04]",
-          "category": "world",
-          "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/1919x1279+0+0/resize/1919x1279!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F0b%2F4c%2F028622124a108d72e3827ab507f1%2Fap26291371602024.jpg",
-          "link": "https://www.npr.org/2026/10/18/g-s1-148654/pope-leo-says-he-will-gradually-resume-duties-after-cancer-surgery",
-          "pubDate": "Sun, 18 Oct 2026 08:55:01 -0400"
-        },
-        {
-          "sourceId": "bloomberg",
-          "sourceName": "Bloomberg",
-          "region": "GLOBAL",
-          "title": "Pope Leo Looks Ahead After Cancer Surgery",
-          "description": "NPR All Things Considered co-host and American Pope coauthor Scott Detrow tells Bloomberg This Weekend that Pope Leo XIV’s cancer was detected early and that his recovery appears to be progressing as he prepares to resume his duties and travel to South America. Speaking with hosts David Gura and Christina Ruffini, Detrow discusses how Leo’s years in Peru shaped his leadership, his openness to greater roles for women in the church and his effor...",
-          "sentiment": 0.198,
-          "eventBase": 0.155,
-          "framingMod": 0.043,
-          "factors": [
-            28,
-            76,
-            44,
-            16
-          ],
-          "explanation": "Early cancer detection and positive convalescence preserve institutional stability for the papacy, presented in an optimistic, forward-looking light. [Event Base: +0.15 | Editorial Framing: +0.04]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://www.bloomberg.com/news/videos/2026-10-18/pope-leo-looks-ahead-after-cancer-surgery-video",
-          "pubDate": "Sun, 18 Oct 2026 12:13:11 GMT"
-        },
-        {
-          "sourceId": "scmp",
-          "sourceName": "South China Morning Post",
-          "region": "APAC",
-          "title": "Pope Leo pledges return to duties following lung cancer surgery",
-          "description": "Pope Leo pledged on Sunday to slowly resume his usual activities as the leader of the world’s 1.4 billion Catholics as he greeted crowds in St. Peter’s Square during his first public event since undergoing surgery for lung cancer five days ago. The 71-year-old pontiff had an ‌operation on Tuesday to remove the lower lobe of his right lung, fuelling speculation about how his illness might change his 17-month papacy. Smiling from a window of the...",
-          "sentiment": 0.184,
-          "eventBase": 0.155,
-          "framingMod": 0.029,
-          "factors": [
-            28,
-            76,
-            44,
-            11
-          ],
-          "explanation": "The pontiff's pledge to return to normal duties reassures global Catholics, framed by the SCMP with calm institutional optimism. [Event Base: +0.15 | Editorial Framing: +0.03]",
-          "category": "world",
-          "imageUrl": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2026/10/18/b8771da4-5403-41b1-85c5-1f5ba1cdac5a_830545ed.jpg?itok=YxR0h9Zj&v=1792324988",
-          "link": "https://www.scmp.com/news/world/europe/article/3371311/pope-leo-pledges-return-duties-following-lung-cancer-surgery?utm_source=rss_feed",
-          "pubDate": "Sun, 18 Oct 2026 12:03:20 +0000"
-        },
-        {
-          "sourceId": "nyt",
-          "sourceName": "The New York Times",
-          "region": "NA",
-          "title": "Pope Leo Addresses the Faithful a Day After Leaving the Hospital",
-          "description": "“This experience has made me feel a special closeness to all those who are battling illness and infirmity,” he said, in his first public appearance since his lung surgery.",
-          "sentiment": 0.176,
-          "eventBase": 0.155,
-          "framingMod": 0.021,
-          "factors": [
-            28,
-            76,
-            44,
-            8
-          ],
-          "explanation": "Pope Leo's successful recovery and first post-surgery public address offer reassuring continuity to the global Catholic church, framed straightforwardly by the Times. [Event Base: +0.15 | Editorial Framing: +0.02]",
-          "category": "world",
-          "imageUrl": "https://static01.nyt.com/images/2026/10/18/multimedia/18int-pope-mqkc/18int-pope-mqkc-mediumSquareAt3X.jpg",
-          "link": "https://www.nytimes.com/2026/10/18/world/europe/pope-leo-mass-lung-cancer.html",
-          "pubDate": "Sun, 18 Oct 2026 11:58:06 +0000"
-        },
-        {
-          "sourceId": "rte",
-          "sourceName": "RTÉ News",
-          "region": "EU",
-          "title": "Pope plans gradual return to duties after cancer surgery",
-          "description": "Pope Leo has thanked thousands of faithful in St Peter's Square for their prayers while he was in hospital for an operation to remove a malignant tumour, and said he plans to gradually return to his usual duties.",
-          "sentiment": 0.179,
-          "eventBase": 0.155,
-          "framingMod": 0.024,
-          "factors": [
-            28,
-            76,
-            44,
-            9
-          ],
-          "explanation": "Pope Leo's gradual return to leadership following lung surgery provides steady reassurance, reported in measured terms by RTÉ. [Event Base: +0.15 | Editorial Framing: +0.02]",
-          "category": "world",
-          "imageUrl": "https://www.rte.ie/images/0025312c-800.jpg",
-          "link": "https://www.rte.ie/news/2026/1018/1595856-pope-cancer-surgery/",
-          "pubDate": "Sun, 18 Oct 2026 12:45:53 +0100"
-        },
-        {
-          "sourceId": "fox",
-          "sourceName": "Fox News",
-          "region": "NA",
-          "title": "Pope Leo welcomed back as he delivers Angelus prayer days after lung cancer surgery",
-          "description": "Thousands gathered in St. Peter's Square as Pope Leo XIV made a surprise early return from Gemelli hospital following cancerous tumor removal.",
-          "sentiment": 0.209,
-          "eventBase": 0.155,
-          "framingMod": 0.054,
-          "factors": [
-            28,
-            76,
-            44,
-            21
-          ],
-          "explanation": "The pontiff's surprise public prayer days after tumor removal is framed enthusiastically as a celebrated homecoming by Fox. [Event Base: +0.15 | Editorial Framing: +0.05]",
-          "category": "world",
-          "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/10/931/523/pope-leo-return-after-surgery.jpg?ve=1&tl=1",
-          "link": "https://www.foxnews.com/world/pope-leo-welcomed-back-delivers-angelus-prayer-days-after-lung-cancer-surgery",
-          "pubDate": "Sun, 18 Oct 2026 07:42:43 -0400"
-        },
-        {
-          "sourceId": "guardian",
-          "sourceName": "The Guardian",
-          "region": "UK",
-          "title": "Pope Leo to gradually resume papal activities since removal of cancerous tumour",
-          "description": "Pontiff thanks people for their prayers as he recovers from operation on his lung Pope Leo told a crowd gathered in St Peter’s Square on Sunday that he would “gradually resume” his activities, at his first appearance before the faithful since undergoing an operation to remove a cancerous tumour from his lung. The Catholic leader, 71, was greeted with applause as he appeared unaided at the window of the Vatican’s Apostolic Palace to deliver his...",
-          "sentiment": 0.206,
-          "eventBase": 0.179,
-          "framingMod": 0.027,
-          "factors": [
-            32,
-            68,
-            45,
-            11
-          ],
-          "explanation": "The pontiff's post-surgical recovery and resumption of pastoral duties is reported with relief and reassurance. [Event Base: +0.18 | Editorial Framing: +0.03]",
-          "category": "health",
-          "imageUrl": "https://i.guim.co.uk/img/media/d6fb83a9f0c60c41dde622a7fb5f39ed2a3d3306/238_0_2728_2182/master/2728.jpg?width=700&quality=85&auto=format&fit=max&s=96bd749607cec950d2efee0170b00bcb",
-          "link": "https://www.theguardian.com/world/2026/oct/18/pope-leo-resume-activities-removal-lung-cancer-tumour",
-          "pubDate": "Sun, 18 Oct 2026 11:40:25 GMT"
-        },
-        {
-          "sourceId": "bbc",
-          "sourceName": "BBC News",
-          "region": "UK",
-          "title": "Watch: Pope thanks well-wishers in first event after cancer surgery",
-          "description": "The Pope's first event since his lung cancer diagnosis and surgery saw him recite the traditional Angelus prayer from the balcony of the Apostolic Palace.",
-          "sentiment": 0.187,
-          "eventBase": 0.155,
-          "framingMod": 0.032,
-          "factors": [
-            28,
-            76,
-            44,
-            12
-          ],
-          "explanation": "The Pope's balcony appearance following cancer surgery provides positive closure to his hospitalization, framed warmly by the BBC. [Event Base: +0.15 | Editorial Framing: +0.03]",
-          "category": "world",
-          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/21f0/live/4a3b0720-cae5-11f1-a64c-550be9e3c66b.jpg",
-          "link": "https://www.bbc.co.uk/news/videos/cq70px6pjkg5o?at_medium=RSS&at_campaign=rss",
-          "pubDate": "Sun, 18 Oct 2026 11:09:32 GMT"
-        },
-        {
-          "sourceId": "smh",
-          "sourceName": "Sydney Morning Herald",
-          "region": "APAC",
-          "title": "Pope Leo emerges from hospital after cancer surgery",
-          "description": "Pope Leo XIV has been discharged from hospital just days after receiving surgery for lung cancer.",
-          "sentiment": 0.184,
-          "eventBase": 0.155,
-          "framingMod": 0.029,
-          "factors": [
-            28,
-            76,
-            44,
-            11
-          ],
-          "explanation": "Announces Pope Leo's discharge from hospital following successful cancer treatment. [Event Base: +0.15 | Editorial Framing: +0.03]",
-          "category": "world",
-          "imageUrl": "https://static.ffx.io/images/$width_800%2C$height_450/t_crop_fill/q_86%2Cf_jpg/60e89b39630876aa0e1f7879b3237ab9d99215af",
-          "link": "https://www.smh.com.au/world/pope-leo-emerges-from-hospital-after-cancer-surgery-20261018-p616ix.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-          "pubDate": "Sun, 18 Oct 2026 21:55:00 +1100"
-        },
-        {
-          "sourceId": "cnn",
-          "sourceName": "CNN",
-          "region": "NA",
-          "title": "Pope Leo leads Sunday prayers in first major public appearance since lung cancer surgery - CNN",
-          "description": "Pope Leo led Sunday prayers in St. Peter's Square, marking his first major public appearance following successful lung cancer surgery. Addressing thousands of gathered faithful, the pontiff expressed gratitude for global prayers and affirmed plans to gradually resume his regular duties and upcoming international travel.",
-          "sentiment": 0.192,
-          "eventBase": 0.155,
-          "framingMod": 0.037,
-          "factors": [
-            28,
-            76,
-            44,
-            14
-          ],
-          "explanation": "Pope Leo leads Sunday prayers at the Vatican after undergoing surgery for lung cancer. [Event Base: +0.15 | Editorial Framing: +0.04]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMieEFVX3lxTE00N1Z4dTRUMDBXcWlnU19pUnVEanYzcmZsTTZvMTNNbFNuMDFwSmFvRUxmd3AtcV9nSVgxdmNDUzFET0EwTDRkZ2tVZkk3QlpZZzVTUllZR2pwdlNLVDRleW43N09sU252aElESWh5ZDZkeElOZndTZg?oc=5",
-          "pubDate": "Sun, 18 Oct 2026 10:16:29 GMT"
-        },
-        {
-          "sourceId": "skynews",
-          "sourceName": "Sky News",
-          "region": "UK",
-          "title": "Pope makes public appearance a day after being discharged from hospital following lung cancer surgery",
-          "description": "Pope Leo has appeared in public to a lead a prayer in Vatican City, a day after being discharged from hospital following lung cancer surgery.",
-          "sentiment": 0.192,
-          "eventBase": 0.155,
-          "framingMod": 0.037,
-          "factors": [
-            28,
-            76,
-            44,
-            14
-          ],
-          "explanation": "Reports on the pontiff's prompt public appearance following major surgical intervention. [Event Base: +0.15 | Editorial Framing: +0.04]",
-          "category": "world",
-          "imageUrl": "https://e3.365dm.com/26/10/1920x1080/skynews-pope-leo-vatican_7379626.jpg?20261018110808",
-          "link": "https://news.sky.com/story/pope-makes-public-appearance-a-day-after-being-discharged-from-hospital-following-lung-cancer-surgery-13598963",
-          "pubDate": "Sun, 18 Oct 2026 10:53:00 +0100"
-        },
-        {
-          "sourceId": "lemonde",
-          "sourceName": "Le Monde",
-          "region": "EU",
-          "title": "Smiling pope returns to Vatican after cancer surgery",
-          "description": "Pope Leo XIV's discharge on Saturday, four days after undergoing lung cancer surgery, ended a stretch of uncertainty that shook the Vatican and the world's 1.4 billion Catholics, less than two years into the Chicago-born pope's papacy.",
-          "sentiment": 0.203,
-          "eventBase": 0.155,
-          "framingMod": 0.048,
-          "factors": [
-            28,
-            76,
-            44,
-            18
-          ],
-          "explanation": "The successful recovery and discharge of the Pope following major surgery brings positive global reassurance to millions of followers. [Event Base: +0.15 | Editorial Framing: +0.05]",
-          "category": "health",
-          "imageUrl": "https://img.lemde.fr/2026/10/17/316/0/3792/1896/644/322/60/0/76b7fd7_ftp-1-vmdxj41u6r7f-f04fbd2e5b7d416ca3114f5653c3db13-1-28c68cd11ed645d98cbcbace2261b78b.jpg",
-          "link": "https://www.lemonde.fr/en/international/article/2026/10/18/smiling-pope-returns-to-vatican-after-cancer-surgery_6758720_4.html",
-          "pubDate": "Sun, 18 Oct 2026 03:56:26 +0200"
-        },
-        {
-          "sourceId": "cbc",
-          "sourceName": "CBC News",
-          "region": "NA",
-          "title": "Pope Leo returns to Vatican after lung cancer surgery",
-          "description": "Pope Leo XIV returned to the Vatican on Saturday days after lung cancer surgery, as his surgeon said there are \"no clinical reasons\" to prevent his planned trip to Latin America next month.",
-          "sentiment": 0.176,
-          "eventBase": 0.155,
-          "framingMod": 0.021,
-          "factors": [
-            28,
-            76,
-            44,
-            8
-          ],
-          "explanation": "The Pope's rapid recovery and discharge following lung cancer surgery restores institutional continuity, framed reassuringly. [Event Base: +0.15 | Editorial Framing: +0.02]",
-          "category": "world",
-          "imageUrl": "https://i.cbc.ca/ais/fb76ade8-36de-481c-8e0e-abd08f8f7c98,1792276471923/full/max/0/default.jpg?im=Crop%2Crect%3D%280%2C308%2C5888%2C3312%29%3B",
-          "link": "https://www.cbc.ca/news/world/pope-leo-lung-cancer-surgery-9.7385445?cmp=rss",
-          "pubDate": "Sat, 17 Oct 2026 18:46:07 EDT"
-        },
-        {
-          "sourceId": "abcau",
-          "sourceName": "ABC News Australia",
-          "region": "APAC",
-          "title": "Pope Leo leaves hospital for Vatican four days after lung cancer surgery",
-          "description": "Pope Leo has returned to the Vatican from hospital following surgery for lung cancer four days ago.",
-          "sentiment": 0.152,
-          "eventBase": 0.155,
-          "framingMod": -0.003,
-          "factors": [
-            28,
-            76,
-            44,
-            -1
-          ],
-          "explanation": "Direct summary of the pontiff's return to the Vatican post-operation. [Event Base: +0.15 | Editorial Framing: -0.00]",
-          "category": "health",
-          "imageUrl": null,
-          "link": "https://www.abc.net.au/news/2026-10-18/pope-leo-leaves-hospital-after-surgery/107279894",
-          "pubDate": "Sat, 17 Oct 2026 14:45:08 +0000"
-        },
-        {
-          "sourceId": "france24",
-          "sourceName": "France 24",
-          "region": "EU",
-          "title": "Pope Leo returns to Vatican four days after lung cancer surgery",
-          "description": "Pope Leo XIV was released from the hospital on Saturday after lung cancer surgery. Doctors removed part of the 71-year-old's right lung last week to extract a cancerous tumour.",
-          "sentiment": 0.152,
-          "eventBase": 0.155,
-          "framingMod": -0.003,
-          "factors": [
-            28,
-            76,
-            44,
-            -1
-          ],
-          "explanation": "Clear, neutral dispatch detailing the timeline of the Pope's post-operative discharge. [Event Base: +0.15 | Editorial Framing: -0.00]",
-          "category": "health",
-          "imageUrl": "https://s.france24.com/media/display/745c4444-ca16-11f1-81af-638c1c1f5fd6/w:1024/p:16x9/5eefb12dbc48266fba95f0685a09134b43ef53d7.jpg",
-          "link": "https://www.france24.com/en/europe/20261017-pope-leo-returns-to-vatican-four-days-after-lung-cancer-surgery",
-          "pubDate": "Sat, 17 Oct 2026 10:35:22 GMT"
-        },
-        {
-          "sourceId": "euronews",
-          "sourceName": "Euronews",
-          "region": "EU",
-          "title": "Vatican releases first photos of Pope Leo XIV after lung tumour surgery",
-          "description": "The Vatican has released the first images of Pope Leo XIV since he underwent surgery to remove a cancerous tumour from his right lung.",
-          "sentiment": 0.16,
-          "eventBase": 0.155,
-          "framingMod": 0.005,
-          "factors": [
-            28,
-            76,
-            44,
-            2
-          ],
-          "explanation": "Focuses on the release of visual verification of the Pope's post-surgery recovery. [Event Base: +0.15 | Editorial Framing: +0.01]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://www.euronews.com/2026/10/16/vatican-releases-first-photos-of-pope-leo-xiv-after-lung-tumour-surgery",
-          "pubDate": "Fri, 16 Oct 2026 15:54:24 +0200"
-        },
-        {
-          "sourceId": "ap",
-          "sourceName": "Associated Press",
-          "region": "GLOBAL",
-          "title": "Doctors say Pope Leo's lung has recovered well from surgery and say his post-operative tests normal - AP News",
-          "description": "Medical teams have confirmed that the pontiff's post-operative diagnostic tests are normal following his recent lung surgery. The positive clinical evaluation indicates that the church leader's recovery is progressing without systemic complications.",
-          "sentiment": 0.17,
-          "eventBase": 0.131,
-          "framingMod": 0.039,
-          "factors": [
-            26,
-            72,
-            34,
-            15
-          ],
-          "explanation": "Favorable clinical evaluations confirming standard post-surgical diagnostics ease acute leadership crisis concerns for the Holy See. [Event Base: +0.13 | Editorial Framing: +0.04]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPVDVBc19LTFg4Mm15NHFyVU95bVJqdlVHLVV5MGlRMFZqdmw5UzN0c2F0MTVONUdfTmxsczY0RU5HSWpFOWhpM294VC1GdlV3M1dfSGVRMUhkRWVHcU9xMWpYTFhJSjRDZXVfM3ZhTjVTdTVWVEJ6dlJkTjNidHhfTlUtRWNaNUlISlhlMTdtUE9WWGl1aXVLUkl0QURaYzdXQ21TNzRWcw?oc=5",
-          "pubDate": "Thu, 15 Oct 2026 12:44:00 GMT"
-        }
-      ]
-    },
-    {
       "id": "uk-hospitality-pledges-youth-jobs",
       "story": "UK Hospitality Pledges Youth Jobs",
       "summary": "Major British hospitality corporations teamed with the Department for Work and Pensions to pledge 100,000 job placements tailored for unemployed young people not in education or training. Outlets discuss the program as an initiative to tackle youth unemployment while easing chronic staffing shortages in pubs and restaurants.",
@@ -1870,6 +1296,394 @@
           "imageUrl": "https://i.guim.co.uk/img/media/03535cccea0a9663dfcbda2588ef4a86c6aa1456/508_0_5840_4672/master/5840.jpg?width=700&quality=85&auto=format&fit=max&s=a42ae33b9055410d5e2b3fb6b20d9e4b",
           "link": "https://www.theguardian.com/society/2026/oct/14/uk-hospitality-sector-100000-jobs-young-people-neets",
           "pubDate": "Wed, 14 Oct 2026 21:30:13 GMT"
+        }
+      ]
+    },
+    {
+      "id": "pope-leo-resumes-duties-after-surgery",
+      "story": "Pope Leo Resumes Duties After Surgery",
+      "summary": "Following successful lung cancer surgery, Pope Leo XIV was discharged from the hospital and returned to the Vatican to resume scheduled duties, with officials releasing the first post-surgery images.",
+      "version": 1,
+      "lastDevelopedAt": "2026-10-19T04:42:13.000Z",
+      "developmentNote": "Pope Leo made his first major public appearance in St. Peter's Square just a day after leaving the hospital following lung cancer surgery.",
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-10-18T14:00:00.000Z",
+          "headline": "Pope Leo Resumes Duties After Surgery",
+          "summary": "Pope Leo returned to the Vatican and resumed official duties after being discharged from Gemelli Hospital in Rome following lung surgery.",
+          "outletCount": 5,
+          "note": "Initial cluster formation on the wire"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-10-19T04:42:13.000Z",
+          "headline": "Pope Leo Resumes Duties After Surgery",
+          "summary": "Following successful lung cancer surgery and a brief hospital stay, Pope Leo made his first major public appearance in St. Peter's Square, as the Vatican released initial photos marking his return to scheduled duties.",
+          "beforeStory": "Pope Leo Resumes Duties After Surgery",
+          "beforeSummary": "Returning to the Vatican just a day after leaving the hospital following successful lung cancer surgery, Pope Leo made his first major public appearance to greet crowds in St. Peter's Square and gradually resume his scheduled papal activities.",
+          "outletCount": 23,
+          "note": "Greeted crowds in St. Peter Square in first post-surgery appearance; First official Vatican photos released following lung surgery",
+          "bullets": [
+            "Greeted crowds in St. Peter Square in first post-surgery appearance",
+            "First official Vatican photos released following lung surgery"
+          ]
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-10-19T01:01:00.000Z",
+          "headline": "Pope Leo Resumes Duties After Surgery",
+          "summary": "Following successful lung cancer surgery, Pope Leo was discharged from the hospital and made his first major public appearance in St. Peter's Square to resume scheduled Vatican duties.",
+          "beforeStory": "Pope Leo Resumes Duties After Surgery",
+          "beforeSummary": "Following successful lung cancer surgery and a brief hospital stay, Pope Leo made his first major public appearance in St. Peter's Square, as the Vatican released initial photos marking his return to scheduled duties.",
+          "outletCount": 22,
+          "note": "Pope Leo discharged from hospital; First post-surgery public appearance in St. Peter's Square"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-10-18T16:34:03.000Z",
+          "headline": "Pope Leo Resumes Duties After Surgery",
+          "summary": "Following successful lung cancer surgery, Pope Leo XIV was discharged from the hospital and returned to the Vatican to resume scheduled duties, with officials releasing the first post-surgery images.",
+          "beforeStory": "Pope Leo Resumes Duties After Surgery",
+          "beforeSummary": "Following successful lung cancer surgery, Pope Leo XIV was discharged from the hospital and returned to the Vatican to resume scheduled duties.",
+          "outletCount": 15,
+          "note": "Vatican releases first images of Pope Leo XIV since surgery."
+        }
+      ],
+      "topic": "health",
+      "imageUrl": "https://d3i6fh83elv35t.cloudfront.net/static/2026/10/2026-10-18T111310Z_301354690_RC2N5OAMRNUJ_RTRMADP_3_POPE-HEALTH-PRAYER-1024x683.jpg",
+      "averageSentiment": 0.17,
+      "eventBase": 0.157,
+      "significanceScore": 0.42,
+      "factors": [
+        28,
+        75,
+        44,
+        5
+      ],
+      "sentimentSpread": 0.05,
+      "outletCount": 15,
+      "firstSeenAt": "2026-10-16T15:33:32.000Z",
+      "latestUpdateAt": "2026-10-18T16:34:03.000Z",
+      "coverage": [
+        {
+          "sourceId": "pbs",
+          "sourceName": "PBS NewsHour",
+          "region": "NA",
+          "title": "Pope Leo tells faithful in St. Peter's Square he will gradually resume duties after cancer surgery",
+          "description": "\"Now that this delicate phase is behind me, I will gradually resume my activities, always with God's help and your prayers,\" Leo said, his voice sounding strong four days after the lower lobe of his right lung was removed.",
+          "sentiment": 0.187,
+          "eventBase": 0.155,
+          "framingMod": 0.032,
+          "factors": [
+            28,
+            76,
+            44,
+            12
+          ],
+          "explanation": "The Pope's recovery from lung surgery and announced return to duties stabilizes leadership for the global Catholic Church. [Event Base: +0.15 | Editorial Framing: +0.03]",
+          "category": "world",
+          "imageUrl": "https://d3i6fh83elv35t.cloudfront.net/static/2026/10/2026-10-18T111310Z_301354690_RC2N5OAMRNUJ_RTRMADP_3_POPE-HEALTH-PRAYER-1024x683.jpg",
+          "link": "https://www.pbs.org/newshour/world/pope-leo-tells-faithful-in-st-peters-square-he-will-gradually-resume-duties-after-cancer-surgery",
+          "pubDate": "Sun, 18 Oct 2026 12:34:03 -0400"
+        },
+        {
+          "sourceId": "cnn",
+          "sourceName": "CNN",
+          "region": "NA",
+          "title": "Pope Leo leads Sunday prayers in first major public appearance since lung cancer surgery - CNN",
+          "description": "Pope Leo led Sunday prayers in St. Peter's Square, marking his first major public appearance following successful lung cancer surgery. Addressing thousands of gathered faithful, the pontiff expressed gratitude for global prayers and affirmed plans to gradually resume his regular duties and upcoming international travel.",
+          "sentiment": 0.192,
+          "eventBase": 0.155,
+          "framingMod": 0.037,
+          "factors": [
+            28,
+            76,
+            44,
+            14
+          ],
+          "explanation": "Pope Leo leads Sunday prayers at the Vatican after undergoing surgery for lung cancer. [Event Base: +0.15 | Editorial Framing: +0.04]",
+          "category": "world",
+          "imageUrl": null,
+          "link": "https://news.google.com/rss/articles/CBMieEFVX3lxTE00N1Z4dTRUMDBXcWlnU19pUnVEanYzcmZsTTZvMTNNbFNuMDFwSmFvRUxmd3AtcV9nSVgxdmNDUzFET0EwTDRkZ2tVZkk3QlpZZzVTUllZR2pwdlNLVDRleW43N09sU252aElESWh5ZDZkeElOZndTZg?oc=5",
+          "pubDate": "Sun, 18 Oct 2026 10:16:29 GMT"
+        },
+        {
+          "sourceId": "lemonde",
+          "sourceName": "Le Monde",
+          "region": "EU",
+          "title": "Smiling pope returns to Vatican after cancer surgery",
+          "description": "Pope Leo XIV's discharge on Saturday, four days after undergoing lung cancer surgery, ended a stretch of uncertainty that shook the Vatican and the world's 1.4 billion Catholics, less than two years into the Chicago-born pope's papacy.",
+          "sentiment": 0.203,
+          "eventBase": 0.155,
+          "framingMod": 0.048,
+          "factors": [
+            28,
+            76,
+            44,
+            18
+          ],
+          "explanation": "The successful recovery and discharge of the Pope following major surgery brings positive global reassurance to millions of followers. [Event Base: +0.15 | Editorial Framing: +0.05]",
+          "category": "health",
+          "imageUrl": "https://img.lemde.fr/2026/10/17/316/0/3792/1896/644/322/60/0/76b7fd7_ftp-1-vmdxj41u6r7f-f04fbd2e5b7d416ca3114f5653c3db13-1-28c68cd11ed645d98cbcbace2261b78b.jpg",
+          "link": "https://www.lemonde.fr/en/international/article/2026/10/18/smiling-pope-returns-to-vatican-after-cancer-surgery_6758720_4.html",
+          "pubDate": "Sun, 18 Oct 2026 03:56:26 +0200"
+        },
+        {
+          "sourceId": "cbc",
+          "sourceName": "CBC News",
+          "region": "NA",
+          "title": "Pope Leo returns to Vatican after lung cancer surgery",
+          "description": "Pope Leo XIV returned to the Vatican on Saturday days after lung cancer surgery, as his surgeon said there are \"no clinical reasons\" to prevent his planned trip to Latin America next month.",
+          "sentiment": 0.176,
+          "eventBase": 0.155,
+          "framingMod": 0.021,
+          "factors": [
+            28,
+            76,
+            44,
+            8
+          ],
+          "explanation": "The Pope's rapid recovery and discharge following lung cancer surgery restores institutional continuity, framed reassuringly. [Event Base: +0.15 | Editorial Framing: +0.02]",
+          "category": "world",
+          "imageUrl": "https://i.cbc.ca/ais/fb76ade8-36de-481c-8e0e-abd08f8f7c98,1792276471923/full/max/0/default.jpg?im=Crop%2Crect%3D%280%2C308%2C5888%2C3312%29%3B",
+          "link": "https://www.cbc.ca/news/world/pope-leo-lung-cancer-surgery-9.7385445?cmp=rss",
+          "pubDate": "Sat, 17 Oct 2026 18:46:07 EDT"
+        },
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Pope Leo returns to Vatican four days after cancer surgery - Reuters",
+          "description": "Pope Leo to leave hospital on Saturday, four days after lung cancer surgery Reuters",
+          "sentiment": 0.158,
+          "eventBase": 0.155,
+          "framingMod": 0.003,
+          "factors": [
+            28,
+            76,
+            44,
+            1
+          ],
+          "explanation": "Reports the constructive medical discharge of the head of the Catholic Church using neutral, factual wire phrasing. [Event Base: +0.15 | Editorial Framing: +0.00]",
+          "category": "health",
+          "imageUrl": null,
+          "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxQMEhiTWpBVEdDa1JjQmtQUDBZR1RGVHF4VmxwaTEzRHhtczZOcHlJZE9idHNKOFpxdnpndFYwLUk5Zy1lZFRFWTUtaHlEdW44aVZKZjlXenBveTRvN29sRzI1RG1JVm0wMGlRcFpoeS1hX0dCZE1WVGdVc3plR3FZay0xeUtSYjg2dk9SZVpUSEJUdw?oc=5",
+          "pubDate": "Sat, 17 Oct 2026 18:25:25 GMT"
+        },
+        {
+          "sourceId": "nyt",
+          "sourceName": "The New York Times",
+          "region": "NA",
+          "title": "Pope Leo Leaves Hospital, Days After Lung Cancer Surgery",
+          "description": "Leo XIV had been treated for lung cancer at Gemelli Hospital in Rome.",
+          "sentiment": 0.16,
+          "eventBase": 0.155,
+          "framingMod": 0.005,
+          "factors": [
+            28,
+            76,
+            44,
+            2
+          ],
+          "explanation": "Standard wire headline covering the Pope's release from the hospital after successful lung surgery. [Event Base: +0.15 | Editorial Framing: +0.01]",
+          "category": "health",
+          "imageUrl": "https://static01.nyt.com/images/2026/10/16/multimedia/00int-pope-discharged-photo-blch/00int-pope-discharged-photo-blch-mediumSquareAt3X.jpg",
+          "link": "https://www.nytimes.com/2026/10/17/world/europe/pope-leo-discharged-hospital.html",
+          "pubDate": "Sat, 17 Oct 2026 16:17:00 +0000"
+        },
+        {
+          "sourceId": "aljazeera",
+          "sourceName": "Al Jazeera",
+          "region": "ME",
+          "title": "Pope Leo leaves hospital after lung cancer surgery",
+          "description": "Pope Leo left Rome's Gemelli Hospital on Saturday after successful lung cancer surgery",
+          "sentiment": 0.194,
+          "eventBase": 0.18,
+          "framingMod": 0.014,
+          "factors": [
+            34,
+            61,
+            37,
+            6
+          ],
+          "explanation": "Constructive recovery of the head of the Catholic Church following serious surgery, framed straightforwardly. [Event Base: +0.18 | Editorial Framing: +0.01]",
+          "category": "world",
+          "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/Sequence-01.00_00_05_00.Still002-1792252013.jpg?resize=1920%2C1080&amp;quality=80",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/10/17/pope-leo-leaves-hospital-after-lung-cancer-surgery?traffic_source=rss",
+          "pubDate": "Sat, 17 Oct 2026 15:47:52 +0000"
+        },
+        {
+          "sourceId": "npr",
+          "sourceName": "NPR News",
+          "region": "NA",
+          "title": "Pope Leo XIV leaves hospital days after lung cancer surgery",
+          "description": "The Pope left Rome's Gemelli Hospital Saturday, days after surgery for lung cancer removed the lower lobe of his right lung. He is currently scheduled to travel to Latin America in November.(Image credit: Andrew Medichini)",
+          "sentiment": 0.158,
+          "eventBase": 0.155,
+          "framingMod": 0.003,
+          "factors": [
+            28,
+            76,
+            44,
+            1
+          ],
+          "explanation": "Objective dispatch detailing the pontiff leaving the clinic following his partial lung resection. [Event Base: +0.15 | Editorial Framing: +0.00]",
+          "category": "health",
+          "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/3792x2528+0+0/resize/3792x2528!/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F5e%2Fae%2Faa9d542c4b2680f6aa607bf717dc%2Fap26290494298005.jpg",
+          "link": "https://www.npr.org/2026/10/17/nx-s1-6006762/pope-leo-xiv-leaves-hospital-days-after-lung-cancer-surgery",
+          "pubDate": "Sat, 17 Oct 2026 11:10:14 -0400"
+        },
+        {
+          "sourceId": "abcau",
+          "sourceName": "ABC News Australia",
+          "region": "APAC",
+          "title": "Pope Leo leaves hospital for Vatican four days after lung cancer surgery",
+          "description": "Pope Leo has returned to the Vatican from hospital following surgery for lung cancer four days ago.",
+          "sentiment": 0.152,
+          "eventBase": 0.155,
+          "framingMod": -0.003,
+          "factors": [
+            28,
+            76,
+            44,
+            -1
+          ],
+          "explanation": "Direct summary of the pontiff's return to the Vatican post-operation. [Event Base: +0.15 | Editorial Framing: -0.00]",
+          "category": "health",
+          "imageUrl": null,
+          "link": "https://www.abc.net.au/news/2026-10-18/pope-leo-leaves-hospital-after-surgery/107279894",
+          "pubDate": "Sat, 17 Oct 2026 14:45:08 +0000"
+        },
+        {
+          "sourceId": "dw",
+          "sourceName": "DW News",
+          "region": "EU",
+          "title": "Pope Leo leaves hospital after cancer surgery",
+          "description": "Four days after undergoing surgery for lung cancer, Pope Leo left the hospital in Rome. His doctors said he was well enough to return home.",
+          "sentiment": 0.158,
+          "eventBase": 0.155,
+          "framingMod": 0.003,
+          "factors": [
+            28,
+            76,
+            44,
+            1
+          ],
+          "explanation": "Dispassionate reporting on the Pope's medical progress and discharge. [Event Base: +0.15 | Editorial Framing: +0.00]",
+          "category": "health",
+          "imageUrl": null,
+          "link": "https://www.dw.com/en/pope-leo-leaves-hospital-after-cancer-surgery/a-79688162?maca=en-rss-en-all-1573-rdf",
+          "pubDate": "2026-10-17T13:59:00.000Z"
+        },
+        {
+          "sourceId": "guardian",
+          "sourceName": "The Guardian",
+          "region": "UK",
+          "title": "Pope Leo discharged from hospital after cancer operation",
+          "description": "Doctors say pontiff is ‘fit for discharge’ after operation to remove cancerous tumour from his lung Pope Leo lung cancer surgery: what kind of operation did he have and what happens next? Pope Leo has been discharged from hospital in Rome after undergoing an operation to remove a cancerous tumour from his lung. Leo, 71, was deemed “fit for discharge”, his doctors, Luigi Carbone and Stefano Margaritora, said in a statement published by the Vati...",
+          "sentiment": 0.158,
+          "eventBase": 0.155,
+          "framingMod": 0.003,
+          "factors": [
+            28,
+            76,
+            44,
+            1
+          ],
+          "explanation": "Factually reports medical clearance for the pontiff following a surgical procedure. [Event Base: +0.15 | Editorial Framing: +0.00]",
+          "category": "health",
+          "imageUrl": "https://i.guim.co.uk/img/media/6aa8cec0b7a6968526c245538c39a81de7c6716e/536_0_4520_3616/master/4520.jpg?width=700&quality=85&auto=format&fit=max&s=5af416eafd7f7252e626191dbc5ff78e",
+          "link": "https://www.theguardian.com/world/2026/oct/17/pope-leo-discharged-from-hospital-after-cancer-operation",
+          "pubDate": "Sat, 17 Oct 2026 13:41:49 GMT"
+        },
+        {
+          "sourceId": "scmp",
+          "sourceName": "South China Morning Post",
+          "region": "APAC",
+          "title": "Pope Leo to leave hospital on Saturday, 4 days after lung cancer surgery",
+          "description": "Pope Leo is expected to leave hospital on Saturday afternoon following surgery for lung cancer, the Vatican said, after blood tests and ‌chest imaging found him fit to return home four days after his operation. The 71-year-old pontiff, who has not been seen in public since a procedure on Tuesday to remove the lower lobe of his right lung, will also hold his first public engagement since surgery on Sunday. He will lead weekly prayers with pilgr...",
+          "sentiment": 0.16,
+          "eventBase": 0.155,
+          "framingMod": 0.005,
+          "factors": [
+            28,
+            76,
+            44,
+            2
+          ],
+          "explanation": "Neutral notification regarding the expected discharge of the Pope following his lung procedure. [Event Base: +0.15 | Editorial Framing: +0.01]",
+          "category": "health",
+          "imageUrl": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2026/10/17/4635b2de-02e0-44bb-b5e8-53a1718bf65f_8bbe05cb.jpg?itok=lFJwHF__&v=1792232777",
+          "link": "https://www.scmp.com/news/world/europe/article/3371256/pope-leo-leave-hospital-saturday-after-lung-cancer-surgery?utm_source=rss_feed",
+          "pubDate": "Sat, 17 Oct 2026 10:26:27 +0000"
+        },
+        {
+          "sourceId": "rte",
+          "sourceName": "RTÉ News",
+          "region": "EU",
+          "title": "Pope Leo returns to Vatican after lung cancer surgery",
+          "description": "The Pope has left Rome's Gemelli hospital four days after undergoing surgery for lung cancer, and returned to the Vatican.",
+          "sentiment": 0.171,
+          "eventBase": 0.155,
+          "framingMod": 0.016,
+          "factors": [
+            28,
+            76,
+            44,
+            6
+          ],
+          "explanation": "Medical discharge after successful cancer surgery signals personal convalescence and leadership stability. [Event Base: +0.15 | Editorial Framing: +0.02]",
+          "category": "world",
+          "imageUrl": "https://www.rte.ie/images/00253028-800.jpg",
+          "link": "https://www.rte.ie/news/2026/1017/1595751-pope-cancer/",
+          "pubDate": "Sat, 17 Oct 2026 11:09:00 +0100"
+        },
+        {
+          "sourceId": "skynews",
+          "sourceName": "Sky News",
+          "region": "UK",
+          "title": "Pope Leo to leave hospital today after lung cancer surgery, the Vatican says",
+          "description": "The Pope is set to leave hospital on Saturday four days after his lung cancer surgery, the Vatican has said.",
+          "sentiment": 0.158,
+          "eventBase": 0.155,
+          "framingMod": 0.003,
+          "factors": [
+            28,
+            76,
+            44,
+            1
+          ],
+          "explanation": "Factual reporting on the Vatican's statement regarding the Pope leaving the hospital. [Event Base: +0.15 | Editorial Framing: +0.00]",
+          "category": "health",
+          "imageUrl": "https://e3.365dm.com/26/09/1920x1080/skynews-pope-leo-france-metz_7363101.jpg?20260928100020",
+          "link": "https://news.sky.com/story/pope-leo-to-leave-hospital-today-after-lung-cancer-surgery-the-vatican-says-13600129",
+          "pubDate": "Sat, 17 Oct 2026 10:40:00 +0100"
+        },
+        {
+          "sourceId": "africanews",
+          "sourceName": "Africanews",
+          "region": "ME",
+          "title": "Vatican releases first images of Pope Leo XIV since his surgery",
+          "description": "Doctors says the 71-year-old pontiff is showing steady improvement since having part of his right lung removed on Tuesday.",
+          "sentiment": 0.179,
+          "eventBase": 0.155,
+          "framingMod": 0.024,
+          "factors": [
+            28,
+            76,
+            44,
+            9
+          ],
+          "explanation": "Reports medical updates confirming steady physical convalescence for the pontiff following lung surgery. [Event Base: +0.15 | Editorial Framing: +0.02]",
+          "category": "world",
+          "imageUrl": "http://images.euronews.com/articles/stories/09/95/53/30/640x360_cmsv2_977f212c-454c-55c1-9a35-6994da532613-9955330.jpg?1792161120",
+          "link": "http://www.africanews.com/2026/10/16/vatican-releases-first-images-of-pope-leo-xiv-since-his-surgery/",
+          "pubDate": "Fri, 16 Oct 2026 15:33:32 +0000"
         }
       ]
     },
@@ -2036,74 +1850,6 @@
       ]
     },
     {
-      "id": "neanderthal-remains-show-weapon-trauma",
-      "story": "Neanderthal Remains Show Weapon Trauma",
-      "summary": "Archaeological analysis of ancient Neanderthal skeletal remains unearthed from a cave in Iraqi Kurdistan revealed a lethal shoulder puncture consistent with a thrusting spear. Scientific reporting emphasizes the discovery as some of the earliest direct evidence of projectile weapon trauma among human ancestors.",
-      "version": 1,
-      "evolvedFromIds": [
-        "iraqi-neanderthal-remains-show-weapon-trauma"
-      ],
-      "topic": "science",
-      "imageUrl": "https://e3.365dm.com/26/10/1920x1080/skynews-neanderthal-natural-history-museum_7377847.jpg?20261015203808",
-      "averageSentiment": 0.32,
-      "eventBase": 0.319,
-      "significanceScore": 0.395,
-      "factors": [
-        48,
-        52,
-        87,
-        -1
-      ],
-      "sentimentSpread": 0.02,
-      "outletCount": 2,
-      "firstSeenAt": "2026-10-15T15:00:23.000Z",
-      "latestUpdateAt": "2026-10-15T18:25:00.000Z",
-      "coverage": [
-        {
-          "sourceId": "skynews",
-          "sourceName": "Sky News",
-          "region": "UK",
-          "title": "Neanderthals capable of both violence and care, bones from Iraqi cave suggest",
-          "description": "Neanderthals were not the unintelligent cave dwellers of popular imagination, but may have been capable of showing both violence and care, researchers who have discovered bones dating back 75,000 years have said.",
-          "sentiment": 0.328,
-          "eventBase": 0.319,
-          "framingMod": 0.009,
-          "factors": [
-            48,
-            52,
-            87,
-            4
-          ],
-          "explanation": "Excavations in an Iraqi cave reveal complex Neanderthal behavioral patterns, balanced between interpersonal violence and caregiving. [Event Base: +0.32 | Editorial Framing: +0.01]",
-          "category": "science",
-          "imageUrl": "https://e3.365dm.com/26/10/1920x1080/skynews-neanderthal-natural-history-museum_7377847.jpg?20261015203808",
-          "link": "https://news.sky.com/story/neanderthals-capable-of-both-violence-and-care-bones-from-iraqi-cave-suggest-13599736",
-          "pubDate": "Thu, 15 Oct 2026 19:25:00 +0100"
-        },
-        {
-          "sourceId": "guardian",
-          "sourceName": "The Guardian",
-          "region": "UK",
-          "title": "Neanderthal remains may be earliest human ancestor find killed by a spear",
-          "description": "Adult excavated in an Iraqi Kurdistan cave died more than 70,000 years ago and bears ‘kill shot’ shoulder wound A smooth round hole in the shoulder blade of a Neanderthal who died more than 70,000 years ago may be the oldest evidence so far of a human ancestor being killed by a wooden spear. Archaeologists spotted the distinctive injury after excavating skeletal remains of the adult and other Neanderthals from under nearly 8 metres of rock and...",
-          "sentiment": 0.306,
-          "eventBase": 0.319,
-          "framingMod": -0.013,
-          "factors": [
-            48,
-            52,
-            87,
-            -6
-          ],
-          "explanation": "The Guardian emphasizes the lethal nature of the archaeological find, highlighting the spear 'kill shot' in its headline. [Event Base: +0.32 | Editorial Framing: -0.01]",
-          "category": "science",
-          "imageUrl": "https://i.guim.co.uk/img/media/c82e9a90e3a5aa490575212ad788b7e53be2d9b9/1092_0_2697_2160/master/2697.jpg?width=700&quality=85&auto=format&fit=max&s=a7935ae3db9ebdfcebf3d9c209995eb5",
-          "link": "https://www.theguardian.com/science/2026/oct/15/neanderthal-remains-human-ancestor-killed-by-spear-iraq-kurdistan-cave-earliest-find",
-          "pubDate": "Thu, 15 Oct 2026 15:00:23 GMT"
-        }
-      ]
-    },
-    {
       "id": "china-q3-economic-growth",
       "story": "China Q3 Economic Growth",
       "summary": "China reported a stronger-than-expected 4.5% economic growth rate for the third quarter driven by high-tech manufacturing, even as analysts note that surging export volumes are masking deep domestic economic challenges and pushing trade surpluses toward record highs.",
@@ -2132,41 +1878,20 @@
       ],
       "topic": "business",
       "imageUrl": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2026/10/19/1b0fd234-e080-45fc-ac78-7085e3493eec_54823591.jpg?itok=2lzqYh0W&v=1792399483",
-      "averageSentiment": 0.14,
-      "eventBase": 0.115,
-      "significanceScore": 0.365,
+      "averageSentiment": 0.18,
+      "eventBase": 0.146,
+      "significanceScore": 0.405,
       "factors": [
-        22,
-        75,
-        43,
-        11
+        27,
+        77,
+        42,
+        14
       ],
-      "sentimentSpread": 0.51,
+      "sentimentSpread": 0.2,
       "outletCount": 8,
       "firstSeenAt": "2026-10-14T04:50:55.000Z",
-      "latestUpdateAt": "2026-10-19T09:30:00.000Z",
+      "latestUpdateAt": "2026-10-19T09:00:09.000Z",
       "coverage": [
-        {
-          "sourceId": "wsj",
-          "sourceName": "Wall Street Journal",
-          "region": "NA",
-          "title": "China’s Export Boom Masks Deep Economic Problems at Home - WSJ",
-          "description": "China’s Export Boom Masks Deep Economic Problems at Home WSJ",
-          "sentiment": -0.186,
-          "eventBase": -0.109,
-          "framingMod": -0.077,
-          "factors": [
-            -14,
-            62,
-            51,
-            -17
-          ],
-          "explanation": "Analyzes the contrast between China's strong export data and persistent structural domestic economic weakness. [Event Base: -0.11 | Editorial Framing: -0.08]",
-          "category": "business",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOTFRDeXZOR0V1TXd1cTNYR3V2Y1RkZFNlLVcwSk1qUkJlVzFNU19WYVJHNXJ4djZuY0poV19Zb3BDSUljOEdlVHFqRXhHcFI1SkhJTGUxQ2pIaXlmRUVYSzQxSnJjVFZuR3REQnd2U2tXSFk5U0VNd2xFRlZVVVlraHc0ZlU5dnAyaEt5SU5BRVloM1VXcHZqQ1BnNlc?oc=5",
-          "pubDate": "Mon, 19 Oct 2026 09:30:00 GMT"
-        },
         {
           "sourceId": "scmp",
           "sourceName": "South China Morning Post",
@@ -2273,6 +1998,27 @@
           "pubDate": "Mon, 19 Oct 2026 06:11:21 +0200"
         },
         {
+          "sourceId": "wsj",
+          "sourceName": "Wall Street Journal",
+          "region": "NA",
+          "title": "China’s Economy Expanded 4.5% in Third Quarter, Powered by Exports - WSJ",
+          "description": "China's economy expanded by 4.5% in the third quarter, surpassing expectations due to robust export activity. The boost offers domestic policymakers momentum while highlighting lingering weakness in consumer spending.",
+          "sentiment": 0.161,
+          "eventBase": 0.139,
+          "framingMod": 0.022,
+          "factors": [
+            26,
+            77,
+            41,
+            8
+          ],
+          "explanation": "Standard business wire reporting China's Q3 GDP growth driven by strong export performance. [Event Base: +0.14 | Editorial Framing: +0.02]",
+          "category": "business",
+          "imageUrl": null,
+          "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxPbTdTLWVJN0c0aUdlWG1hTlR4WEtoalRXTmt3RzZHREYtaGt6ZlZzbGs1ekNROER5ekhBWUI2UWNpLXBubFRhc3dSXzdkemR5RXZpOVd0YTV3Tld5b3d5Q1dhV1BDSWJ2eWlIQ0FGWV9vY3lMcktNcVlkS193R1F1Y0NVTThEdVlGSzRxSjlYRGRfcEkyeVJ0VVk1OEUyVDVtbUE?oc=5",
+          "pubDate": "Mon, 19 Oct 2026 04:03:00 GMT"
+        },
+        {
           "sourceId": "cna",
           "sourceName": "CNA",
           "region": "APAC",
@@ -2313,6 +2059,74 @@
           "imageUrl": "https://static01.nyt.com/images/2026/10/14/multimedia/14biz-china-trade-fcvw/14biz-china-trade-fcvw-facebookJumbo.jpg",
           "link": "https://www.nytimes.com/2026/10/14/business/china-exports-trade-surplus.html",
           "pubDate": "Wed, 14 Oct 2026 04:50:55 +0000"
+        }
+      ]
+    },
+    {
+      "id": "neanderthal-remains-show-weapon-trauma",
+      "story": "Neanderthal Remains Show Weapon Trauma",
+      "summary": "Archaeological analysis of ancient Neanderthal skeletal remains unearthed from a cave in Iraqi Kurdistan revealed a lethal shoulder puncture consistent with a thrusting spear. Scientific reporting emphasizes the discovery as some of the earliest direct evidence of projectile weapon trauma among human ancestors.",
+      "version": 1,
+      "evolvedFromIds": [
+        "iraqi-neanderthal-remains-show-weapon-trauma"
+      ],
+      "topic": "science",
+      "imageUrl": "https://e3.365dm.com/26/10/1920x1080/skynews-neanderthal-natural-history-museum_7377847.jpg?20261015203808",
+      "averageSentiment": 0.32,
+      "eventBase": 0.319,
+      "significanceScore": 0.395,
+      "factors": [
+        48,
+        52,
+        87,
+        -1
+      ],
+      "sentimentSpread": 0.02,
+      "outletCount": 2,
+      "firstSeenAt": "2026-10-15T15:00:23.000Z",
+      "latestUpdateAt": "2026-10-15T18:25:00.000Z",
+      "coverage": [
+        {
+          "sourceId": "skynews",
+          "sourceName": "Sky News",
+          "region": "UK",
+          "title": "Neanderthals capable of both violence and care, bones from Iraqi cave suggest",
+          "description": "Neanderthals were not the unintelligent cave dwellers of popular imagination, but may have been capable of showing both violence and care, researchers who have discovered bones dating back 75,000 years have said.",
+          "sentiment": 0.328,
+          "eventBase": 0.319,
+          "framingMod": 0.009,
+          "factors": [
+            48,
+            52,
+            87,
+            4
+          ],
+          "explanation": "Excavations in an Iraqi cave reveal complex Neanderthal behavioral patterns, balanced between interpersonal violence and caregiving. [Event Base: +0.32 | Editorial Framing: +0.01]",
+          "category": "science",
+          "imageUrl": "https://e3.365dm.com/26/10/1920x1080/skynews-neanderthal-natural-history-museum_7377847.jpg?20261015203808",
+          "link": "https://news.sky.com/story/neanderthals-capable-of-both-violence-and-care-bones-from-iraqi-cave-suggest-13599736",
+          "pubDate": "Thu, 15 Oct 2026 19:25:00 +0100"
+        },
+        {
+          "sourceId": "guardian",
+          "sourceName": "The Guardian",
+          "region": "UK",
+          "title": "Neanderthal remains may be earliest human ancestor find killed by a spear",
+          "description": "Adult excavated in an Iraqi Kurdistan cave died more than 70,000 years ago and bears ‘kill shot’ shoulder wound A smooth round hole in the shoulder blade of a Neanderthal who died more than 70,000 years ago may be the oldest evidence so far of a human ancestor being killed by a wooden spear. Archaeologists spotted the distinctive injury after excavating skeletal remains of the adult and other Neanderthals from under nearly 8 metres of rock and...",
+          "sentiment": 0.306,
+          "eventBase": 0.319,
+          "framingMod": -0.013,
+          "factors": [
+            48,
+            52,
+            87,
+            -6
+          ],
+          "explanation": "The Guardian emphasizes the lethal nature of the archaeological find, highlighting the spear 'kill shot' in its headline. [Event Base: +0.32 | Editorial Framing: -0.01]",
+          "category": "science",
+          "imageUrl": "https://i.guim.co.uk/img/media/c82e9a90e3a5aa490575212ad788b7e53be2d9b9/1092_0_2697_2160/master/2697.jpg?width=700&quality=85&auto=format&fit=max&s=a7935ae3db9ebdfcebf3d9c209995eb5",
+          "link": "https://www.theguardian.com/science/2026/oct/15/neanderthal-remains-human-ancestor-killed-by-spear-iraq-kurdistan-cave-earliest-find",
+          "pubDate": "Thu, 15 Oct 2026 15:00:23 GMT"
         }
       ]
     },
@@ -3384,7 +3198,7 @@
       "title": "Japan leads mission to make first return trip to Mars",
       "description": "Voyage due to launch early Tuesday morning Japan time will be watched for further potential signs of life on red planet",
       "sentiment": 0.338,
-      "significanceScore": 0.532,
+      "significanceScore": 0.549,
       "factors": [
         42,
         74,
@@ -3393,7 +3207,7 @@
       ],
       "clusterId": "japan-prepares-phobos-sample-mission",
       "clusterStory": "Japan Prepares Phobos Sample Mission",
-      "outletCount": 6,
+      "outletCount": 7,
       "explanation": "Japan leading a space mission aimed at the first return trip to Mars represents a major interplanetary scientific advancement. [Event Base: +0.28 | Editorial Framing: +0.05]",
       "category": "science",
       "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/43e5/live/791ac150-c8ad-11f1-9c75-6ff1271de385.jpg",
@@ -3544,6 +3358,29 @@
       "isPast48h": true
     },
     {
+      "title": "AI reads centuries-old handwriting to reveal Britain's vast historic shipping trade",
+      "description": "Historians have created a first-of-its-kind online interactive map, using data from hundreds of thousands of pages of centuries-old port records to chart Britain's growth into a dominant global trading nation.",
+      "sentiment": 0.454,
+      "significanceScore": 0.454,
+      "factors": [
+        65,
+        45,
+        50,
+        25
+      ],
+      "outletCount": 1,
+      "explanation": "Researchers successfully apply AI to decipher centuries-old port records, creating an interactive map that advances historical understanding of global maritime trade. [Event Base: +0.40 | Editorial Framing: +0.05]",
+      "category": "science",
+      "imageUrl": "https://scx1.b-cdn.net/csz/news/tmb/2026/ai-reads-centuries-old-2.jpg",
+      "sourceId": "physorg",
+      "sourceName": "Phys.org",
+      "region": "GLOBAL",
+      "link": "https://phys.org/news/2026-10-ai-centuries-reveal-britain-vast.html",
+      "pubDate": "Mon, 19 Oct 2026 12:40:08 EDT",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
       "title": "Pope Leo pledges gradual return to duties in first event since cancer surgery",
       "description": "Pope Leo, who was only elected in May 2025, has been diagnosed with lung adenocarcinoma, the most common form of lung cancer.",
       "sentiment": 0.187,
@@ -3556,7 +3393,7 @@
       ],
       "clusterId": "pope-leo-resumes-duties-after-surgery",
       "clusterStory": "Pope Leo Resumes Duties After Surgery",
-      "outletCount": 23,
+      "outletCount": 15,
       "explanation": "The pontiff's gradual return to public duties following lung cancer surgery marks an institutional stabilization for the Catholic Church, framed reassuringly. [Event Base: +0.15 | Editorial Framing: +0.03]",
       "category": "world",
       "imageUrl": "https://www.japantimes.co.jp/japantimes/uploads/images/2026/10/19/569197.JPG",
@@ -4150,29 +3987,6 @@
       "isPast48h": true
     },
     {
-      "title": "Mars’ two tiny moons shouldn’t exist. A new mission will reveal why they do - CNN",
-      "description": "Scientists are preparing a pioneering space mission designed to investigate the anomalous origins of Mars' two small moons, Phobos and Deimos. The upcoming exploration aims to uncover whether the enigmatic celestial bodies are captured asteroids or the remnants of an ancient planetary impact.",
-      "sentiment": 0.196,
-      "significanceScore": 0.196,
-      "factors": [
-        27,
-        64,
-        71,
-        18
-      ],
-      "outletCount": 1,
-      "explanation": "Explores a scientific mission to study Mars' moons, framed around an engaging scientific mystery. [Event Base: +0.15 | Editorial Framing: +0.04]",
-      "category": "science",
-      "imageUrl": null,
-      "sourceId": "cnn",
-      "sourceName": "CNN",
-      "region": "NA",
-      "link": "https://news.google.com/rss/articles/CBMidkFVX3lxTFAtOEFRWExjbXdtazRGRlV2UFdfbnY1SjdyaThydGE3VUVBOWs1dEdUVTFLWkFZMElVY0pIdUdBMlAxQm45T2VBd1NkeXVYc1owa3d4RTlsXzFzRkFYZ1FLTWJONGRZdUlSSlBla1lDSHNIbkRHM0E?oc=5",
-      "pubDate": "Mon, 19 Oct 2026 12:33:07 GMT",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
       "title": "Global financial firms with over $5tn in assets announce plans to establish ADGM presence",
       "description": "Global financial institutions managing more than $5 trillion in assets have announced plans to establish a presence in Abu Dhabi’s financial centre ADGM amid rapid expansion of the emirate’s economy.Overall, 14 financial firms have plans to set up base at the international financial centre, state news agency Wam reported on Monday, quoting ADGM chairman Ahmed Al Zaabi.“In 2025, Abu Dhabi's economy grew by 7 per cent and our non-oil economy gre...",
       "sentiment": 0.184,
@@ -4428,6 +4242,56 @@
   ],
   "stories7d": [
     {
+      "title": "Brazil’s Amazon deforestation hits lowest level on record",
+      "description": "Data show a 42 percent drop in forest clearance from a year earlier, giving Lula a boost before the election run-off.",
+      "sentiment": 0.6,
+      "significanceScore": 0.811,
+      "factors": [
+        68,
+        86,
+        63,
+        18
+      ],
+      "clusterId": "brazil-approves-shorter-workweek-and-amazon-deforestation-low",
+      "clusterStory": "Brazil Approves Shorter Workweek and Amazon Deforestation Low",
+      "outletCount": 7,
+      "explanation": "Enthusiastically frames historic drops in rainforest destruction as an all-time record achievement. [Event Base: +0.55 | Editorial Framing: +0.05]",
+      "category": "climate",
+      "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/afp_6ad2d011b3fc-1792200721.jpg?resize=1920%2C1440",
+      "sourceId": "aljazeera",
+      "sourceName": "Al Jazeera",
+      "region": "ME",
+      "link": "https://www.aljazeera.com/news/2026/10/17/brazils-amazon-deforestation-hits-lowest-level-on-record?traffic_source=rss",
+      "pubDate": "Sat, 17 Oct 2026 02:49:21 +0000",
+      "isPast24h": false,
+      "isPast48h": false
+    },
+    {
+      "title": "Japan is launching a mission to Mars’s largest moon Phobos",
+      "description": "The Martian Moons eXploration spacecraft, set to launch on 20 October, will bring back samples that should solve a moon mystery that has been vexing scientists for more than a century",
+      "sentiment": 0.57,
+      "significanceScore": 0.781,
+      "factors": [
+        64,
+        74,
+        82,
+        24
+      ],
+      "clusterId": "japan-prepares-phobos-sample-mission",
+      "clusterStory": "Japan Prepares Phobos Sample Mission",
+      "outletCount": 7,
+      "explanation": "Ambitious space exploration mission aims to collect and return planetary samples to resolve long-standing celestial origins questions. [Event Base: +0.51 | Editorial Framing: +0.06]",
+      "category": "science",
+      "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/10/SEI_316887487.jpg",
+      "sourceId": "newscientist",
+      "sourceName": "New Scientist",
+      "region": "GLOBAL",
+      "link": "https://www.newscientist.com/article/2594332-japan-is-launching-a-mission-to-marss-largest-moon-phobos/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
+      "pubDate": "Fri, 16 Oct 2026 17:00:00 +0000",
+      "isPast24h": false,
+      "isPast48h": false
+    },
+    {
       "title": "Are we about to solve the greatest mystery of the neutrino?",
       "description": "We have long had a seemingly simple question about neutrinos: how much do they weigh? Now, a gigantic experiment in China is poised to find out – and the answer could transform particle physics forever",
       "sentiment": 0.774,
@@ -4449,56 +4313,6 @@
       "pubDate": "Mon, 19 Oct 2026 15:00:00 +0000",
       "isPast24h": true,
       "isPast48h": true
-    },
-    {
-      "title": "Brazil’s Amazon deforestation hits lowest level on record",
-      "description": "Data show a 42 percent drop in forest clearance from a year earlier, giving Lula a boost before the election run-off.",
-      "sentiment": 0.6,
-      "significanceScore": 0.774,
-      "factors": [
-        68,
-        86,
-        63,
-        18
-      ],
-      "clusterId": "amazon-deforestation-falls-to-record-low",
-      "clusterStory": "Amazon Deforestation Falls to Record Low",
-      "outletCount": 5,
-      "explanation": "Enthusiastically frames historic drops in rainforest destruction as an all-time record achievement. [Event Base: +0.55 | Editorial Framing: +0.05]",
-      "category": "climate",
-      "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/afp_6ad2d011b3fc-1792200721.jpg?resize=1920%2C1440",
-      "sourceId": "aljazeera",
-      "sourceName": "Al Jazeera",
-      "region": "ME",
-      "link": "https://www.aljazeera.com/news/2026/10/17/brazils-amazon-deforestation-hits-lowest-level-on-record?traffic_source=rss",
-      "pubDate": "Sat, 17 Oct 2026 02:49:21 +0000",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "Japan is launching a mission to Mars’s largest moon Phobos",
-      "description": "The Martian Moons eXploration spacecraft, set to launch on 20 October, will bring back samples that should solve a moon mystery that has been vexing scientists for more than a century",
-      "sentiment": 0.57,
-      "significanceScore": 0.764,
-      "factors": [
-        64,
-        74,
-        82,
-        24
-      ],
-      "clusterId": "japan-prepares-phobos-sample-mission",
-      "clusterStory": "Japan Prepares Phobos Sample Mission",
-      "outletCount": 6,
-      "explanation": "Ambitious space exploration mission aims to collect and return planetary samples to resolve long-standing celestial origins questions. [Event Base: +0.51 | Editorial Framing: +0.06]",
-      "category": "science",
-      "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/10/SEI_316887487.jpg",
-      "sourceId": "newscientist",
-      "sourceName": "New Scientist",
-      "region": "GLOBAL",
-      "link": "https://www.newscientist.com/article/2594332-japan-is-launching-a-mission-to-marss-largest-moon-phobos/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
-      "pubDate": "Fri, 16 Oct 2026 17:00:00 +0000",
-      "isPast24h": false,
-      "isPast48h": false
     },
     {
       "title": "‘Amazing progress’ in lung cancer: Immunotherapy extends survival as mRNA vaccines offer hope",
@@ -4584,7 +4398,7 @@
       ],
       "clusterId": "pope-leo-resumes-duties-after-surgery",
       "clusterStory": "Pope Leo Resumes Duties After Surgery",
-      "outletCount": 23,
+      "outletCount": 15,
       "explanation": "Contextualizing a high-profile patient's condition against revolutionary advancements that have halved lung cancer mortality rates. [Event Base: +0.32 | Editorial Framing: +0.03]",
       "category": "health",
       "imageUrl": "https://static01.nyt.com/images/2026/10/14/multimedia/14sci-pope-cancer-mutations-01-hzwv/14sci-pope-cancer-mutations-01-hzwv-mediumSquareAt3X.jpg",
@@ -4883,31 +4697,6 @@
       "isPast48h": true
     },
     {
-      "title": "Congress approves changes to Brazil’s working hours",
-      "description": "On Wednesday (Oct. 14), Brazil’s Senate approved a proposed constitutional amendment to abolish the 6x1 work schedule, under which employees work six days and have one day off. Under the new rules, workers will be entitled to two paid days off per week for every five days worked, with no reduction in pay. The bill also provides for a reduction in the maximum workweek from the current 44 hours to 40 hours. The constitutional amendment must now ...",
-      "sentiment": 0.363,
-      "significanceScore": 0.513,
-      "factors": [
-        52,
-        59,
-        74,
-        2
-      ],
-      "clusterId": "brazil-approves-shorter-workweek-measure",
-      "clusterStory": "Brazil Approves Shorter Workweek Measure",
-      "outletCount": 4,
-      "explanation": "Objectively reports constitutional labor reform improving statutory rest days and working limits in Brazil. [Event Base: +0.36 | Editorial Framing: +0.01]",
-      "category": "politics",
-      "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-      "sourceId": "agenciabrasil",
-      "sourceName": "Agência Brasil",
-      "region": "LATAM",
-      "link": "https://agenciabrasil.ebc.com.br/en/economia/noticia/2026-10/congress-approves-changes-brazils-working-hours",
-      "pubDate": "Thu, 15 Oct 2026 13:30:00 -0300",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
       "title": "Giving AI a 'crystal clear' view of the materials world by mapping geometry to text",
       "description": "In principle, artificial intelligence could make finding the right material for an application as simple as ordering dinner: Scientists would tell a large language model what they want, and it would serve them the perfect material for the job.",
       "sentiment": 0.51,
@@ -5144,6 +4933,29 @@
       "pubDate": "Tue, 13 Oct 2026 10:04:59 GMT",
       "isPast24h": false,
       "isPast48h": false
+    },
+    {
+      "title": "AI reads centuries-old handwriting to reveal Britain's vast historic shipping trade",
+      "description": "Historians have created a first-of-its-kind online interactive map, using data from hundreds of thousands of pages of centuries-old port records to chart Britain's growth into a dominant global trading nation.",
+      "sentiment": 0.454,
+      "significanceScore": 0.454,
+      "factors": [
+        65,
+        45,
+        50,
+        25
+      ],
+      "outletCount": 1,
+      "explanation": "Researchers successfully apply AI to decipher centuries-old port records, creating an interactive map that advances historical understanding of global maritime trade. [Event Base: +0.40 | Editorial Framing: +0.05]",
+      "category": "science",
+      "imageUrl": "https://scx1.b-cdn.net/csz/news/tmb/2026/ai-reads-centuries-old-2.jpg",
+      "sourceId": "physorg",
+      "sourceName": "Phys.org",
+      "region": "GLOBAL",
+      "link": "https://phys.org/news/2026-10-ai-centuries-reveal-britain-vast.html",
+      "pubDate": "Mon, 19 Oct 2026 12:40:08 EDT",
+      "isPast24h": true,
+      "isPast48h": true
     },
     {
       "title": "New dinosaur species discovered in UK after fossil left in drawer for 100 years",
@@ -6291,6 +6103,29 @@
       "region": "NA",
       "link": "https://www.cbc.ca/news/canada/manitoba/measles-outbreak-declared-over-9.7384397?cmp=rss",
       "pubDate": "Fri, 16 Oct 2026 16:20:55 EDT",
+      "isPast24h": false,
+      "isPast48h": false
+    },
+    {
+      "title": "Singapore’s economy grows more than 5 percent amid AI boom",
+      "description": "City-state's GDP expands 5.4 percent in July-September quarter, according to advance government estimates.",
+      "sentiment": 0.298,
+      "significanceScore": 0.298,
+      "factors": [
+        47,
+        48,
+        49,
+        14
+      ],
+      "outletCount": 1,
+      "explanation": "Strong macroeconomic growth driven by technological investment bolsters employment and living standards in Singapore. [Event Base: +0.27 | Editorial Framing: +0.03]",
+      "category": "business",
+      "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/AP25121084376348-1791942832_cd66fb-1791948704.jpg?resize=1200%2C630&amp;quality=80",
+      "sourceId": "aljazeera",
+      "sourceName": "Al Jazeera",
+      "region": "ME",
+      "link": "https://www.aljazeera.com/economy/2026/10/14/singapores-economy-grows-more-than-5-percent-amid-ai-boom?traffic_source=rss",
+      "pubDate": "Wed, 14 Oct 2026 04:25:02 +0000",
       "isPast24h": false,
       "isPast48h": false
     },
@@ -7773,29 +7608,6 @@
       "pubDate": "Wed, 14 Oct 2026 05:07:00 GMT",
       "isPast24h": false,
       "isPast48h": false
-    },
-    {
-      "title": "Mars’ two tiny moons shouldn’t exist. A new mission will reveal why they do - CNN",
-      "description": "Scientists are preparing a pioneering space mission designed to investigate the anomalous origins of Mars' two small moons, Phobos and Deimos. The upcoming exploration aims to uncover whether the enigmatic celestial bodies are captured asteroids or the remnants of an ancient planetary impact.",
-      "sentiment": 0.196,
-      "significanceScore": 0.196,
-      "factors": [
-        27,
-        64,
-        71,
-        18
-      ],
-      "outletCount": 1,
-      "explanation": "Explores a scientific mission to study Mars' moons, framed around an engaging scientific mystery. [Event Base: +0.15 | Editorial Framing: +0.04]",
-      "category": "science",
-      "imageUrl": null,
-      "sourceId": "cnn",
-      "sourceName": "CNN",
-      "region": "NA",
-      "link": "https://news.google.com/rss/articles/CBMidkFVX3lxTFAtOEFRWExjbXdtazRGRlV2UFdfbnY1SjdyaThydGE3VUVBOWs1dEdUVTFLWkFZMElVY0pIdUdBMlAxQm45T2VBd1NkeXVYc1owa3d4RTlsXzFzRkFYZ1FLTWJONGRZdUlSSlBla1lDSHNIbkRHM0E?oc=5",
-      "pubDate": "Mon, 19 Oct 2026 12:33:07 GMT",
-      "isPast24h": true,
-      "isPast48h": true
     },
     {
       "title": "China's exports and imports surge past expectations in September",
