@@ -172,6 +172,9 @@ function exportPublicJsonFeeds(fullPayload) {
     const evolutionHistory = Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 0
       ? cl.evolutionHistory
       : undefined;
+    const lateralConnections = Array.isArray(cl.lateralConnections) && cl.lateralConnections.length > 0
+      ? cl.lateralConnections
+      : undefined;
 
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.id = slug;
@@ -192,6 +195,7 @@ function exportPublicJsonFeeds(fullPayload) {
       ...(developmentNote ? { developmentNote } : {}),
       ...(evolvedFromIds ? { evolvedFromIds } : {}),
       ...(evolutionHistory ? { evolutionHistory } : {}),
+      ...(lateralConnections ? { lateralConnections } : {}),
       topic,
       imageUrl: bestImg,
       averageSentiment: avgSent,

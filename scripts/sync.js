@@ -1085,20 +1085,25 @@ When new dispatches arrive on a story, or when two clusters relate to the same s
      b) A major geographic or jurisdictional expansion (e.g., protests in France spread across the border into Italy; an Ebola outbreak crosses into a neighboring country),
      c) A distinct new physical act or major escalation (never routine rhetoric, blame-trading, or tally updates).
 
-You have TWO jobs in this single pass:
+You have THREE jobs in this single pass:
 
 JOB 1 — "merges" (Cross-Cluster Consolidation):
-Identify any groups of 2 or more clusters that represent the exact same underlying story:
-- NEVER merge distinct events that merely share a broad topic, country, or war. In particular, NEVER merge physical military attacks/strikes (e.g., "Ukrainian Drones Strike St. Petersburg") into diplomatic/sanctions policy stories (e.g., "Trump Waives Russia Sanctions").
+Identify any groups of 2 or more clusters that represent the EXACT SAME underlying incident/thread:
+- NEVER merge distinct events that merely share a broad topic, country, leader, or war. If two independently significant events influence or react to each other (e.g., "Ukrainian Drones Strike St. Petersburg" vs. "Trump Waives Russia Sanctions"), DO NOT merge them — put them in "lateralConnections" (Job 3) instead!
 - Set "updateType": "none" if the clusters are simply duplicates of the exact same event/phase.
 - Set "updateType": "clarification" if one cluster just adds sharper detail/numbers to the same event phase.
 - Set "updateType": "material_shift" ONLY if the newer cluster represents a genuine causal step-change, outcome flip, or cross-border expansion over the earlier cluster.
+- HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor from the initial headline while reflecting the key change so readers never lose the thread (e.g., if "Violent Protests Across France" spreads to Italy, write "French Cost-of-Living Protests Spread to Italy" — NEVER drop "France/French" from the title).
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
 Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line:
 - If the new dispatches are redundant with the existing summary or [PRIOR RECORDED HISTORY], omit the cluster.
 - If the new dispatches sharpen numbers, name victims, or add routine reaction/aftermath without a causal phase shift, include it with "updateType": "clarification".
-- If and ONLY if the new dispatches introduce a genuine causal step-change, outcome flip, or cross-border expansion not yet in the summary or [PRIOR RECORDED HISTORY], include it with "updateType": "material_shift".
+- If and ONLY if the new dispatches introduce a genuine causal step-change, outcome flip, or cross-border expansion not yet in the summary or [PRIOR RECORDED HISTORY], include it with "updateType": "material_shift" and follow the HEADLINE CONTINUITY RULE (retain the origin anchor while reflecting the key shift).
+
+JOB 3 — "lateralConnections" (Interacting Clusters That Must NOT Collapse):
+Identify pairs of DISTINCT clusters that causally influence, react to, or directly interact with each other in this week's news without being the same incident (e.g., a US Russia-sanctions policy cluster and a major Ukrainian refinery strike cluster; or a regional diplomatic summit and a parallel border clash):
+- Keep them as separate clusters (do NOT put them in "merges"), and record their interaction here.
 
 Clusters:
 ${lines}
@@ -1109,7 +1114,7 @@ Return ONLY valid JSON in this exact format:
     {
       "indices": [13, 14],
       "updateType": "none" | "clarification" | "material_shift",
-      "story": "Updated Authoritative 3-6 Word Title (only used if material_shift)",
+      "story": "Updated 4-7 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence synthesis with organic temporal grounding.",
       "developmentNote": "1-sentence summary of what changed or was clarified (or null if duplicate merge)."
     }
@@ -1118,9 +1123,15 @@ Return ONLY valid JSON in this exact format:
     {
       "index": 4,
       "updateType": "clarification" | "material_shift",
-      "story": "Updated Authoritative 3-6 Word Title (only used if material_shift)",
+      "story": "Updated 4-7 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence synthesis reflecting the clarified facts or new development.",
       "developmentNote": "1-sentence summary of the specific new development or clarification."
+    }
+  ],
+  "lateralConnections": [
+    {
+      "indices": [0, 9],
+      "howItConnects": "1 concise sentence explaining how these two independent stories directly influence or interact with each other."
     }
   ]
 }`;
@@ -1136,6 +1147,7 @@ Return ONLY valid JSON in this exact format:
     const parsed = JSON.parse(resp.response.text().trim());
     const merges = Array.isArray(parsed?.merges) ? parsed.merges : [];
     const inPlaceDevs = Array.isArray(parsed?.inPlaceDevelopments) ? parsed.inPlaceDevelopments : [];
+    const lateralLinks = Array.isArray(parsed?.lateralConnections) ? parsed.lateralConnections : [];
     const auditLogEntries = [];
 
     // Apply verified in-place developments & clarifications first
@@ -1255,6 +1267,29 @@ Return ONLY valid JSON in this exact format:
           note: noteText || 'Factual details clarified without phase change',
           addedHeadlines: c._pendingUpdate?.addedHeadlines || []
         });
+      }
+    }
+
+    // Attach lateral connections between distinct interacting clusters without collapsing them
+    for (const link of lateralLinks) {
+      const idxs = (link?.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
+      if (idxs.length < 2 || !link.howItConnects) continue;
+      const [idxA, idxB] = idxs;
+      if (idxA === idxB) continue;
+      const clA = clusters[idxA];
+      const clB = clusters[idxB];
+      const idA = clA.id || slugify(clA.story);
+      const idB = clB.id || slugify(clB.story);
+      const reason = String(link.howItConnects).trim();
+
+      if (!Array.isArray(clA.lateralConnections)) clA.lateralConnections = [];
+      if (!clA.lateralConnections.some(x => x.clusterId === idB)) {
+        clA.lateralConnections.push({ clusterId: idB, headline: clB.story, howItConnects: reason });
+      }
+
+      if (!Array.isArray(clB.lateralConnections)) clB.lateralConnections = [];
+      if (!clB.lateralConnections.some(x => x.clusterId === idA)) {
+        clB.lateralConnections.push({ clusterId: idA, headline: clA.story, howItConnects: reason });
       }
     }
 

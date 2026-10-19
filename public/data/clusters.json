@@ -2,11 +2,11 @@
   "dataset": "vibe-o-meter/clusters",
   "lastUpdated": "2026-10-19T06:50:42.383Z",
   "lastClusteredAt": "2026-10-19T06:50:42.383Z",
-  "count": 107,
+  "count": 108,
   "clusters": [
     {
       "id": "trump-defends-russia-sanctions-waiver",
-      "story": "Trump Defends Russia Sanctions Waivers",
+      "story": "Trump Defends Russia Sanctions Waiver",
       "summary": "Following the temporary suspension of congressional sanctions on Russia, President Trump defended the move as a peace measure while clashing with Ukrainian leadership over ongoing war aims, as Kyiv also welcomed a resumption of US intelligence sharing earlier in the week.",
       "version": 1,
       "lastDevelopedAt": "2026-10-19T00:26:00.000Z",
@@ -14,8 +14,7 @@
       "evolvedFromIds": [
         "trump-defends-russia-sanctions-waivers",
         "trump-pauses-new-russia-sanctions",
-        "trump-waives-new-russia-sanctions",
-        "ukrainian-drones-strike-st-petersburg"
+        "trump-waives-new-russia-sanctions"
       ],
       "evolutionHistory": [
         {
@@ -39,20 +38,27 @@
           "note": "President Trump publicly defended the sanctions waiver as a peace measure while trading barbs with Ukrainian President Volodymyr Zelenskyy."
         }
       ],
-      "topic": "world",
-      "imageUrl": "https://static01.nyt.com/images/2026/10/18/multimedia/18dc-prexy-sanger-gqcp/18dc-prexy-sanger-gqcp-mediumSquareAt3X.jpg",
-      "averageSentiment": -0.33,
-      "eventBase": -0.273,
-      "significanceScore": -0.58,
-      "factors": [
-        -35,
-        67,
-        48,
-        -12
+      "lateralConnections": [
+        {
+          "clusterId": "ukrainian-drones-strike-st-petersburg",
+          "headline": "Ukrainian Drones Strike St. Petersburg Refinery",
+          "howItConnects": "Kyiv launched large-scale drone strikes on Russian oil refineries in St. Petersburg just hours after the White House defended suspending new congressional energy sanctions on Moscow."
+        }
       ],
-      "sentimentSpread": 0.33,
-      "outletCount": 13,
-      "firstSeenAt": "2026-10-18T10:48:06.000Z",
+      "topic": "politics",
+      "imageUrl": "https://static01.nyt.com/images/2026/10/18/multimedia/18dc-prexy-sanger-gqcp/18dc-prexy-sanger-gqcp-mediumSquareAt3X.jpg",
+      "averageSentiment": -0.3,
+      "eventBase": -0.249,
+      "significanceScore": -0.538,
+      "factors": [
+        -30,
+        76,
+        51,
+        -10
+      ],
+      "sentimentSpread": 0.3,
+      "outletCount": 9,
+      "firstSeenAt": "2026-10-18T14:49:21.000Z",
       "latestUpdateAt": "2026-10-19T03:10:05.000Z",
       "coverage": [
         {
@@ -243,7 +249,48 @@
           "imageUrl": null,
           "link": "https://news.google.com/rss/articles/CBMif0FVX3lxTE5QaTVWYWxfQW56bkhtN3RLN1lNZlNhb1dMb0czWXV4TW5Zck13aEt6a2c2aXdEYlpmbDlFQjdKeFdwMV8xUTlvUUVYY1dISmtvS2ttQXF6R09MMC1MeVpiLVk0ZE9PNzJDY1p1VXkzeHRrT3QwNnY2Q2dtZlMzVFE?oc=5",
           "pubDate": "Sun, 18 Oct 2026 14:49:21 GMT"
-        },
+        }
+      ]
+    },
+    {
+      "id": "ukrainian-drones-strike-st-petersburg",
+      "story": "Ukrainian Drones Strike St. Petersburg Refinery",
+      "summary": "Ukrainian forces launched a large-scale long-range drone barrage targeting Russian energy infrastructure, setting a major oil refinery in Saint Petersburg ablaze.",
+      "version": 1,
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "Sun, 18 Oct 2026 06:48:06 EDT",
+          "headline": "Ukrainian Drones Strike St. Petersburg Refinery",
+          "summary": "Ukrainian forces launched a large-scale long-range drone barrage targeting Russian energy infrastructure, setting a major oil refinery in Saint Petersburg ablaze.",
+          "outletCount": 4,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "lateralConnections": [
+        {
+          "clusterId": "trump-defends-russia-sanctions-waiver",
+          "headline": "Trump Defends Russia Sanctions Waiver",
+          "howItConnects": "Kyiv launched large-scale drone strikes on Russian oil refineries in St. Petersburg just hours after the White House defended suspending new congressional energy sanctions on Moscow."
+        }
+      ],
+      "topic": "world",
+      "imageUrl": "http://images.euronews.com/articles/stories/09/95/72/99/640x360_cmsv2_ad4cdd80-cf0b-53a7-b3ba-1af642e3f43e-9957299.jpg?1792333686",
+      "averageSentiment": -0.39,
+      "eventBase": -0.327,
+      "significanceScore": -0.54,
+      "factors": [
+        -48,
+        47,
+        41,
+        -15
+      ],
+      "sentimentSpread": 0.07,
+      "outletCount": 4,
+      "firstSeenAt": "2026-10-18T10:48:06.000Z",
+      "latestUpdateAt": "2026-10-18T14:45:38.000Z",
+      "coverage": [
         {
           "sourceId": "africanews",
           "sourceName": "Africanews",
@@ -331,8 +378,8 @@
       ]
     },
     {
-      "id": "cost-of-living-protests-spread-to-italy",
-      "story": "Violent Cost-of-Living Protests Spread to Italy",
+      "id": "french-cost-of-living-protests-spread-to-italy",
+      "story": "French Cost-of-Living Protests Spread to Italy",
       "summary": "Following days of severe riots, looting, and nearly 2,400 arrests across France over rising living costs, civil unrest spilled over into neighboring countries with protesters clashing with police in Milan as French authorities tallied the extensive property damage.",
       "version": 2,
       "lastDevelopedAt": "2026-10-19T06:02:45.000Z",
@@ -342,7 +389,8 @@
         "violent-protests-and-riots-across-france",
         "cost-of-living-protests-turn-violent-in-milan",
         "violent-cost-of-living-riots-in-milan",
-        "widespread-rioting-and-unrest-in-france"
+        "widespread-rioting-and-unrest-in-france",
+        "cost-of-living-protests-spread-to-italy"
       ],
       "evolutionHistory": [
         {
@@ -360,7 +408,7 @@
           "timestamp": "2026-10-18T23:21:45.434Z",
           "beforeStory": "Violent Protests and Riots Across France",
           "beforeSummary": "Widespread demonstrations against rising living costs devolved into severe riots, looting, and clashes with police across multiple French cities earlier in the week, prompting thousands of arrests.",
-          "headline": "Violent Cost-of-Living Protests Spread to Italy",
+          "headline": "French Cost-of-Living Protests Spread to Italy",
           "summary": "Following days of severe riots, looting, and thousands of arrests across France over rising living costs, civil unrest spilled over into neighboring countries, with protesters clashing with police and looting stores in central Milan.",
           "outletCount": 22,
           "note": "The widespread cost-of-living protests and violent riots expanded internationally from France into major Italian cities like Milan."
@@ -371,7 +419,7 @@
           "timestamp": "2026-10-19T00:14:56.601Z",
           "beforeStory": "Violent Cost-of-Living Protests Spread to Italy",
           "beforeSummary": "Following days of severe riots, looting, and thousands of arrests across France over rising living costs, civil unrest spilled over into neighboring countries, with protesters clashing with police and looting stores in central Milan.",
-          "headline": "Violent Cost-of-Living Protests Spread to Italy",
+          "headline": "French Cost-of-Living Protests Spread to Italy",
           "summary": "Following days of severe riots, looting, and nearly 2,400 arrests across France over rising living costs, civil unrest spilled over into neighboring countries with protesters clashing with police in Milan as French authorities tallied the extensive property damage.",
           "outletCount": 22,
           "note": "French interior ministry updated total arrest tally to nearly 2,400 across France as property damage was assessed."
