@@ -57,19 +57,29 @@ function isValidImage(url) {
 }
 
 function inferClusterTopic(cluster, sources) {
-  if (cluster.topic && cluster.topic !== 'other') return cluster.topic;
+  const categoryCounts = {};
   for (const cov of (cluster.coverage || [])) {
+    let cat = cov.category;
     const src = sources && sources[cov.sourceId];
     if (src && Array.isArray(src.articles)) {
       const m = src.articles.find(a =>
         (cov.link && a.link && canonicalUrl(a.link) === canonicalUrl(cov.link)) ||
         (cov.title && a.title && cleanHeadlineTitle(a.title) === cleanHeadlineTitle(cov.title))
       );
-      if (m && m.category && m.category !== 'other') return m.category;
+      if (m && m.category) cat = m.category;
+    }
+    if (cat && cat !== 'other') {
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     }
   }
+  const sortedCats = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
+  if (sortedCats.length > 0) {
+    return sortedCats[0][0];
+  }
+  if (cluster.topic && cluster.topic !== 'other') return cluster.topic;
   const s = `${cluster.story || ''} ${cluster.summary || ''}`.toLowerCase();
   if (/\b(election|parliament|senate|congress|trump|biden|minister|policy|vote|court)\b/.test(s)) return 'politics';
+  if (/\b(war|drones?|missile|strikes?|bombing|military|troops|ceasefire|ukraine|russia|gaza|israel|lebanon|iran|houthi)\b/.test(s)) return 'world';
   if (/\b(market|bank|economy|inflation|stock|earnings|trade|tariff|oil|qatar|energy)\b/.test(s)) return 'business';
   if (/\b(ai|cyber|software|tech|starlink|satellite|chip|apple|google|microsoft)\b/.test(s)) return 'technology';
   if (/\b(space|mars|nasa|neanderthal|archaeolog|shipwreck|physics|scientist|fossil|species)\b/.test(s)) return 'science';

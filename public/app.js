@@ -3592,17 +3592,26 @@ function clamp(val, min, max) {
 
 // Infer news topic for a cluster
 function getClusterTopic(cluster) {
-  if (cluster.topic) return cluster.topic;
+  const categoryCounts = {};
   for (const item of (cluster.coverage || [])) {
+    let cat = item.category;
     const src = state.sources && state.sources[item.sourceId];
     if (src && src.articles) {
       const match = src.articles.find(a => (a.link && a.link === item.link) || (a.title && a.title === item.title));
-      if (match && match.category) return match.category;
+      if (match && match.category) cat = match.category;
+    }
+    if (cat && cat !== 'other') {
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     }
   }
+  const sortedCats = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
+  if (sortedCats.length > 0) {
+    return sortedCats[0][0];
+  }
+  if (cluster.topic && cluster.topic !== 'other') return cluster.topic;
   const s = (cluster.story || '').toLowerCase();
   if (s.includes('election') || s.includes('gop') || s.includes('trump') || s.includes('senate') || s.includes('house')) return 'politics';
-  if (s.includes('ukraine') || s.includes('houthi') || s.includes('saudi') || s.includes('greece') || s.includes('russia') || s.includes('war')) return 'world';
+  if (s.includes('ukraine') || s.includes('houthi') || s.includes('saudi') || s.includes('greece') || s.includes('russia') || s.includes('war') || s.includes('drone') || s.includes('strike')) return 'world';
   if (s.includes('earnings') || s.includes('bank') || s.includes('regulatory') || s.includes('deal') || s.includes('market') || s.includes('sales')) return 'business';
   if (s.includes('starlink') || s.includes('tech') || s.includes('cyber') || s.includes('ai')) return 'technology';
   if (s.includes('cancer') || s.includes('health') || s.includes('hospital') || s.includes('disease')) return 'health';

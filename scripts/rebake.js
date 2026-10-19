@@ -184,6 +184,12 @@ function rebakeOffline() {
     timeSeries: data.timeSeries
   };
 
+  const { exportPublicJsonFeeds } = require('./export-feeds');
+  const { enrichedClusters } = exportPublicJsonFeeds(data);
+  data.sharedStoryClusters = enrichedClusters;
+  data.globalStats.sharedStoryClusters = enrichedClusters;
+  summaryPayload.sharedStoryClusters = enrichedClusters;
+
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
   fs.writeFileSync(PUB_DATA, JSON.stringify(data), 'utf8');
   fs.writeFileSync(PUB_SUM, JSON.stringify(summaryPayload), 'utf8');
