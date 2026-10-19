@@ -436,7 +436,15 @@ function computeFourFactorScore(match) {
     const hill = gPow / (gPow + kPow);
     const impactScale = Math.min(1, 0.14 * reach + 0.86 * hill);
     eventBase = Number((pol * impactScale).toFixed(3));
-    framingMod = Number((frame * 0.45).toFixed(3));
+    if (frame <= 0) {
+      framingMod = Number((frame * 0.45).toFixed(3));
+    } else {
+      // Positive/promotional framing on a negative-polarity event can soften negativity by at most 35% of |eventBase|
+      // and can NEVER flip a negative-polarity event (pol < 0) into a positive (> 0) Good News score!
+      const rawFramingMod = frame * (0.10 + 0.22 * reach);
+      const maxFraming = Math.abs(eventBase) * 0.35;
+      framingMod = Number(Math.min(maxFraming, rawFramingMod).toFixed(3));
+    }
   }
   const score = Number(Math.max(-1, Math.min(1, eventBase + framingMod)).toFixed(3));
 
@@ -477,17 +485,17 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
-  // Pre-tokenize recent 4-factor articles from the last 36 hours for soft Macro-Scale [reach, permanence] calibration
+  // Pre-tokenize recent 4-factor articles from the last 36 hours for same-incident [polarity, reach, permanence] calibration
   const recentCutoffMs = Date.now() - (36 * 60 * 60 * 1000);
   const anchorCandidates = existingEvaluatedPool
     .filter(a => Array.isArray(a.factors) && a.factors.length === 4 && (!a.pubDate || new Date(a.pubDate).getTime() >= recentCutoffMs))
     .map(a => ({
-      scale: [a.factors[1], a.factors[2]], // ONLY [reach, permanence] — never lock polarity or framing!
+      eventFactors: [a.factors[0], a.factors[1], a.factors[2]], // [polarity, reach, permanence] so same-incident coverage never flips sign!
       tokens: new Set(getHeadlineTopicTokens(a.title))
     }))
     .filter(a => a.tokens.size >= 2);
 
-  function findPriorScaleHint(title) {
+  function findPriorEventHint(title) {
     const tokens = getHeadlineTopicTokens(title);
     if (tokens.length < 2) return null;
     let best = null;
@@ -500,7 +508,7 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
       const minLen = Math.min(tokens.length, cand.tokens.size);
       if ((shared >= 3 || (shared >= 2 && shared / minLen >= 0.6)) && shared > bestShared) {
         bestShared = shared;
-        best = cand.scale;
+        best = cand.eventFactors;
       }
     }
     return best;
@@ -516,13 +524,13 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
     const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
     const promptData = chunk.map((item, index) => {
-      const priorScale = findPriorScaleHint(item.title);
+      const priorEvent = findPriorEventHint(item.title);
       return {
         index,
         outlet: item.sourceId,
         headline: item.title,
         description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || ''),
-        ...(priorScale ? { priorScaleHint: priorScale } : {})
+        ...(priorEvent ? { priorEventHint: priorEvent } : {})
       };
     });
 
@@ -531,7 +539,9 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 
 1. "polarity" (integer -100 to 100 — Net Real-World Valence & Substantive Editorial Angle):
    Evaluate the inherent net valence of the primary real-world change and substantive angle foregrounded by the dispatch along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, or offsetting mixed outcomes) to +100 (maximum net constructive advancement).
-   - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, clinical or scientific advance, discovery, or systemic aid that builds durable capacity or resolves a major deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, or acute economic/harm shock and merely highlights a procedural concession, secondary byproduct, or risk catalog, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
+   - Constructive Remediation vs. Tragic Premise: Distinguish between active problem-solving and mere silver linings. When the primary news event is a substantive constructive intervention, clinical or scientific advance, discovery, or systemic aid that builds durable capacity or resolves a major deficit, score polarity positively in proportion to the solution's constructive value. Conversely, when a dispatch centers on an irreversible personal tragedy, terminal plight, violent attack, or acute harm shock and merely highlights survival, a procedural concession, or a secondary silver lining, evaluate the net state of the whole situation (negative or near-zero <= 0) rather than isolating the silver lining.
+   - Criminal Trials, Convictions, Verdicts & Atrocities (STRICT NEGATIVE POLARITY): Guilty verdicts, convictions, sentencing, arrests, or indictments for murder, mass casualties, starvation cults, terrorism, sexual assault, or violent crime MUST be scored with NEGATIVE polarity (-35 to -85) reflecting the underlying atrocity, violence, and loss of life—NEVER score a murder, assault, or atrocity conviction as positive polarity (+1 to +100) merely because a court delivered a guilty verdict or legal accountability.
+   - Commercial Affiliate Copy & Sportsbook Promo Codes (ZERO CONSTRUCTIVE VALUE): Sponsored or affiliate articles promoting sportsbook promo codes, betting bonuses (e.g., Fanatics, Underdog, BetMGM, FanDuel, DraftKings, Betr), or retail discount codes have zero constructive societal value and must be scored near zero (polarity -10 to 0, reach 5 to 15, permanence 5, framing 0).
    - Frontier Advancement vs. Routine Maintenance or Minor Comfort Tips: Distinguish genuine breakthroughs from ordinary civic/corporate administration and minor symptom-comfort studies. Routine municipal/provincial facility openings, ceremonial inaugurations, local charity award profiles, and routine corporate capital expenditures belong near neutral (0 to +15). Similarly, minor symptom-comfort, ergonomic, or lifestyle studies (e.g., wearing headphones to reduce post-op nausea, minor dietary tips) warrant only modest positive polarity (+15 to +28), whereas life-saving medical cures, disease eradication, major conservation milestones, and fundamental scientific discoveries warrant high positive polarity (+55 to +95).
    - Concrete Action vs. Speculative Claims (Symmetrical): Concrete actions, empirical findings, active clinical trials, physical discoveries, enacted policies, and verified acute events carry full positive or negative valence. Conversely, when a dispatch consists of unsubstantiated future predictions, a politician or executive claiming a stalled project is "finally happening", preliminary proposals, political spending pledges, or opinion commentary without a verified completed milestone, discount event polarity toward zero (0 to +18) and permanence (10–25), attributing directional spin primarily to "framing".
 
@@ -544,9 +554,9 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 4. "framing" (integer -100 to 100 — Editorial Rhetoric vs. Neutral Wire Baseline):
    Measure the linguistic and rhetorical spin of the headline relative to a dispassionate, strictly factual wire-service baseline (0), along a continuous scale from -100 (maximally alarmist, sensationalist, or conflict-amplifying rhetoric) to +100 (maximally constructive, promotional, or agency-highlighting rhetoric).
 
-SCALE CALIBRATION & FREE POLARITY PRINCIPLE:
-If a dispatch includes a "priorScaleHint" [reach, permanence] from an earlier article on the exact same specific incident, use it only as a rough reference for macro societal scale ("reach" and "permanence") IF AND ONLY IF this dispatch is about the exact same incident.
-NEVER lock "polarity" or "framing": always evaluate "polarity" (the substantive valence/angle of the facts foregrounded by this outlet) and "framing" (its rhetorical spin) independently for every single headline so subtle editorial variations are fully preserved.
+SAME-INCIDENT COHERENCE & EDITORIAL VARIATION PRINCIPLE:
+1. If a dispatch includes a "priorEventHint" [polarity, reach, permanence] from an earlier article on the exact same specific incident, keep the SAME polarity sign and stay within ±10 points of that anchor's [polarity, reach, permanence] (reflecting only minor differences in which facts this outlet foregrounds)—NEVER flip a negative-polarity event (like a murder trial or attack) into positive polarity!
+2. Evaluate "framing" (-100 to +100) 100% independently for every single headline so each outlet's distinct tone and rhetoric produce natural score variation across outlets covering the same story.
 
 Return ONLY a JSON array of objects with:
 - index: integer matching input index
@@ -1100,7 +1110,8 @@ Return JSON array in format:
           const articleBagStems = new Set();
           matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => articleBagStems.add(s)));
           const prevStoryStems = extractCoherenceStems(matchedPrev.story || '');
-          const prevStorySupported = prevStoryStems.length === 0 || prevStoryStems.every(s => articleBagStems.has(s));
+          const supportedStemCount = prevStoryStems.filter(s => articleBagStems.has(s)).length;
+          const prevStorySupported = prevStoryStems.length === 0 || (supportedStemCount / prevStoryStems.length) >= 0.65;
 
           const prevSlug = prevStorySupported
             ? (matchedPrev.id || String(matchedPrev.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
@@ -1134,7 +1145,13 @@ Return JSON array in format:
           prevSeenKeys = Array.from(historicalKeys).slice(-120);
 
           if (prevStorySupported && Array.isArray(matchedPrev.evolutionHistory) && matchedPrev.evolutionHistory.length > 0) {
-            prevEvolutionHistory = [...matchedPrev.evolutionHistory];
+            // Strip any contaminated evolutionHistory entry that shares zero content stems with the cluster's articles
+            const coherentHistory = matchedPrev.evolutionHistory.filter((h, idx) => {
+              if (idx === 0) return true;
+              const hStems = extractCoherenceStems(`${h.headline || ''} ${h.note || ''} ${h.summary || ''}`);
+              return hStems.length === 0 || hStems.some(s => articleBagStems.has(s));
+            });
+            prevEvolutionHistory = coherentHistory.length > 0 ? coherentHistory : [...matchedPrev.evolutionHistory.slice(0, 1)];
           } else {
             prevEvolutionHistory = [{
               version: 1,
@@ -1368,7 +1385,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "index": 4,
       "developmentNote": "For clarification: 1-2 ultra-succinct telegraphic bullet fragments separated by '; ' stating strictly what fact changed (5-10 words each, e.g. 'First official Vatican photos released; greeted St. Peter\\'s Square crowd' — no filler like 'New dispatches reported'). For material_shift: 1 crisp sentence synthesizing all boundary-crossing shifts in this batch.",
       "stateBoundaryCrossed": "State which envelope boundary(ies) were crossed (Spatial/Jurisdictional, Institutional/Timeline Regime, Outcome Reversal), or 'None — intra-state detail/rhetoric'",
-      "updateType": "clarification" | "material_shift",
+      "updateType": "none" | "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence synthesis reflecting the clarified facts or new development."
     }
@@ -1445,6 +1462,19 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const uType = dev.updateType === 'material_shift' ? 'material_shift' : 'clarification';
       const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
       const noteText = (dev.developmentNote && dev.developmentNote.trim()) || '';
+
+      // Skip routine restatements ("Re-emphasizes...", "Reaffirms...") that add no new factual detail
+      if (uType === 'clarification' && /^(re-?emphasiz|reaffirm|reiterat|continu(es|ed) to report)/i.test(noteText)) {
+        continue;
+      }
+
+      // Coherence guard against off-by-one index slips: ensure the update shares at least 1 stem with the cluster
+      const clusterStems = new Set(extractCoherenceStems(`${c.story || ''} ${c.summary || ''} ${(c.coverage || []).map(a => a.title || '').join(' ')}`));
+      const devStems = extractCoherenceStems(`${dev.story || ''} ${noteText} ${newSummary}`);
+      if (clusterStems.size > 0 && devStems.length > 0 && !devStems.some(s => clusterStems.has(s))) {
+        console.warn(`[Clusters] Rejected cross-story index slip on cluster [${idx}] "${c.story}": "${noteText}"`);
+        continue;
+      }
 
       // Guard against no-op or duplicate note already in evolutionHistory
       const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
@@ -2222,19 +2252,64 @@ async function main() {
   }
 
   // Always synchronize cluster coverage sentiment scores with the latest article scores in finalSources
+  // and harmonize any sign-flipped outlier dispatches inside strongly negative/positive multi-outlet clusters
   if (Array.isArray(sharedStoryClusters) && sharedStoryClusters.length > 0) {
     sharedStoryClusters.forEach(cl => {
       if (!Array.isArray(cl.coverage)) return;
+      const matchedPairs = [];
       cl.coverage.forEach(cov => {
         const srcArts = finalSources[cov.sourceId]?.articles || [];
         const match = srcArts.find(a =>
           (cov.link && a.link && canonicalUrl(a.link) === canonicalUrl(cov.link)) ||
           (cov.title && a.title && cleanHeadlineTitle(a.title) === cleanHeadlineTitle(cov.title))
         );
-        if (match && typeof match.sentiment === 'number') {
+        if (match) matchedPairs.push({ cov, match });
+      });
+
+      const factorMatches = matchedPairs.filter(p => Array.isArray(p.match.factors) && p.match.factors.length === 4);
+      if (factorMatches.length >= 3) {
+        const pols = factorMatches.map(p => p.match.factors[0]).sort((a, b) => a - b);
+        const reaches = factorMatches.map(p => p.match.factors[1]).sort((a, b) => a - b);
+        const perms = factorMatches.map(p => p.match.factors[2]).sort((a, b) => a - b);
+        const mid = Math.floor(factorMatches.length / 2);
+        const medPol = pols[mid];
+        const medReach = reaches[mid];
+        const medPerm = perms[mid];
+        const negCount = pols.filter(x => x <= -20).length;
+
+        // If the cluster is a clear negative event (median polarity <= -25 and majority <= -20),
+        // never allow an outlier article in the same cluster to have positive polarity (> 0)
+        if (medPol <= -25 && negCount >= 2) {
+          factorMatches.forEach(({ match }) => {
+            if (match.factors[0] > 0) {
+              const frame = match.factors[3];
+              const calc = computeFourFactorScore({
+                polarity: medPol,
+                reach: medReach,
+                permanence: medPerm,
+                framing: frame
+              });
+              match.factors = [calc.polarity, calc.reach, calc.permanence, calc.framing];
+              match.sentiment = calc.score;
+              match.sentimentGemini = calc.score;
+              if (typeof match.explanation === 'string') {
+                match.explanation = match.explanation.replace(
+                  /\[Event Base:[^\]]+\]/,
+                  `[Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`
+                );
+                match.explanationGemini = match.explanation;
+              }
+            }
+          });
+        }
+      }
+
+      matchedPairs.forEach(({ cov, match }) => {
+        if (typeof match.sentiment === 'number') {
           cov.sentiment = match.sentiment;
         }
       });
+
       const validScores = cl.coverage.map(c => c.sentiment).filter(s => typeof s === 'number');
       if (validScores.length > 0) {
         cl.averageSentiment = Number((validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(2));
