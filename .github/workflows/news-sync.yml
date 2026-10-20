@@ -2,8 +2,8 @@ name: Autonomous News Ingestion & Sentiment Audit
 
 on:
   schedule:
-    # Staggered off-peak minutes (:07, :27, :47) to avoid GitHub Actions :00/:30 cron congestion drops
-    - cron: '7,27,47 * * * *'
+    # Off-peak hourly cron (:13) so GitHub Actions does not throttle/drop runs like sub-hourly crons
+    - cron: '13 * * * *'
   workflow_dispatch:
   push:
     branches:
@@ -25,6 +25,7 @@ jobs:
   sync:
     name: Fetch RSS & Analyze Vibes
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -45,7 +46,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_PAID_API_KEY: ${{ secrets.GEMINI_PAID_API_KEY }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-3.8-flash' }}
-          CLUSTER_INTERVAL_HOURS: ${{ secrets.CLUSTER_INTERVAL_HOURS || '3' }}
+          CLUSTER_INTERVAL_HOURS: ${{ secrets.CLUSTER_INTERVAL_HOURS || '2' }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'llama-3.1-8b-instant' }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}

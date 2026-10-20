@@ -858,7 +858,7 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
     }
   }
 
-  if (recentArticles.length < 4) return null;
+  if (recentArticles.length < 3) return null;
 
   const pairMap = new Map();
   for (const a of recentArticles) {
@@ -880,7 +880,12 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
   }
 
   const candidates = [...pairMap.entries()]
-    .filter(([, info]) => info.outlets.size >= 4 && info.regions.size >= 3 && info.freshOutlets.size >= 2)
+    .filter(([, info]) => {
+      const isGlobalBurst = (info.outlets.size >= 4 && info.regions.size >= 3 && info.freshOutlets.size >= 2) ||
+        (info.outlets.size >= 3 && info.regions.size >= 3 && info.freshOutlets.size >= 3);
+      const isRegionalSurge = info.outlets.size >= 5 && info.regions.size >= 1 && info.freshOutlets.size >= 3;
+      return isGlobalBurst || isRegionalSurge;
+    })
     .sort((a, b) => b[1].outlets.size - a[1].outlets.size || b[1].regions.size - a[1].regions.size);
 
   if (candidates.length === 0) return null;
@@ -888,6 +893,7 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
   const [bestPair, bestInfo] = candidates[0];
   bestInfo.articles.sort((a, b) => b.pubMs - a.pubMs);
   return {
+    mode: bestInfo.regions.size >= 3 ? 'cross-region-burst' : 'regional-surge',
     pair: bestPair,
     outlets: bestInfo.outlets.size,
     regions: bestInfo.regions.size,
@@ -922,64 +928,198 @@ function extractCoherenceStems(str) {
     .filter(w => w.length >= 3);
 }
 
-// Cross-Outlet Story Clustering (100% Pure AI Semantic Clustering with Uniform 7-Day Rolling Cluster Memory)
+// Cross-Outlet Story Clustering (Smart Candidate Pool + 14-Day Dormant Cluster Wake-Up + Peer-to-Peer Coherence Guard)
 async function clusterCrossOutletStories(finalSources, apiKey, previousClusters = []) {
   if (!apiKey) return previousClusters;
-  
-  // Gather recent headlines from the past 72h uniformly across all sentiments (up to 25 per outlet)
-  // while existing multi-outlet clusters of all sentiments persist for a uniform 7-day rolling window.
-  const candidates = [];
-  const thirtySixHoursAgo = Date.now() - (36 * 60 * 60 * 1000);
-  const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
-  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
+  const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+  const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
+  const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
+
+  // Merge active 7-day clusters with dormant historical clusters (up to 14 days old) from clusters-archive.json
+  // so stories that went dormant for 3-14 days can wake back up and reconnect when a follow-up breaks!
+  const allKnownPrevClusters = [];
+  const seenPrevSlugs = new Set();
+  const registerPrevCluster = (cl) => {
+    if (!cl || !Array.isArray(cl.coverage) || cl.coverage.length < 2) return;
+    const slug = cl.id || String(cl.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (!slug || seenPrevSlugs.has(slug)) return;
+    seenPrevSlugs.add(slug);
+    allKnownPrevClusters.push(cl);
+  };
+  if (Array.isArray(previousClusters)) previousClusters.forEach(registerPrevCluster);
+  try {
+    const archivePath = path.join(PUBLIC_DATA_DIR, 'clusters-archive.json');
+    if (fs.existsSync(archivePath)) {
+      const archData = JSON.parse(fs.readFileSync(archivePath, 'utf8'));
+      if (Array.isArray(archData?.clusters)) archData.clusters.forEach(registerPrevCluster);
+    }
+  } catch (e) {
+    // Non-blocking archive read
+  }
+
+  const alreadyClusteredUrls = new Set();
+  const alreadyClusteredTitles = new Set();
+  const activeClusterAnchors = [];
+  const stemDocFreq = new Map();
+
+  for (const cl of allKnownPrevClusters) {
+    const cov = cl.coverage || [];
+    const outletPubMs = new Map();
+    for (const c of cov) {
+      if (c.link) alreadyClusteredUrls.add(canonicalUrl(c.link));
+      if (c.title) alreadyClusteredTitles.add(cleanHeadlineTitle(c.title));
+      if (c.sourceId) outletPubMs.set(c.sourceId, new Date(c.pubDate).getTime() || 0);
+    }
+    if (Array.isArray(cl.seenArticleKeys)) {
+      cl.seenArticleKeys.forEach(k => {
+        alreadyClusteredUrls.add(k);
+        alreadyClusteredTitles.add(k);
+      });
+    }
+    const newestMs = Math.max(...cov.map(c => new Date(c.pubDate).getTime() || 0), 0);
+    if (newestMs >= fourteenDaysAgo && cov.length >= 2) {
+      const lead = cov[0];
+      const titleStems = new Set(extractCoherenceStems(`${cl.story || ''} ${lead.title || ''}`));
+      const allStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''} ${cov.slice(0, 4).map(c => c.title || '').join(' ')}`));
+      for (const s of allStems) stemDocFreq.set(s, (stemDocFreq.get(s) || 0) + 1);
+      activeClusterAnchors.push({
+        isClusterAnchor: true,
+        anchorCluster: cl,
+        outletPubMs,
+        sourceId: lead.sourceId,
+        sourceName: lead.sourceName || lead.sourceId,
+        anchorStory: cl.story,
+        title: lead.title,
+        description: `[Cluster: ${cl.story}] ${(cl.summary || '').slice(0, 115)}`,
+        sentiment: typeof lead.sentiment === 'number' ? lead.sentiment : 0,
+        link: lead.link || '',
+        pubDate: lead.pubDate || '',
+        titleStems,
+        allStems
+      });
+    }
+  }
+
+  // Scan up to 85 articles deep per outlet across the last 48h (so high-volume wire feeds never drop stories at #26-#85)
+  const rawUnclustered = [];
   Object.entries(finalSources).forEach(([sourceId, src]) => {
     const articles = src.articles || [];
-    let addedForSource = 0;
-    let addedOlderForSource = 0;
+    let scannedForSource = 0;
     for (let i = 0; i < articles.length; i++) {
       const art = articles[i];
       if (!art || !art.title || art.title.trim().length <= 10) continue;
+      if (/\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel)\b/i.test(art.title)) continue;
       const t = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
-      if (isNaN(t) || t < threeDaysAgo) continue;
+      if (isNaN(t) || t < fortyEightHoursAgo) continue;
+      scannedForSource++;
+      if (scannedForSource > 85) continue;
 
+      const cu = art.link ? canonicalUrl(art.link) : '';
+      const ct = cleanHeadlineTitle(art.title);
+      if ((cu && alreadyClusteredUrls.has(cu)) || (ct && alreadyClusteredTitles.has(ct))) continue;
+
+      const titleStems = new Set(extractCoherenceStems(art.title));
+      const allStems = new Set(extractCoherenceStems(`${art.title} ${(art.description || '').slice(0, 125)}`));
+
+      // Skip secondary/older dispatches from an outlet that already has a representative article in a matching cluster
+      const alreadyCoveredBySameOutlet = activeClusterAnchors.some(anc => {
+        if (!anc.outletPubMs.has(sourceId)) return false;
+        const shT = [...titleStems].filter(s => anc.titleStems.has(s));
+        const shA = [...allStems].filter(s => anc.allStems.has(s));
+        if (shT.length >= 2 || (shT.length >= 1 && shA.length >= 3)) {
+          const existingMs = anc.outletPubMs.get(sourceId) || 0;
+          if (t <= existingMs + 2 * 3600 * 1000) return true;
+        }
+        return false;
+      });
+      if (alreadyCoveredBySameOutlet) continue;
+
+      for (const s of allStems) stemDocFreq.set(s, (stemDocFreq.get(s) || 0) + 1);
       const score = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0);
-      const isRecent36h = t >= thirtySixHoursAgo;
-
-      if (addedForSource >= 25) continue;
-      if (!isRecent36h) {
-        if (addedOlderForSource >= 10) continue;
-        addedOlderForSource++;
-      }
-      addedForSource++;
-
-      candidates.push({
+      rawUnclustered.push({
+        isClusterAnchor: false,
         sourceId,
         sourceName: src.name,
+        rankInOutlet: scannedForSource,
+        pubMs: t,
         title: art.title.trim(),
         description: (art.description || '').slice(0, 125).trim(),
         sentiment: score,
         link: art.link || '',
-        pubDate: art.pubDate || ''
+        pubDate: art.pubDate || '',
+        titleStems,
+        allStems
       });
     }
   });
 
-  if (candidates.length < 6) return previousClusters;
+  // Select existing/dormant cluster anchors + unclustered articles with specific cross-outlet stem overlap
+  const matchedAnchorIndices = new Set();
+  const matchedUnclusteredIndices = new Set();
+
+  for (let i = 0; i < rawUnclustered.length; i++) {
+    const a = rawUnclustered[i];
+    for (let cIdx = 0; cIdx < activeClusterAnchors.length; cIdx++) {
+      const anc = activeClusterAnchors[cIdx];
+      if (anc.outletPubMs.has(a.sourceId) && a.pubMs <= (anc.outletPubMs.get(a.sourceId) || 0) + 2 * 3600 * 1000) continue;
+      const shT = [...a.titleStems].filter(s => anc.titleStems.has(s) && (stemDocFreq.get(s) || 0) <= 18);
+      const shA = [...a.allStems].filter(s => anc.allStems.has(s) && (stemDocFreq.get(s) || 0) <= 22);
+      if (shT.length >= 2 || (shT.length >= 1 && shA.length >= 3)) {
+        matchedUnclusteredIndices.add(i);
+        matchedAnchorIndices.add(cIdx);
+      }
+    }
+    for (let j = i + 1; j < rawUnclustered.length; j++) {
+      const b = rawUnclustered[j];
+      if (a.sourceId === b.sourceId) continue;
+      const shT = [...a.titleStems].filter(s => b.titleStems.has(s) && (stemDocFreq.get(s) || 0) <= 18);
+      const shA = [...a.allStems].filter(s => b.allStems.has(s) && (stemDocFreq.get(s) || 0) <= 22);
+      if (shT.length >= 2 || (shT.length >= 1 && shA.length >= 3)) {
+        matchedUnclusteredIndices.add(i);
+        matchedUnclusteredIndices.add(j);
+      }
+    }
+    // Also include top-10 very recent (<=24h) unclustered dispatches per outlet if they share >=2 stems with any peer
+    if (a.rankInOutlet <= 10 && a.pubMs >= twentyFourHoursAgo && !matchedUnclusteredIndices.has(i)) {
+      const hasAnyPeerPair = rawUnclustered.some((b, j) => {
+        if (i === j || a.sourceId === b.sourceId) return false;
+        let sh = 0;
+        for (const s of a.allStems) if (b.allStems.has(s) && (stemDocFreq.get(s) || 0) <= 28) sh++;
+        return sh >= 2;
+      });
+      if (hasAnyPeerPair) matchedUnclusteredIndices.add(i);
+    }
+  }
+
+  const candidates = [
+    ...[...matchedAnchorIndices].map(idx => activeClusterAnchors[idx]),
+    ...[...matchedUnclusteredIndices].map(idx => rawUnclustered[idx])
+  ];
+
+  console.log(`[Clusters] Smart candidate pool built: ${matchedAnchorIndices.size} active/dormant cluster anchors + ${matchedUnclusteredIndices.size} unclustered dispatches (${candidates.length} total items from ${rawUnclustered.length} unclustered 48h articles).`);
+
+  if (candidates.length < 4) return previousClusters;
 
   // Pass headline + brief lead snippet so Gemini resolves oblique headlines semantically without any hardcoded token matching
   const promptLines = candidates.map((c, idx) => {
+    if (c.isClusterAnchor) {
+      return `[${idx}] EXISTING_CLUSTER(${c.sourceId}): ${c.anchorStory} — ${c.title} (${c.description})`;
+    }
     const snippet = c.description ? ` — ${c.description}` : '';
     return `[${idx}] ${c.sourceId}: ${c.title}${snippet}`;
   }).join('\n');
 
   const prompt = `You are a senior news editor analyzing recent dispatches across global newsrooms.
-Identify distinct real-world events, developments, or discoveries that are covered by 2 or more DIFFERENT news outlets.
+Identify distinct real-world events, developments, or discoveries that are covered by 2 or more DIFFERENT news outlets (or where 1 or more new outlet dispatches match an EXISTING_CLUSTER).
 
 Rules:
-- Group dispatches strictly by the exact same underlying real-world event or discovery (never merge two separate tragedies, awards, or debates that occurred in different places just because they share a theme).
-- Match dispatches by their primary headline subject; use the short description snippet only to disambiguate who or where an oblique headline refers to, never to match multi-story digest roundups ("...and more top headlines").
-- Scan the entire list across all regions (NA, LATAM, UK, EU, APAC, MEA) thoroughly: identify ALL distinct shared stories (typically 25 to 55 clusters), including regional stories covered by 2+ Latin American, European, or Asian outlets, as well as global stories, and include every outlet covering that event in "ids".
+- Group dispatches strictly by the exact same underlying real-world event, specific incident, single court ruling, single economic data release, game result, or discovery.
+- NEVER group articles by a broad theme, commodity, industry, or beat (for example, NEVER create thematic buckets like "Climate Change Assessments", "Global Gold Mining", "Midterm Campaign Trails", "Healthcare Costs", or "AI Industry Trends"). If two articles are feature stories or reports about different places/companies on a similar theme, DO NOT group them.
+- Match dispatches by their primary headline subject; use the short description snippet only to disambiguate who or where an oblique headline refers to, never to match multi-story digest roundups ("...and more top headlines") or sportsbook promo codes.
+- Scan the entire list across all regions (NA, LATAM, UK, EU, APAC, MEA) thoroughly and output all genuine event clusters (whether 35 or 95 clusters), including regional stories covered by 2+ outlets and new outlets matching an EXISTING_CLUSTER.
+- If an EXISTING_CLUSTER item is matched by 1 or more new outlet dispatches on that exact same specific event, include the EXISTING_CLUSTER index AND the new outlet index(es) together in "ids", and keep the EXISTING_CLUSTER's concise neutral title unless a major phase shift occurred.
 - If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how outlets are framing it.
@@ -1059,46 +1199,74 @@ Return JSON array in format:
       const rawCandidates = cl.ids.map(id => candidates[id]).filter(Boolean);
       if (rawCandidates.length < 2) return;
 
-      // Reject LLM integer-index digit slips (e.g. [847] instead of [645]): every member must share at least 1 stem
-      // with either the cluster's story+summary OR at least 1 peer headline in the cluster
-      const anchorStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''}`));
+      // Strict Peer-to-Peer Coherence Guard (prevents LLM digit slips & thematic false-positive buckets):
+      // Every member must share stems directly with at least one PEER item from a DIFFERENT outlet in the cluster:
+      // either >=1 title stem AND >=2 full stems (with >=1 specific stem docFreq <= 18), or >=1 rare proper-noun title stem (docFreq <= 8)
       const rawMatching = rawCandidates.filter((art, idx) => {
-        const myStems = extractCoherenceStems(`${art.title || ''} ${(art.description || '').slice(0, 125)}`);
-        if (myStems.some(s => anchorStems.has(s))) return true;
-        const peerTitleStems = new Set();
-        rawCandidates.forEach((other, j) => {
-          if (j !== idx) extractCoherenceStems(other.title).forEach(s => peerTitleStems.add(s));
+        if (/\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel)\b/i.test(art.title || '')) {
+          return false;
+        }
+        const myTitleStems = art.titleStems || new Set(extractCoherenceStems(`${art.anchorStory || ''} ${art.title || ''}`));
+        const myAllStems = art.allStems || new Set(extractCoherenceStems(`${art.anchorStory || ''} ${art.title || ''} ${(art.description || '').slice(0, 125)}`));
+        const keep = rawCandidates.some((other, j) => {
+          if (j === idx) return false;
+          if (!art.isClusterAnchor && !other.isClusterAnchor && other.sourceId === art.sourceId) return false;
+          const otherTitleStems = other.titleStems || new Set(extractCoherenceStems(`${other.anchorStory || ''} ${other.title || ''}`));
+          const otherAllStems = other.allStems || new Set(extractCoherenceStems(`${other.anchorStory || ''} ${other.title || ''} ${(other.description || '').slice(0, 125)}`));
+          const sharedTitle = [...myTitleStems].filter(s => otherTitleStems.has(s));
+          const sharedTitleToFull = [...myTitleStems].filter(s => otherAllStems.has(s));
+          const sharedAll = [...myAllStems].filter(s => otherAllStems.has(s));
+          const hasSpecificAll = sharedAll.some(s => (stemDocFreq.get(s) || 0) <= 18);
+          const hasRareTitle = sharedTitle.some(s => (stemDocFreq.get(s) || 0) <= 8);
+          return (sharedTitle.length >= 1 && sharedAll.length >= 2 && hasSpecificAll) ||
+            hasRareTitle ||
+            (sharedTitleToFull.length >= 2 && sharedAll.length >= 3 && hasSpecificAll);
         });
-        const keep = myStems.some(s => peerTitleStems.has(s));
         if (!keep) {
-          console.warn(`[Clusters] Dropped zero-overlap index outlier from "${cl.story}": [${art.sourceId}] "${art.title}"`);
+          console.warn(`[Clusters] Dropped low-specificity/thematic outlier from "${cl.story}": [${art.sourceId}] "${art.title}"`);
         }
         return keep;
       });
       if (rawMatching.length < 2) return;
+      // Ensure at least 1 genuinely new (non-anchor) article is present so anchor-only pairs don't duplicate existing clusters
+      const nonAnchorMatching = rawMatching.filter(m => !m.isClusterAnchor);
+      if (nonAnchorMatching.length === 0) return;
 
-      rawMatching.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+      const directAnchorMatch = rawMatching.find(m => m.isClusterAnchor && m.anchorCluster);
+
+      // Sort non-anchor articles newest first so fresh dispatches take precedence over older coverage
+      nonAnchorMatching.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
       // Enforce 1 representative dispatch per outlet so no single outlet's live-blog skews the cluster spectrum or average
       const seenOutlets = new Set();
       const matchingArticles = [];
-      for (const m of rawMatching) {
+      for (const m of nonAnchorMatching) {
         if (seenOutlets.has(m.sourceId)) continue;
         seenOutlets.add(m.sourceId);
         matchingArticles.push(m);
       }
 
-      if (matchingArticles.length >= 2) {
-        // Check if this cluster matches a previous cluster by shared article URLs/titles OR high-specificity entity/title stems
+      if (matchingArticles.length >= 2 || (directAnchorMatch && matchingArticles.length >= 1)) {
+        // Check if this cluster matches an existing or dormant cluster via direct EXISTING_CLUSTER anchor OR shared URLs/stems
         let matchedPrev = null;
         const evolvedIds = new Set();
+        if (directAnchorMatch && directAnchorMatch.anchorCluster) {
+          const directSlug = directAnchorMatch.anchorCluster.id || String(directAnchorMatch.anchorCluster.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          if (!matchedPrevIds.has(directSlug)) {
+            matchedPrev = directAnchorMatch.anchorCluster;
+            if (directSlug) evolvedIds.add(directSlug);
+            if (Array.isArray(matchedPrev.evolvedFromIds)) {
+              matchedPrev.evolvedFromIds.forEach(id => evolvedIds.add(id));
+            }
+          }
+        }
         const newUrls = new Set(matchingArticles.map(m => m.link ? canonicalUrl(m.link) : '').filter(Boolean));
         const newTitles = new Set(matchingArticles.map(m => m.title ? cleanHeadlineTitle(m.title) : '').filter(Boolean));
         const newTitleStems = new Set(extractCoherenceStems(cl.story || ''));
         const newAllStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''} ${matchingArticles.slice(0, 5).map(m => m.title || '').join(' ')}`));
 
-        if (Array.isArray(previousClusters)) {
+        if (!matchedPrev && Array.isArray(allKnownPrevClusters)) {
           let bestPrevScore = -1;
-          for (const prev of previousClusters) {
+          for (const prev of allKnownPrevClusters) {
             if (!prev || !Array.isArray(prev.coverage)) continue;
             const prevSlug = prev.id || String(prev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             if (matchedPrevIds.has(prevSlug)) continue;
@@ -1254,6 +1422,7 @@ Return JSON array in format:
             };
           }
         } else {
+          if (matchingArticles.length < 2) return;
           const initKeys = new Set();
           matchingArticles.forEach(m => {
             if (m.link) initKeys.add(canonicalUrl(m.link));
@@ -1503,7 +1672,7 @@ When evaluating what remains AFTER subtracting the existing summary baseline, di
 DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE, SUMMARY-DELTA SYNC & SELECTIVE ATTRIBUTION:
 - When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that execute a true net-new State-Envelope crossing, classify as "material_shift".
 - PURE CHRONOLOGICAL DELTA & SUMMARY-TO-NOTE SYNC ("developmentNote"): Every "developmentNote" (for BOTH "clarification" and "material_shift") appears as a timestamped row in a progression timeline right below the cumulative summary. Therefore:
-  • "developmentNote" must state STRICTLY the net-new delta `(New Summary − Existing Summary)` at this timestamp (8–16 words max) and NEVER recap prior background ("following the weekend of...", "after earlier clashes in...", "in response to...").
+  • "developmentNote" must state STRICTLY the net-new delta (New Summary minus Existing Summary) at this timestamp (8–16 words max) and NEVER recap prior background ("following the weekend of...", "after earlier clashes in...", "in response to...").
   • CRITICAL SYNC INVARIANT: Whenever your updated "summary" introduces or sharpens a concrete figure, casualty toll, dollar valuation, or named identity that was NOT in the existing summary (e.g. sharpening "resulting in fatalities" to "resulting in at least four fatalities" while also adding rooftop rescues), your "developmentNote" MUST explicitly include that newly sharpened figure alongside the new detail (e.g. "Confirmed death toll rises to at least four; Al Jazeera reports residents hoisted from rooftops"). Never silently slip a major figure into "summary" while omitting it from "developmentNote"!
   • SELECTIVE SINGLE-SOURCE ATTRIBUTION: When a single outlet breaks a specific new detail, exclusive claim, or unverified allegation ahead of the rest of the cluster, attributing that outlet in "developmentNote" (e.g. "The Japan Times identifies suspect as Brendan Nugent" or "El País reports donation exceeds $9 billion") is helpful epistemic context. However, when multiple outlets confirm a major fact—or when an outlet is merely syndicating a baseline fact already known—write in direct wire voice ("Official results confirm Albertans rejected independence") and NEVER write "Outlet X confirms [fact already in summary]".
 - Always generate "developmentNote" and "stateBoundaryCrossed" FIRST before deciding "updateType".
@@ -2476,29 +2645,39 @@ async function main() {
     console.warn('[Sync] Non-blocking image enrichment notice:', imgErr.message);
   }
 
-  // 5.7 Cross-Outlet Story Clustering (Method A: Single Aggregation Pass)
-  // Runs on a regular interval (default: every 3 hours, or via --force / --cluster)
-  // OR immediately when the zero-LLM Cross-Region Burst Detector spots >=4 outlets across >=3 global regions
-  // converging on a stemmed token pair within a 90-minute rolling window.
+  // 5.7 Cross-Outlet Story Clustering (4-Mode Activation Matrix)
+  // Activates on:
+  //  (Mode 1) Global Cross-Region Breaking Burst (>=4 outlets across >=3 regions, or >=3 fresh across >=3 regions in 90m)
+  //  (Mode 2) Regional Breaking Surge (>=5 outlets in 1-2 regions with >=3 fresh in 90m)
+  //  (Mode 3) Heavy Ingest Backlog (>=35 newly analyzed articles this run and >=1.0h since last cluster)
+  //  (Mode 4) Regular Scheduled Cadence (default: every 2 hours, or via --force / --cluster)
   let sharedStoryClusters = currentCache.sharedStoryClusters || [];
   let lastClusteredAt = currentCache.lastClusteredAt || (currentCache.globalStats && currentCache.globalStats.lastClusteredAt) || null;
-  const clusterIntervalHours = Number(process.env.CLUSTER_INTERVAL_HOURS || 3);
+  const clusterIntervalHours = Number(process.env.CLUSTER_INTERVAL_HOURS || 2);
   const hoursSinceLastCluster = lastClusteredAt ? (now.getTime() - new Date(lastClusteredAt).getTime()) / (1000 * 60 * 60) : Infinity;
   const forceCluster = process.argv.includes('--force') || process.argv.includes('--cluster') || process.argv.includes('--recalc-24h');
   const breakingBurst = detectCrossRegionBreakingBurst(finalSources, sharedStoryClusters, lastClusteredAt, now.getTime());
-  const shouldRunClustering = forceCluster || sharedStoryClusters.length === 0 || hoursSinceLastCluster >= clusterIntervalHours || Boolean(breakingBurst);
+  const hasHeavyBacklog = newlyAnalyzedCount >= 35 && hoursSinceLastCluster >= 1.0;
+  const shouldRunClustering = forceCluster || sharedStoryClusters.length === 0 || hoursSinceLastCluster >= clusterIntervalHours || Boolean(breakingBurst) || hasHeavyBacklog;
 
   if (shouldRunClustering) {
     try {
       if (breakingBurst && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
-        console.log(`[Burst Signal] ⚡ Breaking cross-region convergence detected ("${breakingBurst.pair}" across ${breakingBurst.outlets} outlets / ${breakingBurst.regions} regions: ${breakingBurst.regionList.join(', ')}) — "${breakingBurst.sampleTitle}"`);
+        console.log(`[Burst Signal] ⚡ Breaking ${breakingBurst.mode} detected ("${breakingBurst.pair}" across ${breakingBurst.outlets} outlets / ${breakingBurst.regions} regions: ${breakingBurst.regionList.join(', ')}) — "${breakingBurst.sampleTitle}"`);
+      } else if (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
+        console.log(`[Backlog Trigger] 📥 Heavy ingest wave (${newlyAnalyzedCount} new articles analyzed, ${hoursSinceLastCluster.toFixed(1)}h since last cluster) — triggering immediate clustering pass.`);
       }
       if (!freeKeyExhaustedThisRun && newlyAnalyzedCount > 0) {
         console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
         await new Promise(r => setTimeout(r, 6000));
       }
       const orderedTiersLabel = getOrderedKeyTiers(geminiKeyTiers).map(t => t.tier).join(' -> ');
-      console.log(`[Sync] Running cross-outlet story clustering (tiers: ${orderedTiersLabel}, reason: ${forceCluster ? 'forced' : (breakingBurst && hoursSinceLastCluster < clusterIntervalHours ? 'breaking-burst' : 'scheduled')}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
+      const triggerReason = forceCluster
+        ? 'forced'
+        : (breakingBurst && hoursSinceLastCluster < clusterIntervalHours
+          ? breakingBurst.mode
+          : (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours ? 'ingest-backlog' : 'scheduled'));
+      console.log(`[Sync] Running cross-outlet story clustering (tiers: ${orderedTiersLabel}, reason: ${triggerReason}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
       const clusters = await clusterCrossOutletStories(finalSources, geminiKeyTiers, currentCache.sharedStoryClusters);
       if (clusters && clusters.length > 0) {
         sharedStoryClusters = clusters;
@@ -2509,7 +2688,7 @@ async function main() {
       console.warn('[Sync] Non-blocking story clustering notice:', clusterErr.message);
     }
   } else {
-    console.log(`[Sync] Skipping story clustering (last clustered ${hoursSinceLastCluster.toFixed(1)}h ago; interval is ${clusterIntervalHours}h; no cross-region burst).`);
+    console.log(`[Sync] Skipping story clustering (last clustered ${hoursSinceLastCluster.toFixed(1)}h ago; interval is ${clusterIntervalHours}h; new articles: ${newlyAnalyzedCount}; no breaking burst).`);
   }
 
   // Always synchronize cluster coverage sentiment scores with the latest article scores in finalSources
@@ -2645,5 +2824,8 @@ async function main() {
     computeFourFactorScore,
     getHeadlineTopicTokens,
     cleanHeadlineTitle,
-    canonicalUrl
+    canonicalUrl,
+    clusterCrossOutletStories,
+    consolidateEvolvingClusters,
+    detectCrossRegionBreakingBurst
   };
