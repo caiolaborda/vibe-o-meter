@@ -60,18 +60,21 @@ const SOURCE_META = {
   mexiconews: { name: 'Mexico News Daily', initials: 'MND', color: '#15803d', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🇲🇽' },
   mercopress: { name: 'MercoPress', initials: 'MCP', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'uy', flag: '🇺🇾' },
   agenciabrasil: { name: 'Agência Brasil', initials: 'AGB', color: '#16a34a', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
+  folha: { name: 'Folha de S.Paulo', initials: 'FSP', color: '#059669', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
+  elpaisam: { name: 'El País América', initials: 'EPA', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🌎' },
+  latercera: { name: 'La Tercera', initials: 'LTC', color: '#b91c1c', region: 'LATAM', regionName: 'Latin America', countryCode: 'cl', flag: '🇨🇱' },
   // United Kingdom
   bbc: { name: 'BBC News', initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   guardian: { name: 'The Guardian', initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   skynews: { name: 'Sky News', initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   ft: { name: 'Financial Times', initials: 'FT', color: '#d97706', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   // Europe
-  spiegel: { name: 'Der Spiegel', initials: 'SPG', color: '#e62a15', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
   dw: { name: 'DW News', initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
   france24: { name: 'France 24', initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
   euronews: { name: 'Euronews', initials: 'EUR', color: '#2563eb', region: 'EU', regionName: 'Europe', countryCode: 'eu', flag: '🇪🇺' },
   lemonde: { name: 'Le Monde', initials: 'LM', color: '#0f172a', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
   elpais: { name: 'El País', initials: 'ELP', color: '#0c4a6e', region: 'EU', regionName: 'Europe', countryCode: 'es', flag: '🇪🇸' },
+  ansa: { name: 'ANSA', initials: 'ANS', color: '#15803d', region: 'EU', regionName: 'Europe', countryCode: 'it', flag: '🇮🇹' },
   rte: { name: 'RTÉ News', initials: 'RTE', color: '#059669', region: 'EU', regionName: 'Europe', countryCode: 'ie', flag: '🇮🇪' },
   // Asia-Pacific
   abcau: { name: 'ABC News Australia', initials: 'ABC', color: '#0d9488', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },

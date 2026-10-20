@@ -53,23 +53,26 @@ const NEWS_SOURCES = [
   { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' },
   { id: 'cbc', name: 'CBC News', feedUrl: 'https://www.cbc.ca/webfeed/rss/rss-topstories' },
   { id: 'globalnews', name: 'Global News', feedUrl: 'https://globalnews.ca/feed/' },
-  // Latin America
+  // Latin America (English & Curated Native Broadsheets)
   { id: 'batimes', name: 'Buenos Aires Times', feedUrl: 'https://www.batimes.com.ar/feed' },
   { id: 'mexiconews', name: 'Mexico News Daily', feedUrl: 'https://mexiconewsdaily.com/feed/' },
   { id: 'mercopress', name: 'MercoPress', feedUrl: 'https://en.mercopress.com/rss/' },
-  { id: 'agenciabrasil', name: 'Agência Brasil', feedUrl: 'https://agenciabrasil.ebc.com.br/en/rss/ultimasnoticias/feed.xml' },
+  { id: 'agenciabrasil', name: 'Agência Brasil', feedUrl: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', lang: 'pt' },
+  { id: 'folha', name: 'Folha de S.Paulo', feedUrl: 'https://feeds.folha.uol.com.br/poder/rss091.xml', lang: 'pt' },
+  { id: 'elpaisam', name: 'El País América', feedUrl: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada', lang: 'es' },
+  { id: 'latercera', name: 'La Tercera', feedUrl: 'https://www.latercera.com/arc/outboundfeeds/rss/category/mundo/?outputType=xml', lang: 'es' },
   // United Kingdom
   { id: 'bbc', name: 'BBC News', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
   { id: 'guardian', name: 'The Guardian', feedUrl: 'https://www.theguardian.com/uk/rss' },
   { id: 'skynews', name: 'Sky News', feedUrl: 'https://feeds.skynews.com/feeds/rss/home.xml' },
   { id: 'ft', name: 'Financial Times', feedUrl: 'https://www.ft.com/world?format=rss' },
   // Europe
-  { id: 'spiegel', name: 'Spiegel International', feedUrl: 'https://www.spiegel.de/international/index.rss' },
   { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
   { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
   { id: 'euronews', name: 'Euronews', feedUrl: 'https://www.euronews.com/rss?level=theme&name=news' },
   { id: 'lemonde', name: 'Le Monde', feedUrl: 'https://www.lemonde.fr/en/rss/une.xml' },
   { id: 'elpais', name: 'El País', feedUrl: 'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada' },
+  { id: 'ansa', name: 'ANSA', feedUrl: 'https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml', lang: 'it' },
   { id: 'rte', name: 'RTÉ News', feedUrl: 'https://www.rte.ie/feeds/rss/?index=/news/&limit=30' },
   // Asia-Pacific
   { id: 'abcau', name: 'ABC News Australia', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
@@ -86,7 +89,9 @@ const NEWS_SOURCES = [
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'newscientist', name: 'New Scientist', feedUrl: 'https://www.newscientist.com/feed/home/' },
   { id: 'arstechnica', name: 'Ars Technica', feedUrl: 'https://feeds.arstechnica.com/arstechnica/index' }
-];
+]
+
+const NATIVE_LANG_SOURCES = new Map(NEWS_SOURCES.filter(s => s.lang && s.lang !== 'en').map(s => [s.id, s.lang]));
 
 const MAX_ARTICLES_PER_SOURCE = 500;
 
@@ -122,7 +127,7 @@ function cleanHeadlineTitle(title) {
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
     .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
     .replace(/[\u2013\u2014-]/g, ' ')
-    .replace(/[^\w\s]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
@@ -537,9 +542,11 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
     const chunk = orderedHeadlines.slice(i, i + BATCH_SIZE);
     const promptData = chunk.map((item, index) => {
       const priorAnchor = findPriorEventAnchor(item.title);
+      const nativeLang = item.lang || NATIVE_LANG_SOURCES.get(item.sourceId) || null;
       return {
         index,
         outlet: item.sourceId,
+        ...(nativeLang ? { lang: nativeLang } : {}),
         headline: item.title,
         description: needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || ''),
         ...(priorAnchor ? { priorAnchor } : {})
@@ -579,6 +586,8 @@ Return ONLY a JSON array of objects with:
 - framing: integer -100 to 100
 - category: strictly one of 'world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports', 'other'
 - explanation: concise 1-sentence analytical note on real-world impact and headline framing
+- englishTitle: IF the input headline is not in English (or has a "lang" field), translate the headline into a natural, accurate English wire headline that faithfully preserves the outlet's exact tone and framing (omit field if already in English)
+- englishSummary: IF the input headline or description is not in English (or has a "lang" field), provide a concise 1-2 sentence English journalistic summary of the dispatch (do NOT mention scores, polarity, or framing; omit field if already in English)
 - summary: ONLY IF polarity >= 15 AND input description is empty (""), write a clean, engaging 2-sentence journalistic summary of the story/breakthrough for readers (do NOT mention scores, polarity, or framing in summary; omit field otherwise)
 
 Articles:
@@ -627,9 +636,14 @@ Return ONLY valid JSON.`;
                 const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
                 const rawExp = String(match.explanation).replace(/\s*\[Event Base:.*$/, '');
                 const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
+                const cleanEnTitle = typeof match.englishTitle === 'string' && match.englishTitle.trim().length > 10 ? match.englishTitle.trim() : null;
+                const cleanEnDesc = typeof match.englishSummary === 'string' && match.englishSummary.trim().length > 20 ? match.englishSummary.trim() : null;
+                const effectiveTitle = cleanEnTitle || item.title;
                 allResults.push({
                   sourceId: item.sourceId,
                   title: item.title,
+                  ...(cleanEnTitle ? { englishTitle: cleanEnTitle } : {}),
+                  ...(cleanEnDesc ? { englishSummary: cleanEnDesc } : {}),
                   link: item.link,
                   sentiment: calc.score,
                   eventBase: calc.eventBase,
@@ -640,10 +654,10 @@ Return ONLY valid JSON.`;
                   ...(cleanSummary ? { summary: cleanSummary } : {})
                 });
                 // Feed verified [polarity, reach, permanence] + headline into anchorCandidates for subsequent batches in this run
-                const itemTokens = getHeadlineTopicTokens(item.title);
+                const itemTokens = getHeadlineTopicTokens(effectiveTitle);
                 if (itemTokens.length >= 2) {
                   anchorCandidates.push({
-                    headline: item.title,
+                    headline: effectiveTitle,
                     factors: [calc.polarity, calc.reach, calc.permanence],
                     tokens: new Set(itemTokens)
                   });
@@ -759,12 +773,12 @@ Return ONLY valid JSON array.`;
 // Structural region mapping of the 39 news sources (feed metadata only — zero topic hardcoding)
 const SOURCE_REGION_MAP = {
   nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', pbs: 'NA', cnbc: 'NA', bloomberg: 'NA', wsj: 'NA', politico: 'NA', cbc: 'NA', globalnews: 'NA',
-  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM',
+  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', folha: 'LATAM', elpaisam: 'LATAM', latercera: 'LATAM',
   bbc: 'UK', guardian: 'UK', skynews: 'UK', ft: 'UK',
-  spiegel: 'EU', dw: 'EU', france24: 'EU', euronews: 'EU', lemonde: 'EU', elpais: 'EU', rte: 'EU',
+  dw: 'EU', france24: 'EU', euronews: 'EU', lemonde: 'EU', elpais: 'EU', ansa: 'EU', rte: 'EU',
   abcau: 'APAC', smh: 'APAC', scmp: 'APAC', japantimes: 'APAC', cna: 'APAC',
   aljazeera: 'MEA', thenational: 'MEA', africanews: 'MEA',
-  reuters: 'WIRE', ap: 'WIRE', newscientist: 'SCI', physorg: 'SCI', arstechnica: 'SCI'
+  reuters: 'WIRE', ap: 'WIRE', newscientist: 'SCI', arstechnica: 'SCI'
 };
 
 // Pure grammatical/function words only (zero hardcoded topic keywords)
@@ -960,7 +974,7 @@ Identify distinct real-world events, developments, or discoveries that are cover
 Rules:
 - Group dispatches strictly by the exact same underlying real-world event or discovery (never merge two separate tragedies, awards, or debates that occurred in different places just because they share a theme).
 - Match dispatches by their primary headline subject; use the short description snippet only to disambiguate who or where an oblique headline refers to, never to match multi-story digest roundups ("...and more top headlines").
-- Scan the full list carefully so every outlet covering that specific event or discovery (even if published a few days apart) is included in "ids".
+- Scan the entire list across all regions (NA, LATAM, UK, EU, APAC, MEA) thoroughly: identify ALL distinct shared stories (typically 25 to 55 clusters), including regional stories covered by 2+ Latin American, European, or Asian outlets, as well as global stories, and include every outlet covering that event in "ids".
 - If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how outlets are framing it.
@@ -2045,6 +2059,7 @@ function compactArticleRecord(art, sourceId) {
   const clean = {
     sourceId: art.sourceId || sourceId,
     title: art.title,
+    ...(art.originalTitle && art.originalTitle !== art.title ? { originalTitle: art.originalTitle } : {}),
     description: art.description || '',
     link: art.link || '',
     ...(art.imageUrl ? { imageUrl: art.imageUrl } : {}),
@@ -2104,6 +2119,10 @@ async function main() {
         src.articles.forEach(art => {
           const tKey = `${sourceId}_title_${cleanHeadlineTitle(art.title)}`;
           existingMap.set(tKey, art);
+          if (art.originalTitle) {
+            const origKey = `${sourceId}_title_${cleanHeadlineTitle(art.originalTitle)}`;
+            existingMap.set(origKey, art);
+          }
           if (art.link) {
             const uKey = `${sourceId}_url_${canonicalUrl(art.link)}`;
             existingMap.set(uKey, art);
@@ -2160,7 +2179,9 @@ async function main() {
           }
           if (new Date(item.pubDate) > new Date(cached.pubDate)) {
             cached.pubDate = item.pubDate;
-            cached.title = item.title;
+            if (!cached.originalTitle) {
+              cached.title = item.title;
+            }
           }
           if (!hasValidGeminiScore(cached)) {
             unanalyzedArticles.push(cached);
@@ -2240,7 +2261,13 @@ async function main() {
             if (Array.isArray(res.factors)) target.factors = res.factors;
             target.explanation = res.explanation;
             target.category = res.category;
-            if (res.summary && needsCleanEditorialSummary(target.description, target.title)) {
+            if (res.englishTitle && res.englishTitle !== target.title) {
+              if (!target.originalTitle) target.originalTitle = target.title;
+              target.title = res.englishTitle;
+            }
+            if (res.englishSummary) {
+              target.description = res.englishSummary;
+            } else if (res.summary && needsCleanEditorialSummary(target.description, target.title)) {
               target.description = res.summary;
             }
             newlyAnalyzedCount++;
