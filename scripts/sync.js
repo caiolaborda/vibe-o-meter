@@ -1789,9 +1789,17 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     for (let j = i + 1; j < meta.length; j++) {
       // At least one of the pair should be within 72h (or have a pending update)
       if (meta[i].ageHours > 72 && meta[j].ageHours > 72 && !meta[i].c._pendingUpdate && !meta[j].c._pendingUpdate) continue;
+      const GENERIC_PAIR_TEMPLATE_STEMS = new Set([
+        'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'train', 'charg', 'releas', 'crash',
+        'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
+        'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
+        'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
+        'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study'
+      ]);
       const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
       const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
-      if (sharedTitle.length >= 2 || (sharedTitle.length >= 1 && sharedAll.length >= 3)) {
+      const hasSpecificEntityStem = sharedAll.some(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s));
+      if (hasSpecificEntityStem && (sharedTitle.length >= 2 || (sharedTitle.length >= 1 && sharedAll.length >= 3))) {
         includedOrigIndices.add(i);
         includedOrigIndices.add(j);
         candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll });
@@ -2299,11 +2307,27 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
     }
 
     // Attach lateral connections between distinct interacting clusters without collapsing them
+    const GENERIC_LAT_TEMPLATE_STEMS = new Set([
+      'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'train', 'charg', 'releas', 'crash',
+      'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
+      'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
+      'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
+      'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study'
+    ]);
     for (const link of lateralLinks) {
       const idxs = (link?.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
       if (idxs.length < 2 || !link.howItConnects) continue;
       const [idxA, idxB] = idxs;
       if (idxA === idxB) continue;
+      const metaA = meta[idxA];
+      const metaB = meta[idxB];
+      if (metaA && metaB) {
+        const sharedSpecific = [...metaA.allStems].filter(s => metaB.allStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s));
+        if (sharedSpecific.length === 0) {
+          console.warn(`[Clusters] Rejected generic-template lateral connection between "${clusters[idxA]?.story}" and "${clusters[idxB]?.story}"`);
+          continue;
+        }
+      }
       const clA = clusters[idxA];
       const clB = clusters[idxB];
       const idA = clA.id || slugify(clA.story);

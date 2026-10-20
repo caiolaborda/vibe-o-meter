@@ -357,6 +357,35 @@ function exportPublicJsonFeeds(fullPayload) {
     console.warn('[Export] Could not read existing clusters-archive.json:', archReadErr.message);
   }
 
+  // Build global oldSlug -> newCluster lookup so lateralConnections never point to superseded slugs
+  const evolvedIdToCurrent = new Map();
+  for (const cl of enrichedClusters) {
+    if (!cl || !cl.id || !Array.isArray(cl.evolvedFromIds)) continue;
+    for (const oldId of cl.evolvedFromIds) {
+      if (oldId && oldId !== cl.id) evolvedIdToCurrent.set(oldId, cl);
+    }
+  }
+  const remapLateralConnections = (latArr, selfId) => {
+    if (!Array.isArray(latArr) || latArr.length === 0) return undefined;
+    const seen = new Set();
+    const out = [];
+    for (const lc of latArr) {
+      if (!lc || !lc.clusterId) continue;
+      const target = evolvedIdToCurrent.get(lc.clusterId);
+      const cid = target ? target.id : lc.clusterId;
+      const headline = target ? target.story : lc.headline;
+      if (cid === selfId || seen.has(cid)) continue;
+      seen.add(cid);
+      out.push({ ...lc, clusterId: cid, headline });
+    }
+    return out.length > 0 ? out : undefined;
+  };
+  for (const cl of enrichedClusters) {
+    if (cl.lateralConnections) {
+      cl.lateralConnections = remapLateralConnections(cl.lateralConnections, cl.id);
+    }
+  }
+
   // Upsert current enrichedClusters into archiveMap and remove any superseded evolvedFromIds slugs
   for (const cl of enrichedClusters) {
     if (!cl || !cl.id || !Array.isArray(cl.coverage) || cl.coverage.length < 2) continue;
