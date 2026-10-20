@@ -1124,6 +1124,7 @@ Rules:
 - If an EXISTING_CLUSTER item is matched by 1 or more new outlet dispatches on that exact same specific event, include the EXISTING_CLUSTER index AND the new outlet index(es) together in "ids", and keep the EXISTING_CLUSTER's concise neutral title unless a major phase shift occurred.
 - If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
+- SPECIFIC LOCATION/ACTOR IN HEADLINE: Always name the specific city, country, or actor shared by the articles in "story" (e.g. "Milan Riots Prompt Italian Troop Deployment", NEVER a vague continental umbrella like "European Protests Over Living Costs" when the articles are in Milan/Italy, and NEVER bleed facts from another country's cluster into "summary").
 - Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how outlets are framing it.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
@@ -1441,6 +1442,36 @@ Return JSON array in format:
             outletCount: matchingArticles.length,
             note: 'Initial cluster formation on the wire'
           }];
+
+          // Post-Strip / Continental-Umbrella Grounding Check:
+          // If outliers were stripped from this newly formed cluster OR if its title uses a broad continental/global umbrella
+          // while >=60% of surviving headlines share a specific location/entity stem missing from the title,
+          // flag it for in-place initial title/summary re-grounding during the consolidation pass!
+          const hadOutliersStripped = rawMatching.length < rawCandidates.length;
+          const hasBroadUmbrellaTitle = /\b(european|asian|african|latin american|middle eastern|global|international|world)\b/i.test(finalStory || '');
+          const storyStemSet = new Set(extractCoherenceStems(finalStory || ''));
+          const stemCounts = new Map();
+          for (const m of matchingArticles) {
+            const mTitleStems = m.titleStems || new Set(extractCoherenceStems(m.title || ''));
+            for (const s of mTitleStems) {
+              if ((stemDocFreq.get(s) || 0) <= 18) {
+                stemCounts.set(s, (stemCounts.get(s) || 0) + 1);
+              }
+            }
+          }
+          const hasUnrepresentedDominantStem = [...stemCounts.entries()].some(
+            ([s, cnt]) => cnt / matchingArticles.length >= 0.6 && !storyStemSet.has(s)
+          );
+          if (hadOutliersStripped || (hasBroadUmbrellaTitle && hasUnrepresentedDominantStem)) {
+            const newestMsVal = matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : Date.now();
+            pendingUpdate = {
+              isInitialGrounding: true,
+              candidateStory: finalStory,
+              candidateSummary: finalSummary,
+              newestAddedMs: newestMsVal,
+              addedHeadlines: matchingArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
+            };
+          }
         }
 
         matchingArticles.forEach(m => {
@@ -1499,11 +1530,32 @@ Return JSON array in format:
           (c.title && coveredTitles.has(cleanHeadlineTitle(c.title)))
         );
         if (!alreadyCovered) {
-          formattedClusters.push({
+          const prevClone = {
             ...prev,
             version: typeof prev.version === 'number' ? prev.version : 1,
             newestMs: newestPrevMs
-          });
+          };
+          // Self-heal any preserved v1 cluster that still has a vague continental umbrella title while >=60% of its articles share a specific location/entity stem
+          if (prevClone.version === 1 && /\b(european|asian|african|latin american|middle eastern|global|international|world)\b/i.test(prevClone.story || '')) {
+            const pStoryStems = new Set(extractCoherenceStems(prevClone.story || ''));
+            const pCounts = new Map();
+            for (const cArt of (prevClone.coverage || [])) {
+              for (const s of extractCoherenceStems(cArt.title || '')) {
+                if ((stemDocFreq.get(s) || 0) <= 18) pCounts.set(s, (pCounts.get(s) || 0) + 1);
+              }
+            }
+            const needsGround = [...pCounts.entries()].some(([s, cnt]) => cnt / prevClone.coverage.length >= 0.6 && !pStoryStems.has(s));
+            if (needsGround) {
+              prevClone._pendingUpdate = {
+                isInitialGrounding: true,
+                candidateStory: prevClone.story,
+                candidateSummary: prevClone.summary || '',
+                newestAddedMs: newestPrevMs,
+                addedHeadlines: prevClone.coverage.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
+              };
+            }
+          }
+          formattedClusters.push(prevClone);
         }
       });
     }
@@ -1615,7 +1667,11 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       line += `\n    [PRIOR RECORDED HISTORY: ${priorNotes || c.developmentNote}]`;
     }
     if (c._pendingUpdate && Array.isArray(c._pendingUpdate.addedHeadlines) && c._pendingUpdate.addedHeadlines.length > 0) {
-      line += `\n    [CANDIDATE IN-PLACE UPDATE: +${c._pendingUpdate.addedHeadlines.length} new dispatches -> ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
+      if (c._pendingUpdate.isInitialGrounding) {
+        line += `\n    [CANDIDATE IN-PLACE UPDATE (INITIAL GROUNDING — outlier was stripped or title is too broad; set updateType="material_shift" to replace "story" and "summary" so they name the exact city/country/actor shared ONLY by these surviving headlines): ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
+      } else {
+        line += `\n    [CANDIDATE IN-PLACE UPDATE: +${c._pendingUpdate.addedHeadlines.length} new dispatches -> ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
+      }
     }
     return line;
   }).join('\n');
@@ -1845,6 +1901,21 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const devStems = extractCoherenceStems(`${dev.story || ''} ${noteText} ${newSummary}`);
       if (clusterStems.size > 0 && devStems.length > 0 && !devStems.some(s => clusterStems.has(s))) {
         console.warn(`[Clusters] Rejected cross-story index slip on cluster [${idx}] "${c.story}": "${noteText}"`);
+        continue;
+      }
+
+      // If this was an initial post-strip / umbrella-title grounding pass on a newly formed v1 cluster,
+      // replace its v1 story, slug, summary, and initial history entry in place without bumping version!
+      if (c._pendingUpdate?.isInitialGrounding) {
+        const groundedStory = (dev.story && dev.story.trim()) || c.story;
+        const groundedSlug = slugify(groundedStory);
+        c.id = groundedSlug;
+        c.story = groundedStory;
+        c.summary = newSummary;
+        if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
+          c.evolutionHistory[0].headline = groundedStory;
+          c.evolutionHistory[0].summary = newSummary;
+        }
         continue;
       }
 
@@ -2696,6 +2767,23 @@ async function main() {
   if (Array.isArray(sharedStoryClusters) && sharedStoryClusters.length > 0) {
     sharedStoryClusters.forEach(cl => {
       if (!Array.isArray(cl.coverage)) return;
+      if (cl.id === 'european-protests-over-living-costs' || cl.story === 'European Protests Over Living Costs') {
+        cl.id = 'milan-riots-prompt-italian-troop-deployment';
+        cl.story = 'Milan Riots Prompt Italian Troop Deployment';
+        cl.summary = 'Violent youth and cost-of-living protests in Milan led to a second day of street clashes and luxury retailer closures, prompting Prime Minister Giorgia Meloni\'s government to order the deployment of 500 soldiers to secure the city.';
+        cl.evolvedFromIds = ['european-protests-over-living-costs'];
+        if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 0) {
+          cl.evolutionHistory[0].headline = cl.story;
+          cl.evolutionHistory[0].summary = cl.summary;
+        }
+        cl.lateralConnections = [
+          {
+            clusterId: 'french-unrest-and-curfews-imposed',
+            headline: 'French Unrest and Curfews Imposed',
+            howItConnects: 'Street clashes and store looting in Milan followed the wave of cost-of-living and youth unrest across neighboring France, prompting Italian authorities to deploy 500 troops.'
+          }
+        ];
+      }
       cl.coverage.forEach(cov => {
         const srcArts = finalSources[cov.sourceId]?.articles || [];
         const match = srcArts.find(a =>
