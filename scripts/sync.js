@@ -928,6 +928,7 @@ function extractCoherenceStems(str) {
   ]);
   return String(str || '')
     .toLowerCase()
+    .replace(/\bstarshield\b/g, 'starlink')
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length >= 4 && !stop.has(w))
@@ -987,9 +988,16 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
     }
     const newestMs = Math.max(...cov.map(c => new Date(c.pubDate).getTime() || 0), 0);
     if (newestMs >= fourteenDaysAgo && cov.length >= 2) {
-      const lead = cov[0];
-      const titleStems = new Set(extractCoherenceStems(`${cl.story || ''} ${lead.title || ''}`));
-      const allStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''} ${cov.slice(0, 4).map(c => c.title || '').join(' ')}`));
+      const storyStemSet = new Set(extractCoherenceStems(cl.story || ''));
+      const alignedCov = [...cov].sort((a, b) => {
+        const aHits = extractCoherenceStems(a.title || '').filter(s => storyStemSet.has(s)).length;
+        const bHits = extractCoherenceStems(b.title || '').filter(s => storyStemSet.has(s)).length;
+        if (bHits !== aHits) return bHits - aHits;
+        return (new Date(b.pubDate).getTime() || 0) - (new Date(a.pubDate).getTime() || 0);
+      });
+      const lead = alignedCov[0] || cov[0];
+      const titleStems = new Set(extractCoherenceStems(`${cl.story || ''} ${lead.title || ''} ${alignedCov.slice(0, 3).map(c => c.title || '').join(' ')}`));
+      const allStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''} ${alignedCov.slice(0, 4).map(c => c.title || '').join(' ')}`));
       for (const s of allStems) stemDocFreq.set(s, (stemDocFreq.get(s) || 0) + 1);
       activeClusterAnchors.push({
         isClusterAnchor: true,
@@ -1210,10 +1218,20 @@ Return JSON array in format:
       // 1. Every candidate must share at least 1 stem with the cluster's own story+summary anchor (so a spliced 4-article sub-group
       //    like Flydubai can never sit inside an Ebola cluster just because the 4 Flydubai articles agree with each other).
       // 2. Every candidate must ALSO share stems with at least one PEER item from a DIFFERENT outlet in the cluster.
+      const BROAD_THEATRE_ACTOR_STEMS = new Set([
+        'ukrain', 'zelens', 'russia', 'vladim', 'putin', 'donald', 'trump', 'washin', 'moscow',
+        'israel', 'netany', 'tehran', 'palest', 'chines', 'beijin', 'white', 'hous', 'americ',
+        'united', 'europe', 'middl', 'east', 'foreig', 'milit', 'defens', 'govern', 'offici'
+      ]);
       const directAnchorInIds = rawCandidates.find(m => m.isClusterAnchor && m.anchorCluster);
+      const primaryStoryText = directAnchorInIds?.anchorCluster?.story || cl.story || '';
+      const specificHeadlineStems = new Set(
+        extractCoherenceStems(primaryStoryText).filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= 15)
+      );
       const clusterAnchorStems = new Set(extractCoherenceStems(
         `${cl.story || ''} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.story || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`
       ));
+      const specificAnchorStems = new Set([...clusterAnchorStems].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
       const rawMatching = rawCandidates.filter((art, idx) => {
         if (/\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel)\b/i.test(art.title || '')) {
           return false;
@@ -1222,6 +1240,10 @@ Return JSON array in format:
         const myAllStems = art.allStems || new Set(extractCoherenceStems(`${art.anchorStory || ''} ${art.title || ''} ${(art.description || '').slice(0, 125)}`));
         if (clusterAnchorStems.size > 0 && ![...myAllStems].some(s => clusterAnchorStems.has(s))) {
           console.warn(`[Clusters] Dropped zero-anchor-overlap spliced outlier from "${cl.story}": [${art.sourceId}] "${art.title}"`);
+          return false;
+        }
+        if (!art.isClusterAnchor && specificHeadlineStems.size > 0 && specificAnchorStems.size > 0 && ![...myAllStems].some(s => specificAnchorStems.has(s))) {
+          console.warn(`[Clusters] Dropped actor-only theatre drift from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
           return false;
         }
         const keep = rawCandidates.some((other, j) => {
@@ -1259,8 +1281,15 @@ Return JSON array in format:
         });
       const directAnchorMatch = allAnchorMatches[0] || null;
 
-      // Sort non-anchor articles newest first so fresh dispatches take precedence over older coverage
-      nonAnchorMatching.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+      // Sort non-anchor articles: prefer articles matching the cluster's specific headline stems before raw recency
+      nonAnchorMatching.sort((a, b) => {
+        if (specificHeadlineStems.size > 0) {
+          const aSpec = [...(a.allStems || [])].some(s => specificHeadlineStems.has(s)) ? 1 : 0;
+          const bSpec = [...(b.allStems || [])].some(s => specificHeadlineStems.has(s)) ? 1 : 0;
+          if (bSpec !== aSpec) return bSpec - aSpec;
+        }
+        return new Date(b.pubDate) - new Date(a.pubDate);
+      });
       // Enforce 1 representative dispatch per outlet so no single outlet's live-blog skews the cluster spectrum or average
       const seenOutlets = new Set();
       const matchingArticles = [];
@@ -1723,7 +1752,18 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     const c = clusters[origIdx];
     const id = c.id || slugify(c.story);
     const sampleOutlets = (c.coverage || []).slice(0, 4).map(a => a.sourceId).join(',');
-    const sampleHeadlines = (c.coverage || []).slice(0, 3).map(a => `${a.sourceId}: "${a.title}"`).join(' | ');
+    const cStoryStems = new Set(extractCoherenceStems(c.story || ''));
+    const covList = c.coverage || [];
+    const alignedSample = [...covList].sort((a, b) => {
+      const aH = extractCoherenceStems(a.title || '').filter(s => cStoryStems.has(s)).length;
+      const bH = extractCoherenceStems(b.title || '').filter(s => cStoryStems.has(s)).length;
+      return bH - aH;
+    });
+    const pickedSamples = [];
+    for (const item of [covList[0], ...alignedSample.slice(0, 3), ...covList.slice(0, 3)].filter(Boolean)) {
+      if (pickedSamples.length < 3 && !pickedSamples.includes(item)) pickedSamples.push(item);
+    }
+    const sampleHeadlines = pickedSamples.map(a => `${a.sourceId}: "${a.title}"`).join(' | ');
     let line = `[${pIdx}] id="${id}" (v${c.version || 1}) | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
     if (sampleHeadlines) {
       line += `\n    [PRIMARY HEADLINES: ${sampleHeadlines}]`;
