@@ -50,7 +50,6 @@ const NEWS_SOURCES = [
   { id: 'cnbc', name: 'CNBC News', feedUrl: 'https://www.cnbc.com/id/100003114/device/rss/rss.html' },
   { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://feeds.bloomberg.com/markets/news.rss' },
   { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'politico', name: 'Politico', feedUrl: 'https://rss.politico.com/politics-news.xml' },
   { id: 'cbc', name: 'CBC News', feedUrl: 'https://www.cbc.ca/webfeed/rss/rss-topstories' },
   { id: 'globalnews', name: 'Global News', feedUrl: 'https://globalnews.ca/feed/' },
   // Latin America (English & Curated Native Broadsheets)
@@ -58,7 +57,7 @@ const NEWS_SOURCES = [
   { id: 'mexiconews', name: 'Mexico News Daily', feedUrl: 'https://mexiconewsdaily.com/feed/' },
   { id: 'mercopress', name: 'MercoPress', feedUrl: 'https://en.mercopress.com/rss/' },
   { id: 'agenciabrasil', name: 'Agência Brasil', feedUrl: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', lang: 'pt' },
-  { id: 'folha', name: 'Folha de S.Paulo', feedUrl: 'https://feeds.folha.uol.com.br/poder/rss091.xml', lang: 'pt' },
+  { id: 'oglobo', name: 'O Globo', feedUrl: 'https://oglobo.globo.com/rss/oglobo/', lang: 'pt' },
   { id: 'elpaisam', name: 'El País América', feedUrl: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada', lang: 'es' },
   { id: 'latercera', name: 'La Tercera', feedUrl: 'https://www.latercera.com/arc/outboundfeeds/rss/category/mundo/?outputType=xml', lang: 'es' },
   // United Kingdom
@@ -68,11 +67,12 @@ const NEWS_SOURCES = [
   { id: 'ft', name: 'Financial Times', feedUrl: 'https://www.ft.com/world?format=rss' },
   // Europe
   { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
+  { id: 'nzz', name: 'Neue Zürcher Zeitung', feedUrl: 'https://www.nzz.ch/international.rss', lang: 'de' },
   { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
   { id: 'euronews', name: 'Euronews', feedUrl: 'https://www.euronews.com/rss?level=theme&name=news' },
   { id: 'lemonde', name: 'Le Monde', feedUrl: 'https://www.lemonde.fr/en/rss/une.xml' },
   { id: 'elpais', name: 'El País', feedUrl: 'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada' },
-  { id: 'ansa', name: 'ANSA', feedUrl: 'https://www.ansa.it/sito/notizie/mondo/mondo_rss.xml', lang: 'it' },
+  { id: 'repubblica', name: 'La Repubblica', feedUrl: 'https://www.repubblica.it/rss/esteri/rss2.0.xml', lang: 'it' },
   { id: 'rte', name: 'RTÉ News', feedUrl: 'https://www.rte.ie/feeds/rss/?index=/news/&limit=30' },
   // Asia-Pacific
   { id: 'abcau', name: 'ABC News Australia', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
@@ -89,7 +89,7 @@ const NEWS_SOURCES = [
   { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
   { id: 'newscientist', name: 'New Scientist', feedUrl: 'https://www.newscientist.com/feed/home/' },
   { id: 'arstechnica', name: 'Ars Technica', feedUrl: 'https://feeds.arstechnica.com/arstechnica/index' }
-]
+];
 
 const NATIVE_LANG_SOURCES = new Map(NEWS_SOURCES.filter(s => s.lang && s.lang !== 'en').map(s => [s.id, s.lang]));
 
@@ -586,8 +586,8 @@ Return ONLY a JSON array of objects with:
 - framing: integer -100 to 100
 - category: strictly one of 'world', 'politics', 'business', 'technology', 'science', 'climate', 'health', 'entertainment', 'sports', 'other'
 - explanation: concise 1-sentence analytical note on real-world impact and headline framing
-- englishTitle: IF the input headline is not in English (or has a "lang" field), translate the headline into a natural, accurate English wire headline that faithfully preserves the outlet's exact tone and framing (omit field if already in English)
-- englishSummary: IF the input headline or description is not in English (or has a "lang" field), provide a concise 1-2 sentence English journalistic summary of the dispatch (do NOT mention scores, polarity, or framing; omit field if already in English)
+- englishTitle: REQUIRED whenever the article has a "lang" field (or is not in English) — translate the headline into a natural, accurate English wire headline that faithfully preserves the outlet's exact tone and framing (omit field ONLY if input is already in English)
+- englishSummary: REQUIRED whenever the article has a "lang" field (or is not in English) — provide a concise 1-2 sentence English journalistic summary of the dispatch (do NOT mention scores, polarity, or framing; omit field ONLY if input is already in English)
 - summary: ONLY IF polarity >= 15 AND input description is empty (""), write a clean, engaging 2-sentence journalistic summary of the story/breakthrough for readers (do NOT mention scores, polarity, or framing in summary; omit field otherwise)
 
 Articles:
@@ -628,7 +628,8 @@ Return ONLY valid JSON.`;
               chunk.forEach((item, idx) => {
                 const match = parsed.find(r => r && r.index === idx);
                 // Never fabricate a 0.00 fallback if an item was omitted or truncated
-                if (!match || typeof match.polarity !== 'number' || !match.explanation) {
+                const requiresTranslation = Boolean(item.lang || NATIVE_LANG_SOURCES.has(item.sourceId));
+                if (!match || typeof match.polarity !== 'number' || !match.explanation || (requiresTranslation && (!match.englishTitle || match.englishTitle.trim().length <= 10))) {
                   return;
                 }
                 matchedInBatch++;
@@ -772,10 +773,10 @@ Return ONLY valid JSON array.`;
 
 // Structural region mapping of the 39 news sources (feed metadata only — zero topic hardcoding)
 const SOURCE_REGION_MAP = {
-  nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', pbs: 'NA', cnbc: 'NA', bloomberg: 'NA', wsj: 'NA', politico: 'NA', cbc: 'NA', globalnews: 'NA',
-  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', folha: 'LATAM', elpaisam: 'LATAM', latercera: 'LATAM',
+  nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', pbs: 'NA', cnbc: 'NA', bloomberg: 'NA', wsj: 'NA', cbc: 'NA', globalnews: 'NA',
+  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', oglobo: 'LATAM', elpaisam: 'LATAM', latercera: 'LATAM',
   bbc: 'UK', guardian: 'UK', skynews: 'UK', ft: 'UK',
-  dw: 'EU', france24: 'EU', euronews: 'EU', lemonde: 'EU', elpais: 'EU', ansa: 'EU', rte: 'EU',
+  dw: 'EU', nzz: 'EU', france24: 'EU', euronews: 'EU', lemonde: 'EU', elpais: 'EU', repubblica: 'EU', rte: 'EU',
   abcau: 'APAC', smh: 'APAC', scmp: 'APAC', japantimes: 'APAC', cna: 'APAC',
   aljazeera: 'MEA', thenational: 'MEA', africanews: 'MEA',
   reuters: 'WIRE', ap: 'WIRE', newscientist: 'SCI', arstechnica: 'SCI'
@@ -2045,6 +2046,9 @@ function hasValidGeminiScore(art) {
   if (!art) return false;
   const exp = art.explanationGemini || art.explanation || '';
   if (!exp || exp.includes('Analyzed locally') || exp.startsWith('Analyzed via Gemini (')) return false;
+  if (art.sourceId && NATIVE_LANG_SOURCES.has(art.sourceId) && !art.originalTitle && !/\/en\//.test(art.link || '')) {
+    return false;
+  }
   const s = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : art.sentiment;
   return typeof s === 'number' && !isNaN(s);
 }
