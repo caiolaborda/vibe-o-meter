@@ -135,7 +135,12 @@ function cleanHeadlineTitle(title) {
 
 // Helper to check if an article's RSS description is missing, echoed from the headline, or contains grading jargon
 function needsCleanEditorialSummary(desc, title) {
-  const cleanD = sanitizeText(desc || '')
+  const rawD = sanitizeText(desc || '').trim();
+  // Google News RSS descriptions are bare headline echoes ending with the outlet name (often from an earlier version of a rolling URL)
+  if (/\s+(Bloomberg\.com|Reuters|AP News|Associated Press|WSJ|The Wall Street Journal)\s*$/i.test(rawD) && !/[.!?]\s+[A-Z]/.test(rawD.replace(/\b(U\.S\.|U\.K\.|U\.N\.|St\.|Mr\.|Ms\.|Dr\.|Inc\.|Corp\.|Ltd\.)/g, ''))) {
+    return true;
+  }
+  const cleanD = rawD
     .replace(/\s*[-–—|]?\s*(Bloomberg\.com|Bloomberg|Reuters|AP News|Associated Press|CNN|The Wall Street Journal|WSJ)\s*$/i, '')
     .trim();
   if (!cleanD || cleanD.length < 35) return true;
@@ -1228,7 +1233,7 @@ Return JSON array in format:
           const sharedTitleToFull = [...myTitleStems].filter(s => otherAllStems.has(s));
           const sharedAll = [...myAllStems].filter(s => otherAllStems.has(s));
           const hasSpecificAll = sharedAll.some(s => (stemDocFreq.get(s) || 0) <= 18);
-          const hasRareTitle = sharedTitle.some(s => (stemDocFreq.get(s) || 0) <= 8);
+          const hasRareTitle = sharedTitle.some(s => (stemDocFreq.get(s) || 0) <= 8) && sharedAll.length >= 2;
           return (sharedTitle.length >= 1 && sharedAll.length >= 2 && hasSpecificAll) ||
             hasRareTitle ||
             (sharedTitleToFull.length >= 2 && sharedAll.length >= 3 && hasSpecificAll);
@@ -2657,8 +2662,24 @@ async function main() {
             cached.link = item.link;
           }
           if (new Date(item.pubDate) > new Date(cached.pubDate)) {
+            const oldBaseTitle = cached.originalTitle || cached.title || '';
+            const oldStems = extractCoherenceStems(oldBaseTitle);
+            const newStems = new Set(extractCoherenceStems(item.title || ''));
+            const sharedStems = oldStems.filter(s => newStems.has(s)).length;
+            const overlapRatio = oldStems.length > 0 ? (sharedStems / oldStems.length) : 1;
+            const titleChangedMaterially = cleanHeadlineTitle(oldBaseTitle) !== cleanHeadlineTitle(item.title || '') && (overlapRatio < 0.6 || sharedStems < 2);
             cached.pubDate = item.pubDate;
-            if (!cached.originalTitle) {
+            if (titleChangedMaterially) {
+              console.log(`[RSS] Rolling URL headline changed for [${source.id}]: "${oldBaseTitle.slice(0, 55)}..." -> "${item.title.slice(0, 55)}..." (re-queueing for Gemini)`);
+              cached.title = item.title;
+              delete cached.originalTitle;
+              cached.description = needsCleanEditorialSummary(item.description, item.title) ? '' : (item.description || '');
+              cached.sentiment = null;
+              delete cached.eventBase;
+              delete cached.framingMod;
+              delete cached.factors;
+              cached.explanation = '';
+            } else if (!cached.originalTitle) {
               cached.title = item.title;
             }
           }
@@ -2992,8 +3013,48 @@ async function main() {
         );
         if (match && typeof match.sentiment === 'number') {
           cov.sentiment = match.sentiment;
+          if (match.title) cov.title = match.title;
+          if (typeof match.eventBase === 'number') cov.eventBase = match.eventBase;
+          if (typeof match.framingMod === 'number') cov.framingMod = match.framingMod;
         }
       });
+      if (cl.coverage.length >= 4) {
+        const getEb = (c) => {
+          if (typeof c.eventBase === 'number') return c.eventBase;
+          const srcArts = finalSources[c.sourceId]?.articles || [];
+          const m = srcArts.find(a => (c.link && a.link && canonicalUrl(a.link) === canonicalUrl(c.link)) || (c.title && a.title && cleanHeadlineTitle(a.title) === cleanHeadlineTitle(c.title)));
+          return (m && typeof m.eventBase === 'number') ? m.eventBase : (typeof c.sentiment === 'number' ? c.sentiment : 0);
+        };
+        const ebs = cl.coverage.map(getEb).sort((a, b) => a - b);
+        const medEb = ebs[Math.floor(ebs.length / 2)];
+        const clusterIsMarket = /\b(oil|crude|brent|stock|market|wall st|nasdaq|s&p|bond|yield|tariff|trade|gold|economy|inflation|shares|price)\b/i.test(cl.story || '');
+        const clusterHasCasualtyHeadline = /\b(kill|kills|killed|dead|death|deaths|massacre|strage|strike|strikes|struck|missile|camp|tanker|tankers|mine|mines)\b/i.test(cl.story || '');
+        const filteredCov = cl.coverage.filter(cov => {
+          const eb = getEb(cov);
+          const isMarketTicker = /\b(oil\s+(above|tops|surges|slips|rises|falls|edges|holds)|oil futures|oil prices?|brent crude|u\.s\. oil surges|stocks? turn|wall st opens|nasdaq|s&p 500|bond yields?)\b/i.test(cov.title || '');
+          const mentionsClusterIncident = /\b(tanker|tankers|mine|mines|ship|ships|vessel|vessels|starlink|zelensky|zelenskyy)\b/i.test(cov.title || '');
+          if (!clusterIsMarket && isMarketTicker && !mentionsClusterIncident) {
+            console.log(`[Clusters] Stripped market-ticker intruder from "${cl.story}": [${cov.sourceId}] "${cov.title}"`);
+            return false;
+          }
+          if (medEb <= -0.55 && (eb - medEb) >= 0.42) {
+            const hasCasualtyWord = /\b(kill|kills|killed|dead|death|deaths|casualt|wound|injur|strike|strikes|missile|camp|fire|blaze|flood|rescue)\b/i.test(cov.title || '');
+            if (!hasCasualtyWord) {
+              console.log(`[Clusters] Stripped mild commentary outlier (eb=${eb} vs medEb=${medEb}) from mass-casualty cluster "${cl.story}": [${cov.sourceId}] "${cov.title}"`);
+              return false;
+            }
+          }
+          if (medEb >= -0.28 && !clusterHasCasualtyHeadline && (medEb - eb) >= 0.40 && eb <= -0.55) {
+            console.log(`[Clusters] Stripped mass-casualty outlier (eb=${eb} vs medEb=${medEb}) from non-casualty cluster "${cl.story}": [${cov.sourceId}] "${cov.title}"`);
+            return false;
+          }
+          return true;
+        });
+        if (filteredCov.length >= 2) {
+          cl.coverage = filteredCov;
+          cl.outletCount = filteredCov.length;
+        }
+      }
       const validScores = cl.coverage.map(c => c.sentiment).filter(s => typeof s === 'number');
       if (validScores.length > 0) {
         cl.averageSentiment = Number((validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(2));
