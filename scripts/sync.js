@@ -2217,7 +2217,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           outletCount: afterSnapshot.outletCount,
           note: c.developmentNote
         });
-        c.evolutionHistory = hist.slice(-8);
+        c.evolutionHistory = hist.slice(-20);
 
         auditLogEntries.push({
           timestamp: new Date().toISOString(),
@@ -2291,7 +2291,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           outletCount: afterSnapshot.outletCount,
           note: noteText || 'Factual details and figures clarified across incoming dispatches'
         });
-        c.evolutionHistory = hist.slice(-8);
+        c.evolutionHistory = hist.slice(-20);
 
         auditLogEntries.push({
           timestamp: new Date().toISOString(),
@@ -2307,13 +2307,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
     }
 
     // Attach lateral connections between distinct interacting clusters without collapsing them
-    const GENERIC_LAT_TEMPLATE_STEMS = new Set([
-      'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'train', 'charg', 'releas', 'crash',
-      'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
-      'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
-      'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
-      'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study'
-    ]);
+    const GENERIC_LAT_TEMPLATE_STEMS = new Set(['record','fatal','kill','dead','death','deadli','milit','soldi','base','train','charg','releas','crash','fire','attack','protes','court','suprem','judg','polic','arrest','strik','launch','approv','reject','elect','voter','campai','senat','congre','parlia','govern','offici','minist','presid','invest','probe','threat','crisis','emerg','warn','disrup','cancel','delay','announ','reveal','confirm','report','discov','found','scient','astron','study','shot','flood','market','breach','data','center','centr','project','appeal','lawsui','disput','petition','review','order','scruti','race','deport','title','defend','suspec','driver','withou','stampa','festiv','crimina','tariff','spark','latest']);
     for (const link of lateralLinks) {
       const idxs = (link?.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
       if (idxs.length < 2 || !link.howItConnects) continue;
@@ -2322,7 +2316,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const metaA = meta[idxA];
       const metaB = meta[idxB];
       if (metaA && metaB) {
-        const sharedSpecific = [...metaA.allStems].filter(s => metaB.allStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s));
+        const sharedSpecific = [...metaA.titleStems].filter(s => metaB.allStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s));
         if (sharedSpecific.length === 0) {
           console.warn(`[Clusters] Rejected generic-template lateral connection between "${clusters[idxA]?.story}" and "${clusters[idxB]?.story}"`);
           continue;
@@ -2572,7 +2566,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         ...(nextDevNote ? { developmentNote: nextDevNote } : {}),
         ...(mergedGroupLateral.length > 0 ? { lateralConnections: mergedGroupLateral } : {}),
         evolvedFromIds: Array.from(evolvedIds),
-        evolutionHistory: hist.slice(-8),
+        evolutionHistory: hist.slice(-20),
         seenArticleKeys: Array.from(mergedSeenKeys).slice(-120),
         averageSentiment: avgScore,
         sentimentSpread: spreadRange,
