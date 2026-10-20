@@ -1673,6 +1673,11 @@ Return JSON array in format:
       return scoreB - scoreA;
     });
     consolidatedClusters.forEach(c => {
+      if (c._pendingUpdate?.desyncTokens) {
+        const prevEval = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
+        c._pendingUpdate.desyncTokens.forEach(t => prevEval.add(t));
+        c.evaluatedDesyncTokens = Array.from(prevEval).slice(-30);
+      }
       delete c.newestMs;
       delete c._pendingUpdate;
     });
@@ -1720,11 +1725,62 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   // Include any cluster that (a) has a _pendingUpdate, (b) is active (<= 48h), OR
   // (c) is an older 2-7d cluster that shares specific entity/title stems with at least one recent (<= 72h) cluster.
   // This preserves 100% of multi-day evolving arcs across all 7 days while trimming isolated background noise by ~40-50%.
+  // Self-Healing Coverage-vs-Summary Desync Detector:
+  // If an earlier sync run added articles to `coverage` (e.g. Nigeria Ebola cases, JD Vance declining endorsement,
+  // or updated casualty counts) but the LLM consolidation call timed out or skipped that cluster in a large batch,
+  // detect when >=2 recent coverage headlines share a proper noun or concrete figure missing from story+summary and re-queue!
+  const DESYNC_IGNORE_WORDS = new Set([
+    'after', 'amid', 'over', 'with', 'from', 'into', 'says', 'warn', 'warns', 'calls', 'talks', 'first', 'more',
+    'most', 'some', 'many', 'news', 'live', 'watch', 'video', 'report', 'reports', 'world', 'state', 'states',
+    'united', 'house', 'court', 'police', 'minister', 'president', 'government', 'officials', 'america', 'american',
+    'britain', 'british', 'turkiye', 'turkey', 'reuters', 'bloomberg', 'guardian', 'times'
+  ]);
+  for (let i = 0; i < meta.length; i++) {
+    const c = meta[i].c;
+    if (c._pendingUpdate || meta[i].ageHours > 72) continue;
+    const cov = c.coverage || [];
+    if (cov.length < 3) continue;
+    const baseText = `${c.story || ''} ${c.summary || ''} ${c.developmentNote || ''} ${(c.evolutionHistory || []).map(h => h.note || '').join(' ')}`.toLowerCase();
+    const evalSet = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
+    const recentCov = cov.slice(0, 5);
+    const tokenHits = new Map();
+    for (const a of recentCov) {
+      const cleanT = String(a.title || '').replace(/\s*[-–—|]\s*[^-–—|]+$/, '');
+      const tokens = cleanT.split(/\s+/).slice(1);
+      const seenInArt = new Set();
+      for (const tok of tokens) {
+        const w = tok.replace(/[^a-zA-Z0-9]/g, '');
+        const wl = w.toLowerCase();
+        if (evalSet.has(wl)) continue;
+        const isProper = w.length >= 4 && /^[A-Z][a-z]+$/.test(w) && !DESYNC_IGNORE_WORDS.has(wl);
+        const isNumber = /^\d{2,}$/.test(w) && Number(w) >= 12 && Number(w) !== 2026 && Number(w) !== 2027;
+        if ((isProper || isNumber) && !baseText.includes(wl.slice(0, Math.min(5, wl.length)))) {
+          seenInArt.add(wl);
+        }
+      }
+      for (const wl of seenInArt) tokenHits.set(wl, (tokenHits.get(wl) || 0) + 1);
+    }
+    const missingShared = [...tokenHits.entries()].filter(([, cnt]) => cnt >= 2).map(([wl]) => wl);
+    if (missingShared.length > 0) {
+      const matchArts = recentCov.filter(a => missingShared.some(wl => String(a.title || '').toLowerCase().includes(wl)));
+      if (matchArts.length >= 2) {
+        console.log(`[Clusters] Self-healing desync detected on "${c.story}" (missing from summary: ${missingShared.join(', ')}) — queueing for Job 2.`);
+        c._pendingUpdate = {
+          candidateStory: c.story,
+          candidateSummary: c.summary || '',
+          newestAddedMs: Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0), Date.now()),
+          addedHeadlines: matchArts.slice(0, 5).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`),
+          desyncTokens: missingShared
+        };
+      }
+    }
+  }
+
   const includedOrigIndices = new Set();
   const candidatePairHints = [];
 
   for (let i = 0; i < meta.length; i++) {
-    if (meta[i].c._pendingUpdate || meta[i].ageHours <= 48) {
+    if (meta[i].c._pendingUpdate) {
       includedOrigIndices.add(i);
     }
   }
@@ -1735,7 +1791,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       if (meta[i].ageHours > 72 && meta[j].ageHours > 72 && !meta[i].c._pendingUpdate && !meta[j].c._pendingUpdate) continue;
       const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
       const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
-      if (sharedTitle.length >= 2 || (sharedTitle.length >= 1 && sharedAll.length >= 4)) {
+      if (sharedTitle.length >= 2 || (sharedTitle.length >= 1 && sharedAll.length >= 3)) {
         includedOrigIndices.add(i);
         includedOrigIndices.add(j);
         candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll });
@@ -1743,7 +1799,14 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     }
   }
 
-  const activeOrigIndices = Array.from(includedOrigIndices).sort((a, b) => a - b);
+  // Sort activeOrigIndices so all _pendingUpdate clusters appear FIRST ([0..K-1]) at the top of the prompt
+  // to eliminate LLM "lost-in-the-middle" attention dropoff on Job 2 (inPlaceDevelopments)!
+  const activeOrigIndices = Array.from(includedOrigIndices).sort((a, b) => {
+    const aPend = meta[a].c._pendingUpdate ? 1 : 0;
+    const bPend = meta[b].c._pendingUpdate ? 1 : 0;
+    if (bPend !== aPend) return bPend - aPend;
+    return a - b;
+  });
   if (activeOrigIndices.length < 2) return clusters;
   const origToPromptIdx = new Map();
   activeOrigIndices.forEach((origIdx, pIdx) => origToPromptIdx.set(origIdx, pIdx));
