@@ -1470,35 +1470,42 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   const prompt = `You are the Executive Editor of a global news intelligence wire.
 Below are ${activeOrigIndices.length} active or overlapping story clusters from our rolling 7-day window, including each cluster's current summary, [PRIMARY HEADLINES], any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
 
-FIRST-PRINCIPLES META-RULE — INTRA-STATE RESOLUTION ("clarification") vs. STATE-ENVELOPE SHIFT ("material_shift"):
+FIRST-PRINCIPLES META-RULE — BASELINE SUBTRACTION, INTRA-STATE RESOLUTION ("clarification") vs. STATE-ENVELOPE SHIFT ("material_shift"):
 Every news story has a current State Envelope defined by:
   (A) Active Jurisdictions & Actors (where and between whom the active phenomenon is occurring),
   (B) Institutional / Legal / Operational Regime (what formal powers, legal statuses, or operational timelines are in force),
-  (C) Causal Phase & Outcome Direction (whether the situation is escalating, reversing, or resolved).
+  (C) Causal Phase & Outcome Direction (whether the situation is in an active/deliberative phase, escalating, reversing, or decisively resolved).
 
-When new dispatches arrive on a story, or when two clusters relate to the same story, distinguish between THREE states:
+STEP 0 — MANDATORY BASELINE-SUBTRACTION GATE (Preventing Syndication Echoes):
+Before classifying ANY update in Job 2, compare the facts in [CANDIDATE IN-PLACE UPDATE] against the facts ALREADY stated in the cluster's existing headline, summary, and [PRIOR RECORDED HISTORY]:
+  • An action, order, ruling, verdict, or casualty tally in [CANDIDATE IN-PLACE UPDATE] only counts as a new development if it is NOT ALREADY stated in the cluster's existing summary!
+  • If a newly arriving outlet (e.g. a late regional or international syndicate) reports a government ban, court conviction, hospital discharge, or fatality count that is ALREADY described in the cluster's current summary, it is 100% syndication catch-up ("none") — NEVER trigger a "material_shift" or a "clarification" ("Outlet X confirms...") for a milestone the cluster summary already states!
+
+When evaluating what remains AFTER subtracting the existing summary baseline, distinguish between THREE states:
 1. "none" (Redundant / Syndication Catch-Up — Omit):
-   - The new dispatches merely restate milestones already present in the cluster's existing headline, summary, or [PRIOR RECORDED HISTORY] (e.g. reporting a hospital discharge when the summary already states the patient left the hospital and resumed public duties, or repeating a casualty tally of 53 when the headline already says "Kills 53"). Omit these completely!
+   - The new dispatches merely restate milestones, orders, verdicts, or figures already present in the cluster's existing headline, summary, or [PRIOR RECORDED HISTORY] (e.g. reporting a DHS ban, a guilty verdict for 191 deaths, a hospital discharge, or 4 fatalities when the existing summary already states that exact ban, verdict, discharge, or tally). Omit these completely!
 
 2. "clarification" (In-Phase Factual Delta — Sharpening Facts, Proposals, or Sub-Events Within the Existing Envelope):
-   - The new dispatches add factual precision, granularity, pre-decision deliberations, or localized sub-incidents WITHOUT executing an irreversible boundary crossing of the State Envelope:
-     • Refining a metric or tally of an already-reported action (e.g. "thousands arrested" -> "nearly 2,400 arrested"; "large drone barrage" -> "over 1,000 drones and 1 fatality"),
+   - The new dispatches add genuinely new factual precision, granularity, pre-decision deliberations, or localized sub-incidents NOT YET in the existing summary, WITHOUT executing an irreversible boundary crossing of the State Envelope:
+     • Introducing or sharpening a concrete metric or tally compared to a previously vague or lower figure in the summary (e.g. "fatalities" or "1 dead" -> "at least 4 dead"; "thousands arrested" -> "nearly 2,400 arrested"; "pledges SpaceX shares" -> "valued at over $9 billion"),
      • Pre-decision proposals, deliberations, or warnings BEFORE formal enactment (e.g. officials "weighing", "pushing for", "debating", or "threatening" curfews, sanctions, or charges — deliberating a measure is an In-Phase Update; only FORMAL ENACTMENT is a Shift),
-     • Localized tactical flashpoints within an already-established nationwide/regional phenomenon (e.g. protesters blockading a specific museum or highway during ongoing nationwide unrest),
-     • Identifying or profiling already-counted victims/participants, forensic mechanics, property damage assessments, or routine rhetorical reactions/blame-trading.
-   - For "clarification": we refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version or renaming the headline.
+     • Localized tactical flashpoints or rescue details within an already-established phenomenon (e.g. residents hoisted from rooftops during ongoing floods; protesters blockading a specific museum during nationwide unrest),
+     • Identifying or profiling already-counted victims/suspects (e.g. naming an already-arrested suspect), forensic mechanics, property damage assessments, or notable reactions.
+   - For "clarification": refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version or renaming the headline.
 
-3. "material_shift" (Irreversible Phase Pivot — Structural Step-Change):
-   - At least ONE fact in the new dispatches executes an IRREVERSIBLE crossing of the prior State Envelope:
+3. "material_shift" (Irreversible Phase Pivot — Structural Step-Change Not Yet in the Existing Summary):
+   - At least ONE net-new fact in the incoming dispatches (that is NOT already in the existing summary) executes an IRREVERSIBLE crossing of the prior State Envelope:
      • Spatial / Sovereign Border Crossing: The active physical phenomenon crosses into a NEW sovereign country or international theatre not yet named in the prior summary (e.g. domestic French unrest spreading into Italy and Belgium; an outbreak crossing into Kenya),
-     • Executed Institutional / Legal Regime Change: Authorities FORMALLY ENACT, SIGN, RULE, OR EXECUTE an extraordinary legal/coercive measure (e.g. curfews formally imposed in Paris and Nice, criminal charges/indictments formally filed, a suspect released without charges, or construction ordered to begin despite a court injunction — NEVER merely "weighing" or "pushing for" it),
+     • Executed Institutional / Legal Regime Change: Authorities FORMALLY ENACT, SIGN, RULE, OR EXECUTE an extraordinary legal/coercive measure not yet in the summary (e.g. curfews formally imposed in Paris and Nice, criminal charges/indictments formally filed, a suspect released without charges, or construction ordered to begin despite a court injunction — NEVER merely "weighing" or "pushing for" it),
+     • Phase Completion / Decisive Outcome Resolution: An active process, vote, election, referendum, trial, launch, or emergency transitions from an ongoing/unresolved state ("holds referendum", "voters cast ballots", "prepares to launch", "on trial") to a decisive declared result or completed milestone ("voters reject independence referendum", "court convicts leader", "spacecraft successfully launches"),
      • Outcome / Premise Reversal: A critical threat or premise is definitively resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses).
 
-DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE & PURE CHRONOLOGICAL DELTA RULE:
-- When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that execute a true State-Envelope crossing, classify as "material_shift".
-- PURE CHRONOLOGICAL DELTA ("developmentNote"): Every "developmentNote" (for BOTH "clarification" and "material_shift") appears as a timestamped row in a progression timeline right below the cumulative summary. Therefore, "developmentNote" must state STRICTLY the net-new delta at this timestamp (8–16 words max) and NEVER recap prior background ("following the weekend of...", "after earlier clashes in...", "in response to...").
-  • BAD Shift note: "French authorities formally enacted localized curfews in Paris and Nice following the weekend of nearly 2,400 arrests and cross-border spillover into Italy and Belgium." (Repeats old timeline steps!)
-  • GOOD Shift note: "Localized curfews formally enacted in Paris, Nice, and other cities; officials acknowledge intelligence failures."
+DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE, SUMMARY-DELTA SYNC & SELECTIVE ATTRIBUTION:
+- When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that execute a true net-new State-Envelope crossing, classify as "material_shift".
+- PURE CHRONOLOGICAL DELTA & SUMMARY-TO-NOTE SYNC ("developmentNote"): Every "developmentNote" (for BOTH "clarification" and "material_shift") appears as a timestamped row in a progression timeline right below the cumulative summary. Therefore:
+  • "developmentNote" must state STRICTLY the net-new delta `(New Summary − Existing Summary)` at this timestamp (8–16 words max) and NEVER recap prior background ("following the weekend of...", "after earlier clashes in...", "in response to...").
+  • CRITICAL SYNC INVARIANT: Whenever your updated "summary" introduces or sharpens a concrete figure, casualty toll, dollar valuation, or named identity that was NOT in the existing summary (e.g. sharpening "resulting in fatalities" to "resulting in at least four fatalities" while also adding rooftop rescues), your "developmentNote" MUST explicitly include that newly sharpened figure alongside the new detail (e.g. "Confirmed death toll rises to at least four; Al Jazeera reports residents hoisted from rooftops"). Never silently slip a major figure into "summary" while omitting it from "developmentNote"!
+  • SELECTIVE SINGLE-SOURCE ATTRIBUTION: When a single outlet breaks a specific new detail, exclusive claim, or unverified allegation ahead of the rest of the cluster, attributing that outlet in "developmentNote" (e.g. "The Japan Times identifies suspect as Brendan Nugent" or "El País reports donation exceeds $9 billion") is helpful epistemic context. However, when multiple outlets confirm a major fact—or when an outlet is merely syndicating a baseline fact already known—write in direct wire voice ("Official results confirm Albertans rejected independence") and NEVER write "Outlet X confirms [fact already in summary]".
 - Always generate "developmentNote" and "stateBoundaryCrossed" FIRST before deciding "updateType".
 - HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor AND prior geographic scope from the existing headline while appending/reflecting the new shift so readers never lose the thread (e.g. "French Cost-of-Living Protests Spread to Italy and Belgium").
 - CUMULATIVE SUMMARY INVARIANT (NO RECENCY AMNESIA): A cluster's "summary" represents the complete cumulative story arc to date—NEVER just the latest batch of headlines. Whenever you output "summary" (for either "clarification" or "material_shift"), you MUST retain the concrete figures (e.g. arrest or casualty counts), key actions (e.g. museum blockades), and multi-country/multi-city geographic scope (e.g. spillover into Milan and Brussels) already established in the cluster's existing summary and [PRIOR RECORDED HISTORY], while integrating the new development (e.g. localized curfews enacted in Paris and Nice). Never drop earlier verified milestones or secondary countries just because the newest headlines focus on the latest reaction or measure!
@@ -1671,11 +1678,32 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         continue;
       }
 
-      const ts = new Date(c._pendingUpdate?.newestAddedMs || c.newestMs || Date.now()).toISOString();
-
-      // Guard against no-op, duplicate timestamp, or paraphrased note already in evolutionHistory
       const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
       const noteStems = extractCoherenceStems(noteText);
+
+      // Deterministic Baseline-Subtraction Guard: if >= 70% of the substantive stems in `noteText` (excluding outlet names)
+      // were ALREADY present in the cluster's existing story + summary, reject the update as a syndication echo!
+      const priorBaselineStems = new Set(extractCoherenceStems(`${c.story || ''} ${c.summary || ''}`));
+      const outletNameStems = new Set(extractCoherenceStems(NEWS_SOURCES.map(s => s.name).join(' ')));
+      const substantiveNoteStems = noteStems.filter(s => !outletNameStems.has(s));
+      if (substantiveNoteStems.length >= 2) {
+        const alreadyInBaseline = substantiveNoteStems.filter(s => priorBaselineStems.has(s)).length;
+        if (alreadyInBaseline / substantiveNoteStems.length >= 0.72) {
+          console.log(`[Clusters] Suppressed syndication echo on "${c.story}": "${noteText}" (${alreadyInBaseline}/${substantiveNoteStems.length} stems already in baseline summary)`);
+          continue;
+        }
+      }
+
+      // Ensure strictly monotonic timeline timestamps so a late-ingested article with an older RSS pubDate
+      // never inserts an update earlier than prior steps in evolutionHistory
+      const rawTsMs = c._pendingUpdate?.newestAddedMs || c.newestMs || Date.now();
+      const maxPrevHistMs = hist.reduce((max, h) => {
+        const t = h?.timestamp ? new Date(h.timestamp).getTime() : 0;
+        return (!isNaN(t) && t > max) ? t : max;
+      }, 0);
+      const ts = new Date(Math.max(rawTsMs, maxPrevHistMs > 0 ? maxPrevHistMs + 60000 : 0)).toISOString();
+
+      // Guard against no-op, duplicate timestamp, or paraphrased note already in evolutionHistory
       const alreadyRecorded = hist.some(h => {
         if (h.timestamp && h.timestamp === ts) return true;
         if (noteText && h.note && h.note.toLowerCase() === noteText.toLowerCase()) return true;
