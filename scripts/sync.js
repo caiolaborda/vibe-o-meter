@@ -1243,7 +1243,16 @@ Return JSON array in format:
       const nonAnchorMatching = rawMatching.filter(m => !m.isClusterAnchor);
       if (nonAnchorMatching.length === 0) return;
 
-      const directAnchorMatch = rawMatching.find(m => m.isClusterAnchor && m.anchorCluster);
+      const allAnchorMatches = rawMatching
+        .filter(m => m.isClusterAnchor && m.anchorCluster)
+        .sort((a, b) => {
+          const ca = a.anchorCluster;
+          const cb = b.anchorCluster;
+          const scoreA = ((ca.evolutionHistory?.length || 1) * 1000) + ((ca.version || 1) * 100) + (ca.coverage?.length || 0);
+          const scoreB = ((cb.evolutionHistory?.length || 1) * 1000) + ((cb.version || 1) * 100) + (cb.coverage?.length || 0);
+          return scoreB - scoreA;
+        });
+      const directAnchorMatch = allAnchorMatches[0] || null;
 
       // Sort non-anchor articles newest first so fresh dispatches take precedence over older coverage
       nonAnchorMatching.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
@@ -1259,14 +1268,31 @@ Return JSON array in format:
       if (matchingArticles.length >= 2 || (directAnchorMatch && matchingArticles.length >= 1)) {
         // Check if this cluster matches an existing or dormant cluster via direct EXISTING_CLUSTER anchor OR shared URLs/stems
         let matchedPrev = null;
+        const secondaryAnchors = [];
         const evolvedIds = new Set();
-        if (directAnchorMatch && directAnchorMatch.anchorCluster) {
-          const directSlug = directAnchorMatch.anchorCluster.id || String(directAnchorMatch.anchorCluster.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-          if (!matchedPrevIds.has(directSlug)) {
-            matchedPrev = directAnchorMatch.anchorCluster;
-            if (directSlug) evolvedIds.add(directSlug);
-            if (Array.isArray(matchedPrev.evolvedFromIds)) {
-              matchedPrev.evolvedFromIds.forEach(id => evolvedIds.add(id));
+        if (allAnchorMatches.length > 0) {
+          for (const anc of allAnchorMatches) {
+            const ancCluster = anc.anchorCluster;
+            if (!ancCluster) continue;
+            const ancSlug = ancCluster.id || String(ancCluster.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            if (matchedPrevIds.has(ancSlug)) continue;
+            // Verify that the surviving non-anchor articles share at least 1 coherent stem with this anchor cluster
+            // (prevents a single leftover article after outlier-stripping from hijacking or dropping an unrelated EXISTING_CLUSTER anchor)
+            const ancStems = new Set(extractCoherenceStems(`${ancCluster.story || ''} ${ancCluster.summary || ''} ${(ancCluster.coverage || []).slice(0, 5).map(c => c.title || '').join(' ')}`));
+            const nonAnchorBagStems = new Set();
+            matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => nonAnchorBagStems.add(s)));
+            const sharedWithAnchor = [...nonAnchorBagStems].filter(s => ancStems.has(s)).length;
+            if (sharedWithAnchor === 0 && matchingArticles.length < 2) {
+              continue;
+            }
+            if (!matchedPrev) {
+              matchedPrev = ancCluster;
+            } else {
+              secondaryAnchors.push(ancCluster);
+            }
+            if (ancSlug) evolvedIds.add(ancSlug);
+            if (Array.isArray(ancCluster.evolvedFromIds)) {
+              ancCluster.evolvedFromIds.forEach(id => evolvedIds.add(id));
             }
           }
         }
@@ -1330,12 +1356,12 @@ Return JSON array in format:
         let pendingUpdate = null;
 
         if (matchedPrev) {
-          const matchedPrevSlug = matchedPrev.id || String(matchedPrev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-          if (matchedPrevSlug) matchedPrevIds.add(matchedPrevSlug);
-
-          // Self-heal check: only reset if matchedPrev's title+summary share virtually zero stems with the current article bag
+          const allMatchedAnchors = [matchedPrev, ...secondaryAnchors];
+          // Self-heal check: include both new matchingArticles AND matchedPrev.coverage so a single new dispatch
+          // matching an EXISTING_CLUSTER anchor never falsely fails prevStorySupported and drops the cluster's existing outlets!
           const articleBagStems = new Set();
           matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => articleBagStems.add(s)));
+          (matchedPrev.coverage || []).forEach(c => extractCoherenceStems(`${c.title || ''}`).forEach(s => articleBagStems.add(s)));
           const prevStoryStems = extractCoherenceStems(matchedPrev.story || '');
           const prevSummaryStems = extractCoherenceStems(matchedPrev.summary || '');
           const supportedStoryStems = prevStoryStems.filter(s => articleBagStems.has(s)).length;
@@ -1345,6 +1371,15 @@ Return JSON array in format:
             supportedStoryStems >= 2 ||
             (supportedStoryStems / prevStoryStems.length) >= 0.35 ||
             (supportedStoryStems >= 1 && supportedSummaryStems >= 2);
+
+          if (!prevStorySupported && matchingArticles.length < 2) {
+            return;
+          }
+
+          for (const anc of allMatchedAnchors) {
+            const ancSlug = anc.id || String(anc.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            if (ancSlug) matchedPrevIds.add(ancSlug);
+          }
 
           const prevSlug = prevStorySupported
             ? (matchedPrev.id || String(matchedPrev.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
@@ -1356,15 +1391,29 @@ Return JSON array in format:
           prevFirstSeenAt = prevStorySupported ? (matchedPrev.firstSeenAt || matchedPrev.evolutionHistory?.[0]?.timestamp || null) : null;
           prevLastDevelopedAt = prevStorySupported ? (matchedPrev.lastDevelopedAt || null) : null;
           prevDevelopmentNote = prevStorySupported ? (matchedPrev.developmentNote || null) : null;
-          prevLateralConnections = prevStorySupported && Array.isArray(matchedPrev.lateralConnections) ? matchedPrev.lateralConnections : null;
 
-          const currentCovUrls = (matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean);
-          const currentCovTitles = (matchedPrev.coverage || []).map(c => c.title ? cleanHeadlineTitle(c.title) : '').filter(Boolean);
-          const historicalKeys = new Set([
-            ...(Array.isArray(matchedPrev.seenArticleKeys) ? matchedPrev.seenArticleKeys : []),
-            ...currentCovUrls,
-            ...currentCovTitles
-          ]);
+          const mergedLat = [];
+          const seenLatIds = new Set();
+          if (prevStorySupported) {
+            for (const anc of allMatchedAnchors) {
+              for (const lc of (anc.lateralConnections || [])) {
+                if (lc?.clusterId && !seenLatIds.has(lc.clusterId)) {
+                  seenLatIds.add(lc.clusterId);
+                  mergedLat.push(lc);
+                }
+              }
+            }
+          }
+          prevLateralConnections = mergedLat.length > 0 ? mergedLat : null;
+
+          const historicalKeys = new Set();
+          for (const anc of allMatchedAnchors) {
+            (anc.seenArticleKeys || []).forEach(k => historicalKeys.add(k));
+            (anc.coverage || []).forEach(c => {
+              if (c.link) historicalKeys.add(canonicalUrl(c.link));
+              if (c.title) historicalKeys.add(cleanHeadlineTitle(c.title));
+            });
+          }
 
           const addedArticles = matchingArticles.filter(m => {
             const u = m.link ? canonicalUrl(m.link) : '';
@@ -1372,23 +1421,29 @@ Return JSON array in format:
             return (!u || !historicalKeys.has(u)) && (!t || !historicalKeys.has(t));
           });
 
-          // Preserve prior outlets from matchedPrev.coverage that didn't publish a newer dispatch in this batch
+          // Preserve prior outlets from matchedPrev.coverage (and any secondary merged anchors) that didn't publish a newer dispatch in this batch
           // so evolving multi-day clusters never shrink from 21 outlets down to 3 when a subset of outlets posts a follow-up!
-          if (prevStorySupported && Array.isArray(matchedPrev.coverage)) {
-            for (const prevArt of matchedPrev.coverage) {
-              if (!prevArt || !prevArt.sourceId || seenOutlets.has(prevArt.sourceId)) continue;
-              seenOutlets.add(prevArt.sourceId);
-              matchingArticles.push({
-                sourceId: prevArt.sourceId,
-                sourceName: prevArt.sourceName || prevArt.sourceId,
-                title: prevArt.title,
-                sentiment: typeof prevArt.sentiment === 'number' ? prevArt.sentiment : 0,
-                link: prevArt.link || '',
-                pubDate: prevArt.pubDate || ''
-              });
+          if (prevStorySupported) {
+            for (const anc of allMatchedAnchors) {
+              if (!Array.isArray(anc.coverage)) continue;
+              for (const prevArt of anc.coverage) {
+                if (!prevArt || !prevArt.sourceId || seenOutlets.has(prevArt.sourceId)) continue;
+                seenOutlets.add(prevArt.sourceId);
+                matchingArticles.push({
+                  sourceId: prevArt.sourceId,
+                  sourceName: prevArt.sourceName || prevArt.sourceId,
+                  title: prevArt.title,
+                  sentiment: typeof prevArt.sentiment === 'number' ? prevArt.sentiment : 0,
+                  link: prevArt.link || '',
+                  pubDate: prevArt.pubDate || ''
+                });
+                extractCoherenceStems(`${prevArt.title || ''}`).forEach(s => articleBagStems.add(s));
+              }
             }
             matchingArticles.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
           }
+
+          if (matchingArticles.length < 2) return;
 
           // Record all current articles into historicalKeys so re-clustered articles never re-trigger pendingUpdate
           matchingArticles.forEach(m => {
@@ -2158,12 +2213,58 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       }
     }
 
+    const reconcileFinalLateralConnections = (finalList) => {
+      const byId = new Map();
+      for (const cl of finalList) {
+        const cid = cl.id || slugify(cl.story);
+        byId.set(cid, cl);
+        if (Array.isArray(cl.evolvedFromIds)) {
+          cl.evolvedFromIds.forEach(oldId => {
+            if (oldId && !byId.has(oldId)) byId.set(oldId, cl);
+          });
+        }
+      }
+      for (const cl of finalList) {
+        if (!Array.isArray(cl.lateralConnections) || cl.lateralConnections.length === 0) continue;
+        const cid = cl.id || slugify(cl.story);
+        const seen = new Set([cid]);
+        const cleaned = [];
+        for (const lc of cl.lateralConnections) {
+          if (!lc?.clusterId) continue;
+          const target = byId.get(lc.clusterId);
+          if (!target) continue;
+          const tid = target.id || slugify(target.story);
+          if (seen.has(tid)) continue;
+          seen.add(tid);
+          cleaned.push({
+            clusterId: tid,
+            headline: target.story || lc.headline,
+            howItConnects: lc.howItConnects
+          });
+          if (!Array.isArray(target.lateralConnections)) target.lateralConnections = [];
+          if (!target.lateralConnections.some(x => (byId.get(x.clusterId)?.id || x.clusterId) === cid)) {
+            target.lateralConnections.push({
+              clusterId: cid,
+              headline: cl.story,
+              howItConnects: lc.howItConnects
+            });
+          }
+        }
+        if (cleaned.length > 0) {
+          cl.lateralConnections = cleaned.slice(0, 4);
+        } else {
+          delete cl.lateralConnections;
+        }
+      }
+      return finalList;
+    };
+
     if (merges.length === 0) {
       appendClusterUpdateAuditLog(auditLogEntries);
       if (materialInPlaceCount > 0 || clarificationInPlaceCount > 0) {
         console.log(`[Clusters] Verified ${materialInPlaceCount} material shifts and ${clarificationInPlaceCount} silent clarifications.`);
       }
-      return clusters;
+      return reconcileFinalLateralConnections(clusters);
     }
 
     const consumed = new Set();
@@ -2177,6 +2278,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const group = validIdx.map(i => clusters[i]);
       const evolvedIds = new Set();
       const mergedSeenKeys = new Set();
+      const mergedGroupLateral = [];
+      const seenGroupLateralIds = new Set();
       const rawCov = [];
       let maxNewestMs = 0;
       let maxVersion = 1;
@@ -2194,6 +2297,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       // Pick the chronologically earliest cluster as the historical origin anchor, and largest for fallback metadata
       const originAnchor = [...group].sort((a, b) => getEarliestMs(a) - getEarliestMs(b))[0] || group[0];
       const largestAnchor = [...group].sort((a, b) => (b.outletCount || 0) - (a.outletCount || 0))[0] || group[0];
+      const richestHistoryAnchor = [...group].sort((a, b) => ((b.evolutionHistory?.length || 0) - (a.evolutionHistory?.length || 0)) || (getEarliestMs(a) - getEarliestMs(b)))[0] || originAnchor;
       const latestCluster = [...group].sort((a, b) => (b.newestMs || 0) - (a.newestMs || 0))[0] || group[0];
       const chronologicalSpanMs = Math.max(0, (latestCluster.newestMs || 0) - getEarliestMs(originAnchor));
 
@@ -2205,6 +2309,14 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         }
         if (Array.isArray(g.seenArticleKeys)) {
           g.seenArticleKeys.forEach(k => mergedSeenKeys.add(k));
+        }
+        if (Array.isArray(g.lateralConnections)) {
+          for (const lc of g.lateralConnections) {
+            if (lc?.clusterId && !seenGroupLateralIds.has(lc.clusterId)) {
+              seenGroupLateralIds.add(lc.clusterId);
+              mergedGroupLateral.push(lc);
+            }
+          }
         }
         if (g.newestMs && g.newestMs > maxNewestMs) maxNewestMs = g.newestMs;
         if (typeof g.version === 'number' && g.version > maxVersion) maxVersion = g.version;
@@ -2252,15 +2364,32 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         ? ((m.developmentNote && m.developmentNote.trim()) || `Story evolved: ${finalStory}`)
         : bestDevelopmentNote;
 
-      const hist = Array.isArray(originAnchor.evolutionHistory) ? [...originAnchor.evolutionHistory] : [{
-        version: 1,
-        type: 'initial',
-        timestamp: originAnchor.firstSeenAt || new Date(getEarliestMs(originAnchor) < Infinity ? getEarliestMs(originAnchor) : (maxNewestMs || Date.now())).toISOString(),
-        headline: originAnchor.story,
-        summary: originAnchor.summary,
-        outletCount: originAnchor.outletCount || 2,
-        note: 'Initial cluster formation on the wire'
-      }];
+      const baseHistSource = Array.isArray(richestHistoryAnchor.evolutionHistory) && richestHistoryAnchor.evolutionHistory.length > 0
+        ? richestHistoryAnchor
+        : originAnchor;
+      const hist = Array.isArray(baseHistSource.evolutionHistory) && baseHistSource.evolutionHistory.length > 0
+        ? [...baseHistSource.evolutionHistory]
+        : [{
+            version: 1,
+            type: 'initial',
+            timestamp: originAnchor.firstSeenAt || new Date(getEarliestMs(originAnchor) < Infinity ? getEarliestMs(originAnchor) : (maxNewestMs || Date.now())).toISOString(),
+            headline: originAnchor.story,
+            summary: originAnchor.summary,
+            outletCount: originAnchor.outletCount || 2,
+            note: 'Initial cluster formation on the wire'
+          }];
+      const seenHistNotes = new Set(hist.map(h => (h.note || '').toLowerCase().trim()));
+      for (const g of group) {
+        if (g === baseHistSource || !Array.isArray(g.evolutionHistory)) continue;
+        for (const h of g.evolutionHistory) {
+          if (!h || h.type === 'initial') continue;
+          const nKey = (h.note || '').toLowerCase().trim();
+          if (nKey && !seenHistNotes.has(nKey)) {
+            seenHistNotes.add(nKey);
+            hist.push(h);
+          }
+        }
+      }
 
       if (mergeType === 'material_shift' || mergeType === 'clarification') {
         const beforeSnapshot = {
@@ -2309,6 +2438,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         version: nextVersion,
         ...(nextDevelopedAt ? { lastDevelopedAt: nextDevelopedAt } : {}),
         ...(nextDevNote ? { developmentNote: nextDevNote } : {}),
+        ...(mergedGroupLateral.length > 0 ? { lateralConnections: mergedGroupLateral } : {}),
         evolvedFromIds: Array.from(evolvedIds),
         evolutionHistory: hist.slice(-8),
         seenArticleKeys: Array.from(mergedSeenKeys).slice(-120),
@@ -2326,7 +2456,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
 
     appendClusterUpdateAuditLog(auditLogEntries);
     console.log(`[Clusters] Consolidated ${merges.length} cluster groups (${materialInPlaceCount} material shifts, ${clarificationInPlaceCount} silent clarifications, ${clusters.length} -> ${result.length} clusters).`);
-    return result;
+    return reconcileFinalLateralConnections(result);
   } catch (e) {
     console.warn('[Clusters] Consolidation pass skipped:', e.message);
     return clusters;
