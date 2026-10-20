@@ -95,13 +95,29 @@ function deduplicateAndSanitizeClusters(rawClusters) {
   const slugify = (s) => String(s || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   // 1. Deduplicate clusters sharing the exact same ID (e.g. if a git merge spliced two arrays)
+  //    and always deduplicate each cluster's coverage array by sourceId (keeping the newest dispatch per outlet)
+  const dedupeCovByOutlet = (covArr) => {
+    if (!Array.isArray(covArr)) return [];
+    const sorted = [...covArr].sort((a, b) => new Date(b?.pubDate || 0) - new Date(a?.pubDate || 0));
+    const seenOutlets = new Set();
+    const out = [];
+    for (const art of sorted) {
+      if (!art?.sourceId || seenOutlets.has(art.sourceId)) continue;
+      seenOutlets.add(art.sourceId);
+      out.push(art);
+    }
+    return out;
+  };
+
   const byId = new Map();
   for (const cl of rawClusters) {
     if (!cl || !Array.isArray(cl.coverage) || cl.coverage.length < 2) continue;
+    const cleanCov = dedupeCovByOutlet(cl.coverage);
+    if (cleanCov.length < 2) continue;
     const id = cl.id || slugify(cl.story);
     const existing = byId.get(id);
     if (!existing) {
-      byId.set(id, { ...cl, id });
+      byId.set(id, { ...cl, id, coverage: cleanCov, outletCount: cleanCov.length });
     } else {
       const vCurr = typeof cl.version === 'number' ? cl.version : 1;
       const vExist = typeof existing.version === 'number' ? existing.version : 1;

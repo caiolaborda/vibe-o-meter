@@ -510,8 +510,7 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   function findPriorEventAnchor(title) {
     const tokens = getHeadlineTopicTokens(title);
     if (tokens.length < 2) return null;
-    let best = null;
-    let bestShared = 0;
+    const matches = [];
     for (const cand of anchorCandidates) {
       let shared = 0;
       let specificShared = 0;
@@ -523,12 +522,17 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
       }
       const minLen = Math.min(tokens.length, cand.tokens.size);
       // Require at least 1 specific non-broad token (e.g. 'openai', 'accused', 'egypt', 'postpones') so generic 'saudi + houthi + attacks' never cross-matches unrelated stories
-      if (specificShared >= 1 && (shared >= 3 || (shared >= 2 && shared / minLen >= 0.55)) && shared > bestShared) {
-        bestShared = shared;
-        best = { headline: cand.headline, factors: cand.factors };
+      if (specificShared >= 1 && (shared >= 3 || (shared >= 2 && shared / minLen >= 0.55))) {
+        matches.push({ headline: cand.headline, factors: cand.factors, shared });
       }
     }
-    return best;
+    if (matches.length < 2) return null;
+    // Pick the candidate whose base polarity is closest to the consensus of all matching prior dispatches
+    // so a single anomalous early evaluation never poisons subsequent batches
+    const sortedPols = matches.map(m => m.factors[0]).sort((a, b) => a - b);
+    const consensusPol = sortedPols[Math.floor(sortedPols.length / 2)];
+    matches.sort((a, b) => Math.abs(a.factors[0] - consensusPol) - Math.abs(b.factors[0] - consensusPol) || b.shared - a.shared);
+    return { headline: matches[0].headline, factors: matches[0].factors };
   }
 
   // Interleave & topic-group across outlets so simultaneous coverage of the same story sits in the same context window
@@ -575,8 +579,8 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 CROSS-BATCH & INTRA-BATCH SAME-INCIDENT CALIBRATION:
 - For dispatches within the same batch covering the exact same real-world incident, keep "reach" and "permanence" consistent and vary "polarity" only in proportion to genuine differences in substantive angle, while scoring "framing" independently for each headline's rhetoric.
 - If an item includes "priorAnchor" { headline, factors: [polarity, reach, permanence] } from an earlier batch:
-  1. First verify whether this article and "priorAnchor.headline" describe the EXACT same specific real-world incident. If they are different events that merely share a country or actor, IGNORE "priorAnchor" completely.
-  2. If they ARE the exact same incident, use "priorAnchor.factors" [polarity, reach, permanence] as your baseline anchor so cross-batch scoring stays coherent—adjusting "polarity" only if this outlet foregrounds a materially different substantive angle or new development, and scoring "framing" 100% independently.
+  1. First verify whether this article and "priorAnchor.headline" describe the EXACT same specific real-world incident AND whether "priorAnchor.factors" is reasonable under the rubric above (e.g. a mass-casualty strike or violent attack cannot have a minor -14 polarity). If they are different events OR if the prior anchor clearly mis-scored the severity of the event, IGNORE "priorAnchor" completely and score from first principles.
+  2. If they ARE the exact same incident and the anchor is sound, use "priorAnchor.factors" [polarity, reach, permanence] as your baseline anchor so cross-batch scoring stays coherent—adjusting "polarity" only if this outlet foregrounds a materially different substantive angle or new development, and scoring "framing" 100% independently.
 
 Return ONLY a JSON array of objects with:
 - index: integer matching input index
@@ -1503,8 +1507,10 @@ You have THREE jobs in this single pass:
 
 JOB 1 — "merges" (Strict Duplicate-Incident Consolidation — Return [] If None):
 Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME specific physical incident, referendum, legislative bill, court ruling, or scientific study (e.g. two clusters that both report on the exact same train crash, or an earlier cluster on a referendum/protest and a newer cluster on that exact same referendum/protest):
-- CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, debates, or studies that merely involve the same country, leader, election campaign, or war!
-  • Example of FORBIDDEN merge: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
+- CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, conferences, economic reactions, debates, or studies that merely involve the same country, leader, election campaign, or war!
+  • Example of FORBIDDEN merge #1: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
+  • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate diplomatic or economic fallout ("Saudi Arabia Postpones Investor Conference" or "Egypt Pledges Support to Saudi Arabia") are DISTINCT EVENTS with different actors and severities. NEVER merge an economic/diplomatic reaction cluster into a casualty/strike cluster — link them via "lateralConnections" (Job 3) instead!
+  • Example of VALID merge: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
 - If no two clusters report the exact same specific incident, return "merges": [].
 - For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary; otherwise set "updateType": "clarification" (deduplication).
 
@@ -2597,9 +2603,19 @@ async function main() {
   }
 }
 
-main().then(() => {
-  process.exit(0);
-}).catch(err => {
-  console.error('Fatal error during sync:', err);
-  process.exit(1);
-});
+  if (require.main === module) {
+    main().then(() => {
+      process.exit(0);
+    }).catch(err => {
+      console.error('Fatal error during sync:', err);
+      process.exit(1);
+    });
+  }
+
+  module.exports = {
+    analyzeWithGemini,
+    computeFourFactorScore,
+    getHeadlineTopicTokens,
+    cleanHeadlineTitle,
+    canonicalUrl
+  };
