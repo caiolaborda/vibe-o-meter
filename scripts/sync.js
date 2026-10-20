@@ -1727,7 +1727,7 @@ When evaluating what remains AFTER subtracting the existing summary baseline, di
      • Localized tactical flashpoints or rescue details within an already-established phenomenon (e.g. residents hoisted from rooftops during ongoing floods; protesters blockading a specific museum during nationwide unrest),
      • Identifying or profiling already-counted victims/suspects (e.g. naming an already-arrested suspect), forensic mechanics, property damage assessments, or notable reactions.
    - For "clarification": refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version.
-   - HEADLINE-SUMMARY CONSISTENCY INVARIANT (for "clarification"): Normally, "clarification" keeps the existing "story" headline unchanged. HOWEVER, if the existing "story" headline contains an explicit number, tally, or status word (e.g. "Kills 53", "1 Dead", "$5B") that is now directly contradicted or superseded by the updated "summary" (e.g. death toll rose to 73), you MUST update "story" in place so the headline and summary never contradict each other (e.g. "Houthi Missile Attack Kills 73 in Yemen") while still keeping "updateType": "clarification"!
+   - HEADLINE-SUMMARY CONSISTENCY & ANCHOR-PRESERVATION INVARIANT (for "clarification"): Normally, "clarification" keeps the existing "story" headline unchanged so the user recognizes the same story card over time. HOWEVER, if the existing "story" headline contains an explicit number/tally (e.g. "Kills 53", "1 Dead", "$5B") OR a directional/phase status word (e.g. "Halts", "Prepares", "Holds", "Injured" when they died, "Missing" when found) that is now directly contradicted or superseded by the updated "summary" (e.g. death toll rose to 73, or renovation is proceeding in November despite a lawsuit), you MUST surgically update ONLY the stale number/predicate in "story" while preserving the recognizable subject/place anchor (e.g. "Houthi Attack Kills 53 in Yemen" -> "Houthi Missile Attack Kills 73 in Yemen") and keeping "updateType": "clarification"!
 
 3. "material_shift" (Irreversible Phase Pivot — Structural Step-Change Not Yet in the Existing Summary):
    - At least ONE net-new fact in the incoming dispatches (that is NOT already in the existing summary) executes an IRREVERSIBLE crossing of the prior State Envelope:
@@ -1983,10 +1983,23 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         outletCount: c.outletCount || (c.coverage || []).length || 1
       };
 
+      // Helper to verify that a candidate headline retains >= 1 recognizable subject/place stem from the origin headline
+      const originAnchorHeadline = hist[0]?.headline || c.story || '';
+      const originAnchorStems = new Set(
+        extractCoherenceStems(`${originAnchorHeadline} ${c.story || ''}`)
+          .filter(s => !/^\d+$/.test(s) && !/^(kill|dead|die|halt|stop|prepar|hold|held|plan|weigh|mull|consider|spurs|spark|prompt|delay)$/.test(s))
+      );
+      const isHeadlineAnchorRecognizable = (candTitle) => {
+        if (!candTitle || originAnchorStems.size === 0) return Boolean(candTitle);
+        const candStems = extractCoherenceStems(candTitle);
+        return candStems.some(s => originAnchorStems.has(s));
+      };
+
       if (uType === 'material_shift') {
         materialInPlaceCount++;
         const oldSlug = c.id || slugify(c.story);
-        const newStory = (dev.story && dev.story.trim()) || c.story;
+        const rawCandStory = (dev.story && dev.story.trim()) || c.story;
+        const newStory = isHeadlineAnchorRecognizable(rawCandStory) ? rawCandStory : c.story;
         const newSlug = slugify(newStory);
         const evolvedIds = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
         if (oldSlug && oldSlug !== newSlug) evolvedIds.add(oldSlug);
@@ -2055,11 +2068,20 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         const oldStoryNums = (c.story || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [];
         const newSummaryNums = new Set((newSummary || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []);
         const hasStaleHeadlineNumber = oldStoryNums.some(n => !newSummaryNums.has(n));
+        // Also detect semantic status/verb contradictions between existing headline and updated summary
+        const storyLower = (c.story || '').toLowerCase();
+        const sumLower = (newSummary || '').toLowerCase();
+        const hasSemanticContradiction = (
+          (/\b(halts?|halted|stops?|stopped|blocks?|blocked|cancels?|canceled)\b/.test(storyLower) && /\b(pushed forward|pushing forward|proceeds?|proceeding|will officially begin|will begin|resumes?|resumed)\b/.test(sumLower)) ||
+          (/\b(prepares?|preparing|plans?|planning|set to|gears? up)\b/.test(storyLower) && /\b(successfully launched|lifts? off|lifted off|completed|concluded|rejected|approved|enacted)\b/.test(sumLower)) ||
+          (/\b(holds?|holding)\s+(referendum|election|vote)\b/.test(storyLower) && /\b(voters\s+(?:decisively\s+)?(?:reject|approve|elect|back)|official results confirm)\b/.test(sumLower)) ||
+          (/\b(injured|wounded|hospitalized|critical)\b/.test(storyLower) && !/\b(dead|dies?|died|killed|fatal)\b/.test(storyLower) && /\b(died|dies|succumbed|passed away|killed)\b/.test(sumLower))
+        );
 
-        if (hasStaleHeadlineNumber) {
-          if (candidateClarStory && candidateClarStory !== c.story) {
+        if (hasStaleHeadlineNumber || hasSemanticContradiction) {
+          if (candidateClarStory && candidateClarStory !== c.story && isHeadlineAnchorRecognizable(candidateClarStory)) {
             updatedClarificationStory = candidateClarStory;
-          } else {
+          } else if (hasStaleHeadlineNumber) {
             const noteNums = (noteText || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [];
             const replacementNum = noteNums.find(n => newSummaryNums.has(n) && !oldStoryNums.includes(n));
             if (replacementNum && oldStoryNums.length === 1) {
