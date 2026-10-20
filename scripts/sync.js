@@ -1722,11 +1722,12 @@ When evaluating what remains AFTER subtracting the existing summary baseline, di
 
 2. "clarification" (In-Phase Factual Delta — Sharpening Facts, Proposals, or Sub-Events Within the Existing Envelope):
    - The new dispatches add genuinely new factual precision, granularity, pre-decision deliberations, or localized sub-incidents NOT YET in the existing summary, WITHOUT executing an irreversible boundary crossing of the State Envelope:
-     • Introducing or sharpening a concrete metric or tally compared to a previously vague or lower figure in the summary (e.g. "fatalities" or "1 dead" -> "at least 4 dead"; "thousands arrested" -> "nearly 2,400 arrested"; "pledges SpaceX shares" -> "valued at over $9 billion"),
+     • Introducing or sharpening a concrete metric or tally compared to a previously vague or lower figure in the summary (e.g. "fatalities" or "1 dead" -> "at least 4 dead"; "kills 53" -> "kills 73"; "thousands arrested" -> "nearly 2,400 arrested"; "pledges SpaceX shares" -> "valued at over $9 billion"),
      • Pre-decision proposals, deliberations, or warnings BEFORE formal enactment (e.g. officials "weighing", "pushing for", "debating", or "threatening" curfews, sanctions, or charges — deliberating a measure is an In-Phase Update; only FORMAL ENACTMENT is a Shift),
      • Localized tactical flashpoints or rescue details within an already-established phenomenon (e.g. residents hoisted from rooftops during ongoing floods; protesters blockading a specific museum during nationwide unrest),
      • Identifying or profiling already-counted victims/suspects (e.g. naming an already-arrested suspect), forensic mechanics, property damage assessments, or notable reactions.
-   - For "clarification": refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version or renaming the headline.
+   - For "clarification": refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version.
+   - HEADLINE-SUMMARY CONSISTENCY INVARIANT (for "clarification"): Normally, "clarification" keeps the existing "story" headline unchanged. HOWEVER, if the existing "story" headline contains an explicit number, tally, or status word (e.g. "Kills 53", "1 Dead", "$5B") that is now directly contradicted or superseded by the updated "summary" (e.g. death toll rose to 73), you MUST update "story" in place so the headline and summary never contradict each other (e.g. "Houthi Missile Attack Kills 73 in Yemen") while still keeping "updateType": "clarification"!
 
 3. "material_shift" (Irreversible Phase Pivot — Structural Step-Change Not Yet in the Existing Summary):
    - At least ONE net-new fact in the incoming dispatches (that is NOT already in the existing summary) executes an IRREVERSIBLE crossing of the prior State Envelope:
@@ -1788,7 +1789,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "developmentNote": "Pure chronological delta stating ONLY what changed at this timestamp (8-16 words max, NO 'following/after...' recap of earlier milestones). For clarification: 1-2 telegraphic fragments separated by '; '. For material_shift: 1 crisp delta sentence.",
       "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
       "updateType": "none" | "clarification" | "material_shift",
-      "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
+      "story": "Updated 4-8 Word Title (required for material_shift; for clarification, keep existing story UNLESS an explicit number/tally in the existing headline is now superseded by the updated summary)",
       "summary": "1-2 sentence cumulative synthesis integrating the new development into the existing summary without dropping prior verified figures or geographic scope."
     }
   ],
@@ -2045,8 +2046,39 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           addedHeadlines: c._pendingUpdate?.addedHeadlines || []
         });
       } else {
-        // 'clarification': silent summary refinement without bumping version or triggering unread alert
+        // 'clarification': summary refinement without bumping version.
+        // If the existing headline (`c.story`) contains an explicit number/tally that was superseded in `newSummary`
+        // (or if `dev.story` updated that headline number to match `newSummary`), synchronize `c.story` so the headline never contradicts the summary!
         clarificationInPlaceCount++;
+        let updatedClarificationStory = c.story;
+        const candidateClarStory = (dev.story && dev.story.trim()) || '';
+        const oldStoryNums = (c.story || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [];
+        const newSummaryNums = new Set((newSummary || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []);
+        const hasStaleHeadlineNumber = oldStoryNums.some(n => !newSummaryNums.has(n));
+
+        if (hasStaleHeadlineNumber) {
+          if (candidateClarStory && candidateClarStory !== c.story) {
+            updatedClarificationStory = candidateClarStory;
+          } else {
+            const noteNums = (noteText || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [];
+            const replacementNum = noteNums.find(n => newSummaryNums.has(n) && !oldStoryNums.includes(n));
+            if (replacementNum && oldStoryNums.length === 1) {
+              updatedClarificationStory = c.story.replace(new RegExp(`\\b${oldStoryNums[0]}\\b`), replacementNum);
+            }
+          }
+        }
+
+        if (updatedClarificationStory !== c.story) {
+          const oldSlug = c.id || slugify(c.story);
+          const newSlug = slugify(updatedClarificationStory);
+          const evolvedIds = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
+          if (oldSlug && oldSlug !== newSlug) evolvedIds.add(oldSlug);
+          evolvedIds.delete(newSlug);
+          c.id = newSlug;
+          c.story = updatedClarificationStory;
+          if (evolvedIds.size > 0) c.evolvedFromIds = Array.from(evolvedIds);
+        }
+
         c.summary = newSummary;
         const afterSnapshot = {
           id: c.id || slugify(c.story),

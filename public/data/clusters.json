@@ -112,6 +112,21 @@
           "pubDate": "Tue, 20 Oct 2026 10:47:55 -0000"
         },
         {
+          "sourceId": "npr",
+          "sourceName": "NPR News",
+          "region": "NA",
+          "title": "Morning news brief",
+          "description": "Ukraine and Russia exchange strikes as relations between U.S. and Ukraine deteriorate, the midterms are on track to be the most expensive on record, French president denounces violent protests.",
+          "sentiment": -0.02,
+          "eventBase": -0.02,
+          "framingMod": 0,
+          "explanation": "Generic morning news summary title bearing entirely neutral, functional labeling. [Event Base: -0.02 | Editorial Framing: +0.00]",
+          "category": "other",
+          "imageUrl": null,
+          "link": "https://www.npr.org/2026/10/12/nx-s1-5995584/newsbrief-trump-russia-ukraine-trump-priorities-saudi-airport-strikes",
+          "pubDate": "Tue, 20 Oct 2026 04:50:27 -0400"
+        },
+        {
           "sourceId": "aljazeera",
           "sourceName": "Al Jazeera",
           "region": "ME",
@@ -385,21 +400,6 @@
           "pubDate": "2026-10-19T10:01:00.000Z"
         },
         {
-          "sourceId": "npr",
-          "sourceName": "NPR News",
-          "region": "NA",
-          "title": "Morning news brief",
-          "description": "Ukraine and Russia exchange strikes as relations between U.S. and Ukraine deteriorate, the midterms are on track to be the most expensive on record, French president denounces violent protests.",
-          "sentiment": -0.02,
-          "eventBase": -0.02,
-          "framingMod": 0,
-          "explanation": "Generic morning news summary title bearing entirely neutral, functional labeling. [Event Base: -0.02 | Editorial Framing: +0.00]",
-          "category": "other",
-          "imageUrl": null,
-          "link": "https://www.npr.org/2026/10/12/nx-s1-5995584/newsbrief-trump-russia-ukraine-trump-priorities-saudi-airport-strikes",
-          "pubDate": "Tue, 20 Oct 2026 04:50:27 -0400"
-        },
-        {
           "sourceId": "nzz",
           "sourceName": "Neue Zürcher Zeitung",
           "region": "EU",
@@ -444,19 +444,20 @@
       ]
     },
     {
-      "id": "houthi-missile-attack-kills-53-and-delays-saudi-summit",
-      "story": "Houthi Missile Attack Kills 53 and Delays Saudi Summit",
-      "summary": "A ballistic missile strike by Houthi rebels hit a military training camp in Yemen's Shabwa governorate, killing 73 recruits and wounding over 200 others in the largest loss of life since the civil war reignited, prompting Saudi authorities to officially postpone the Future Investment Initiative conference to 2027 amid mounting regional security threats.",
-      "version": 4,
+      "id": "houthi-missile-attack-kills-73-in-yemen",
+      "story": "Houthi Missile Attack Kills 73 in Yemen",
+      "summary": "A ballistic missile strike by Iran-backed Houthi rebels hit a government military training camp in Yemen's Shabwa governorate, killing 73 recruits and wounding over 200 others in the single largest loss of life since the civil war reignited.",
+      "version": 1,
       "lastDevelopedAt": "2026-10-20T01:05:31.000Z",
-      "developmentNote": "Saudi authorities formally reschedule the FII conference to 2027 following deadly attacks.",
+      "developmentNote": "CBC News reports the regional death toll rising to 73 fatalities according to provincial governor statements.",
       "evolvedFromIds": [
         "saudi-arabia-postpones-fii-investment-event",
         "houthi-attack-kills-53-in-yemen-and-sparks-saudi-investment-freeze",
         "saudi-investment-event-postponed-to-2027",
         "saudi-investment-event-postponed-after-attacks",
         "houthi-attack-kills-53-in-yemen",
-        "saudi-arabia-postpones-fii-investment-event-after-attacks"
+        "saudi-arabia-postpones-fii-investment-event-after-attacks",
+        "houthi-missile-attack-kills-53-and-delays-saudi-summit"
       ],
       "evolutionHistory": [
         {
@@ -469,36 +470,14 @@
           "note": "Initial cluster formation on the wire"
         },
         {
-          "version": 2,
-          "type": "material_shift",
-          "timestamp": "2026-10-19T19:37:51.000Z",
-          "headline": "Houthi Attack Kills 53 in Yemen and Sparks Saudi Investment Freeze",
-          "summary": "A ballistic missile strike by Iran-backed Houthi rebels hit a government military training camp in Yemen's Shabwa governorate, killing at least 53 recruits and wounding over 200 others in the single largest loss of life since the civil war reignited, prompting Saudi authorities to postpone major high-profile investment conferences to 2027 in response to mounting regional security threats.",
-          "beforeStory": "Houthi Attack Kills 53 in Yemen",
-          "beforeSummary": "A ballistic missile strike by Iran-backed Houthi rebels hit a government military training camp in Yemen's Shabwa governorate, killing at least 53 recruits and wounding over 200 others in the single largest loss of life since the civil war reignited.",
-          "outletCount": 14,
-          "note": "Saudi Arabia cancels upcoming Riyadh investment conference following escalating Houthi cross-border missile attacks."
-        },
-        {
-          "version": 3,
-          "type": "material_shift",
-          "timestamp": "2026-10-20T01:05:31.000Z",
-          "headline": "Houthi Missile Attack Kills 53 and Delays Saudi Summit",
-          "summary": "A ballistic missile strike by Iran-backed Houthi rebels hit a government military training camp in Yemen's Shabwa governorate, killing at least 53 recruits and wounding over 200 others in the single largest loss of life since the civil war reignited, prompting Saudi authorities to officially postpone the Future Investment Initiative conference to 2027 in response to mounting regional security threats.",
-          "beforeStory": "Houthi Attack Kills 53 in Yemen and Sparks Saudi Investment Freeze",
-          "beforeSummary": "A ballistic missile strike by Iran-backed Houthi rebels hit a government military training camp in Yemen's Shabwa governorate, killing at least 53 recruits and wounding over 200 others in the single largest loss of life since the civil war reignited, prompting Saudi authorities to postpone major high-profile investment conferences to 2027 in response to mounting regional security threats.",
-          "outletCount": 15,
-          "note": "Saudi authorities formally postpone the FII conference to 2027 following the deadly missile strike."
-        },
-        {
-          "version": 4,
+          "version": 1,
           "type": "clarification",
           "timestamp": "2026-10-20T12:24:07.000Z",
-          "headline": "Houthi Missile Attack Kills 53 and Delays Saudi Summit",
-          "summary": "A ballistic missile strike by Houthi rebels hit a military training camp in Yemen's Shabwa governorate, killing 73 recruits and wounding over 200 others in the largest loss of life since the civil war reignited, prompting Saudi authorities to officially postpone the Future Investment Initiative conference to 2027 amid mounting regional security threats.",
-          "beforeStory": "Houthi Missile Attack Kills 53 and Delays Saudi Summit",
-          "beforeSummary": "A ballistic missile strike by Houthi rebels hit a military training camp in Yemen's Shabwa governorate, killing 53 recruits and wounding over 200 others in the largest loss of life since the civil war reignited, prompting Saudi authorities to officially postpone the Future Investment Initiative conference to 2027 amid mounting regional security threats.",
-          "outletCount": 15,
+          "headline": "Houthi Missile Attack Kills 73 in Yemen",
+          "summary": "A ballistic missile strike by Iran-backed Houthi rebels hit a government military training camp in Yemen's Shabwa governorate, killing 73 recruits and wounding over 200 others in the single largest loss of life since the civil war reignited.",
+          "beforeStory": "Houthi Attack Kills 53 in Yemen",
+          "beforeSummary": "A ballistic missile strike by Iran-backed Houthi rebels hit a government military training camp in Yemen's Shabwa governorate, killing at least 53 recruits and wounding over 200 others.",
+          "outletCount": 10,
           "note": "CBC News reports the regional death toll rising to 73 fatalities according to provincial governor statements."
         }
       ],
@@ -532,21 +511,26 @@
           "clusterId": "saudi-closes-riyadh-skyscraper-amid-houthi-threats",
           "headline": "Saudi Closes Riyadh Skyscraper Amid Houthi Threats",
           "howItConnects": "Houthi cross-border aerial attacks in Yemen directly triggered precautionary emergency closures and work-from-home orders for corporate workers in Riyadh skyscrapers."
+        },
+        {
+          "clusterId": "saudi-arabia-postpones-fii-conference",
+          "headline": "Saudi Arabia Postpones FII Conference",
+          "howItConnects": "Escalating Houthi ballistic missile strikes across the region prompted Riyadh to cancel next week's flagship Future Investment Initiative summit."
         }
       ],
       "topic": "world",
       "imageUrl": "https://i.cbc.ca/ais/c1d9f186-567b-4033-9cc7-8fda0a241d02,1792496140290/full/max/0/default.jpg?im=Crop%2Crect%3D%280%2C191%2C4267%2C2400%29%3B",
-      "averageSentiment": -0.53,
-      "eventBase": -0.471,
-      "significanceScore": -0.78,
+      "averageSentiment": -0.74,
+      "eventBase": -0.673,
+      "significanceScore": -0.989,
       "factors": [
-        -59,
-        61,
-        51,
-        -13
+        -83,
+        65,
+        65,
+        -16
       ],
-      "sentimentSpread": 0.84,
-      "outletCount": 16,
+      "sentimentSpread": 0.77,
+      "outletCount": 10,
       "firstSeenAt": "2026-10-19T02:00:00.000Z",
       "latestUpdateAt": "2026-10-20T12:24:07.000Z",
       "coverage": [
@@ -570,27 +554,6 @@
           "imageUrl": "https://i.cbc.ca/ais/c1d9f186-567b-4033-9cc7-8fda0a241d02,1792496140290/full/max/0/default.jpg?im=Crop%2Crect%3D%280%2C191%2C4267%2C2400%29%3B",
           "link": "https://www.cbc.ca/news/world/houthi-attack-yemen-forces-rises-9.7388015?cmp=rss",
           "pubDate": "Tue, 20 Oct 2026 08:24:07 EDT"
-        },
-        {
-          "sourceId": "aljazeera",
-          "sourceName": "Al Jazeera",
-          "region": "ME",
-          "title": "Saudi Arabia cancels 2026 ‘Davos in the Desert’ amid Houthi attacks",
-          "description": "Riyadh postpones flagship investment conference until 2027, orders government staff to work from home.",
-          "sentiment": -0.287,
-          "eventBase": -0.233,
-          "framingMod": -0.054,
-          "factors": [
-            -35,
-            50,
-            25,
-            -12
-          ],
-          "explanation": "Saudi Arabia cancels its premier international investment forum amid continuing security threats from regional Houthi attacks. [Event Base: -0.23 | Editorial Framing: -0.05]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://www.aljazeera.com/news/2026/10/20/saudi-arabia-cancels-2026-davos-in-the-desert-amid-houthi-attacks?traffic_source=rss",
-          "pubDate": "Tue, 20 Oct 2026 01:05:31 +0000"
         },
         {
           "sourceId": "japantimes",
@@ -635,69 +598,6 @@
           "pubDate": "Mon, 19 Oct 2026 19:54:36 +0000"
         },
         {
-          "sourceId": "cnbc",
-          "sourceName": "CNBC News",
-          "region": "NA",
-          "title": "Saudi Arabia postpones big investor conference to 2027 as Iran-backed Houthis escalate attacks on kingdom",
-          "description": "Iran-backed Houthi militants have launched repeated volleys of missiles and drones at Saudi Arabia since a deadly airport attack earlier this month.",
-          "sentiment": -0.152,
-          "eventBase": -0.107,
-          "framingMod": -0.045,
-          "factors": [
-            -15,
-            55,
-            30,
-            -10
-          ],
-          "explanation": "This article reports Saudi Arabia postponing a major investor conference to 2027 due to escalating Houthi attacks, reflecting a significant negative economic and security impact. [Event Base: -0.11 | Editorial Framing: -0.04]",
-          "category": "business",
-          "imageUrl": null,
-          "link": "https://www.cnbc.com/2026/10/19/saudi-arabia-postpones-fii-investor-conference-to-2027.html",
-          "pubDate": "Mon, 19 Oct 2026 19:37:51 GMT"
-        },
-        {
-          "sourceId": "cnn",
-          "sourceName": "CNN",
-          "region": "NA",
-          "title": "Saudi Arabia cancels next week’s ‘Davos in the Desert’ conference after series of Houthi attacks - CNN",
-          "description": "Saudi Arabia cancels next week’s ‘Davos in the Desert’ conference after series of Houthi attacks CNN",
-          "sentiment": -0.152,
-          "eventBase": -0.107,
-          "framingMod": -0.045,
-          "factors": [
-            -15,
-            55,
-            30,
-            -10
-          ],
-          "explanation": "The article reports the cancellation of a major Saudi conference due to Houthi attacks, reflecting a negative economic and security impact on the kingdom. [Event Base: -0.11 | Editorial Framing: -0.04]",
-          "category": "business",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxQQjZHQ2NNTXM1Tlh3MHF1TDZxYUJmd2RBUi1tVU4tWkpsbnNvYi1FM0pOcWdrMjRqZHZET3JZRzZUSnd4Zy1KRW5GZEppNkREdjZROTRQeUdodXR2MjM3aHVtN3RxXzFGMHZqZksxZV9hZkUtcnNaR3FSRlptQU1aT1NRUU80VkRjZU1yNFE1dzlYQ05XZVJqZWlRcXE?oc=5",
-          "pubDate": "Mon, 19 Oct 2026 18:03:15 GMT"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Saudi Arabia postpones its 'Davos in the Desert' conference after attacks - Reuters",
-          "description": "Saudi Arabia postpones its 'Davos in the Desert' conference after attacks Reuters",
-          "sentiment": -0.301,
-          "eventBase": -0.233,
-          "framingMod": -0.068,
-          "factors": [
-            -35,
-            50,
-            25,
-            -15
-          ],
-          "explanation": "A prominent investment conference is postponed following security attacks, reflecting regional instability and economic disruption. [Event Base: -0.23 | Editorial Framing: -0.07]",
-          "category": "business",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPaXJvV3ktdmE4WU9ZNjVBcDRBYW9yNXJVYVI3MV83aWtIV0pYN0lGNzM4UlNRZDdpRGs1bGsxR18wcjY5STVhU1Q1VEZJUmRKWFZPUnoxSlpFaThtMzhjRlVIZGl2VVVYYTlYM181N0Jyb0h4ZWRrM2FVZFZsSFRBT1haU0QtdEp5QlZ6dVg2VVpyX2RsaDEzbnN2Q1NvSFc5WW5jT2VmVQ?oc=5",
-          "pubDate": "Mon, 19 Oct 2026 17:34:43 GMT"
-        },
-        {
           "sourceId": "guardian",
           "sourceName": "The Guardian",
           "region": "UK",
@@ -738,48 +638,6 @@
           "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/9320/live/759508d0-cbd5-11f1-aba9-2bb2608f11d9.jpg",
           "link": "https://www.bbc.co.uk/news/articles/cv0ld6lrr2zeo?at_medium=RSS&at_campaign=rss",
           "pubDate": "Mon, 19 Oct 2026 16:20:51 GMT"
-        },
-        {
-          "sourceId": "thenational",
-          "sourceName": "The National",
-          "region": "ME",
-          "title": "Saudi Arabia postpones FII investment in Riyadh after Houthi attacks",
-          "description": "Saudi Arabia has postponed its flagship Future Investment Initiative (FII) conference after a surge in Houthi attacks on the kingdom. The annual gathering was scheduled to take place from October 26 to 29 in Riyadh. \"The FII Institute announces that the tenth edition of the Future Investment Initiative, FII10 'The Power of Legacy', originally scheduled for October 26–29, 2026, in Riyadh, will now take place in 2027,\" an advisory issued by the ...",
-          "sentiment": -0.073,
-          "eventBase": -0.064,
-          "framingMod": -0.009,
-          "factors": [
-            -9,
-            59,
-            22,
-            -2
-          ],
-          "explanation": "Regional reporting on the rescheduling of an investment summit due to Houthi attacks, maintaining consistent impact scores. [Event Base: -0.06 | Editorial Framing: -0.01]",
-          "category": "business",
-          "imageUrl": "https://www.thenationalnews.com/resizer/v2/TQTDGEXGW264ANZ27TQSI3MJAA.jpg?auth=26e89f196168c373eea3b4177c21fe45c85989eb7ec0ab4b2bb41c86d229300b&smart=true&width=3000&height=1999",
-          "link": "https://www.thenationalnews.com/business/economy/2026/10/19/saudi-arabia-postpones-fii-investment-in-riyadh-after-houthi-attacks/",
-          "pubDate": "Mon, 19 Oct 2026 15:42:03 +0000"
-        },
-        {
-          "sourceId": "ft",
-          "sourceName": "Financial Times",
-          "region": "UK",
-          "title": "Saudi Arabia to postpone ‘Davos in the desert’ after Houthi attacks",
-          "description": "Flagship Future Investment Initiative was scheduled to begin next week in Riyadh but will now take place next year",
-          "sentiment": -0.087,
-          "eventBase": -0.064,
-          "framingMod": -0.023,
-          "factors": [
-            -9,
-            59,
-            22,
-            -5
-          ],
-          "explanation": "Financial wire coverage of the Saudi investment conference delay resulting from regional security threats, sharing baseline impact factors. [Event Base: -0.06 | Editorial Framing: -0.02]",
-          "category": "business",
-          "imageUrl": null,
-          "link": "https://www.ft.com/content/75a2ee4e-ead9-4d37-b1ea-6fd759c4691d?syn-25a6b1a6=1",
-          "pubDate": "Mon, 19 Oct 2026 15:40:33 GMT"
         },
         {
           "sourceId": "pbs",
@@ -973,7 +831,7 @@
         }
       ],
       "topic": "politics",
-      "imageUrl": "https://globalnews.ca/wp-content/uploads/2026/10/Alberta-referendum-reactions.jpg?quality=65&strip=all&w=720&h=480&crop=1",
+      "imageUrl": "https://static01.nyt.com/images/2026/10/20/multimedia/20int-canada-alberta-vote-01-tbfc/20int-canada-alberta-vote-01-tbfc-mediumSquareAt3X.jpg",
       "averageSentiment": -0.01,
       "eventBase": 0.001,
       "significanceScore": -0.26,
@@ -1008,6 +866,27 @@
           "imageUrl": null,
           "link": "https://www.aljazeera.com/news/2026/10/20/alberta-rejects-separation-referendum-whats-next-for-canadian-province?traffic_source=rss",
           "pubDate": "Tue, 20 Oct 2026 14:42:47 +0000"
+        },
+        {
+          "sourceId": "nyt",
+          "sourceName": "The New York Times",
+          "region": "NA",
+          "title": "Voters in Oil-Rich Alberta Reject Leaving Canada",
+          "description": "Electors have been asked if they wish to remain in Canada or to hold another vote on breaking away in a referendum that left both sides unhappy.",
+          "sentiment": -0.176,
+          "eventBase": -0.14,
+          "framingMod": -0.036,
+          "factors": [
+            -21,
+            43,
+            49,
+            -8
+          ],
+          "explanation": "Examines constitutional and economic tensions surrounding a contentious provincial autonomy referendum in Alberta. [Event Base: -0.14 | Editorial Framing: -0.04]",
+          "category": "politics",
+          "imageUrl": "https://static01.nyt.com/images/2026/10/20/multimedia/20int-canada-alberta-vote-01-tbfc/20int-canada-alberta-vote-01-tbfc-mediumSquareAt3X.jpg",
+          "link": "https://www.nytimes.com/2026/10/19/world/canada/alberta-secession-canada-referendum.html",
+          "pubDate": "Tue, 20 Oct 2026 14:27:01 +0000"
         },
         {
           "sourceId": "globalnews",
@@ -1302,27 +1181,6 @@
           "imageUrl": "https://imagenes.elpais.com/resizer/v2/SSQAXE4VINJMNEHF2JGJJRDLNQ.jpg?auth=561d442f730916631abfee6635c10ae575c10e601ed7e37f64b34febf36dd731",
           "link": "https://elpais.com/america/2026-10-20/los-ciudadanos-de-alberta-votan-en-referendum-permanecer-en-canada.html",
           "pubDate": "Tue, 20 Oct 2026 07:09:04 GMT"
-        },
-        {
-          "sourceId": "nyt",
-          "sourceName": "The New York Times",
-          "region": "NA",
-          "title": "Voters in Oil-Rich Alberta Reject Leaving Canada",
-          "description": "Electors have been asked if they wish to remain in Canada or to hold another vote on breaking away in a referendum that left both sides unhappy.",
-          "sentiment": -0.176,
-          "eventBase": -0.14,
-          "framingMod": -0.036,
-          "factors": [
-            -21,
-            43,
-            49,
-            -8
-          ],
-          "explanation": "Examines constitutional and economic tensions surrounding a contentious provincial autonomy referendum in Alberta. [Event Base: -0.14 | Editorial Framing: -0.04]",
-          "category": "politics",
-          "imageUrl": "https://static01.nyt.com/images/2026/10/20/multimedia/20int-canada-alberta-vote-01-tbfc/20int-canada-alberta-vote-01-tbfc-mediumSquareAt3X.jpg",
-          "link": "https://www.nytimes.com/2026/10/19/world/canada/alberta-secession-canada-referendum.html",
-          "pubDate": "Tue, 20 Oct 2026 14:27:01 +0000"
         },
         {
           "sourceId": "rte",
@@ -2116,7 +1974,7 @@
         }
       ],
       "topic": "world",
-      "imageUrl": "https://s.france24.com/media/display/6ff3a0ce-cc95-11f1-a599-4dd8ac2cf3bf/w:1024/p:16x9/EN-20261020-160252-160702-CS.jpg",
+      "imageUrl": "https://i.guim.co.uk/img/media/8583f4ba91abd08cbc173527ed7e3d8bbc7b1438/796_586_6012_4809/master/6012.jpg?width=700&quality=85&auto=format&fit=max&s=bd4f699402ee1e820b04eb250f0505ac",
       "averageSentiment": -0.33,
       "eventBase": -0.295,
       "significanceScore": -0.58,
@@ -2151,6 +2009,27 @@
           "imageUrl": null,
           "link": "https://www.cnbc.com/2026/10/20/france-protests-curfews-macron-gulf-trip.html",
           "pubDate": "Tue, 20 Oct 2026 15:01:38 GMT"
+        },
+        {
+          "sourceId": "guardian",
+          "sourceName": "The Guardian",
+          "region": "UK",
+          "title": "French cities ‘calm overnight’ after targeted curfews, prime minister says – Europe live",
+          "description": "Sébastien Lecornu suggests more curfews could be introduced to quell unrest after weekend protests Nordic correspondent As well as Steve Witkoff, Ukrainian president Volodymyr Zelenskyy will also meet the Norwegian prime minister, Jonas Gahr Støre and the Finnish president Alexander Stubb and Norway’s new King Haakon during his visit to Oslo. Continue reading...",
+          "sentiment": -0.281,
+          "eventBase": -0.258,
+          "framingMod": -0.023,
+          "factors": [
+            -35,
+            58,
+            35,
+            -5
+          ],
+          "explanation": "Live blog reporting notes relative calm following targeted curfews implemented to contain urban unrest in France. [Event Base: -0.26 | Editorial Framing: -0.02]",
+          "category": "world",
+          "imageUrl": "https://i.guim.co.uk/img/media/8583f4ba91abd08cbc173527ed7e3d8bbc7b1438/796_586_6012_4809/master/6012.jpg?width=700&quality=85&auto=format&fit=max&s=bd4f699402ee1e820b04eb250f0505ac",
+          "link": "https://www.theguardian.com/world/live/2026/oct/20/france-protests-paris-curfews-italy-europe-ukraine-latest-news-updates",
+          "pubDate": "Tue, 20 Oct 2026 14:58:01 GMT"
         },
         {
           "sourceId": "france24",
@@ -2214,27 +2093,6 @@
           "imageUrl": "https://s2-oglobo.glbimg.com/xjTSV9pWRBeitjC0ACXevpbjzwQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/W/8/LGrpA1SViwuAQcgowBXw/441911522.jpg",
           "link": "https://oglobo.globo.com/mundo/noticia/2026/10/20/franca-vai-prorrogar-toques-de-recolher-apos-restricoes-conterem-disturbios-anuncia-primeiro-ministro.ghtml",
           "pubDate": "Tue, 20 Oct 2026 14:45:19 -0000"
-        },
-        {
-          "sourceId": "guardian",
-          "sourceName": "The Guardian",
-          "region": "UK",
-          "title": "French cities ‘calm overnight’ after targeted curfews, prime minister says – Europe live",
-          "description": "Sébastien Lecornu suggests more curfews could be introduced to quell unrest after weekend protests Nordic correspondent As well as Steve Witkoff, Ukrainian president Volodymyr Zelenskyy will also meet the Norwegian prime minister, Jonas Gahr Støre and the Finnish president Alexander Stubb and Norway’s new King Haakon during his visit to Oslo. Continue reading...",
-          "sentiment": -0.281,
-          "eventBase": -0.258,
-          "framingMod": -0.023,
-          "factors": [
-            -35,
-            58,
-            35,
-            -5
-          ],
-          "explanation": "Live blog reporting notes relative calm following targeted curfews implemented to contain urban unrest in France. [Event Base: -0.26 | Editorial Framing: -0.02]",
-          "category": "world",
-          "imageUrl": "https://i.guim.co.uk/img/media/8583f4ba91abd08cbc173527ed7e3d8bbc7b1438/796_586_6012_4809/master/6012.jpg?width=700&quality=85&auto=format&fit=max&s=bd4f699402ee1e820b04eb250f0505ac",
-          "link": "https://www.theguardian.com/world/live/2026/oct/20/france-protests-paris-curfews-italy-europe-ukraine-latest-news-updates",
-          "pubDate": "Tue, 20 Oct 2026 14:58:01 GMT"
         },
         {
           "sourceId": "nyt",
@@ -5859,27 +5717,6 @@
       "latestUpdateAt": "2026-10-20T15:22:00.000Z",
       "coverage": [
         {
-          "sourceId": "latercera",
-          "sourceName": "La Tercera",
-          "region": "LATAM",
-          "title": "Iran Claims Two Tankers 'Caught Fire' After Hitting Naval Mines in the Strait of Hormuz",
-          "description": "Iran's Revolutionary Guard reported that two oil tankers caught fire after striking mines in the Strait of Hormuz, warning that oil companies face escalating costs if US actions continue.",
-          "sentiment": -0.637,
-          "eventBase": -0.524,
-          "framingMod": -0.113,
-          "factors": [
-            -63,
-            74,
-            54,
-            -25
-          ],
-          "explanation": "Covers naval mine strikes on commercial oil tankers in the Strait of Hormuz amid explicit threats from Iranian state forces. [Event Base: -0.52 | Editorial Framing: -0.11]",
-          "category": "world",
-          "imageUrl": "https://www.latercera.com/resizer/v2/ZQKC4WA25BAZFFM6GJL62DLUN4.jpg?auth=68ae1721ffd04c73e34283c93cdfba1e60d66fe7ac4c5fd79847c11b438e7d6b&smart=true&width=1200&height=800",
-          "link": "https://www.latercera.com/mundo/noticia/iran-afirma-que-dos-petroleros-se-incendiaron-tras-chocar-con-minas-navales-en-el-estrecho-de-ormuz/",
-          "pubDate": "Tue, 20 Oct 2026 14:07:41 +0000"
-        },
-        {
           "sourceId": "cnbc",
           "sourceName": "CNBC News",
           "region": "NA",
@@ -5899,6 +5736,27 @@
           "imageUrl": null,
           "link": "https://www.cnbc.com/2026/10/20/oil-price-wti-brent-crude.html",
           "pubDate": "Tue, 20 Oct 2026 15:22:00 GMT"
+        },
+        {
+          "sourceId": "latercera",
+          "sourceName": "La Tercera",
+          "region": "LATAM",
+          "title": "Iran Claims Two Tankers 'Caught Fire' After Hitting Naval Mines in the Strait of Hormuz",
+          "description": "Iran's Revolutionary Guard reported that two oil tankers caught fire after striking mines in the Strait of Hormuz, warning that oil companies face escalating costs if US actions continue.",
+          "sentiment": -0.637,
+          "eventBase": -0.524,
+          "framingMod": -0.113,
+          "factors": [
+            -63,
+            74,
+            54,
+            -25
+          ],
+          "explanation": "Covers naval mine strikes on commercial oil tankers in the Strait of Hormuz amid explicit threats from Iranian state forces. [Event Base: -0.52 | Editorial Framing: -0.11]",
+          "category": "world",
+          "imageUrl": "https://www.latercera.com/resizer/v2/ZQKC4WA25BAZFFM6GJL62DLUN4.jpg?auth=68ae1721ffd04c73e34283c93cdfba1e60d66fe7ac4c5fd79847c11b438e7d6b&smart=true&width=1200&height=800",
+          "link": "https://www.latercera.com/mundo/noticia/iran-afirma-que-dos-petroleros-se-incendiaron-tras-chocar-con-minas-navales-en-el-estrecho-de-ormuz/",
+          "pubDate": "Tue, 20 Oct 2026 14:07:41 +0000"
         },
         {
           "sourceId": "bloomberg",
@@ -6070,25 +5928,25 @@
       "latestUpdateAt": "2026-10-20T13:55:02.000Z",
       "coverage": [
         {
-          "sourceId": "cnbc",
-          "sourceName": "CNBC News",
-          "region": "NA",
-          "title": "UK to deploy fighter jets to defend Saudi cities from Houthi attacks",
-          "description": "The U.K.'s Royal Air Force will deploy jets to assist with defensive operations, but will not engage in offensive strikes.",
-          "sentiment": -0.326,
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "UK to fly RAF missions defending Saudi Arabia against Houthi attacks, Bloomberg reports - Reuters",
+          "description": "UK to fly RAF missions defending Saudi Arabia against Houthi attacks, Bloomberg reports Reuters",
+          "sentiment": -0.324,
           "eventBase": -0.326,
-          "framingMod": 0,
+          "framingMod": 0.002,
           "factors": [
             -42,
             62,
             48,
-            0
+            1
           ],
-          "explanation": "CNBC covers the UK's defensive military deployment to protect Saudi cities from Houthi attacks with factual framing. [Event Base: -0.33 | Editorial Framing: +0.00]",
+          "explanation": "Neutral wire reporting on the United Kingdom's planned air defense patrols over Saudi territory against Houthi aerial threats. [Event Base: -0.33 | Editorial Framing: +0.00]",
           "category": "world",
           "imageUrl": null,
-          "link": "https://www.cnbc.com/2026/10/20/uk-fighter-jets-saudi-houthi-attacks-iran.html",
-          "pubDate": "Tue, 20 Oct 2026 12:58:24 GMT"
+          "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQTGh1LWkyRVZqaTRQMEdnRXhvWFhvWnJ6TW5WdlEyM0dxTFQwLWczNjAwLU95SDFDZVVSdUNQUE1uYkREcG05THRjbmhiQk5FWlBjb2p2V01DVmhGRFppUmFHQUFwMm4yZHFLRndUbU9PcEVjY0JBY1JpZjROd0JnOTdoZXFodTRDSzJEQURHQkVzd21pMmtUZmdnLUE3SGI1UGt5Wno0WWVKR1ZWV0FaQ0FmZUY5aVlQZVAtRGV4WEhoTmVnbHRsZ0taZ2d2NFBxOFIzdQ?oc=5",
+          "pubDate": "Tue, 20 Oct 2026 13:55:02 GMT"
         },
         {
           "sourceId": "bbc",
@@ -6112,6 +5970,27 @@
           "pubDate": "Tue, 20 Oct 2026 13:54:35 GMT"
         },
         {
+          "sourceId": "cnbc",
+          "sourceName": "CNBC News",
+          "region": "NA",
+          "title": "UK to deploy fighter jets to defend Saudi cities from Houthi attacks",
+          "description": "The U.K.'s Royal Air Force will deploy jets to assist with defensive operations, but will not engage in offensive strikes.",
+          "sentiment": -0.326,
+          "eventBase": -0.326,
+          "framingMod": 0,
+          "factors": [
+            -42,
+            62,
+            48,
+            0
+          ],
+          "explanation": "CNBC covers the UK's defensive military deployment to protect Saudi cities from Houthi attacks with factual framing. [Event Base: -0.33 | Editorial Framing: +0.00]",
+          "category": "world",
+          "imageUrl": null,
+          "link": "https://www.cnbc.com/2026/10/20/uk-fighter-jets-saudi-houthi-attacks-iran.html",
+          "pubDate": "Tue, 20 Oct 2026 12:58:24 GMT"
+        },
+        {
           "sourceId": "oglobo",
           "sourceName": "O Globo",
           "region": "LATAM",
@@ -6131,27 +6010,6 @@
           "imageUrl": "https://s2-oglobo.glbimg.com/Eerq8_Jz9r5EJGMqcoGurZavTRc=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/c/A/lViLJtQeagA4ngm6tsPQ/afp-20260706-b9db4l2-v1-midres-britainrussiadefencenato.jpg",
           "link": "https://oglobo.globo.com/mundo/noticia/2026/10/20/reino-unido-anuncia-envio-de-avioes-militares-para-missoes-defensivas-na-arabia-saudita-contra-ataques-houthis.ghtml",
           "pubDate": "Tue, 20 Oct 2026 12:37:38 -0000"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "UK to fly RAF missions defending Saudi Arabia against Houthi attacks, Bloomberg reports - Reuters",
-          "description": "UK to fly RAF missions defending Saudi Arabia against Houthi attacks, Bloomberg reports Reuters",
-          "sentiment": -0.324,
-          "eventBase": -0.326,
-          "framingMod": 0.002,
-          "factors": [
-            -42,
-            62,
-            48,
-            1
-          ],
-          "explanation": "Neutral wire reporting on the United Kingdom's planned air defense patrols over Saudi territory against Houthi aerial threats. [Event Base: -0.33 | Editorial Framing: +0.00]",
-          "category": "world",
-          "imageUrl": null,
-          "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQTGh1LWkyRVZqaTRQMEdnRXhvWFhvWnJ6TW5WdlEyM0dxTFQwLWczNjAwLU95SDFDZVVSdUNQUE1uYkREcG05THRjbmhiQk5FWlBjb2p2V01DVmhGRFppUmFHQUFwMm4yZHFLRndUbU9PcEVjY0JBY1JpZjROd0JnOTdoZXFodTRDSzJEQURHQkVzd21pMmtUZmdnLUE3SGI1UGt5Wno0WWVKR1ZWV0FaQ0FmZUY5aVlQZVAtRGV4WEhoTmVnbHRsZ0taZ2d2NFBxOFIzdQ?oc=5",
-          "pubDate": "Tue, 20 Oct 2026 13:55:02 GMT"
         },
         {
           "sourceId": "scmp",
@@ -7924,6 +7782,27 @@
       "latestUpdateAt": "2026-10-20T15:15:42.000Z",
       "coverage": [
         {
+          "sourceId": "cnbc",
+          "sourceName": "CNBC News",
+          "region": "NA",
+          "title": "OpenAI bugging suspect Alfozan held without bail after Saudi government offers to pay",
+          "description": "Saudi national Abdulrahman Alfozan is accused of planting a recording device in an executive conference room at OpenAI headquarters in San Francisco.",
+          "sentiment": -0.264,
+          "eventBase": -0.241,
+          "framingMod": -0.023,
+          "factors": [
+            -40,
+            40,
+            30,
+            -5
+          ],
+          "explanation": "Follows the judicial hearing denying bail in the OpenAI bugging case amid foreign state financial intervention. [Event Base: -0.24 | Editorial Framing: -0.02]",
+          "category": "technology",
+          "imageUrl": null,
+          "link": "https://www.cnbc.com/2026/10/19/openai-bugging-suspect-alfozan-saudi-royal-family.html",
+          "pubDate": "Tue, 20 Oct 2026 15:15:42 GMT"
+        },
+        {
           "sourceId": "ft",
           "sourceName": "Financial Times",
           "region": "UK",
@@ -7985,27 +7864,6 @@
           "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/ad18/live/95af9980-cbd2-11f1-aba9-2bb2608f11d9.png",
           "link": "https://www.bbc.co.uk/news/articles/c6gel2dlyxvyo?at_medium=RSS&at_campaign=rss",
           "pubDate": "Mon, 19 Oct 2026 21:12:30 GMT"
-        },
-        {
-          "sourceId": "cnbc",
-          "sourceName": "CNBC News",
-          "region": "NA",
-          "title": "OpenAI bugging suspect Alfozan held without bail after Saudi government offers to pay",
-          "description": "Saudi national Abdulrahman Alfozan is accused of planting a recording device in an executive conference room at OpenAI headquarters in San Francisco.",
-          "sentiment": -0.264,
-          "eventBase": -0.241,
-          "framingMod": -0.023,
-          "factors": [
-            -40,
-            40,
-            30,
-            -5
-          ],
-          "explanation": "Follows the judicial hearing denying bail in the OpenAI bugging case amid foreign state financial intervention. [Event Base: -0.24 | Editorial Framing: -0.02]",
-          "category": "technology",
-          "imageUrl": null,
-          "link": "https://www.cnbc.com/2026/10/19/openai-bugging-suspect-alfozan-saudi-royal-family.html",
-          "pubDate": "Tue, 20 Oct 2026 15:15:42 GMT"
         },
         {
           "sourceId": "pbs",
@@ -8867,7 +8725,7 @@
     },
     {
       "id": "trump-golf-course-renovation-halts",
-      "story": "Trump Golf Course Renovation Halts",
+      "story": "Trump Pushes Ahead With DC Golf Course Overhaul",
       "summary": "Donald Trump pushed forward with the redevelopment timeline, announcing that construction and closure of the historic East Potomac golf course in Washington, D.C., will officially begin in November despite ongoing legal battles and a federal judge's restraining order.",
       "version": 2,
       "lastDevelopedAt": "2026-10-19T00:30:00.000Z",
@@ -8899,7 +8757,7 @@
           "version": 2,
           "type": "clarification",
           "timestamp": "2026-10-19T02:55:13.000Z",
-          "headline": "Trump Golf Course Renovation Halts",
+          "headline": "Trump Pushes Ahead With DC Golf Course Overhaul",
           "summary": "Donald Trump pushed forward with the redevelopment timeline, announcing that construction and closure of the historic East Potomac golf course in Washington, D.C., will officially begin in November despite ongoing legal battles and a federal judge's restraining order.",
           "beforeStory": "Trump Overhauls Historic DC Golf Course",
           "beforeSummary": "Despite ongoing legal challenges and a federal judge's blocking order, Donald Trump announced that the rapid renovation and redevelopment of the historic East Potomac golf course in Washington, D.C., will officially begin in November.",
@@ -12836,27 +12694,6 @@
       "latestUpdateAt": "2026-10-20T14:04:49.000Z",
       "coverage": [
         {
-          "sourceId": "bloomberg",
-          "sourceName": "Bloomberg",
-          "region": "GLOBAL",
-          "title": "Storm Austen to Boost Wind Power in Europe as Gas Prices Surge",
-          "description": "The first named storm of this autumn is set to lash the UK and northwest Europe with heavy rain and wind in the coming days, potentially bringing some relief to elevated power prices.",
-          "sentiment": 0.066,
-          "eventBase": 0.049,
-          "framingMod": 0.017,
-          "factors": [
-            15,
-            52,
-            20,
-            8
-          ],
-          "explanation": "Meteorological and economic dispatch reports that an incoming autumn storm will boost European wind energy generation and ease power prices. [Event Base: +0.05 | Editorial Framing: +0.02]",
-          "category": "climate",
-          "imageUrl": null,
-          "link": "https://www.bloomberg.com/news/articles/2026-10-20/storm-austen-to-boost-wind-power-in-europe-as-gas-prices-surge",
-          "pubDate": "Tue, 20 Oct 2026 11:39:12 GMT"
-        },
-        {
           "sourceId": "guardian",
           "sourceName": "The Guardian",
           "region": "UK",
@@ -12876,6 +12713,27 @@
           "imageUrl": "https://i.guim.co.uk/img/media/c57858faffd6eb23a4c63753572831eb2675974a/357_0_3048_2438/master/3048.jpg?width=700&quality=85&auto=format&fit=max&s=ad90f368391219a3e71fc9efba4c4946",
           "link": "https://www.theguardian.com/uk-news/2026/oct/20/storm-austen-named-uk-severe-weather-warning",
           "pubDate": "Tue, 20 Oct 2026 14:04:49 GMT"
+        },
+        {
+          "sourceId": "bloomberg",
+          "sourceName": "Bloomberg",
+          "region": "GLOBAL",
+          "title": "Storm Austen to Boost Wind Power in Europe as Gas Prices Surge",
+          "description": "The first named storm of this autumn is set to lash the UK and northwest Europe with heavy rain and wind in the coming days, potentially bringing some relief to elevated power prices.",
+          "sentiment": 0.066,
+          "eventBase": 0.049,
+          "framingMod": 0.017,
+          "factors": [
+            15,
+            52,
+            20,
+            8
+          ],
+          "explanation": "Meteorological and economic dispatch reports that an incoming autumn storm will boost European wind energy generation and ease power prices. [Event Base: +0.05 | Editorial Framing: +0.02]",
+          "category": "climate",
+          "imageUrl": null,
+          "link": "https://www.bloomberg.com/news/articles/2026-10-20/storm-austen-to-boost-wind-power-in-europe-as-gas-prices-surge",
+          "pubDate": "Tue, 20 Oct 2026 11:39:12 GMT"
         },
         {
           "sourceId": "rte",
@@ -14556,22 +14414,27 @@
           "clusterId": "marco-rubio-tours-central-asia",
           "headline": "Marco Rubio Tours Central Asia",
           "howItConnects": "U.S. diplomatic engagement in Central Asia and security realignments in the Middle East both illustrate Washington's broader geopolitical strategy to counter regional adversaries like China and Iran."
+        },
+        {
+          "clusterId": "houthi-missile-attack-kills-73-in-yemen",
+          "headline": "Houthi Missile Attack Kills 73 in Yemen",
+          "howItConnects": "Riyadh postponed its flagship investor summit to 2027 amid the surge in Houthi missile and drone attacks that killed 73 recruits in Yemen."
         }
       ],
       "topic": "business",
       "imageUrl": "https://static01.nyt.com/images/2026/10/19/multimedia/19biz-saudi-investment-ktlm/19biz-saudi-investment-ktlm-mediumSquareAt3X.jpg",
-      "averageSentiment": -0.12,
-      "eventBase": -0.092,
-      "significanceScore": -0.314,
+      "averageSentiment": -0.15,
+      "eventBase": -0.12,
+      "significanceScore": -0.388,
       "factors": [
-        -13,
-        56,
-        27,
-        -5
+        -17,
+        55,
+        26,
+        -7
       ],
-      "sentimentSpread": 0.08,
-      "outletCount": 6,
-      "firstSeenAt": "2026-10-19T15:42:03.000Z",
+      "sentimentSpread": 0.23,
+      "outletCount": 9,
+      "firstSeenAt": "2026-10-19T15:40:33.000Z",
       "latestUpdateAt": "2026-10-20T11:20:00.000Z",
       "coverage": [
         {
@@ -14615,6 +14478,27 @@
           "imageUrl": null,
           "link": "https://www.bloomberg.com/news/videos/2026-10-20/horizons-middle-east-africa-10-20-2026-video",
           "pubDate": "Tue, 20 Oct 2026 07:31:28 GMT"
+        },
+        {
+          "sourceId": "aljazeera",
+          "sourceName": "Al Jazeera",
+          "region": "ME",
+          "title": "Saudi Arabia cancels 2026 ‘Davos in the Desert’ amid Houthi attacks",
+          "description": "Riyadh postpones flagship investment conference until 2027, orders government staff to work from home.",
+          "sentiment": -0.287,
+          "eventBase": -0.233,
+          "framingMod": -0.054,
+          "factors": [
+            -35,
+            50,
+            25,
+            -12
+          ],
+          "explanation": "Saudi Arabia cancels its premier international investment forum amid continuing security threats from regional Houthi attacks. [Event Base: -0.23 | Editorial Framing: -0.05]",
+          "category": "world",
+          "imageUrl": null,
+          "link": "https://www.aljazeera.com/news/2026/10/20/saudi-arabia-cancels-2026-davos-in-the-desert-amid-houthi-attacks?traffic_source=rss",
+          "pubDate": "Tue, 20 Oct 2026 01:05:31 +0000"
         },
         {
           "sourceId": "cnbc",
@@ -14680,6 +14564,27 @@
           "pubDate": "Mon, 19 Oct 2026 18:03:15 GMT"
         },
         {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Saudi Arabia postpones its 'Davos in the Desert' conference after attacks - Reuters",
+          "description": "Saudi Arabia postpones its 'Davos in the Desert' conference after attacks Reuters",
+          "sentiment": -0.301,
+          "eventBase": -0.233,
+          "framingMod": -0.068,
+          "factors": [
+            -35,
+            50,
+            25,
+            -15
+          ],
+          "explanation": "A prominent investment conference is postponed following security attacks, reflecting regional instability and economic disruption. [Event Base: -0.23 | Editorial Framing: -0.07]",
+          "category": "business",
+          "imageUrl": null,
+          "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPaXJvV3ktdmE4WU9ZNjVBcDRBYW9yNXJVYVI3MV83aWtIV0pYN0lGNzM4UlNRZDdpRGs1bGsxR18wcjY5STVhU1Q1VEZJUmRKWFZPUnoxSlpFaThtMzhjRlVIZGl2VVVYYTlYM181N0Jyb0h4ZWRrM2FVZFZsSFRBT1haU0QtdEp5QlZ6dVg2VVpyX2RsaDEzbnN2Q1NvSFc5WW5jT2VmVQ?oc=5",
+          "pubDate": "Mon, 19 Oct 2026 17:34:43 GMT"
+        },
+        {
           "sourceId": "thenational",
           "sourceName": "The National",
           "region": "ME",
@@ -14699,6 +14604,27 @@
           "imageUrl": "https://www.thenationalnews.com/resizer/v2/TQTDGEXGW264ANZ27TQSI3MJAA.jpg?auth=26e89f196168c373eea3b4177c21fe45c85989eb7ec0ab4b2bb41c86d229300b&smart=true&width=3000&height=1999",
           "link": "https://www.thenationalnews.com/business/economy/2026/10/19/saudi-arabia-postpones-fii-investment-in-riyadh-after-houthi-attacks/",
           "pubDate": "Mon, 19 Oct 2026 15:42:03 +0000"
+        },
+        {
+          "sourceId": "ft",
+          "sourceName": "Financial Times",
+          "region": "UK",
+          "title": "Saudi Arabia to postpone ‘Davos in the desert’ after Houthi attacks",
+          "description": "Flagship Future Investment Initiative was scheduled to begin next week in Riyadh but will now take place next year",
+          "sentiment": -0.087,
+          "eventBase": -0.064,
+          "framingMod": -0.023,
+          "factors": [
+            -9,
+            59,
+            22,
+            -5
+          ],
+          "explanation": "Financial wire coverage of the Saudi investment conference delay resulting from regional security threats, sharing baseline impact factors. [Event Base: -0.06 | Editorial Framing: -0.02]",
+          "category": "business",
+          "imageUrl": null,
+          "link": "https://www.ft.com/content/75a2ee4e-ead9-4d37-b1ea-6fd759c4691d?syn-25a6b1a6=1",
+          "pubDate": "Mon, 19 Oct 2026 15:40:33 GMT"
         }
       ]
     },
@@ -15098,27 +15024,6 @@
       "latestUpdateAt": "2026-10-20T13:59:50.000Z",
       "coverage": [
         {
-          "sourceId": "guardian",
-          "sourceName": "The Guardian",
-          "region": "UK",
-          "title": "Google Cloud outage: service recovery underway after power problem causes widespread disruption – latest updates",
-          "description": "Google apologises after suffering a major Cloud outage in its London region that caused problems at banks, Revolut, and court video cameras The pound has rallied after Britain’s unemployment rate fell unexpectedly this morning to 4.7%. Sterling has gained half a cent against the US dollar to $1.3352, as the City welcomes the news that employment rose in the last quarter. “This data has caught the market on the hop, with traders scrambling to r...",
-          "sentiment": -0.207,
-          "eventBase": -0.162,
-          "framingMod": -0.045,
-          "factors": [
-            -25,
-            50,
-            20,
-            -10
-          ],
-          "explanation": "Live blog tracking disruptions to banking apps, retail services, and judicial courts caused by a Google Cloud power failure in London. [Event Base: -0.16 | Editorial Framing: -0.04]",
-          "category": "technology",
-          "imageUrl": "https://i.guim.co.uk/img/media/4abba6c5ea456b0e89fd05e658c5c6fa8a713ce7/430_0_3301_2641/master/3301.jpg?width=700&quality=85&auto=format&fit=max&s=57689be7c0297f8bb9b70bbc83b6bb95",
-          "link": "https://www.theguardian.com/business/live/2026/oct/20/uk-unemployment-rate-pre-budget-boost-wages-vacancies-latest-news-updates",
-          "pubDate": "Tue, 20 Oct 2026 13:02:38 GMT"
-        },
-        {
           "sourceId": "reuters",
           "sourceName": "Reuters",
           "region": "GLOBAL",
@@ -15138,6 +15043,27 @@
           "imageUrl": null,
           "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQS0VTdUFWc1FhZzJaWWZDMkN3dkl0RzdnMU84OHNOS1g0eDdGZ0RNWDVJcVd1MXZzMHU2Unp0QXBXN0tvc3ZZcW1iRlg1Y1h4TFl3Yi1oM2pWRW5KLUNTT0M1NU1YMGdrUjY2MkZTNW82U2FOX0VYRkRVaTlmckJ0ZElGcjJYNzlhSnVCQzA3X0tiVTZ2Z092U2haTQ?oc=5",
           "pubDate": "Tue, 20 Oct 2026 13:59:50 GMT"
+        },
+        {
+          "sourceId": "guardian",
+          "sourceName": "The Guardian",
+          "region": "UK",
+          "title": "Google Cloud outage: service recovery underway after power problem causes widespread disruption – latest updates",
+          "description": "Google apologises after suffering a major Cloud outage in its London region that caused problems at banks, Revolut, and court video cameras The pound has rallied after Britain’s unemployment rate fell unexpectedly this morning to 4.7%. Sterling has gained half a cent against the US dollar to $1.3352, as the City welcomes the news that employment rose in the last quarter. “This data has caught the market on the hop, with traders scrambling to r...",
+          "sentiment": -0.207,
+          "eventBase": -0.162,
+          "framingMod": -0.045,
+          "factors": [
+            -25,
+            50,
+            20,
+            -10
+          ],
+          "explanation": "Live blog tracking disruptions to banking apps, retail services, and judicial courts caused by a Google Cloud power failure in London. [Event Base: -0.16 | Editorial Framing: -0.04]",
+          "category": "technology",
+          "imageUrl": "https://i.guim.co.uk/img/media/4abba6c5ea456b0e89fd05e658c5c6fa8a713ce7/430_0_3301_2641/master/3301.jpg?width=700&quality=85&auto=format&fit=max&s=57689be7c0297f8bb9b70bbc83b6bb95",
+          "link": "https://www.theguardian.com/business/live/2026/oct/20/uk-unemployment-rate-pre-budget-boost-wages-vacancies-latest-news-updates",
+          "pubDate": "Tue, 20 Oct 2026 13:02:38 GMT"
         },
         {
           "sourceId": "abcau",
@@ -20094,27 +20020,6 @@
       "latestUpdateAt": "2026-10-20T14:34:00.000Z",
       "coverage": [
         {
-          "sourceId": "oglobo",
-          "sourceName": "O Globo",
-          "region": "LATAM",
-          "title": "Google says 'several' cloud services suffered network failures in Europe",
-          "description": "A technical outage affecting Google Cloud's London region disrupted online banking services and fintech platforms like Revolut across the UK and Europe.",
-          "sentiment": -0.362,
-          "eventBase": -0.249,
-          "framingMod": -0.113,
-          "factors": [
-            -35,
-            55,
-            30,
-            -25
-          ],
-          "explanation": "Google Cloud service outages disrupt banking and fintech operations across the UK and parts of Europe. [Event Base: -0.25 | Editorial Framing: -0.11]",
-          "category": "technology",
-          "imageUrl": "https://s2-oglobo.glbimg.com/feUF3UasRKUIKW45-1kfdme-jZg=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/y/C/tCA91nSDuZmf6iKLCg0A/google-cloud-bloomberg.jpg",
-          "link": "https://oglobo.globo.com/economia/tecnologia/noticia/2026/10/20/google-afirma-que-varios-servicos-em-nuvem-sofreram-falhas-de-rede-na-europa.ghtml",
-          "pubDate": "Tue, 20 Oct 2026 12:02:59 -0000"
-        },
-        {
           "sourceId": "wsj",
           "sourceName": "Wall Street Journal",
           "region": "NA",
@@ -20134,6 +20039,27 @@
           "imageUrl": null,
           "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxPZU9oaGJacEZnOFoyeHBZS3k4cVJHTFdjelUxbkozMWN0QkVFSkJSZXE3cFp2VDFJM2kycjdOb2dkMU95WFlwZGNtdmprbzFpRUdDOTM1MXdld3hYakNyX0VNOEQ1NXhGSFBqT19wM3JkQlN4ZG1BNjN1MDZ3QS1fR0Q0LXhTdlZVd0lHcThJMlNaaXpLRGF4ZnNSS1VMTGd2dHAzcnBOSXBMUW9IVTFtcFBOSlBDMThlbGc2Nw?oc=5",
           "pubDate": "Tue, 20 Oct 2026 14:34:00 GMT"
+        },
+        {
+          "sourceId": "oglobo",
+          "sourceName": "O Globo",
+          "region": "LATAM",
+          "title": "Google says 'several' cloud services suffered network failures in Europe",
+          "description": "A technical outage affecting Google Cloud's London region disrupted online banking services and fintech platforms like Revolut across the UK and Europe.",
+          "sentiment": -0.362,
+          "eventBase": -0.249,
+          "framingMod": -0.113,
+          "factors": [
+            -35,
+            55,
+            30,
+            -25
+          ],
+          "explanation": "Google Cloud service outages disrupt banking and fintech operations across the UK and parts of Europe. [Event Base: -0.25 | Editorial Framing: -0.11]",
+          "category": "technology",
+          "imageUrl": "https://s2-oglobo.glbimg.com/feUF3UasRKUIKW45-1kfdme-jZg=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/y/C/tCA91nSDuZmf6iKLCg0A/google-cloud-bloomberg.jpg",
+          "link": "https://oglobo.globo.com/economia/tecnologia/noticia/2026/10/20/google-afirma-que-varios-servicos-em-nuvem-sofreram-falhas-de-rede-na-europa.ghtml",
+          "pubDate": "Tue, 20 Oct 2026 12:02:59 -0000"
         }
       ]
     },
@@ -20543,7 +20469,7 @@
         }
       ],
       "topic": "politics",
-      "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/10/931/523/barbara-pierce-bush.jpg?ve=1&tl=1",
+      "imageUrl": "https://static01.nyt.com/images/2026/10/20/multimedia/20daily-talarico-03-mvcw/20daily-talarico-03-mvcw-mediumSquareAt3X.jpg",
       "averageSentiment": 0.04,
       "eventBase": 0.032,
       "significanceScore": 0.159,
@@ -20558,27 +20484,6 @@
       "firstSeenAt": "2026-10-20T03:52:53.000Z",
       "latestUpdateAt": "2026-10-20T14:38:32.000Z",
       "coverage": [
-        {
-          "sourceId": "fox",
-          "sourceName": "Fox News",
-          "region": "NA",
-          "title": "Bush family royalty backs Democrat in battle to flip Texas blue",
-          "description": "Barbara Bush donated $2,500 to a PAC supporting James Talarico's Texas Senate race against Ken Paxton, using her real name in public FEC filings.",
-          "sentiment": 0.065,
-          "eventBase": 0.048,
-          "framingMod": 0.017,
-          "factors": [
-            15,
-            45,
-            25,
-            18
-          ],
-          "explanation": "Barbara Bush donates to a PAC supporting a Texas Democratic Senate candidate, crossing traditional political lines. [Event Base: +0.05 | Editorial Framing: +0.02]",
-          "category": "politics",
-          "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/10/931/523/barbara-pierce-bush.jpg?ve=1&tl=1",
-          "link": "https://www.foxnews.com/politics/bush-family-royalty-backs-democrat-battle-flip-texas-blue",
-          "pubDate": "Tue, 20 Oct 2026 09:36:40 -0400"
-        },
         {
           "sourceId": "nyt",
           "sourceName": "The New York Times",
@@ -20599,6 +20504,27 @@
           "imageUrl": "https://static01.nyt.com/images/2026/10/20/multimedia/20daily-talarico-03-mvcw/20daily-talarico-03-mvcw-mediumSquareAt3X.jpg",
           "link": "https://www.nytimes.com/2026/10/20/podcasts/the-daily/james-talarico-interview-texas-midterms.html",
           "pubDate": "Tue, 20 Oct 2026 14:38:32 +0000"
+        },
+        {
+          "sourceId": "fox",
+          "sourceName": "Fox News",
+          "region": "NA",
+          "title": "Bush family royalty backs Democrat in battle to flip Texas blue",
+          "description": "Barbara Bush donated $2,500 to a PAC supporting James Talarico's Texas Senate race against Ken Paxton, using her real name in public FEC filings.",
+          "sentiment": 0.065,
+          "eventBase": 0.048,
+          "framingMod": 0.017,
+          "factors": [
+            15,
+            45,
+            25,
+            18
+          ],
+          "explanation": "Barbara Bush donates to a PAC supporting a Texas Democratic Senate candidate, crossing traditional political lines. [Event Base: +0.05 | Editorial Framing: +0.02]",
+          "category": "politics",
+          "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/10/931/523/barbara-pierce-bush.jpg?ve=1&tl=1",
+          "link": "https://www.foxnews.com/politics/bush-family-royalty-backs-democrat-battle-flip-texas-blue",
+          "pubDate": "Tue, 20 Oct 2026 09:36:40 -0400"
         },
         {
           "sourceId": "cnn",
