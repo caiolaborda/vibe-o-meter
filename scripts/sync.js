@@ -1201,15 +1201,24 @@ Return JSON array in format:
       const rawCandidates = cl.ids.map(id => candidates[id]).filter(Boolean);
       if (rawCandidates.length < 2) return;
 
-      // Strict Peer-to-Peer Coherence Guard (prevents LLM digit slips & thematic false-positive buckets):
-      // Every member must share stems directly with at least one PEER item from a DIFFERENT outlet in the cluster:
-      // either >=1 title stem AND >=2 full stems (with >=1 specific stem docFreq <= 18), or >=1 rare proper-noun title stem (docFreq <= 8)
+      // Strict Anchor + Peer-to-Peer Coherence Guard (prevents LLM digit slips, spliced ID arrays & thematic buckets):
+      // 1. Every candidate must share at least 1 stem with the cluster's own story+summary anchor (so a spliced 4-article sub-group
+      //    like Flydubai can never sit inside an Ebola cluster just because the 4 Flydubai articles agree with each other).
+      // 2. Every candidate must ALSO share stems with at least one PEER item from a DIFFERENT outlet in the cluster.
+      const directAnchorInIds = rawCandidates.find(m => m.isClusterAnchor && m.anchorCluster);
+      const clusterAnchorStems = new Set(extractCoherenceStems(
+        `${cl.story || ''} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.story || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`
+      ));
       const rawMatching = rawCandidates.filter((art, idx) => {
         if (/\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel)\b/i.test(art.title || '')) {
           return false;
         }
         const myTitleStems = art.titleStems || new Set(extractCoherenceStems(`${art.anchorStory || ''} ${art.title || ''}`));
         const myAllStems = art.allStems || new Set(extractCoherenceStems(`${art.anchorStory || ''} ${art.title || ''} ${(art.description || '').slice(0, 125)}`));
+        if (clusterAnchorStems.size > 0 && ![...myAllStems].some(s => clusterAnchorStems.has(s))) {
+          console.warn(`[Clusters] Dropped zero-anchor-overlap spliced outlier from "${cl.story}": [${art.sourceId}] "${art.title}"`);
+          return false;
+        }
         const keep = rawCandidates.some((other, j) => {
           if (j === idx) return false;
           if (!art.isClusterAnchor && !other.isClusterAnchor && other.sourceId === art.sourceId) return false;
@@ -1847,14 +1856,21 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       if (idxs.length < 2) return false;
       const pairKey = `${Math.min(idxs[0], idxs[1])}:${Math.max(idxs[0], idxs[1])}`;
       if (lateralPairKeys.has(pairKey)) return false;
-      // Deterministic stem-overlap guard: reject any LLM index slip where merged clusters share zero content stems
+      // Deterministic stem-overlap guard: reject any LLM index slip or broad-country over-merge
+      // where merged clusters do not share at least 1 specific title stem (excluding broad geopolitical actors)
+      const broadMergeGeoStems = new Set([
+        'saudi', 'arabia', 'houthi', 'yemen', 'iran', 'israel', 'gaza', 'ukrain', 'russia',
+        'china', 'chines', 'trump', 'biden', 'ameri', 'europ', 'britain', 'british', 'attack'
+      ]);
       const metaA = meta[idxs[0]];
       const metaB = meta[idxs[1]];
       if (metaA && metaB) {
-        const sharedTitle = [...metaA.titleStems].filter(s => metaB.titleStems.has(s)).length;
-        const sharedAll = [...metaA.allStems].filter(s => metaB.allStems.has(s)).length;
-        if (sharedTitle < 1 && sharedAll < 2) {
-          console.warn(`[Clusters] Rejected low-overlap merge slip between [${idxs[0]}] "${clusters[idxs[0]]?.story}" and [${idxs[1]}] "${clusters[idxs[1]]?.story}"`);
+        const sharedTitle = [...metaA.titleStems].filter(s => metaB.titleStems.has(s));
+        const sharedSpecificTitle = sharedTitle.filter(s => !broadMergeGeoStems.has(s));
+        const sharedAll = [...metaA.allStems].filter(s => metaB.allStems.has(s));
+        const sharedSpecificAll = sharedAll.filter(s => !broadMergeGeoStems.has(s));
+        if ((sharedTitle.length < 1 && sharedAll.length < 2) || (sharedSpecificTitle.length < 1 && sharedSpecificAll.length < 2)) {
+          console.warn(`[Clusters] Rejected low-specificity/broad-geo merge between [${idxs[0]}] "${clusters[idxs[0]]?.story}" and [${idxs[1]}] "${clusters[idxs[1]]?.story}"`);
           return false;
         }
       }
