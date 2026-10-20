@@ -156,12 +156,13 @@ async function generateDailyBriefing(options = {}) {
 
   let briefingText = '';
   const apiKey = process.env.GEMINI_PAID_API_KEY || process.env.GEMINI_API_KEY;
+  const envModel = process.env.GEMINI_MODEL === 'gemini-2.5-flash' ? 'gemini-3.8-flash' : process.env.GEMINI_MODEL;
   const modelsToTry = [
-    process.env.GEMINI_MODEL,
+    envModel,
     'gemini-3.8-flash',
-    'gemini-2.5-flash',
     'gemini-3.5-flash',
-    'gemini-3.5-flash-lite'
+    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   if (apiKey) {

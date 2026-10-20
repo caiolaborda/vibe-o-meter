@@ -482,13 +482,15 @@ function getOrderedKeyTiers(apiKeyOrTiers) {
 // Structured Gemini sentiment analysis with cross-outlet batching & 4-Factor First-Principles Formula
 async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, customBatchSize, existingEvaluatedPool = []) {
   const keyTiers = getOrderedKeyTiers(apiKeyOrTiers);
+  const envModel = process.env.GEMINI_MODEL === 'gemini-2.5-flash' ? 'gemini-3.5-flash' : process.env.GEMINI_MODEL;
+  const reqModel = requestedModel === 'gemini-2.5-flash' ? 'gemini-3.5-flash' : requestedModel;
   const modelsToTry = [
-    requestedModel,
-    process.env.GEMINI_MODEL,
+    reqModel,
+    envModel,
     'gemini-3.8-flash',
-    'gemini-2.5-flash',
     'gemini-3.5-flash',
-    'gemini-3.5-flash-lite'
+    'gemini-3.5-flash-lite',
+    'gemini-2.5-flash'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   // Pre-tokenize recent 4-factor articles from the last 36 hours for verified same-incident calibration
@@ -1136,10 +1138,9 @@ Return JSON array in format:
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const modelsToTry = [
     'gemini-3.5-flash-lite',
-    process.env.GEMINI_MODEL,
+    'gemini-3.5-flash',
     'gemini-3.8-flash',
-    'gemini-2.5-flash',
-    'gemini-3.5-flash'
+    'gemini-2.5-flash'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   let clusters = null;
