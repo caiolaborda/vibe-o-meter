@@ -1,22 +1,24 @@
 {
   "dataset": "vibe-o-meter/good-news",
-  "lastUpdated": "2026-10-20T22:19:23.427Z",
-  "count24h": 53,
-  "count7d": 177,
+  "lastUpdated": "2026-10-20T22:28:30.759Z",
+  "count24h": 52,
+  "count7d": 176,
   "constructiveClusterCount": 39,
   "top5DailyAntidote": [
     {
       "title": "Drop in deforestation in Brazil generates R$ 1.16 trillion for the global economy",
       "description": "A recent economic study shows that declining deforestation rates in the Amazon and Cerrado have generated an estimated R$ 1.16 trillion in global economic and climate benefits.",
       "sentiment": 0.752,
-      "significanceScore": 0.752,
+      "significanceScore": 0.963,
       "factors": [
         78,
         85,
         75,
         28
       ],
-      "outletCount": 1,
+      "clusterId": "amazon-deforestation-falls-to-record-low",
+      "clusterStory": "Amazon Deforestation Falls to Record Low",
+      "outletCount": 7,
       "explanation": "A verified economic study finds that reduced deforestation in Brazil yielded massive global economic and climate benefits. [Event Base: +0.67 | Editorial Framing: +0.08]",
       "category": "climate",
       "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
@@ -27,7 +29,7 @@
       "pubDate": "Tue, 20 Oct 2026 16:59:00 -0300",
       "isPast24h": true,
       "isPast48h": true,
-      "antidoteRank": 0.752
+      "antidoteRank": 0.963
     },
     {
       "title": "SpaceX profit exceeds estimates in Q3 thanks to 161% revenue increase",
@@ -132,7 +134,7 @@
     {
       "id": "amazon-deforestation-falls-to-record-low",
       "story": "Amazon Deforestation Falls to Record Low",
-      "summary": "Official satellite monitoring data from Brazil's space research agency INPE revealed that Amazon rainforest deforestation fell to its lowest recorded level in four decades ahead of the presidential runoff.",
+      "summary": "Official satellite monitoring data from Brazil's space research agency INPE revealed that Amazon rainforest deforestation fell to its lowest recorded level in four decades ahead of the presidential runoff, with economic studies estimating macroeconomic benefits of up to R$ 1.16 trillion globally.",
       "version": 1,
       "evolutionHistory": [
         {
@@ -143,6 +145,17 @@
           "summary": "Official satellite monitoring data from Brazil's space research agency INPE revealed that Amazon rainforest deforestation fell to its lowest recorded level in four decades ahead of the presidential runoff.",
           "outletCount": 6,
           "note": "Initial cluster formation on the wire"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-10-20T22:23:57.000Z",
+          "headline": "Amazon Deforestation Falls to Record Low",
+          "summary": "Official satellite monitoring data from Brazil's space research agency INPE revealed that Amazon rainforest deforestation fell to its lowest recorded level in four decades ahead of the presidential runoff, with economic studies estimating macroeconomic benefits of up to R$ 1.16 trillion globally.",
+          "beforeStory": "Amazon Deforestation Falls to Record Low",
+          "beforeSummary": "Official satellite monitoring data from Brazil's space research agency INPE revealed that Amazon rainforest deforestation fell to its lowest recorded level in four decades ahead of the presidential runoff.",
+          "outletCount": 7,
+          "note": "O Globo and Agência Brasil estimate economic gains up to R$ 1.16 trillion globally from lower deforestation."
         }
       ],
       "lateralConnections": [
@@ -150,44 +163,70 @@
           "clusterId": "trump-approval-hits-record-low-ahead-of-midterms",
           "headline": "Trump Approval Hits Record Low Ahead of Midterms",
           "howItConnects": "Record-low domestic political approval figures for US President Trump run parallel to significant ecological milestones achieved by Brazil under its ongoing administrative leadership."
+        },
+        {
+          "clusterId": "brazilian-court-orders-meta-to-prove-election-equality",
+          "headline": "Brazilian Court Orders Meta to Prove Election Equality",
+          "howItConnects": "Both stories highlight key economic and regulatory data points shaping the final days of Brazil's high-stakes presidential runoff election."
         }
       ],
       "topic": "climate",
-      "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-      "averageSentiment": 0.59,
-      "eventBase": 0.551,
-      "significanceScore": 0.784,
+      "imageUrl": "https://s2-oglobo.glbimg.com/-h_bh1Myv5y4TniQk67SDukRZZg=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/L/B/nSKPEqTKaXaYZqcWUAww/istock-1706278382.jpg",
+      "averageSentiment": 0.58,
+      "eventBase": 0.533,
+      "significanceScore": 0.791,
       "factors": [
-        69,
-        84,
-        64,
-        15
+        67,
+        83,
+        63,
+        16
       ],
-      "sentimentSpread": 0.03,
-      "outletCount": 6,
+      "sentimentSpread": 0.41,
+      "outletCount": 7,
       "firstSeenAt": "2026-10-16T22:30:00.000Z",
-      "latestUpdateAt": "2026-10-18T12:00:00.000Z",
+      "latestUpdateAt": "2026-10-20T22:23:57.000Z",
       "coverage": [
+        {
+          "sourceId": "oglobo",
+          "sourceName": "O Globo",
+          "region": "LATAM",
+          "title": "Drop in Amazon and Cerrado Deforestation Yielded Up to R$ 192 Billion for Brazilian Economy, FGV Estimates",
+          "description": "A study by the Getulio Vargas Foundation estimates that reduced deforestation in the Amazon and Cerrado since 2023 generated up to R$ 192 billion in economic benefits for Brazil through avoided climate damages.",
+          "sentiment": 0.345,
+          "eventBase": 0.317,
+          "framingMod": 0.028,
+          "factors": [
+            48,
+            69,
+            53,
+            11
+          ],
+          "explanation": "A macroeconomic assessment demonstrating vast economic and ecological benefits from reduced deforestation in the Amazon and Cerrado confirms substantial environmental progress. [Event Base: +0.32 | Editorial Framing: +0.03]",
+          "category": "climate",
+          "imageUrl": "https://s2-oglobo.glbimg.com/-h_bh1Myv5y4TniQk67SDukRZZg=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/L/B/nSKPEqTKaXaYZqcWUAww/istock-1706278382.jpg",
+          "link": "https://oglobo.globo.com/brasil/meio-ambiente/noticia/2026/10/20/queda-de-desmatamento-na-amazonia-e-no-cerrado-rendeu-ate-r-192-bilhoes-para-a-economia-brasileira-estima-fgv.ghtml",
+          "pubDate": "Tue, 20 Oct 2026 22:23:57 -0000"
+        },
         {
           "sourceId": "agenciabrasil",
           "sourceName": "Agência Brasil",
           "region": "LATAM",
-          "title": "Amazon records lowest deforestation level in 41 years",
-          "description": "The Amazon recorded its lowest level of deforestation in 2025 in 41 years. The deforested area totaled 693,000 hectares over the period covered by the data. The figures are part of MapBiomas Collection 11, which compiles information on land cover and land use in Brazil between 1985 and 2025. Most of the deforestation - 639,000 hectares - occurred in primary vegetation, meaning areas where native vegetation remained intact. Another 54,000 hecta...",
-          "sentiment": 0.615,
-          "eventBase": 0.565,
-          "framingMod": 0.05,
+          "title": "Drop in deforestation in Brazil generates R$ 1.16 trillion for the global economy",
+          "description": "A recent economic study shows that declining deforestation rates in the Amazon and Cerrado have generated an estimated R$ 1.16 trillion in global economic and climate benefits.",
+          "sentiment": 0.752,
+          "eventBase": 0.672,
+          "framingMod": 0.08,
           "factors": [
-            71,
-            74,
-            68,
-            19
+            78,
+            85,
+            75,
+            28
           ],
-          "explanation": "Announces verified multi-decade low deforestation data in the Brazilian Amazon, marking a significant environmental milestone. [Event Base: +0.56 | Editorial Framing: +0.05]",
+          "explanation": "A verified economic study finds that reduced deforestation in Brazil yielded massive global economic and climate benefits. [Event Base: +0.67 | Editorial Framing: +0.08]",
           "category": "climate",
           "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-          "link": "https://agenciabrasil.ebc.com.br/en/meio-ambiente/noticia/2026-10/amazon-records-lowest-deforestation-level-41-years",
-          "pubDate": "Sun, 18 Oct 2026 09:00:00 -0300"
+          "link": "https://agenciabrasil.ebc.com.br/meio-ambiente/noticia/2026-10/queda-de-desmatamento-no-brasil-gera-r-116-trilhao-economia-global",
+          "pubDate": "Tue, 20 Oct 2026 16:59:00 -0300"
         },
         {
           "sourceId": "france24",
@@ -838,7 +877,7 @@
     {
       "id": "spacex-q3-financial-results-and-revenue-surge",
       "story": "SpaceX Q3 Financial Results and Revenue Surge",
-      "summary": "SpaceX reported its first profit as a public company alongside a significant jump in quarterly revenue driven by its satellite and AI business.",
+      "summary": "SpaceX reported its first profit as a public company alongside a significant 161% jump in quarterly revenue driven by its satellite and artificial intelligence business, beating Wall Street estimates.",
       "version": 1,
       "evolutionHistory": [
         {
@@ -849,6 +888,17 @@
           "summary": "SpaceX reported its first profit as a public company alongside a significant jump in quarterly revenue driven by its satellite and AI business.",
           "outletCount": 4,
           "note": "Initial cluster formation on the wire"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-10-20T22:28:59.115Z",
+          "headline": "SpaceX Q3 Financial Results and Revenue Surge",
+          "summary": "SpaceX reported its first profit as a public company alongside a significant 161% jump in quarterly revenue driven by its satellite and artificial intelligence business, beating Wall Street estimates.",
+          "beforeStory": "SpaceX Q3 Financial Results and Revenue Surge",
+          "beforeSummary": "SpaceX reported its first profit as a public company alongside a significant jump in quarterly revenue driven by its satellite and AI business.",
+          "outletCount": 4,
+          "note": "O Globo and Wall Street Journal report Q3 profit beating estimates thanks to a 161% revenue surge."
         }
       ],
       "topic": "business",
@@ -3877,8 +3927,8 @@
       ]
     },
     {
-      "id": "global-ai-giants-release-new-open-access-models",
-      "story": "Global AI Giants Release New Open-Access Models",
+      "id": "tech-giants-unveil-new-open-access-ai-models",
+      "story": "Tech Giants Unveil New Open-Access AI Models",
       "summary": "Major technology firms including Nvidia, Meta, and Apple have officially unveiled and released new open-access artificial intelligence models, such as the collaborative Muse AI tool running on Mac computers, to broaden machine learning capabilities across the industry.",
       "version": 1,
       "evolutionHistory": [
@@ -3886,7 +3936,7 @@
           "version": 1,
           "type": "initial",
           "timestamp": "2026-10-16T11:52:00.000Z",
-          "headline": "Global AI Giants Release New Open-Access Models",
+          "headline": "Tech Giants Unveil New Open-Access AI Models",
           "summary": "Major technology firms including Nvidia, Meta, and Apple have officially unveiled and released new open-access artificial intelligence models, such as the collaborative Muse AI tool running on Mac computers, to broaden machine learning capabilities across the industry.",
           "outletCount": 2,
           "note": "Initial cluster formation on the wire"
@@ -5172,14 +5222,16 @@
       "title": "Drop in deforestation in Brazil generates R$ 1.16 trillion for the global economy",
       "description": "A recent economic study shows that declining deforestation rates in the Amazon and Cerrado have generated an estimated R$ 1.16 trillion in global economic and climate benefits.",
       "sentiment": 0.752,
-      "significanceScore": 0.752,
+      "significanceScore": 0.963,
       "factors": [
         78,
         85,
         75,
         28
       ],
-      "outletCount": 1,
+      "clusterId": "amazon-deforestation-falls-to-record-low",
+      "clusterStory": "Amazon Deforestation Falls to Record Low",
+      "outletCount": 7,
       "explanation": "A verified economic study finds that reduced deforestation in Brazil yielded massive global economic and climate benefits. [Event Base: +0.67 | Editorial Framing: +0.08]",
       "category": "climate",
       "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
@@ -6044,29 +6096,6 @@
       "isPast48h": true
     },
     {
-      "title": "Man who lost legs to MS warming heads and hearts by knitting tuques on custom-made cot",
-      "description": "Leonard Foidart built a cot so he can knit comfortably while lying down. The 84-year-old from Notre-Dame-de-Lourdes, Man., lost his legs decades ago and finds it difficult to sit but loves to knit, donating more than 1,000 tuques in the last five years.",
-      "sentiment": 0.186,
-      "significanceScore": 0.186,
-      "factors": [
-        64,
-        15,
-        18,
-        48
-      ],
-      "outletCount": 1,
-      "explanation": "Profiles an inspiring double-amputee knitter who overcomes physical barriers to donate over a thousand tuques, offering a heartwarming human-interest story. [Event Base: +0.14 | Editorial Framing: +0.05]",
-      "category": "world",
-      "imageUrl": "https://i.cbc.ca/ais/8b1e24bd-c27f-4a67-9e19-63fdf218535d,1792099243933/full/max/0/default.jpg?im=Crop%2Crect%3D%2819%2C0%2C881%2C495%29%3B",
-      "sourceId": "cbc",
-      "sourceName": "CBC News",
-      "region": "NA",
-      "link": "https://www.cbc.ca/news/canada/manitoba/senior-custom-cot-knitting-tuques-9.7382128?cmp=rss",
-      "pubDate": "Mon, 19 Oct 2026 18:28:52 EDT",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
       "title": "Celebrating Fela Kuti’s legacy and the global rise of Afrobeats",
       "description": "Fela Kuti was a Nigerian musician known as the King of Afrobeat. His legacy is celebrated every October at Felabration.",
       "sentiment": 0.181,
@@ -6414,42 +6443,19 @@
   ],
   "stories7d": [
     {
-      "title": "Amazon records lowest deforestation level in 41 years",
-      "description": "The Amazon recorded its lowest level of deforestation in 2025 in 41 years. The deforested area totaled 693,000 hectares over the period covered by the data. The figures are part of MapBiomas Collection 11, which compiles information on land cover and land use in Brazil between 1985 and 2025. Most of the deforestation - 639,000 hectares - occurred in primary vegetation, meaning areas where native vegetation remained intact. Another 54,000 hecta...",
-      "sentiment": 0.615,
-      "significanceScore": 0.809,
-      "factors": [
-        71,
-        74,
-        68,
-        19
-      ],
-      "clusterId": "amazon-deforestation-falls-to-record-low",
-      "clusterStory": "Amazon Deforestation Falls to Record Low",
-      "outletCount": 6,
-      "explanation": "Announces verified multi-decade low deforestation data in the Brazilian Amazon, marking a significant environmental milestone. [Event Base: +0.56 | Editorial Framing: +0.05]",
-      "category": "climate",
-      "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-      "sourceId": "agenciabrasil",
-      "sourceName": "Agência Brasil",
-      "region": "LATAM",
-      "link": "https://agenciabrasil.ebc.com.br/en/meio-ambiente/noticia/2026-10/amazon-records-lowest-deforestation-level-41-years",
-      "pubDate": "Sun, 18 Oct 2026 09:00:00 -0300",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
       "title": "Drop in deforestation in Brazil generates R$ 1.16 trillion for the global economy",
       "description": "A recent economic study shows that declining deforestation rates in the Amazon and Cerrado have generated an estimated R$ 1.16 trillion in global economic and climate benefits.",
       "sentiment": 0.752,
-      "significanceScore": 0.752,
+      "significanceScore": 0.963,
       "factors": [
         78,
         85,
         75,
         28
       ],
-      "outletCount": 1,
+      "clusterId": "amazon-deforestation-falls-to-record-low",
+      "clusterStory": "Amazon Deforestation Falls to Record Low",
+      "outletCount": 7,
       "explanation": "A verified economic study finds that reduced deforestation in Brazil yielded massive global economic and climate benefits. [Event Base: +0.67 | Editorial Framing: +0.08]",
       "category": "climate",
       "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
@@ -7221,8 +7227,8 @@
         69,
         9
       ],
-      "clusterId": "global-ai-giants-release-new-open-access-models",
-      "clusterStory": "Global AI Giants Release New Open-Access Models",
+      "clusterId": "tech-giants-unveil-new-open-access-ai-models",
+      "clusterStory": "Tech Giants Unveil New Open-Access AI Models",
       "outletCount": 2,
       "explanation": "Release of powerful open-weights AI architectures by major tech firms democratizes technological capabilities and fuels decentralized development. [Event Base: +0.30 | Editorial Framing: +0.02]",
       "category": "technology",
@@ -9562,7 +9568,7 @@
       "region": "NA",
       "link": "https://www.cbc.ca/news/canada/manitoba/senior-custom-cot-knitting-tuques-9.7382128?cmp=rss",
       "pubDate": "Mon, 19 Oct 2026 18:28:52 EDT",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
