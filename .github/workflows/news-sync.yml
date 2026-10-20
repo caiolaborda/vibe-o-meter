@@ -2,8 +2,9 @@ name: Autonomous News Ingestion & Sentiment Audit
 
 on:
   schedule:
-    # Off-peak hourly cron (:13) so GitHub Actions does not throttle/drop runs like sub-hourly crons
+    # Two independent off-peak cron entries (:13 and :43) so if GitHub's scheduler drops one tick under load, the other still fires
     - cron: '13 * * * *'
+    - cron: '43 * * * *'
   workflow_dispatch:
   push:
     branches:
@@ -30,6 +31,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 1
 
       - name: Setup Node.js
