@@ -932,11 +932,19 @@ function extractCoherenceStems(str) {
     'with','within','without','work','world','would','year','years','reuters','bloomberg','guardian','country',
     'countries','minister','president','leader','leaders','national','global','international','million','billion'
   ]);
+  const demonymMap = {
+    french: 'france', british: 'britain', spanish: 'spain', dutch: 'netherlands',
+    polish: 'poland', turkish: 'turkey', swedish: 'sweden', danish: 'denmark',
+    finnish: 'finland', irish: 'ireland', scottish: 'scotland', greek: 'greece',
+    swiss: 'switzerland', lebanese: 'lebanon', congolese: 'congo', sudanese: 'sudan',
+    taiwanese: 'taiwan', japanese: 'japan', chinese: 'china'
+  };
   return String(str || '')
     .toLowerCase()
     .replace(/\bstarshield\b/g, 'starlink')
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
+    .map(w => demonymMap[w] || w)
     .filter(w => w.length >= 4 && !stop.has(w))
     .map(w => w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
     .filter(w => w.length >= 3);
@@ -1659,10 +1667,13 @@ Return JSON array in format:
         const newestPrevMs = Math.max(...prev.coverage.map(c => new Date(c.pubDate).getTime() || 0));
         if (newestPrevMs < sevenDaysAgo) return;
 
-        const alreadyCovered = prev.coverage.some(c =>
+        const coveredCount = prev.coverage.filter(c =>
           (c.link && coveredUrls.has(canonicalUrl(c.link))) ||
           (c.title && coveredTitles.has(cleanHeadlineTitle(c.title)))
-        );
+        ).length;
+        // Only treat a previous cluster as superseded by coveredUrls if >= 60% (and at least 2) of its articles
+        // were absorbed into new clusters; never drop a 2-outlet cluster just because 1 of its articles got pulled into a broad umbrella story!
+        const alreadyCovered = coveredCount >= Math.max(2, Math.ceil(prev.coverage.length * 0.6));
         if (!alreadyCovered) {
           const prevClone = {
             ...prev,
@@ -1844,8 +1855,20 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       ]);
       const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
       const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
+      const crossTitleStems = new Set([
+        ...[...meta[i].titleStems].filter(s => meta[j].allStems.has(s)),
+        ...[...meta[j].titleStems].filter(s => meta[i].allStems.has(s))
+      ]);
+      const specificSharedAll = sharedAll.filter(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s));
       const hasSpecificEntityStem = sharedAll.some(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s) && (clusterStemFreq.get(s) || 0) <= 6);
-      if (hasSpecificEntityStem && (sharedTitle.length >= 2 || (sharedTitle.length >= 1 && sharedAll.length >= 3))) {
+      if (
+        hasSpecificEntityStem &&
+        (
+          sharedTitle.length >= 2 ||
+          (sharedTitle.length >= 1 && sharedAll.length >= 3) ||
+          (crossTitleStems.size >= 2 && sharedAll.length >= 4 && specificSharedAll.length >= 3)
+        )
+      ) {
         includedOrigIndices.add(i);
         includedOrigIndices.add(j);
         candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll });
@@ -1972,8 +1995,9 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
   • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate diplomatic or economic fallout ("Saudi Arabia Postpones Investor Conference" or "Egypt Pledges Support to Saudi Arabia") are DISTINCT EVENTS with different actors and severities. NEVER merge an economic/diplomatic reaction cluster into a casualty/strike cluster — link them via "lateralConnections" (Job 3) instead!
   • Example of VALID merge #1: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
   • Example of VALID merge #2 (Same-Decision Policy Action + Leader Defense): If one cluster reports a specific government policy decision, waiver, or order (e.g. "U.S. Cuts Russia Sanctions and Rifts With Ukraine") and another cluster in the same window reports the leader's public remarks defending, announcing, or explaining that EXACT SAME decision (e.g. "Trump Defends Russia Sanctions Waiver"), they are the SAME specific policy event and MUST be merged in "merges" (never left separate in "lateralConnections")!
-- If no two clusters report the exact same specific incident, return "merges": [].
-- For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary; otherwise set "updateType": "clarification" (deduplication).
+  • Example of VALID merge #3 (Direct Diplomatic/Rhetorical Exchange — Criticism + Target Leader Counter-Rebuke): If an earlier cluster specifically reports foreign leaders or observers criticizing a country/leader over an event (e.g. "International Observers React to French Unrest" or "Trump Remarks on France Riots and Immigration") and a subsequent cluster reports the targeted leader directly rebuking or responding to those exact remarks (e.g. "Macron Slams Foreign Leaders Over Riot Comments"), they are chronological stages of the EXACT SAME diplomatic war-of-words and MUST be merged in "merges" with "updateType": "material_shift" (while keeping the separate on-the-ground domestic street-protest cluster linked via "lateralConnections")!
+- If no two clusters report the exact same specific incident or direct rhetorical exchange, return "merges": [].
+- For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary (or executes a direct head-of-state counter-rebuke to prior foreign criticism); otherwise set "updateType": "clarification" (deduplication).
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches — Eligible Indices: ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : 'NONE (return "inPlaceDevelopments": [])'}):
 Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly limited to indices ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : '[]'}):
@@ -1982,7 +2006,7 @@ Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly 
 - Otherwise, generate "developmentNote" and "stateBoundaryCrossed" first, then set "updateType": "clarification" | "material_shift" using the State-Envelope Meta-Rule and Disjunctive Batch Principle.
 
 JOB 3 — "lateralConnections" (Interacting / Same-Campaign / Same-Theatre Clusters That Must Stay Separate):
-Identify pairs of DISTINCT clusters that share a political campaign, country backdrop, or causal interaction without being the same specific incident (e.g. separate policy milestones ahead of Brazil's runoff election, or international leaders commenting on another country's unrest):
+Identify pairs of DISTINCT clusters that share a political campaign, country backdrop, or causal interaction without being the same specific incident (e.g. separate policy milestones ahead of Brazil's runoff election, or linking a domestic street-protest cluster to a separate diplomatic commentary cluster about those protests):
 - Keep them as separate clusters (NEVER put them in "merges"), and record their connection here.
 - ANTI-SUPER-NODE RULE: NEVER link two clusters in "lateralConnections" merely because they mention the same head of state, administration, or public figure (e.g. NEVER link a local property, golf course, or lifestyle story to international war diplomacy, sanctions, or foreign elections). Both clusters in a lateralConnection must operate in the same geopolitical theater, economic sector, or policy/judicial domain.
 
@@ -2553,7 +2577,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const isDev = mergeType === 'material_shift';
 
       const anchor = isDev ? originAnchor : largestAnchor;
-      const finalStory = isDev ? ((m.story && m.story.trim()) || anchor.story) : (anchor.story || (m.story && m.story.trim()));
+      const finalStory = isDev ? ((m.story && m.story.trim()) || latestCluster.story || anchor.story) : (anchor.story || (m.story && m.story.trim()));
       const finalSlug = isDev ? slugify(finalStory) : (anchor.id || slugify(finalStory));
       const finalSummary = (m.summary && m.summary.trim()) || anchor.summary;
       evolvedIds.delete(finalSlug);
