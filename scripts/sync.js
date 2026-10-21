@@ -2037,7 +2037,15 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const idxs = (m.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
       if (idxs.length < 2) return false;
       const pairKey = `${Math.min(idxs[0], idxs[1])}:${Math.max(idxs[0], idxs[1])}`;
-      if (lateralPairKeys.has(pairKey)) return false;
+      if (lateralPairKeys.has(pairKey)) {
+        const urlsA = new Set((clusters[idxs[0]]?.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
+        const urlsB = new Set((clusters[idxs[1]]?.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
+        let sharedU = 0;
+        for (const u of urlsB) { if (urlsA.has(u)) sharedU++; }
+        const minU = Math.min(urlsA.size || 1, urlsB.size || 1);
+        if (sharedU < 3 && (sharedU < 2 || (sharedU / minU) < 0.35)) return false;
+        lateralPairKeys.delete(pairKey);
+      }
       // Deterministic stem-overlap guard: reject any LLM index slip or broad-country over-merge
       // where merged clusters do not share at least 1 specific title stem (excluding broad geopolitical actors)
       const broadMergeGeoStems = new Set([
@@ -2094,12 +2102,21 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         continue;
       }
 
-      // Coherence guard against off-by-one index slips: ensure the update shares at least 1 stem with the cluster
-      const clusterStems = new Set(extractCoherenceStems(`${c.story || ''} ${c.summary || ''} ${(c.coverage || []).map(a => a.title || '').join(' ')}`));
-      const devStems = extractCoherenceStems(`${dev.story || ''} ${noteText} ${newSummary}`);
-      if (clusterStems.size > 0 && devStems.length > 0 && !devStems.some(s => clusterStems.has(s))) {
-        console.warn(`[Clusters] Rejected cross-story index slip on cluster [${idx}] "${c.story}": "${noteText}"`);
-        continue;
+      // Coherence guard against off-by-one index slips & off-topic wire roundups:
+      // Ensure noteText shares >= 1 specific stem with the cluster headline (or >= 2 specific stems with its summary)
+      const BROAD_DEV_STEMS = new Set(["saudi","arabia","houthi","yemen","iran","israel","gaza","ukrain","ukrainian","russia","russian","zelensky","zelenskyy","putin","china","chines","trump","biden","ameri","united","state","europ","european","britain","british","protes","riot","unrest","strik","attack","crisis","forces","milit","govern","minist","presid","offici","polic","disrup","restric","impos","prompt","order","escalat","report","update"]);
+      const headStems = extractCoherenceStems(c.story || "");
+      const specificHeadStems = new Set(headStems.filter(s => !BROAD_DEV_STEMS.has(s)));
+      const anchorHeadStems = specificHeadStems.size > 0 ? specificHeadStems : new Set(headStems);
+      const specificSumStems = new Set(extractCoherenceStems(`${c.story || ""} ${c.summary || ""}`).filter(s => !BROAD_DEV_STEMS.has(s)));
+      const noteOnlyStems = extractCoherenceStems(noteText);
+      if (noteOnlyStems.length > 0 && anchorHeadStems.size > 0) {
+        const matchesHead = noteOnlyStems.some(s => anchorHeadStems.has(s));
+        const matchesSumCount = noteOnlyStems.filter(s => specificSumStems.has(s)).length;
+        if (!matchesHead && matchesSumCount < 2) {
+          console.warn(`[Clusters] Rejected off-topic roundup / index slip on cluster [${idx}] "${c.story}": "${noteText}"`);
+          continue;
+        }
       }
 
       // If this was an initial post-strip / umbrella-title grounding pass on a newly formed v1 cluster,

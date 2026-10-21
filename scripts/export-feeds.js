@@ -179,6 +179,90 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
   }
 
+  // 2b. Deterministic Shared-URL (>= 3 URLs or >= 35% overlap) & Typo-Tolerant Near-Duplicate Merge
+  const STOP_DEDUPE = new Set(["the","and","for","that","with","from","this","are","was","were","have","has","had","not","but","what","all","when","can","said","will","other","about","out","into","more","over","new","after","amid","says","say","report","reports","update","news","world","global"]);
+  const stemWord = (w) => w.replace(/([a-z]{3,})ies$/, "$1y").replace(/([a-z]{3,})ing$/, "$1").replace(/([a-z]{3,})ed$/, "$1").replace(/([a-z]{3,})es$/, "$1").replace(/([a-z]{3,})s$/, "$1");
+  const getStems = (txt) => new Set(String(txt || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length >= 3 && !STOP_DEDUPE.has(w)).map(stemWord));
+  const editDist1 = (a, b) => {
+    if (a === b) return true;
+    if (Math.abs(a.length - b.length) > 1 || a.length < 5 || b.length < 5) return false;
+    let diffs = 0, i = 0, j = 0;
+    while (i < a.length && j < b.length) {
+      if (a[i] === b[j]) { i++; j++; }
+      else {
+        diffs++;
+        if (diffs > 1) return false;
+        if (a.length > b.length) i++;
+        else if (b.length > a.length) j++;
+        else { i++; j++; }
+      }
+    }
+    return true;
+  };
+  const countFuzzyOverlap = (setA, setB) => {
+    let m = 0;
+    const arrB = Array.from(setB);
+    for (const a of setA) {
+      if (setB.has(a) || arrB.some(b => editDist1(a, b))) m++;
+    }
+    return m;
+  };
+
+  const activeList = Array.from(byId.values()).sort((a, b) => ((b.coverage?.length || 0) - (a.coverage?.length || 0)) || ((b.version || 1) - (a.version || 1)));
+  const absorbedIds = new Set();
+  for (let i = 0; i < activeList.length; i++) {
+    const primary = activeList[i];
+    if (absorbedIds.has(primary.id)) continue;
+    const urlsA = new Set((primary.coverage || []).map(x => canonicalUrl(x.link)).filter(Boolean));
+    const headStemsA = getStems(primary.story);
+    const sumStemsA = getStems(`${primary.story} ${primary.summary}`);
+
+    for (let j = i + 1; j < activeList.length; j++) {
+      const secondary = activeList[j];
+      if (absorbedIds.has(secondary.id)) continue;
+      const urlsB = new Set((secondary.coverage || []).map(x => canonicalUrl(x.link)).filter(Boolean));
+      let sharedUrls = 0;
+      for (const u of urlsB) { if (urlsA.has(u)) sharedUrls++; }
+      const minUrls = Math.min(urlsA.size || 1, urlsB.size || 1);
+      const urlRatio = sharedUrls / minUrls;
+
+      let shouldMerge = (sharedUrls >= 3) || (sharedUrls >= 2 && urlRatio >= 0.35);
+      if (!shouldMerge) {
+        const headStemsB = getStems(secondary.story);
+        const sharedHead = countFuzzyOverlap(headStemsA, headStemsB);
+        const headSim = sharedHead / Math.min(headStemsA.size || 1, headStemsB.size || 1);
+        if (headSim >= 0.80 && sharedHead >= 3) {
+          const sumStemsB = getStems(`${secondary.story} ${secondary.summary}`);
+          const sharedSum = countFuzzyOverlap(sumStemsA, sumStemsB);
+          const sumJac = sharedSum / Math.max(1, sumStemsA.size + sumStemsB.size - sharedSum);
+          if (sumJac >= 0.35) shouldMerge = true;
+        }
+      }
+
+      if (shouldMerge) {
+        absorbedIds.add(secondary.id);
+        byId.delete(secondary.id);
+        const seenOutlets = new Set((primary.coverage || []).map(a => a.sourceId));
+        for (const art of (secondary.coverage || [])) {
+          if (art?.sourceId && !seenOutlets.has(art.sourceId)) {
+            seenOutlets.add(art.sourceId);
+            primary.coverage.push(art);
+            if (art.link) urlsA.add(canonicalUrl(art.link));
+          }
+        }
+        primary.coverage.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+        primary.outletCount = primary.coverage.length;
+        const evSet = new Set([
+          ...(Array.isArray(primary.evolvedFromIds) ? primary.evolvedFromIds : []),
+          ...(Array.isArray(secondary.evolvedFromIds) ? secondary.evolvedFromIds : []),
+          secondary.id
+        ]);
+        evSet.delete(primary.id);
+        primary.evolvedFromIds = Array.from(evSet);
+      }
+    }
+  }
+
   // 3. Deduplicate same-timestamp or paraphrased evolutionHistory entries
   const result = [];
   for (const cl of byId.values()) {
@@ -220,6 +304,8 @@ function exportPublicJsonFeeds(fullPayload) {
   const rawClusters = deduplicateAndSanitizeClusters(
     fullPayload.sharedStoryClusters || fullPayload.globalStats?.sharedStoryClusters || []
   );
+  fullPayload.sharedStoryClusters = rawClusters;
+  if (fullPayload.globalStats) fullPayload.globalStats.sharedStoryClusters = rawClusters;
   const enrichedClusters = rawClusters.map(cl => {
     const topic = inferClusterTopic(cl, sources);
     const timestamps = [];
@@ -321,7 +407,12 @@ function exportPublicJsonFeeds(fullPayload) {
       ...(clusterFactors ? { factors: clusterFactors } : {}),
       sentimentSpread: spread,
       outletCount,
-      firstSeenAt: timestamps.length > 0 ? new Date(timestamps[0]).toISOString() : null,
+      firstSeenAt: (() => {
+        const cands = [...timestamps];
+        if (cl.firstSeenAt) { const t = Date.parse(cl.firstSeenAt); if (!isNaN(t) && t > 0) cands.push(t); }
+        if (cl.evolutionHistory?.[0]?.timestamp) { const t = Date.parse(cl.evolutionHistory[0].timestamp); if (!isNaN(t) && t > 0) cands.push(t); }
+        return cands.length > 0 ? new Date(Math.min(...cands)).toISOString() : null;
+      })(),
       latestUpdateAt: timestamps.length > 0 ? new Date(timestamps[timestamps.length - 1]).toISOString() : null,
       coverage: enrichedCov
     };
