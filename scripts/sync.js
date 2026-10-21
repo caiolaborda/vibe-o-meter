@@ -470,6 +470,8 @@ function computeFourFactorScore(match) {
 
 // Track if the Free Tier key hit a quota/rate-limit during this process run so subsequent calls skip straight to Paid fallback
 let freeKeyExhaustedThisRun = false;
+// Per-model:tier circuit breaker so a model hitting 429 daily quota is skipped immediately on all subsequent batches
+const exhaustedModelTiers = new Set();
 
 function getOrderedKeyTiers(apiKeyOrTiers) {
   if (Array.isArray(apiKeyOrTiers)) {
@@ -485,14 +487,11 @@ function getOrderedKeyTiers(apiKeyOrTiers) {
 // Structured Gemini sentiment analysis with cross-outlet batching & 4-Factor First-Principles Formula
 async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, customBatchSize, existingEvaluatedPool = []) {
   const keyTiers = getOrderedKeyTiers(apiKeyOrTiers);
-  const envModel = process.env.GEMINI_MODEL === 'gemini-2.5-flash' ? 'gemini-3.5-flash' : process.env.GEMINI_MODEL;
-  const reqModel = requestedModel === 'gemini-2.5-flash' ? 'gemini-3.5-flash' : requestedModel;
+  // Default to gemini-3.5-flash-lite first so all batches across the day use one consistent high-quota model (zero cross-model variance, no 20-RPD cap stalls)
   const modelsToTry = [
-    reqModel,
-    envModel,
-    'gemini-3.8-flash',
-    'gemini-3.5-flash',
     'gemini-3.5-flash-lite',
+    'gemini-3.5-flash',
+    'gemini-3.8-flash',
     'gemini-2.5-flash'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
@@ -610,8 +609,10 @@ Return ONLY valid JSON.`;
       if (batchSuccess) break;
       for (const keyObj of activeTiers) {
         if (batchSuccess) break;
+        const modelTierKey = `${modelName}:${keyObj.tier}`;
+        if (exhaustedModelTiers.has(modelTierKey)) continue;
         const genAI = new GoogleGenerativeAI(keyObj.key);
-        const maxAttempts = keyObj.tier === 'FREE' && activeTiers.length > 1 ? 1 : (modelName.includes('lite') ? 2 : 3);
+        const maxAttempts = keyObj.tier === 'FREE' && activeTiers.length > 1 ? 1 : 2;
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
             console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} [${keyObj.tier} key] (attempt ${attempt}/${maxAttempts})...`);
@@ -686,14 +687,21 @@ Return ONLY valid JSON.`;
             const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
             const isDemandSpike = isQuotaOrRateLimit || msg.includes('503') || msg.includes('high demand') || msg.includes('timed out');
             console.warn(`[Gemini] Model ${modelName} [${keyObj.tier} key] attempt ${attempt}/${maxAttempts} warning:`, msg);
-            if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
-              freeKeyExhaustedThisRun = true;
-              console.log('[Gemini] Free tier key reached rate/quota limit — switching to PAID fallback key...');
+            if (isQuotaOrRateLimit) {
+              exhaustedModelTiers.add(modelTierKey);
+              if (keyObj.tier === 'FREE' && activeTiers.length > 1) {
+                freeKeyExhaustedThisRun = true;
+                console.log('[Gemini] Free tier key reached rate/quota limit — switching to PAID fallback key...');
+              } else {
+                console.log(`[Gemini] Quota reached for ${modelName} [${keyObj.tier} key] — circuit-breaking model for remainder of run.`);
+              }
               break;
             }
             if (attempt < maxAttempts) {
-              const waitMs = isDemandSpike ? (attempt === 1 ? 5000 : 12000) : 2500;
+              const waitMs = isDemandSpike ? 4000 : 2000;
               await new Promise(r => setTimeout(r, waitMs));
+            } else {
+              exhaustedModelTiers.add(modelTierKey);
             }
           }
         }
@@ -2741,7 +2749,7 @@ async function main() {
   const geminiKeyTiers = [];
   if (geminiKey) geminiKeyTiers.push({ key: geminiKey, tier: 'FREE' });
   if (geminiPaidKey && geminiPaidKey !== geminiKey) geminiKeyTiers.push({ key: geminiPaidKey, tier: 'PAID' });
-  const geminiModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const geminiModel = 'gemini-3.5-flash-lite';
 
   // Build lookup of already analyzed articles
   const existingMap = new Map();
