@@ -7,7 +7,7 @@ const PUBLIC_DATA_DIR = path.join(__dirname, '..', 'public', 'data');
 const OUTLET_REGION_MAP = {
   bbc: 'UK', guardian: 'UK', skynews: 'UK', ft: 'UK', independent: 'UK', telegraph: 'UK',
   nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', cnbc: 'NA', wsj: 'NA', cbc: 'NA', globalnews: 'NA', latimes: 'NA', wapo: 'NA', nbc: 'NA', pbs: 'NA', ars: 'NA', globeandmail: 'NA',
-  oglobo: 'LATAM', batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', elpaisam: 'LATAM', latercera: 'LATAM',
+  oglobo: 'LATAM', batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', latercera: 'LATAM',
   dw: 'EU', nzz: 'EU', france24: 'EU', euronews: 'EU', politicoeu: 'EU', lemonde: 'EU', elpais: 'EU', repubblica: 'EU', rte: 'EU', irishtimes: 'EU', swissinfo: 'EU',
   aljazeera: 'ME', thenational: 'ME', africanews: 'ME',
   scmp: 'APAC', abcau: 'APAC', smh: 'APAC', japantimes: 'APAC', CNA: 'APAC', cna: 'APAC', koreaherald: 'APAC',

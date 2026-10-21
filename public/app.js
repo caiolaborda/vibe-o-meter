@@ -59,9 +59,7 @@ const SOURCE_META = {
   mexiconews: { name: 'Mexico News Daily', initials: 'MND', color: '#15803d', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🇲🇽' },
   mercopress: { name: 'MercoPress', initials: 'MCP', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'uy', flag: '🇺🇾' },
   agenciabrasil: { name: 'Agência Brasil', initials: 'AGB', color: '#16a34a', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
-  oglobo: { name: 'O Globo', initials: 'OGB', color: '#1d4ed8', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
-  elpaisam: { name: 'El País América', initials: 'EPA', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🌎' },
-  latercera: { name: 'La Tercera', initials: 'LTC', color: '#b91c1c', region: 'LATAM', regionName: 'Latin America', countryCode: 'cl', flag: '🇨🇱' },
+  oglobo: { name: 'O Globo', initials: 'OGB', color: '#1d4ed8', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },  latercera: { name: 'La Tercera', initials: 'LTC', color: '#b91c1c', region: 'LATAM', regionName: 'Latin America', countryCode: 'cl', flag: '🇨🇱' },
   // United Kingdom
   bbc: { name: 'BBC News', initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   guardian: { name: 'The Guardian', initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },

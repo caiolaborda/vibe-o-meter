@@ -57,9 +57,7 @@ const NEWS_SOURCES = [
   { id: 'mexiconews', name: 'Mexico News Daily', feedUrl: 'https://mexiconewsdaily.com/feed/' },
   { id: 'mercopress', name: 'MercoPress', feedUrl: 'https://en.mercopress.com/rss/' },
   { id: 'agenciabrasil', name: 'Agência Brasil', feedUrl: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', lang: 'pt' },
-  { id: 'oglobo', name: 'O Globo', feedUrl: 'https://oglobo.globo.com/rss/oglobo/', lang: 'pt' },
-  { id: 'elpaisam', name: 'El País América', feedUrl: 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america/portada', lang: 'es' },
-  { id: 'latercera', name: 'La Tercera', feedUrl: 'https://www.latercera.com/arc/outboundfeeds/rss/category/mundo/?outputType=xml', lang: 'es' },
+  { id: 'oglobo', name: 'O Globo', feedUrl: 'https://oglobo.globo.com/rss/oglobo/', lang: 'pt' },  { id: 'latercera', name: 'La Tercera', feedUrl: 'https://www.latercera.com/arc/outboundfeeds/rss/category/mundo/?outputType=xml', lang: 'es' },
   // United Kingdom
   { id: 'bbc', name: 'BBC News', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
   { id: 'guardian', name: 'The Guardian', feedUrl: 'https://www.theguardian.com/uk/rss' },
@@ -785,7 +783,7 @@ Return ONLY valid JSON array.`;
 // Structural region mapping of the 39 news sources (feed metadata only — zero topic hardcoding)
 const SOURCE_REGION_MAP = {
   nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', pbs: 'NA', cnbc: 'NA', bloomberg: 'NA', wsj: 'NA', cbc: 'NA', globalnews: 'NA',
-  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', oglobo: 'LATAM', elpaisam: 'LATAM', latercera: 'LATAM',
+  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', oglobo: 'LATAM', latercera: 'LATAM',
   bbc: 'UK', guardian: 'UK', skynews: 'UK', ft: 'UK',
   dw: 'EU', nzz: 'EU', france24: 'EU', euronews: 'EU', lemonde: 'EU', elpais: 'EU', repubblica: 'EU', rte: 'EU',
   abcau: 'APAC', smh: 'APAC', scmp: 'APAC', japantimes: 'APAC', cna: 'APAC',
