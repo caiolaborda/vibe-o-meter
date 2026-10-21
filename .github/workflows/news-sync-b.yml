@@ -1,0 +1,53 @@
+name: Autonomous News Ingestion (Relay B)
+
+on:
+  schedule:
+    # Relay Slot B (:28 and :58) — independent workflow_id slot + 3-pulse chain (T=0m, T=+30m, T=+60m)
+    - cron: '28 * * * *'
+    - cron: '58 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  pulse-1:
+    name: Sync Pulse 1 (T+0m)
+    uses: ./.github/workflows/sync-pulse.yml
+    secrets: inherit
+
+  wait-1:
+    name: Interval Wait (30m)
+    needs: pulse-1
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Wait 30 minutes before Pulse 2 (no concurrency lock held)
+        run: sleep 1800
+
+  pulse-2:
+    name: Sync Pulse 2 (T+30m)
+    needs: wait-1
+    if: always() && github.event_name == 'schedule'
+    uses: ./.github/workflows/sync-pulse.yml
+    secrets: inherit
+
+  wait-2:
+    name: Interval Wait (60m)
+    needs: pulse-2
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Wait 30 minutes before Pulse 3 (no concurrency lock held)
+        run: sleep 1800
+
+  pulse-3:
+    name: Sync Pulse 3 (T+60m)
+    needs: wait-2
+    if: always() && github.event_name == 'schedule'
+    uses: ./.github/workflows/sync-pulse.yml
+    secrets: inherit

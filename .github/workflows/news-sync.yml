@@ -2,7 +2,7 @@ name: Autonomous News Ingestion & Sentiment Audit
 
 on:
   schedule:
-    # Two independent off-peak cron entries (:13 and :43) so if GitHub's scheduler drops one tick under load, the other still fires
+    # Relay Slot A (:13 and :43) — each scheduled wake-up runs 3 pulses (T=0m, T=+30m, T=+60m)
     - cron: '13 * * * *'
     - cron: '43 * * * *'
   workflow_dispatch:
@@ -12,76 +12,49 @@ on:
     paths:
       - 'scripts/**'
       - '.github/workflows/news-sync.yml'
+      - '.github/workflows/sync-pulse.yml'
 
 permissions:
   contents: write
   pages: write
   id-token: write
 
-concurrency:
-  group: 'pages'
-  cancel-in-progress: false
-
 jobs:
-  sync:
-    name: Fetch RSS & Analyze Vibes
+  pulse-1:
+    name: Sync Pulse 1 (T+0m)
+    uses: ./.github/workflows/sync-pulse.yml
+    secrets: inherit
+
+  wait-1:
+    name: Interval Wait (30m)
+    needs: pulse-1
+    if: always() && github.event_name == 'schedule'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 1
+      - name: Wait 30 minutes before Pulse 2 (no concurrency lock held)
+        run: sleep 1800
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
+  pulse-2:
+    name: Sync Pulse 2 (T+30m)
+    needs: wait-1
+    if: always() && github.event_name == 'schedule'
+    uses: ./.github/workflows/sync-pulse.yml
+    secrets: inherit
 
-      - name: Install dependencies
-        run: npm ci || npm install
+  wait-2:
+    name: Interval Wait (60m)
+    needs: pulse-2
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Wait 30 minutes before Pulse 3 (no concurrency lock held)
+        run: sleep 1800
 
-      - name: Run Headless Sync Script
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_PAID_API_KEY: ${{ secrets.GEMINI_PAID_API_KEY }}
-          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-3.8-flash' }}
-          CLUSTER_INTERVAL_HOURS: ${{ secrets.CLUSTER_INTERVAL_HOURS || '2' }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'llama-3.1-8b-instant' }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          DEFAULT_ANALYZER: ${{ secrets.DEFAULT_ANALYZER || 'gemini' }}
-        run: node scripts/sync.js
-
-      - name: Commit updated vibe datasets
-        id: commit_step
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/vibe-data.json data/cluster-updates-log.json public/data/
-          if git diff --staged --quiet; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No new data changes to commit."
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            git commit -m "chore(data): auto-update vibe sentiment data"
-            git pull --rebase origin ${{ github.ref_name }} || true
-            git push origin HEAD:${{ github.ref }}
-          fi
-
-      - name: Setup GitHub Pages
-        if: steps.commit_step.outputs.has_changes == 'true'
-        uses: actions/configure-pages@v4
-
-      - name: Upload static website artifact
-        if: steps.commit_step.outputs.has_changes == 'true'
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'public/'
-
-      - name: Deploy to GitHub Pages
-        if: steps.commit_step.outputs.has_changes == 'true'
-        id: deployment
-        uses: actions/deploy-pages@v4
+  pulse-3:
+    name: Sync Pulse 3 (T+60m)
+    needs: wait-2
+    if: always() && github.event_name == 'schedule'
+    uses: ./.github/workflows/sync-pulse.yml
+    secrets: inherit

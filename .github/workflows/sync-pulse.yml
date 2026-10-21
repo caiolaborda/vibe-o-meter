@@ -1,0 +1,99 @@
+name: Reusable Sync Pulse Worker
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  sync:
+    name: Fetch RSS & Analyze Vibes
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: 'pages'
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Check schedule cooldown (25m)
+        id: cooldown
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            SKIP=$(node -e "
+              try {
+                const s = JSON.parse(require('fs').readFileSync('public/data/summary.json', 'utf8'));
+                const ageMin = (Date.now() - Date.parse(s.lastUpdated)) / 60000;
+                console.error('Last sync age: ' + ageMin.toFixed(1) + 'm (cooldown threshold: 25m)');
+                process.stdout.write(ageMin < 25 ? 'true' : 'false');
+              } catch (e) {
+                process.stdout.write('false');
+              }
+            ")
+            echo "skip=$SKIP" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        if: steps.cooldown.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: steps.cooldown.outputs.skip != 'true'
+        run: npm ci || npm install
+
+      - name: Run Headless Sync Script
+        if: steps.cooldown.outputs.skip != 'true'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_PAID_API_KEY: ${{ secrets.GEMINI_PAID_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-3.8-flash' }}
+          CLUSTER_INTERVAL_HOURS: ${{ secrets.CLUSTER_INTERVAL_HOURS || '2' }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'llama-3.1-8b-instant' }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          DEFAULT_ANALYZER: ${{ secrets.DEFAULT_ANALYZER || 'gemini' }}
+        run: node scripts/sync.js
+
+      - name: Commit updated vibe datasets
+        if: steps.cooldown.outputs.skip != 'true'
+        id: commit_step
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/vibe-data.json data/cluster-updates-log.json public/data/
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No new data changes to commit."
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            git commit -m "chore(data): auto-update vibe sentiment data"
+            git pull --rebase origin main || true
+            git push origin HEAD:main
+          fi
+
+      - name: Setup GitHub Pages
+        if: steps.cooldown.outputs.skip != 'true' && steps.commit_step.outputs.has_changes == 'true'
+        uses: actions/configure-pages@v4
+
+      - name: Upload static website artifact
+        if: steps.cooldown.outputs.skip != 'true' && steps.commit_step.outputs.has_changes == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'public/'
+
+      - name: Deploy to GitHub Pages
+        if: steps.cooldown.outputs.skip != 'true' && steps.commit_step.outputs.has_changes == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
