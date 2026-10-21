@@ -1519,13 +1519,43 @@ Return JSON array in format:
           }
 
           if (addedArticles.length > 0) {
-            const newestAddedMs = Math.max(...addedArticles.map(a => a.pubDate ? new Date(a.pubDate).getTime() : 0).filter(Boolean));
-            pendingUpdate = {
-              candidateStory: cl.story,
-              candidateSummary: cl.summary || '',
-              newestAddedMs: newestAddedMs > 0 ? newestAddedMs : (matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : Date.now()),
-              addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
-            };
+            // Pre-LLM Information-Gain Gate: skip queuing _pendingUpdate when added articles only repeat known stems/numbers
+            const priorText = [
+              matchedPrev.story || '',
+              matchedPrev.summary || '',
+              ...(Array.isArray(matchedPrev.evolutionHistory) ? matchedPrev.evolutionHistory.map(h => `${h?.headline || ''} ${h?.note || ''}`) : []),
+              ...(Array.isArray(matchedPrev.coverage) ? matchedPrev.coverage.map(a => a?.title || '') : [])
+            ].join(' ');
+            const priorKnownStems = new Set(extractCoherenceStems(priorText));
+            const priorKnownNums = new Set(priorText.match(/\b\d+(?:[.,]\d+)?\b/g) || []);
+            const waveNovelStemCounts = new Map();
+            let hasNovelNumber = false;
+            let maxSingleArtNovelSpecific = 0;
+            let minSingleArtOverlap = 1;
+            for (const a of addedArticles) {
+              const cleanT = cleanHeadlineTitle(a.title || '');
+              const aStems = extractCoherenceStems(cleanT);
+              const aNums = cleanT.match(/\b\d+(?:[.,]\d+)?\b/g) || [];
+              if (aNums.some(n => !priorKnownNums.has(n))) hasNovelNumber = true;
+              const novelSpecific = aStems.filter(st => !priorKnownStems.has(st) && (stemDocFreq.get(st) || 0) <= 18);
+              const overlap = aStems.length > 0 ? (aStems.length - novelSpecific.length) / aStems.length : 1;
+              if (novelSpecific.length > maxSingleArtNovelSpecific) maxSingleArtNovelSpecific = novelSpecific.length;
+              if (overlap < minSingleArtOverlap) minSingleArtOverlap = overlap;
+              for (const st of new Set(novelSpecific)) {
+                waveNovelStemCounts.set(st, (waveNovelStemCounts.get(st) || 0) + 1);
+              }
+            }
+            const hasSharedNovelStem = [...waveNovelStemCounts.values()].some(cnt => cnt >= 2);
+            const hasSubstantiveInfoGain = hasNovelNumber || hasSharedNovelStem || (maxSingleArtNovelSpecific >= 2 && minSingleArtOverlap < 0.55);
+            if (hasSubstantiveInfoGain) {
+              const newestAddedMs = Math.max(...addedArticles.map(a => a.pubDate ? new Date(a.pubDate).getTime() : 0).filter(Boolean));
+              pendingUpdate = {
+                candidateStory: cl.story,
+                candidateSummary: cl.summary || '',
+                newestAddedMs: newestAddedMs > 0 ? newestAddedMs : (matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : Date.now()),
+                addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
+              };
+            }
           }
         } else {
           if (matchingArticles.length < 2) return;
@@ -2145,15 +2175,22 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
       const noteStems = extractCoherenceStems(noteText);
 
-      // Deterministic Baseline-Subtraction Guard: if >= 70% of the substantive stems in `noteText` (excluding outlet names)
-      // were ALREADY present in the cluster's existing story + summary, reject the update as a syndication echo!
-      const priorBaselineStems = new Set(extractCoherenceStems(`${c.story || ''} ${c.summary || ''}`));
+      // Deterministic Baseline-Subtraction Guard: if >= 60% of the substantive stems in `noteText` (excluding outlet names)
+      // were ALREADY present in the cluster's existing story + summary + prior evolution notes (and no new numbers are introduced),
+      // reject the update as a syndication echo!
+      const priorBaselineText = `${c.story || ''} ${c.summary || ''} ${(hist || []).map(h => h?.note || '').join(' ')}`;
+      const priorBaselineStems = new Set(extractCoherenceStems(priorBaselineText));
+      const priorBaselineNums = new Set(priorBaselineText.match(/\b\d+(?:[.,]\d+)?\b/g) || []);
+      const noteNums = (noteText.match(/\b\d+(?:[.,]\d+)?\b/g) || []).filter(n => !priorBaselineNums.has(n));
       const outletNameStems = new Set(extractCoherenceStems(NEWS_SOURCES.map(s => s.name).join(' ')));
       const substantiveNoteStems = noteStems.filter(s => !outletNameStems.has(s));
-      if (substantiveNoteStems.length >= 2) {
+      if (substantiveNoteStems.length >= 1) {
         const alreadyInBaseline = substantiveNoteStems.filter(s => priorBaselineStems.has(s)).length;
-        if (alreadyInBaseline / substantiveNoteStems.length >= 0.72) {
-          console.log(`[Clusters] Suppressed syndication echo on "${c.story}": "${noteText}" (${alreadyInBaseline}/${substantiveNoteStems.length} stems already in baseline summary)`);
+        const novelStemCount = substantiveNoteStems.length - alreadyInBaseline;
+        const overlapRatio = alreadyInBaseline / substantiveNoteStems.length;
+        const maxAllowedOverlap = uType === 'clarification' ? 0.60 : 0.72;
+        if ((uType === 'clarification' && noteNums.length === 0 && novelStemCount < 2) || (noteNums.length === 0 && overlapRatio >= maxAllowedOverlap)) {
+          console.log(`[Clusters] Suppressed syndication echo on "${c.story}": "${noteText}" (${alreadyInBaseline}/${substantiveNoteStems.length} stems already in baseline)`);
           continue;
         }
       }
@@ -2167,15 +2204,17 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       }, 0);
       const ts = new Date(Math.max(rawTsMs, maxPrevHistMs > 0 ? maxPrevHistMs + 60000 : 0)).toISOString();
 
-      // Guard against no-op, duplicate timestamp, or paraphrased note already in evolutionHistory
+      // Guard against no-op, duplicate timestamp, or paraphrased note already in evolutionHistory (excluding initial baseline stems from shared count)
+      const initBaseStems = new Set(extractCoherenceStems(`${hist[0]?.headline || ''} ${hist[0]?.summary || ''}`));
       const alreadyRecorded = hist.some(h => {
         if (h.timestamp && h.timestamp === ts) return true;
         if (noteText && h.note && h.note.toLowerCase() === noteText.toLowerCase()) return true;
         if (newSummary && h.summary && h.summary.toLowerCase() === newSummary.toLowerCase()) return true;
         if (noteStems.length >= 2 && h.note && h.type !== 'initial') {
           const hStems = new Set(extractCoherenceStems(h.note));
-          const shared = noteStems.filter(s => hStems.has(s)).length;
-          if (shared >= 3 || (shared / Math.min(noteStems.length, hStems.size || 1)) >= 0.5) return true;
+          const sharedNovel = noteStems.filter(s => hStems.has(s) && !initBaseStems.has(s)).length;
+          const sharedAll = noteStems.filter(s => hStems.has(s)).length;
+          if ((sharedNovel >= 3 && (sharedAll / Math.min(noteStems.length, hStems.size || 1)) >= 0.60) || (sharedAll / Math.min(noteStems.length, hStems.size || 1)) >= 0.68) return true;
         }
         return false;
       });
