@@ -1783,6 +1783,15 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     }
   }
 
+  // Compute cluster-level document frequency for each stem so ubiquitous "super-node" actors/countries
+  // (e.g. "trump" or "united" appearing across >6 unrelated clusters) cannot alone trigger a pair hint without a specific event/topic stem.
+  const clusterStemFreq = new Map();
+  for (const m of meta) {
+    for (const s of m.allStems) {
+      clusterStemFreq.set(s, (clusterStemFreq.get(s) || 0) + 1);
+    }
+  }
+
   for (let i = 0; i < meta.length; i++) {
     for (let j = i + 1; j < meta.length; j++) {
       // At least one of the pair should be within 72h (or have a pending update)
@@ -1792,11 +1801,12 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
         'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
         'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
         'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
-        'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study'
+        'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study',
+        'united', 'state', 'americ', 'administr', 'white', 'house', 'feder', 'nation', 'global', 'world'
       ]);
       const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
       const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
-      const hasSpecificEntityStem = sharedAll.some(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s));
+      const hasSpecificEntityStem = sharedAll.some(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s) && (clusterStemFreq.get(s) || 0) <= 6);
       if (hasSpecificEntityStem && (sharedTitle.length >= 2 || (sharedTitle.length >= 1 && sharedAll.length >= 3))) {
         includedOrigIndices.add(i);
         includedOrigIndices.add(j);
@@ -1922,7 +1932,8 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
 - CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, conferences, economic reactions, debates, or studies that merely involve the same country, leader, election campaign, or war!
   • Example of FORBIDDEN merge #1: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
   • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate diplomatic or economic fallout ("Saudi Arabia Postpones Investor Conference" or "Egypt Pledges Support to Saudi Arabia") are DISTINCT EVENTS with different actors and severities. NEVER merge an economic/diplomatic reaction cluster into a casualty/strike cluster — link them via "lateralConnections" (Job 3) instead!
-  • Example of VALID merge: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
+  • Example of VALID merge #1: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
+  • Example of VALID merge #2 (Same-Decision Policy Action + Leader Defense): If one cluster reports a specific government policy decision, waiver, or order (e.g. "U.S. Cuts Russia Sanctions and Rifts With Ukraine") and another cluster in the same window reports the leader's public remarks defending, announcing, or explaining that EXACT SAME decision (e.g. "Trump Defends Russia Sanctions Waiver"), they are the SAME specific policy event and MUST be merged in "merges" (never left separate in "lateralConnections")!
 - If no two clusters report the exact same specific incident, return "merges": [].
 - For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary; otherwise set "updateType": "clarification" (deduplication).
 
@@ -1935,6 +1946,7 @@ Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly 
 JOB 3 — "lateralConnections" (Interacting / Same-Campaign / Same-Theatre Clusters That Must Stay Separate):
 Identify pairs of DISTINCT clusters that share a political campaign, country backdrop, or causal interaction without being the same specific incident (e.g. separate policy milestones ahead of Brazil's runoff election, or international leaders commenting on another country's unrest):
 - Keep them as separate clusters (NEVER put them in "merges"), and record their connection here.
+- ANTI-SUPER-NODE RULE: NEVER link two clusters in "lateralConnections" merely because they mention the same head of state, administration, or public figure (e.g. NEVER link a local property, golf course, or lifestyle story to international war diplomacy, sanctions, or foreign elections). Both clusters in a lateralConnection must operate in the same geopolitical theater, economic sector, or policy/judicial domain.
 
 Clusters:
 ${lines}${pairHintBlock}
@@ -2315,8 +2327,9 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const metaB = meta[idxB];
       if (metaA && metaB) {
         const sharedSpecific = [...metaA.titleStems].filter(s => metaB.allStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s));
-        if (sharedSpecific.length === 0) {
-          console.warn(`[Clusters] Rejected generic-template lateral connection between "${clusters[idxA]?.story}" and "${clusters[idxB]?.story}"`);
+        const sharedNonSuperNode = [...metaA.allStems].filter(s => metaB.allStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s) && (clusterStemFreq.get(s) || 0) <= 6);
+        if (sharedSpecific.length === 0 || sharedNonSuperNode.length === 0) {
+          console.warn(`[Clusters] Rejected generic-template or super-node-only lateral connection between "${clusters[idxA]?.story}" and "${clusters[idxB]?.story}"`);
           continue;
         }
       }
