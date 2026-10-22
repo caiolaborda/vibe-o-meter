@@ -566,8 +566,9 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 
 1. "polarity" (integer -100 to 100 — Whole-Event Counterfactual Valence & Substantive Angle):
    Evaluate the net human and societal valence of the reality described in the dispatch along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, commercial/transactional, or offsetting outcomes) to +100 (maximum net constructive advancement).
-   - Whole-Event Baseline vs. Isolated Verb Delta: Evaluate the net state of the entire situation described in the dispatch against a normal, unharmed baseline—never score the isolated delta of a final procedural verb while ignoring the underlying subject. When a dispatch reports a downstream judicial verdict, conviction, sentencing, arrest, or survival response following an atrocity, violent attack, or irreversible loss of life, the net valence of the complete event remains negative in proportion to the underlying harm; score polarity positively only when the event produces a net advance above an unharmed baseline (such as curing disease, advancing knowledge, or building durable capacity).
-   - Contested Policy & Polarized Perspectives: When an event is a contested political, economic, regulatory, or social development (rather than an objective physical tragedy or atrocity), evaluate the substantive causal outcome foregrounded by this specific outlet's angle so genuine cross-outlet perspective differences are preserved.
+   - Whole-Event Baseline vs. Isolated Verb Delta: Evaluate the net state of the entire situation described in the dispatch against a normal, unharmed baseline—never score the isolated delta of a final procedural verb while ignoring the underlying subject. When a dispatch reports a downstream judicial verdict, conviction, sentencing, bail/custody release, arrest, or survival response following an atrocity, violent attack, preventive arrest, civil crackdown, or irreversible loss of life, the net valence of the complete event remains negative in proportion to the underlying harm or institutional friction; score polarity positively only when the event produces a net advance above an unharmed baseline (such as curing disease, advancing knowledge, or building durable capacity).
+   - Protests, Strikes, Demonstrations & Grievance Rallies: Treat protests, strikes, marches, and political grievance rallies as symptoms of underlying societal friction, institutional failure, or unresolved public grievance—scoring their baseline "polarity" as negative (-10 to -25 for peaceful demonstrations, marches, or protest-led voter mobilization; -25 to -45 for disruptive strikes, camp clearances, blockades, or protest detentions; -45 or lower for violent clashes or riots), unless the dispatch reports a concrete, completed constructive resolution (such as an enacted reform or signed agreement). When coverage profiles protesters sympathetically, heroically, or as an inspiring civic experiment, capture that upbeat journalistic angle strictly in "framing" (+15 to +50) while keeping "polarity" negative to reflect the underlying grievance or unrest.
+   - Contested Policy & Polarized Perspectives: When an event is a contested political, economic, regulatory, or social development (rather than an objective physical tragedy, atrocity, or civil unrest), evaluate the substantive causal outcome foregrounded by this specific outlet's angle so genuine cross-outlet perspective differences are preserved.
    - Structural Advancement vs. Routine Administration, Minor Comfort, Speculation, or Commercial Solicitation: Reserve high positive polarity for verified, completed discoveries and breakthroughs across science, natural history, archaeology, ecology, medicine, and society. Discount routine administrative maintenance, minor symptom-comfort or lifestyle tips, unverified corporate/political pledges, and commercial/wagering promotional copy toward zero, attributing promotional hype or spin to "framing".
    - Epistemic Actuality (Completed Discovery vs. Anticipatory Preview, Speculative Question, or Explainer): Score strictly what has ALREADY been empirically discovered, proven, or enacted—never score the hypothetical future payoff of an experiment that is merely "poised to find out", a spacecraft "due to launch", an open question headline ("Are we about to solve...?", "Can X solve Y?"), or a retrospective/educational explainer ("How did life arise?"). When a breakthrough has not yet occurred, keep "polarity" and "permanence" modest (0 to +22) to reflect only the concrete preparatory step or ongoing inquiry, and assign any "could transform physics forever" hype to "framing".
 
@@ -863,7 +864,7 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
       recentArticles.push({
         sourceId,
         region,
-        title: art.title,
+        title: art.title, description: art.description || '',
         pubMs,
         stems,
         isFreshSinceLastCluster
@@ -1050,7 +1051,7 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
       if ((cu && alreadyClusteredUrls.has(cu)) || (ct && alreadyClusteredTitles.has(ct))) continue;
 
       const titleStems = new Set(extractCoherenceStems(art.title));
-      const allStems = new Set(extractCoherenceStems(`${art.title} ${(art.description || '').slice(0, 125)}`));
+      const allStems = new Set(extractCoherenceStems(`${art.title} ${(art.description || '').slice(0, 240)}`));
 
       // Skip secondary/older dispatches from an outlet that already has a representative article in a matching cluster
       const alreadyCoveredBySameOutlet = activeClusterAnchors.some(anc => {
@@ -1074,7 +1075,7 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
         rankInOutlet: scannedForSource,
         pubMs: t,
         title: art.title.trim(),
-        description: (art.description || '').slice(0, 125).trim(),
+        description: (art.description || '').slice(0, 240).trim(),
         sentiment: score,
         link: art.link || '',
         pubDate: art.pubDate || '',
@@ -1170,7 +1171,7 @@ Rules:
 - If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
 - SPECIFIC LOCATION/ACTOR IN HEADLINE: Always name the specific city, country, or actor shared by the articles in "story" (e.g. "Milan Riots Prompt Italian Troop Deployment", NEVER a vague continental umbrella like "European Protests Over Living Costs" when the articles are in Milan/Italy, and NEVER bleed facts from another country's cluster into "summary").
-- Provide a concise 1-2 sentence editorial summary explaining the core real-world event and how outlets are framing it.
+- Provide a concise, detail-packed 1-2 sentence editorial summary (~35-55 words) weaving the event's core arc with the concrete specifics from the dispatches (exact named institutions/agencies/companies, people/roles/ages, specific venues/streets/cities, concrete figures/tallies, and causal mechanisms). NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
 Dispatches:
@@ -1178,7 +1179,7 @@ ${promptLines}
 
 Return JSON array in format:
 [
-  { "story": "Topic Title", "summary": "1-2 sentence editorial summary of the event.", "ids": [0, 4, 12] }
+  { "story": "Topic Title", "summary": "1-2 sentence detail-packed summary with exact named actors, institutions, venues, figures, and mechanisms (no meta-coverage filler).", "ids": [0, 4, 12] }
 ]`;
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -1508,7 +1509,7 @@ Return JSON array in format:
                 matchingArticles.push({
                   sourceId: prevArt.sourceId,
                   sourceName: prevArt.sourceName || prevArt.sourceId,
-                  title: prevArt.title,
+                  title: prevArt.title, description: prevArt.description || '',
                   sentiment: typeof prevArt.sentiment === 'number' ? prevArt.sentiment : 0,
                   link: prevArt.link || '',
                   pubDate: prevArt.pubDate || ''
@@ -1589,7 +1590,7 @@ Return JSON array in format:
                 candidateStory: cl.story,
                 candidateSummary: cl.summary || '',
                 newestAddedMs: newestAddedMs > 0 ? newestAddedMs : (matchingArticles[0]?.pubDate ? new Date(matchingArticles[0].pubDate).getTime() : Date.now()),
-                addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
+                addedHeadlines: addedArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`)
               };
             }
           }
@@ -1639,7 +1640,7 @@ Return JSON array in format:
               candidateStory: finalStory,
               candidateSummary: finalSummary,
               newestAddedMs: newestMsVal,
-              addedHeadlines: matchingArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
+              addedHeadlines: matchingArticles.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`)
             };
           }
         }
@@ -1676,7 +1677,7 @@ Return JSON array in format:
           coverage: matchingArticles.map(m => ({
             sourceId: m.sourceId,
             sourceName: m.sourceName,
-            title: m.title,
+            title: m.title, description: m.description || '',
             sentiment: m.sentiment,
             link: m.link,
             pubDate: m.pubDate
@@ -1724,7 +1725,7 @@ Return JSON array in format:
                 candidateStory: prevClone.story,
                 candidateSummary: prevClone.summary || '',
                 newestAddedMs: newestPrevMs,
-                addedHeadlines: prevClone.coverage.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`)
+                addedHeadlines: prevClone.coverage.slice(0, 6).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`)
               };
             }
           }
@@ -1862,7 +1863,7 @@ Return JSON array in format:
       bestCl.coverage.push({
         sourceId: art.sourceId,
         sourceName: art.sourceName,
-        title: art.title,
+        title: art.title, description: art.description || '',
         sentiment: art.sentiment,
         link: art.link,
         pubDate: art.pubDate
@@ -1992,7 +1993,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
           candidateStory: c.story,
           candidateSummary: c.summary || '',
           newestAddedMs: Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0), Date.now()),
-          addedHeadlines: matchArts.slice(0, 5).map(a => `${a.sourceName || a.sourceId}: "${a.title}"`),
+          addedHeadlines: matchArts.slice(0, 5).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`),
           desyncTokens: missingShared
         };
       }
@@ -2083,7 +2084,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     for (const item of [covList[0], ...alignedSample.slice(0, 3), ...covList.slice(0, 3)].filter(Boolean)) {
       if (pickedSamples.length < 3 && !pickedSamples.includes(item)) pickedSamples.push(item);
     }
-    const sampleHeadlines = pickedSamples.map(a => `${a.sourceId}: "${a.title}"`).join(' | ');
+    const sampleHeadlines = pickedSamples.map(a => `${a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 140).trim()})` : ''}`).join(' | ');
     let line = `[${pIdx}] id="${id}" (v${c.version || 1}) | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
     if (sampleHeadlines) {
       line += `\n    [PRIMARY HEADLINES: ${sampleHeadlines}]`;
@@ -2164,7 +2165,7 @@ DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE, SUMMARY-DELTA SYNC & SELECTIVE ATTRIBUTIO
   • SELECTIVE SINGLE-SOURCE ATTRIBUTION: When a single outlet breaks a specific new detail, exclusive claim, or unverified allegation ahead of the rest of the cluster, attributing that outlet in "developmentNote" (e.g. "The Japan Times identifies suspect as Brendan Nugent" or "El País reports donation exceeds $9 billion") is helpful epistemic context. However, when multiple outlets confirm a major fact—or when an outlet is merely syndicating a baseline fact already known—write in direct wire voice ("Official results confirm Albertans rejected independence") and NEVER write "Outlet X confirms [fact already in summary]".
 - Always generate "developmentNote" and "stateBoundaryCrossed" FIRST before deciding "updateType".
 - HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor AND prior geographic scope from the existing headline while appending/reflecting the new shift so readers never lose the thread (e.g. "French Cost-of-Living Protests Spread to Italy and Belgium").
-- CUMULATIVE SUMMARY INVARIANT (NO RECENCY AMNESIA): A cluster's "summary" represents the complete cumulative story arc to date—NEVER just the latest batch of headlines. Whenever you output "summary" (for either "clarification" or "material_shift"), you MUST retain the concrete figures (e.g. arrest or casualty counts), key actions (e.g. museum blockades), and multi-country/multi-city geographic scope (e.g. spillover into Milan and Brussels) already established in the cluster's existing summary and [PRIOR RECORDED HISTORY], while integrating the new development (e.g. localized curfews enacted in Paris and Nice). Never drop earlier verified milestones or secondary countries just because the newest headlines focus on the latest reaction or measure!
+- CUMULATIVE SUMMARY INVARIANT (INTEGRATED JOURNEY + CONCRETE FLASHPOINT DETAILS, NO RECENCY AMNESIA): A cluster's "summary" represents the complete cumulative story arc to date—NEVER just the latest batch of headlines. Whenever you output "summary" (for either "clarification" or "material_shift"), you MUST weave the integrated chronological journey (how the story broke -> how it shifted/developed across [PRIOR RECORDED HISTORY] -> where it stands now) WITH the concrete specifics from the dispatches (exact named institutions/agencies/companies, people/roles/ages, specific venues/streets/cities, exact figures/tallies, and causal mechanisms), while retaining prior verified figures and multi-country/multi-city geographic scope. Never drop earlier verified milestones or secondary countries, and NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
 
 You have THREE jobs in this single pass:
 
@@ -2203,7 +2204,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
       "updateType": "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
-      "summary": "1-2 sentence cumulative synthesis integrating the new development while preserving prior verified figures and geographic scope."
+      "summary": "1-2 sentence detail-packed cumulative synthesis weaving the integrated chronological journey with exact named institutions/actors, specific venues/cities, concrete figures, and mechanisms (zero meta-coverage filler)."
     }
   ],
   "inPlaceDevelopments": [
@@ -2213,7 +2214,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
       "updateType": "none" | "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title (required for material_shift; for clarification, keep existing story UNLESS an explicit number/tally in the existing headline is now superseded by the updated summary)",
-      "summary": "1-2 sentence cumulative synthesis integrating the new development into the existing summary without dropping prior verified figures or geographic scope."
+      "summary": "1-2 sentence detail-packed cumulative synthesis weaving the integrated chronological journey with exact named institutions/actors, specific venues/cities, concrete figures, and mechanisms (zero meta-coverage filler)."
     }
   ],
   "lateralConnections": [
