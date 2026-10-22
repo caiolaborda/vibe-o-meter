@@ -23,6 +23,8 @@ jobs:
   pulse-1:
     name: Sync Pulse 1 (T+0m)
     uses: ./.github/workflows/sync-pulse.yml
+    with:
+      pulse_id: pulse-1
     secrets: inherit
 
   wait-1:
@@ -40,6 +42,8 @@ jobs:
     needs: wait-1
     if: always() && github.event_name == 'schedule'
     uses: ./.github/workflows/sync-pulse.yml
+    with:
+      pulse_id: pulse-2
     secrets: inherit
 
   wait-2:
@@ -57,4 +61,6 @@ jobs:
     needs: wait-2
     if: always() && github.event_name == 'schedule'
     uses: ./.github/workflows/sync-pulse.yml
+    with:
+      pulse_id: pulse-3
     secrets: inherit

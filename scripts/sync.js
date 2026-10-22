@@ -1608,6 +1608,7 @@ Return JSON array in format:
             version: 1,
             type: 'initial',
             timestamp: prevFirstSeenAt,
+            batchConsolidatedAt: new Date().toISOString(),
             headline: finalStory,
             summary: finalSummary,
             outletCount: matchingArticles.length,
@@ -1877,6 +1878,35 @@ Return JSON array in format:
       if (art.cUrl) coveredUrls.add(art.cUrl);
       if (art.cTitle) coveredTitles.add(art.cTitle);
       catchupAttachedCount++;
+      const histArr = Array.isArray(bestCl.evolutionHistory) ? bestCl.evolutionHistory : [];
+      const maxHistMs = histArr.reduce((m, h) => {
+        const ms = h?.timestamp ? new Date(h.timestamp).getTime() : 0;
+        return (!isNaN(ms) && ms > m) ? ms : m;
+      }, 0);
+      if (art.pubMs > maxHistMs + 30 * 60000) {
+        const baseText = `${bestCl.story || ""} ${bestCl.summary || ""} ${histArr.map(h => `${h?.headline || ""} ${h?.note || ""}`).join(" ")}`;
+        const baseStems = new Set(extractCoherenceStems(baseText));
+        const baseNums = new Set(baseText.match(/\b\d+(?:[.,]\d+)?\b/g) || []);
+        const cleanT = cleanHeadlineTitle(art.title || "");
+        const aNums = (cleanT.match(/\b\d+(?:[.,]\d+)?\b/g) || []).filter(n => !baseNums.has(n));
+        const novelSpec = [...art.titleStems].filter(s => !baseStems.has(s) && (stemDocFreq.get(s) || 0) <= 18);
+        if (aNums.length > 0 || novelSpec.length >= 2) {
+          const lineStr = `${art.sourceName || art.sourceId}: "${art.title}"${art.description ? ` (${String(art.description).slice(0, 160).trim()})` : ""}`;
+          if (!bestCl._pendingUpdate) {
+            bestCl._pendingUpdate = {
+              candidateStory: bestCl.story,
+              candidateSummary: bestCl.summary || "",
+              newestAddedMs: art.pubMs,
+              addedHeadlines: [lineStr]
+            };
+          } else {
+            bestCl._pendingUpdate.newestAddedMs = Math.max(bestCl._pendingUpdate.newestAddedMs || 0, art.pubMs);
+            if (Array.isArray(bestCl._pendingUpdate.addedHeadlines) && bestCl._pendingUpdate.addedHeadlines.length < 6 && !bestCl._pendingUpdate.addedHeadlines.includes(lineStr)) {
+              bestCl._pendingUpdate.addedHeadlines.push(lineStr);
+            }
+          }
+        }
+      }
     }
     if (catchupAttachedCount > 0) {
       console.log(`[Clusters] Deterministic coverage catch-up attached ${catchupAttachedCount} late-arriving outlet dispatches to existing clusters.`);
@@ -1901,6 +1931,9 @@ Return JSON array in format:
         const prevEval = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
         c._pendingUpdate.desyncTokens.forEach(t => prevEval.add(t));
         c.evaluatedDesyncTokens = Array.from(prevEval).slice(-30);
+      }
+      if (c._pendingUpdate && c.newestMs) {
+        c.lastEvaluatedCoverageMs = Math.max(c.lastEvaluatedCoverageMs || 0, c.newestMs);
       }
       delete c.newestMs;
       delete c._pendingUpdate;
@@ -1969,7 +2002,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     const recentCov = cov.slice(0, 5);
     const tokenHits = new Map();
     for (const a of recentCov) {
-      const cleanT = String(a.title || '').replace(/\s*[-–—|]\s*[^-–—|]+$/, '');
+      const cleanT = String(a.title || '').replace(/\s+[-–—|]\s+[^-–—|]+$/, '');
       const tokens = cleanT.split(/\s+/).slice(1);
       const seenInArt = new Set();
       for (const tok of tokens) {
@@ -1992,7 +2025,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
         c._pendingUpdate = {
           candidateStory: c.story,
           candidateSummary: c.summary || '',
-          newestAddedMs: Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0), Date.now()),
+          newestAddedMs: Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0)) || Date.now(),
           addedHeadlines: matchArts.slice(0, 5).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`),
           desyncTokens: missingShared
         };
@@ -2155,7 +2188,8 @@ When evaluating what remains AFTER subtracting the existing summary baseline, di
      • Spatial / Sovereign Border Crossing: The active physical phenomenon crosses into a NEW sovereign country or international theatre not yet named in the prior summary (e.g. domestic French unrest spreading into Italy and Belgium; an outbreak crossing into Kenya),
      • Executed Institutional / Legal Regime Change: Authorities FORMALLY ENACT, SIGN, RULE, OR EXECUTE an extraordinary legal/coercive measure not yet in the summary (e.g. curfews formally imposed in Paris and Nice, criminal charges/indictments formally filed, a suspect released without charges, or construction ordered to begin despite a court injunction — NEVER merely "weighing" or "pushing for" it),
      • Phase Completion / Decisive Outcome Resolution: An active process, vote, election, referendum, trial, launch, or emergency transitions from an ongoing/unresolved state ("holds referendum", "voters cast ballots", "prepares to launch", "on trial") to a decisive declared result or completed milestone ("voters reject independence referendum", "court convicts leader", "spacecraft successfully launches"),
-     • Outcome / Premise Reversal: A critical threat or premise is definitively resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses).
+     • Outcome / Premise Reversal: A critical threat or premise is definitively resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses),
+     • Temporal Re-Break / Follow-Up Kinetic or Institutional Escalation: When a new kinetic strike, explosion, military operation, municipal/regional ban, direct diplomatic summit, or significant casualty toll jump occurs hours or days (>= 6h) after the prior stage within the same cluster, classify as "material_shift" (never demote a new physical strike/explosion or major toll jump to "clarification" merely because the theatre headline is unchanged).
 
 DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE, SUMMARY-DELTA SYNC & SELECTIVE ATTRIBUTION:
 - When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that execute a true net-new State-Envelope crossing, classify as "material_shift".
@@ -2489,6 +2523,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           version: c.version,
           type: 'material_shift',
           timestamp: ts,
+          batchConsolidatedAt: new Date().toISOString(),
           headline: c.story,
           summary: c.summary,
           beforeStory: beforeSnapshot.story,
@@ -2563,6 +2598,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           version: beforeSnapshot.version,
           type: 'clarification',
           timestamp: ts,
+          batchConsolidatedAt: new Date().toISOString(),
           headline: c.story,
           summary: c.summary,
           beforeStory: beforeSnapshot.story,
@@ -3408,7 +3444,7 @@ async function main() {
         cl.story = 'Milan Riots Prompt Italian Troop Deployment';
         cl.summary = 'Violent youth and cost-of-living protests in Milan led to a second day of street clashes and luxury retailer closures, prompting Prime Minister Giorgia Meloni\'s government to order the deployment of 500 soldiers to secure the city.';
         cl.evolvedFromIds = ['european-protests-over-living-costs'];
-        if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 0) {
+        if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length === 1) {
           cl.evolutionHistory[0].headline = cl.story;
           cl.evolutionHistory[0].summary = cl.summary;
         }
