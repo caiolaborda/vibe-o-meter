@@ -1354,6 +1354,16 @@ Return JSON array in format:
             if (!matchedPrev) {
               matchedPrev = ancCluster;
             } else {
+              // Guard against swallowing a distinct secondary EXISTING_CLUSTER anchor when the first-pass LLM
+              // lumped two different stories from the same geopolitical theatre into one candidate group.
+              const prevUrlsSet = new Set((matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean));
+              const ancUrlsOverlap = (ancCluster.coverage || []).filter(c => c.link && prevUrlsSet.has(canonicalUrl(c.link))).length;
+              const prevSpecificTitleStems = extractCoherenceStems(matchedPrev.story || '').filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s));
+              const ancSpecificTitleStems = new Set(extractCoherenceStems(ancCluster.story || '').filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
+              const sharedSpecificTitle = prevSpecificTitleStems.filter(s => ancSpecificTitleStems.has(s)).length;
+              if (ancUrlsOverlap < 2 && sharedSpecificTitle < 2) {
+                continue;
+              }
               secondaryAnchors.push(ancCluster);
             }
             if (ancSlug) evolvedIds.add(ancSlug);
@@ -1723,15 +1733,17 @@ Return JSON array in format:
       });
     }
 
-    // Deterministic Post-LLM Entity-Anchor + Event-Action Coverage Catch-Up Pass:
+    // Deterministic Post-LLM Entity-Anchor + Event-Action Coverage Catch-Up Pass (Rolling 7-Day Window):
     // Because a single LLM clustering call outputs ~50 clusters per run and does not re-emit all ~300 preserved clusters,
-    // sweep remaining uncovered 48h articles that pass the Rare-Entity Bottleneck + Headline Coverage + Peer Coherence gates
-    // into their matching active cluster from outlets not yet represented in that cluster.
+    // sweep uncovered 7-day articles (within ±72h of each cluster's coverage window) that pass the Rare-Entity Bottleneck
+    // + Headline Coverage + Peer Coherence gates, sorted by match score descending so the best dispatch per outlet wins.
     const GENERIC_PREDICATE_OR_ROLE_STEMS = new Set(extractCoherenceStems(`
-      record fatal kills killed dead death military train charged charges release released crash
-      fire attack attacks protest protests protesters court judge police arrest arrested strike strikes launch launches approve approval
-      reject election elections voters campaign senate congress parliament government officials minister
-      president investigation probe threat threats crisis emergency warn warns disruption cancel delay
+      record fatal kills killed dead death deadly military soldiers soldier service members troops forces base bases training
+      train charged charges release released crash fire attack attacks protest protests protesters court judge police arrest arrested
+      strike strikes launch launches approve approval reject election elections voters campaign senate congress parliament government
+      officials minister president secretary press spokesperson chief director head boss
+      ousted ousts fires fired firing resigns resigned departs departed leaves left steps stepped out
+      investigation probe threat threats crisis emergency warn warns disruption cancel delay
       announce announces reveal confirm confirms report reports discover found scientists astronomers study
       united states america american administration white house federal national global world
       outage pledges donate shares stock plunges surge slump fine fined penalty
@@ -1745,85 +1757,125 @@ Return JSON array in format:
       summit talks willing resume accept freezing front vows kids relief spark powers
       upholds pause policy dismissed rumors health media retailer group stake pipeline network woman
       escalate accuses interference recover exports middle east early system services unveils
+      injured wounded iran iranian oil crude gas fuel energy import imports export price prices trim trims cut cuts deal annual supply supplies
+      barcelona villarreal madrid
     `));
-    let catchupAttachedCount = 0;
-    for (const art of rawUnclustered) {
-      const cUrl = canonicalUrl(art.link);
-      const cTitle = cleanHeadlineTitle(art.title);
-      if ((cUrl && coveredUrls.has(cUrl)) || (cTitle && coveredTitles.has(cTitle))) continue;
-      if (/\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel|top news headlines|morning briefing|evening briefing|live:|– live)\b/i.test(art.title || '')) continue;
-
+    for (const cl of formattedClusters) {
+      for (const c of (cl.coverage || [])) {
+        if (c.link) coveredUrls.add(canonicalUrl(c.link));
+        if (c.title) coveredTitles.add(cleanHeadlineTitle(c.title));
+      }
+    }
+    const unclustered7d = [];
+    Object.entries(finalSources).forEach(([sourceId, src]) => {
+      for (const art of (src.articles || [])) {
+        if (!art || !art.title || art.title.trim().length <= 10) continue;
+        if (/\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel|top news headlines|morning briefing|evening briefing|live:|– live)\b/i.test(art.title)) continue;
+        const pubMs = art.pubDate ? new Date(art.pubDate).getTime() : NaN;
+        if (isNaN(pubMs) || pubMs < sevenDaysAgo) continue;
+        const cUrl = canonicalUrl(art.link);
+        const cTitle = cleanHeadlineTitle(art.title);
+        if ((cUrl && coveredUrls.has(cUrl)) || (cTitle && coveredTitles.has(cTitle))) continue;
+        const titleStems = new Set(extractCoherenceStems(art.title));
+        const allStems = new Set(extractCoherenceStems(`${art.title} ${(art.description || '').slice(0, 260)}`));
+        const score = typeof art.sentimentGemini === 'number' ? art.sentimentGemini : (art.sentiment || 0);
+        unclustered7d.push({
+          sourceId,
+          sourceName: src.name || sourceId,
+          pubMs,
+          title: art.title.trim(),
+          description: (art.description || '').slice(0, 260).trim(),
+          sentiment: score,
+          link: art.link || '',
+          pubDate: art.pubDate || '',
+          cUrl,
+          cTitle,
+          titleStems,
+          allStems
+        });
+      }
+    });
+    const clusterMetaCatchup = formattedClusters.map(cl => {
+      const cov = cl.coverage || [];
+      const times = cov.map(c => new Date(c.pubDate).getTime()).filter(t => !isNaN(t) && t > 0);
+      const minMs = times.length ? Math.min(...times) : 0;
+      const maxMs = times.length ? Math.max(...times) : 0;
+      const clTitleArr = extractCoherenceStems(cl.story || '');
+      const clAllStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''}`));
+      const clEntityStems = clTitleArr
+        .filter(s => !GENERIC_PREDICATE_OR_ROLE_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= 180)
+        .sort((a, b) => (stemDocFreq.get(a) || 999) - (stemDocFreq.get(b) || 999));
+      const peerStems = cov.map(peer => ({
+        titleStems: new Set(extractCoherenceStems(peer.title || '')),
+        allStems: new Set(extractCoherenceStems(`${peer.title || ''} ${peer.description || ''}`))
+      }));
+      return { cl, minMs, maxMs, clTitleArr, clAllStems, clEntityStems, peerStems };
+    });
+    const candidateAttachments = [];
+    for (const art of unclustered7d) {
       let bestCl = null;
       let bestScore = 0;
-      for (const cl of formattedClusters) {
-        const cov = cl.coverage || [];
-        if (cov.length < 2) continue;
+      for (const cm of clusterMetaCatchup) {
+        const cov = cm.cl.coverage || [];
+        if (cov.length < 2 || cm.clTitleArr.length < 2 || cm.clEntityStems.length < 1) continue;
         if (cov.some(c => c.sourceId === art.sourceId)) continue;
-        const clTitleArr = extractCoherenceStems(cl.story || '');
-        if (clTitleArr.length < 2) continue;
-        const clAllStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''}`));
-        const clEntityStems = clTitleArr
-          .filter(s => !GENERIC_PREDICATE_OR_ROLE_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= 140)
-          .sort((a, b) => (stemDocFreq.get(a) || 999) - (stemDocFreq.get(b) || 999));
-        if (clEntityStems.length < 1) continue;
-        if (!art.titleStems.has(clEntityStems[0])) continue;
-        if (clEntityStems.length >= 2 && !art.allStems.has(clEntityStems[1])) continue;
-
-        const matchedEntitiesInTitle = clEntityStems.filter(s => art.titleStems.has(s));
-        const matchedEntitiesInAll = clEntityStems.filter(s => art.allStems.has(s));
-        if (clEntityStems.length <= 3) {
-          if (matchedEntitiesInAll.length < clEntityStems.length) continue;
-          if (matchedEntitiesInTitle.length < Math.min(2, clEntityStems.length)) continue;
+        if (cm.minMs > 0 && (art.pubMs < cm.minMs - 72 * 3600 * 1000 || art.pubMs > cm.maxMs + 72 * 3600 * 1000)) continue;
+        if (!art.titleStems.has(cm.clEntityStems[0])) continue;
+        if (cm.clEntityStems.length >= 2 && !art.allStems.has(cm.clEntityStems[1])) continue;
+        const matchedEntitiesInTitle = cm.clEntityStems.filter(s => art.titleStems.has(s));
+        const matchedEntitiesInAll = cm.clEntityStems.filter(s => art.allStems.has(s));
+        if (cm.clEntityStems.length <= 3) {
+          if (matchedEntitiesInAll.length < cm.clEntityStems.length) continue;
+          if (matchedEntitiesInTitle.length < Math.min(2, cm.clEntityStems.length)) continue;
         } else {
           if (matchedEntitiesInTitle.length < 2 || matchedEntitiesInAll.length < 3) continue;
         }
-
-        const shTitle = clTitleArr.filter(s => art.titleStems.has(s));
-        const shTitleFromArtAll = clTitleArr.filter(s => art.allStems.has(s));
+        const shTitle = cm.clTitleArr.filter(s => art.titleStems.has(s));
+        const shTitleFromArtAll = cm.clTitleArr.filter(s => art.allStems.has(s));
         if (shTitle.length < 2) continue;
-        if ((shTitleFromArtAll.length / clTitleArr.length) < 0.60) continue;
-
-        const shAll = [...art.allStems].filter(s => clAllStems.has(s));
+        if ((shTitleFromArtAll.length / cm.clTitleArr.length) < 0.60) continue;
+        const shAll = [...art.allStems].filter(s => cm.clAllStems.has(s));
         if (shAll.length < 3) continue;
-
         let peerConfirmations = 0;
-        for (const peer of cov) {
-          const pTitleStems = new Set(extractCoherenceStems(peer.title || ''));
-          const pAllStems = new Set(extractCoherenceStems(`${peer.title || ''} ${peer.description || ''}`));
-          const pShT = [...art.titleStems].filter(s => pTitleStems.has(s));
-          const pShA = [...art.allStems].filter(s => pAllStems.has(s));
-          const pHasLeadEntity = matchedEntitiesInAll.some(s => pAllStems.has(s));
+        for (const p of cm.peerStems) {
+          const pShT = [...art.titleStems].filter(s => p.titleStems.has(s));
+          const pShA = [...art.allStems].filter(s => p.allStems.has(s));
+          const pHasLeadEntity = matchedEntitiesInAll.some(s => p.allStems.has(s));
           if (pHasLeadEntity && ((pShT.length >= 2 && pShA.length >= 2) || (pShT.length >= 1 && pShA.length >= 3))) {
             peerConfirmations++;
           }
         }
         if (peerConfirmations < 2) continue;
-
         const score = (matchedEntitiesInTitle.length * 15) + (shTitle.length * 8) + (shAll.length * 3) + (peerConfirmations * 4);
         if (score > bestScore) {
           bestScore = score;
-          bestCl = cl;
+          bestCl = cm.cl;
         }
       }
-      if (bestCl) {
-        bestCl.coverage.push({
-          sourceId: art.sourceId,
-          sourceName: art.sourceName,
-          title: art.title,
-          sentiment: art.sentiment,
-          link: art.link,
-          pubDate: art.pubDate
-        });
-        bestCl.coverage.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
-        bestCl.outletCount = bestCl.coverage.length;
-        const sents = bestCl.coverage.map(a => a.sentiment || 0);
-        bestCl.avgSentiment = Number((sents.reduce((s, v) => s + v, 0) / sents.length).toFixed(2));
-        bestCl.sentimentSpread = Number((Math.max(...sents) - Math.min(...sents)).toFixed(2));
-        if (art.pubMs > (bestCl.newestMs || 0)) bestCl.newestMs = art.pubMs;
-        if (cUrl) coveredUrls.add(cUrl);
-        if (cTitle) coveredTitles.add(cTitle);
-        catchupAttachedCount++;
-      }
+      if (bestCl) candidateAttachments.push({ art, bestCl, bestScore });
+    }
+    candidateAttachments.sort((a, b) => (b.bestScore - a.bestScore) || (b.art.pubMs - a.art.pubMs));
+    let catchupAttachedCount = 0;
+    for (const { art, bestCl } of candidateAttachments) {
+      if ((art.cUrl && coveredUrls.has(art.cUrl)) || (art.cTitle && coveredTitles.has(art.cTitle))) continue;
+      if ((bestCl.coverage || []).some(c => c.sourceId === art.sourceId)) continue;
+      bestCl.coverage.push({
+        sourceId: art.sourceId,
+        sourceName: art.sourceName,
+        title: art.title,
+        sentiment: art.sentiment,
+        link: art.link,
+        pubDate: art.pubDate
+      });
+      bestCl.coverage.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+      bestCl.outletCount = bestCl.coverage.length;
+      const sents = bestCl.coverage.map(a => a.sentiment || 0);
+      bestCl.averageSentiment = Number((sents.reduce((s, v) => s + v, 0) / sents.length).toFixed(2));
+      bestCl.sentimentSpread = Number((Math.max(...sents) - Math.min(...sents)).toFixed(2));
+      if (art.pubMs > (bestCl.newestMs || 0)) bestCl.newestMs = art.pubMs;
+      if (art.cUrl) coveredUrls.add(art.cUrl);
+      if (art.cTitle) coveredTitles.add(art.cTitle);
+      catchupAttachedCount++;
     }
     if (catchupAttachedCount > 0) {
       console.log(`[Clusters] Deterministic coverage catch-up attached ${catchupAttachedCount} late-arriving outlet dispatches to existing clusters.`);
@@ -2568,6 +2620,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
 
     const reconcileFinalLateralConnections = (finalList) => {
       const byId = new Map();
+      const stemsById = new Map();
+      const finalStemFreq = new Map();
       for (const cl of finalList) {
         const cid = cl.id || slugify(cl.story);
         byId.set(cid, cl);
@@ -2576,10 +2630,15 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
             if (oldId && !byId.has(oldId)) byId.set(oldId, cl);
           });
         }
+        const tStems = new Set(extractCoherenceStems(cl.story || ''));
+        const aStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''} ${(cl.coverage || []).slice(0, 4).map(a => a.title || '').join(' ')}`));
+        stemsById.set(cid, { tStems, aStems });
+        for (const s of aStems) finalStemFreq.set(s, (finalStemFreq.get(s) || 0) + 1);
       }
       for (const cl of finalList) {
         if (!Array.isArray(cl.lateralConnections) || cl.lateralConnections.length === 0) continue;
         const cid = cl.id || slugify(cl.story);
+        const selfStems = stemsById.get(cid);
         const seen = new Set([cid]);
         const cleaned = [];
         for (const lc of cl.lateralConnections) {
@@ -2588,6 +2647,13 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           if (!target) continue;
           const tid = target.id || slugify(target.story);
           if (seen.has(tid)) continue;
+          const targetStems = stemsById.get(tid);
+          if (selfStems && targetStems) {
+            const shSpec = [...selfStems.tStems].filter(s => targetStems.aStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s));
+            const shRev = [...targetStems.tStems].filter(s => selfStems.aStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s));
+            const shNonSuper = [...selfStems.aStems].filter(s => targetStems.aStems.has(s) && !GENERIC_LAT_TEMPLATE_STEMS.has(s) && (finalStemFreq.get(s) || 0) <= 7);
+            if ((shSpec.length === 0 && shRev.length === 0) || shNonSuper.length === 0) continue;
+          }
           seen.add(tid);
           cleaned.push({
             clusterId: tid,

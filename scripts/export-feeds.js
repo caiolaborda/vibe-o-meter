@@ -379,13 +379,34 @@ function exportPublicJsonFeeds(fullPayload) {
       ? cl.lateralConnections
       : undefined;
 
+    const computedFirstSeenAt = (() => {
+      const cands = [...timestamps];
+      if (cl.firstSeenAt) { const t = Date.parse(cl.firstSeenAt); if (!isNaN(t) && t > 0) cands.push(t); }
+      if (cl.evolutionHistory?.[0]?.timestamp) { const t = Date.parse(cl.evolutionHistory[0].timestamp); if (!isNaN(t) && t > 0) cands.push(t); }
+      return cands.length > 0 ? new Date(Math.min(...cands)).toISOString() : null;
+    })();
+    const computedLatestUpdateAt = timestamps.length > 0 ? new Date(timestamps[timestamps.length - 1]).toISOString() : null;
+    if (Array.isArray(evolutionHistory)) {
+      evolutionHistory.forEach(h => {
+        if (h && h.timestamp) {
+          const parsed = Date.parse(h.timestamp);
+          if (!isNaN(parsed) && parsed > 0) h.timestamp = new Date(parsed).toISOString();
+        }
+      });
+    }
+
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.id = slug;
     cl.topic = topic;
     cl.version = version;
     cl.averageSentiment = avgSent;
+    cl.eventBase = avgEventBase;
     cl.significanceScore = significanceScore;
+    if (clusterFactors) cl.factors = clusterFactors;
     cl.sentimentSpread = spread;
+    cl.outletCount = outletCount;
+    if (computedFirstSeenAt) cl.firstSeenAt = computedFirstSeenAt;
+    if (computedLatestUpdateAt) cl.latestUpdateAt = computedLatestUpdateAt;
     if (bestImg) cl.imageUrl = bestImg;
     cl.coverage = enrichedCov;
 
@@ -407,13 +428,8 @@ function exportPublicJsonFeeds(fullPayload) {
       ...(clusterFactors ? { factors: clusterFactors } : {}),
       sentimentSpread: spread,
       outletCount,
-      firstSeenAt: (() => {
-        const cands = [...timestamps];
-        if (cl.firstSeenAt) { const t = Date.parse(cl.firstSeenAt); if (!isNaN(t) && t > 0) cands.push(t); }
-        if (cl.evolutionHistory?.[0]?.timestamp) { const t = Date.parse(cl.evolutionHistory[0].timestamp); if (!isNaN(t) && t > 0) cands.push(t); }
-        return cands.length > 0 ? new Date(Math.min(...cands)).toISOString() : null;
-      })(),
-      latestUpdateAt: timestamps.length > 0 ? new Date(timestamps[timestamps.length - 1]).toISOString() : null,
+      firstSeenAt: computedFirstSeenAt,
+      latestUpdateAt: computedLatestUpdateAt,
       coverage: enrichedCov
     };
   });
@@ -448,12 +464,16 @@ function exportPublicJsonFeeds(fullPayload) {
     console.warn('[Export] Could not read existing clusters-archive.json:', archReadErr.message);
   }
 
-  // Build global oldSlug -> newCluster lookup so lateralConnections never point to superseded slugs
+  // Build global oldSlug -> newCluster lookup so lateralConnections never point to superseded or missing slugs
+  const activeClusterById = new Map();
   const evolvedIdToCurrent = new Map();
   for (const cl of enrichedClusters) {
-    if (!cl || !cl.id || !Array.isArray(cl.evolvedFromIds)) continue;
-    for (const oldId of cl.evolvedFromIds) {
-      if (oldId && oldId !== cl.id) evolvedIdToCurrent.set(oldId, cl);
+    if (!cl || !cl.id) continue;
+    activeClusterById.set(cl.id, cl);
+    if (Array.isArray(cl.evolvedFromIds)) {
+      for (const oldId of cl.evolvedFromIds) {
+        if (oldId && oldId !== cl.id) evolvedIdToCurrent.set(oldId, cl);
+      }
     }
   }
   const remapLateralConnections = (latArr, selfId) => {
@@ -462,20 +482,28 @@ function exportPublicJsonFeeds(fullPayload) {
     const out = [];
     for (const lc of latArr) {
       if (!lc || !lc.clusterId) continue;
-      const target = evolvedIdToCurrent.get(lc.clusterId);
-      const cid = target ? target.id : lc.clusterId;
-      const headline = target ? target.story : lc.headline;
+      const target = evolvedIdToCurrent.get(lc.clusterId) || activeClusterById.get(lc.clusterId) || archiveMap.get(lc.clusterId);
+      if (!target) continue;
+      const cid = target.id || lc.clusterId;
+      const headline = target.story || lc.headline;
       if (cid === selfId || seen.has(cid)) continue;
       seen.add(cid);
       out.push({ ...lc, clusterId: cid, headline });
     }
     return out.length > 0 ? out : undefined;
   };
-  for (const cl of enrichedClusters) {
+  for (let i = 0; i < enrichedClusters.length; i++) {
+    const cl = enrichedClusters[i];
     if (cl.lateralConnections) {
       cl.lateralConnections = remapLateralConnections(cl.lateralConnections, cl.id);
+      if (rawClusters[i]) {
+        if (cl.lateralConnections) rawClusters[i].lateralConnections = cl.lateralConnections;
+        else delete rawClusters[i].lateralConnections;
+      }
     }
   }
+  // Re-write clusters.json after remapping lateralConnections
+  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'clusters.json'), JSON.stringify(clustersPayload, null, 2), 'utf8');
 
   // Upsert current enrichedClusters into archiveMap and remove any superseded evolvedFromIds slugs
   for (const cl of enrichedClusters) {
@@ -518,7 +546,15 @@ function exportPublicJsonFeeds(fullPayload) {
     });
   }
 
-  const archivedClustersList = Array.from(archiveMap.values())
+  const archivedClustersList = deduplicateAndSanitizeClusters(Array.from(archiveMap.values()))
+    .map(cl => {
+      if (cl.lateralConnections) {
+        const remapped = remapLateralConnections(cl.lateralConnections, cl.id);
+        if (remapped) cl.lateralConnections = remapped;
+        else delete cl.lateralConnections;
+      }
+      return cl;
+    })
     .sort((a, b) => new Date(b.latestUpdateAt || b.firstSeenAt || 0) - new Date(a.latestUpdateAt || a.firstSeenAt || 0))
     .slice(0, 2500);
 
@@ -792,7 +828,7 @@ function exportPublicJsonFeeds(fullPayload) {
   const activeClusters48h = active48h.length >= 12 ? active48h : rawClusters.slice(0, 24);
 
   return {
-    enrichedClusters: rawClusters,
+    enrichedClusters,
     activeClusters48h,
     clustersCount: enrichedClusters.length,
     archivedClustersCount: archivedClustersList.length,
