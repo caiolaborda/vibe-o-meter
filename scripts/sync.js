@@ -1172,6 +1172,7 @@ Rules:
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
 - SPECIFIC LOCATION/ACTOR IN HEADLINE: Always name the specific city, country, or actor shared by the articles in "story" (e.g. "Milan Riots Prompt Italian Troop Deployment", NEVER a vague continental umbrella like "European Protests Over Living Costs" when the articles are in Milan/Italy, and NEVER bleed facts from another country's cluster into "summary").
 - Provide a concise, detail-packed 1-2 sentence editorial summary (~35-55 words) weaving the event's core arc with the concrete specifics from the dispatches (exact named institutions/agencies/companies, people/roles/ages, specific venues/streets/cities, concrete figures/tallies, and causal mechanisms). NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
+- TEMPORAL & ROLE HYGIENE (NEVER INJECT PRE-CUTOFF TITLES): Only attribute an active political, corporate, or institutional office/title to a person if that exact current title is explicitly stated in the dispatches below. Because offices, prime ministers, mayors, and ministers change over time, NEVER supply a person's former or pre-training-cutoff role from internal memory when the dispatches omit a title or use a newer title.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
 Dispatches:
@@ -1429,11 +1430,23 @@ Return JSON array in format:
         let prevDevelopmentNote = null;
         let prevEvolutionHistory = null;
         let prevSeenKeys = null;
+        let prevEvaluatedDesyncTokens = null;
+        let prevLastEvaluatedCoverageMs = null;
         let prevLateralConnections = null;
         let pendingUpdate = null;
 
         if (matchedPrev) {
           const allMatchedAnchors = [matchedPrev, ...secondaryAnchors];
+          const mergedEvalTokens = new Set();
+          let maxEvalCovMs = 0;
+          for (const anc of allMatchedAnchors) {
+            (anc.evaluatedDesyncTokens || []).forEach(t => mergedEvalTokens.add(t));
+            if (anc.lastEvaluatedCoverageMs && anc.lastEvaluatedCoverageMs > maxEvalCovMs) {
+              maxEvalCovMs = anc.lastEvaluatedCoverageMs;
+            }
+          }
+          if (mergedEvalTokens.size > 0) prevEvaluatedDesyncTokens = Array.from(mergedEvalTokens).slice(-30);
+          if (maxEvalCovMs > 0) prevLastEvaluatedCoverageMs = maxEvalCovMs;
           // Self-heal check: include both new matchingArticles AND matchedPrev.coverage so a single new dispatch
           // matching an EXISTING_CLUSTER anchor never falsely fails prevStorySupported and drops the cluster's existing outlets!
           const articleBagStems = new Set();
@@ -1669,6 +1682,8 @@ Return JSON array in format:
           ...(evolvedIds.size > 0 ? { evolvedFromIds: Array.from(evolvedIds) } : {}),
           ...(prevEvolutionHistory ? { evolutionHistory: prevEvolutionHistory } : {}),
           ...(prevSeenKeys ? { seenArticleKeys: prevSeenKeys } : {}),
+          ...(prevEvaluatedDesyncTokens ? { evaluatedDesyncTokens: prevEvaluatedDesyncTokens } : {}),
+          ...(prevLastEvaluatedCoverageMs ? { lastEvaluatedCoverageMs: prevLastEvaluatedCoverageMs } : {}),
           ...(prevLateralConnections ? { lateralConnections: prevLateralConnections } : {}),
           ...(pendingUpdate ? { _pendingUpdate: pendingUpdate } : {}),
           averageSentiment: avgScore,
@@ -1990,13 +2005,17 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     'after', 'amid', 'over', 'with', 'from', 'into', 'says', 'warn', 'warns', 'calls', 'talks', 'first', 'more',
     'most', 'some', 'many', 'news', 'live', 'watch', 'video', 'report', 'reports', 'world', 'state', 'states',
     'united', 'house', 'court', 'police', 'minister', 'president', 'government', 'officials', 'america', 'american',
-    'britain', 'british', 'turkiye', 'turkey', 'reuters', 'bloomberg', 'guardian', 'times'
+    'britain', 'british', 'turkiye', 'turkey', 'reuters', 'bloomberg', 'guardian', 'times',
+    'trump', 'biden', 'democrat', 'democratic', 'democrats', 'republican', 'republicans', 'senator', 'senate',
+    'congress', 'lawmaker', 'parliament', 'federal', 'national', 'general', 'prime', 'supreme', 'justice', 'department'
   ]);
   for (let i = 0; i < meta.length; i++) {
     const c = meta[i].c;
     if (c._pendingUpdate || meta[i].ageHours > 72) continue;
     const cov = c.coverage || [];
     if (cov.length < 3) continue;
+    const newestCovMs = Math.max(...cov.map(a => new Date(a.pubDate).getTime() || 0), 0);
+    if (c.lastEvaluatedCoverageMs && newestCovMs <= c.lastEvaluatedCoverageMs) continue;
     const baseText = `${c.story || ''} ${c.summary || ''} ${c.developmentNote || ''} ${(c.evolutionHistory || []).map(h => h.note || '').join(' ')}`.toLowerCase();
     const evalSet = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
     const recentCov = cov.slice(0, 5);
@@ -2020,12 +2039,13 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     const missingShared = [...tokenHits.entries()].filter(([, cnt]) => cnt >= 2).map(([wl]) => wl);
     if (missingShared.length > 0) {
       const matchArts = recentCov.filter(a => missingShared.some(wl => String(a.title || '').toLowerCase().includes(wl)));
-      if (matchArts.length >= 2) {
+      const newestMatchMs = Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0), 0);
+      if (matchArts.length >= 2 && (!c.lastEvaluatedCoverageMs || newestMatchMs > c.lastEvaluatedCoverageMs)) {
         console.log(`[Clusters] Self-healing desync detected on "${c.story}" (missing from summary: ${missingShared.join(', ')}) — queueing for Job 2.`);
         c._pendingUpdate = {
           candidateStory: c.story,
           candidateSummary: c.summary || '',
-          newestAddedMs: Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0)) || Date.now(),
+          newestAddedMs: newestMatchMs || Date.now(),
           addedHeadlines: matchArts.slice(0, 5).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`),
           desyncTokens: missingShared
         };
@@ -2171,15 +2191,15 @@ Before classifying ANY update in Job 2, compare the facts in [CANDIDATE IN-PLACE
   • If a newly arriving outlet (e.g. a late regional or international syndicate) reports a government ban, court conviction, hospital discharge, or fatality count that is ALREADY described in the cluster's current summary, it is 100% syndication catch-up ("none") — NEVER trigger a "material_shift" or a "clarification" ("Outlet X confirms...") for a milestone the cluster summary already states!
 
 When evaluating what remains AFTER subtracting the existing summary baseline, distinguish between THREE states:
-1. "none" (Redundant / Syndication Catch-Up — Omit):
-   - The new dispatches merely restate milestones, orders, verdicts, or figures already present in the cluster's existing headline, summary, or [PRIOR RECORDED HISTORY] (e.g. reporting a DHS ban, a guilty verdict for 191 deaths, a hospital discharge, or 4 fatalities when the existing summary already states that exact ban, verdict, discharge, or tally). Omit these completely!
+1. "none" (Same-Event Syndication / Static Background Color — Omit):
+   - The new dispatches report on the EXACT SAME breaking event, court ruling, indictment, or announcement already in the cluster's headline/summary without any new subsequent chronological event occurring afterward — even if the new headlines use different synonyms (e.g. "charged by DOJ in cannabis conspiracy" vs "indicted on federal counts for marijuana distribution", or "blocks anti-trans prison policy" vs "upholds pause on transgender prison policy") or include static background/biographical/date details of that same initial event (e.g. mentioning a person's age like "82-year-old", party affiliation, exact date like "December 11" vs "early December", or co-defendants in the same indictment). If nothing new happened in time after the initial break, it is "none" — omit completely!
 
 2. "clarification" (In-Phase Factual Delta — Sharpening Facts, Proposals, or Sub-Events Within the Existing Envelope):
    - The new dispatches add genuinely new factual precision, granularity, pre-decision deliberations, or localized sub-incidents NOT YET in the existing summary, WITHOUT executing an irreversible boundary crossing of the State Envelope:
      • Introducing or sharpening a concrete metric or tally compared to a previously vague or lower figure in the summary (e.g. "fatalities" or "1 dead" -> "at least 4 dead"; "kills 53" -> "kills 73"; "thousands arrested" -> "nearly 2,400 arrested"; "pledges SpaceX shares" -> "valued at over $9 billion"),
      • Pre-decision proposals, deliberations, or warnings BEFORE formal enactment (e.g. officials "weighing", "pushing for", "debating", or "threatening" curfews, sanctions, or charges — deliberating a measure is an In-Phase Update; only FORMAL ENACTMENT is a Shift),
      • Localized tactical flashpoints or rescue details within an already-established phenomenon (e.g. residents hoisted from rooftops during ongoing floods; protesters blockading a specific museum during nationwide unrest),
-     • Identifying or profiling already-counted victims/suspects (e.g. naming an already-arrested suspect), forensic mechanics, property damage assessments, or notable reactions.
+     • A genuinely new subsequent chronological step, newly released identity of a previously unnamed suspect/victim, or a major new official/market reaction that occurred AFTER the initial event (never routine background details or age/party descriptors of an already-named subject).
    - For "clarification": refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version.
    - HEADLINE-SUMMARY CONSISTENCY & ANCHOR-PRESERVATION INVARIANT (for "clarification"): Normally, "clarification" keeps the existing "story" headline unchanged so the user recognizes the same story card over time. HOWEVER, if the existing "story" headline contains an explicit number/tally (e.g. "Kills 53", "1 Dead", "$5B") OR a directional/phase status word (e.g. "Halts", "Prepares", "Holds", "Injured" when they died, "Missing" when found) that is now directly contradicted or superseded by the updated "summary" (e.g. death toll rose to 73, or renovation is proceeding in November despite a lawsuit), you MUST surgically update ONLY the stale number/predicate in "story" while preserving the recognizable subject/place anchor (e.g. "Houthi Attack Kills 53 in Yemen" -> "Houthi Missile Attack Kills 73 in Yemen") and keeping "updateType": "clarification"!
 
@@ -2197,7 +2217,8 @@ DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE, SUMMARY-DELTA SYNC & SELECTIVE ATTRIBUTIO
   • "developmentNote" must state STRICTLY the net-new delta (New Summary minus Existing Summary) at this timestamp (8–16 words max) and NEVER recap prior background ("following the weekend of...", "after earlier clashes in...", "in response to...").
   • CRITICAL SYNC INVARIANT: Whenever your updated "summary" introduces or sharpens a concrete figure, casualty toll, dollar valuation, or named identity that was NOT in the existing summary (e.g. sharpening "resulting in fatalities" to "resulting in at least four fatalities" while also adding rooftop rescues), your "developmentNote" MUST explicitly include that newly sharpened figure alongside the new detail (e.g. "Confirmed death toll rises to at least four; Al Jazeera reports residents hoisted from rooftops"). Never silently slip a major figure into "summary" while omitting it from "developmentNote"!
   • SELECTIVE SINGLE-SOURCE ATTRIBUTION: When a single outlet breaks a specific new detail, exclusive claim, or unverified allegation ahead of the rest of the cluster, attributing that outlet in "developmentNote" (e.g. "The Japan Times identifies suspect as Brendan Nugent" or "El País reports donation exceeds $9 billion") is helpful epistemic context. However, when multiple outlets confirm a major fact—or when an outlet is merely syndicating a baseline fact already known—write in direct wire voice ("Official results confirm Albertans rejected independence") and NEVER write "Outlet X confirms [fact already in summary]".
-- Always generate "developmentNote" and "stateBoundaryCrossed" FIRST before deciding "updateType".
+- Ask FIRST: "Did a new chronological event or revised casualty/financial tally happen AFTER the initial break, or are these outlets just reporting the same initial event with different wording/background color?" If it is the same initial event, omit it or set "updateType": "none".
+- TEMPORAL & ROLE HYGIENE (NO STALE PRE-CUTOFF TITLES): Political officeholders, party leaders, and roles change over time (e.g. Andy Burnham is UK Prime Minister, not Mayor of Manchester). NEVER attach a political office, title, or city jurisdiction to a named person from your training memory unless that exact title appears verbatim in the provided dispatch text.
 - HEADLINE CONTINUITY RULE (for material_shift): Keep the recognizable origin/subject anchor AND prior geographic scope from the existing headline while appending/reflecting the new shift so readers never lose the thread (e.g. "French Cost-of-Living Protests Spread to Italy and Belgium").
 - CUMULATIVE SUMMARY INVARIANT (INTEGRATED JOURNEY + CONCRETE FLASHPOINT DETAILS, NO RECENCY AMNESIA): A cluster's "summary" represents the complete cumulative story arc to date—NEVER just the latest batch of headlines. Whenever you output "summary" (for either "clarification" or "material_shift"), you MUST weave the integrated chronological journey (how the story broke -> how it shifted/developed across [PRIOR RECORDED HISTORY] -> where it stands now) WITH the concrete specifics from the dispatches (exact named institutions/agencies/companies, people/roles/ages, specific venues/streets/cities, exact figures/tallies, and causal mechanisms), while retaining prior verified figures and multi-country/multi-city geographic scope. Never drop earlier verified milestones or secondary countries, and NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
 
@@ -3568,9 +3589,10 @@ async function main() {
   };
 
   // 7. Export dedicated public JSON feeds & enrich clusters with imageUrl/topic
+  // Note: exportPublicJsonFeeds enriches fullPayload.sharedStoryClusters (rawClusters) in-place
+  // while preserving internal tracking state (seenArticleKeys, evaluatedDesyncTokens, lastEvaluatedCoverageMs)
   const { exportPublicJsonFeeds } = require('./export-feeds');
   const { enrichedClusters, activeClusters48h } = exportPublicJsonFeeds(fullPayload);
-  fullPayload.sharedStoryClusters = enrichedClusters;
   summaryPayload.sharedStoryClusters = activeClusters48h || enrichedClusters;
   if (summaryPayload.globalStats) {
     summaryPayload.globalStats = { ...summaryPayload.globalStats, sharedStoryClusters: summaryPayload.sharedStoryClusters };

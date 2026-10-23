@@ -1,0 +1,54 @@
+name: Daily Cross-Archive Longitudinal Realignment
+
+on:
+  schedule:
+    - cron: '15 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  realign:
+    name: Realign Multi-Day Evolutions & Lateral Graph
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: 'pages'
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Run Cross-Archive Realignment
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_PAID_API_KEY: ${{ secrets.GEMINI_PAID_API_KEY }}
+        run: node scripts/realign-archive.js
+
+      - name: Commit updated archive & feeds
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/vibe-data.json data/clusters-archive.json public/data/
+          if git diff --staged --quiet; then
+            echo "No archive changes to commit."
+          else
+            git commit -m "chore(archive): daily cross-archive evolution & lateral graph realignment"
+            git pull --rebase origin main || true
+            git push origin HEAD:main
+          fi
