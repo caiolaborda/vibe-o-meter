@@ -57,7 +57,8 @@ const NEWS_SOURCES = [
   { id: 'mexiconews', name: 'Mexico News Daily', feedUrl: 'https://mexiconewsdaily.com/feed/' },
   { id: 'mercopress', name: 'MercoPress', feedUrl: 'https://en.mercopress.com/rss/' },
   { id: 'agenciabrasil', name: 'Agência Brasil', feedUrl: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', lang: 'pt' },
-  { id: 'oglobo', name: 'O Globo', feedUrl: 'https://oglobo.globo.com/rss/oglobo/', lang: 'pt' },  { id: 'latercera', name: 'La Tercera', feedUrl: 'https://www.latercera.com/arc/outboundfeeds/rss/category/mundo/?outputType=xml', lang: 'es' },
+  { id: 'oglobo', name: 'O Globo', feedUrl: 'https://oglobo.globo.com/rss/oglobo/', lang: 'pt' },
+  { id: 'latercera', name: 'La Tercera', feedUrl: 'https://www.latercera.com/arc/outboundfeeds/rss/category/mundo/?outputType=xml', lang: 'es' },
   // United Kingdom
   { id: 'bbc', name: 'BBC News', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
   { id: 'guardian', name: 'The Guardian', feedUrl: 'https://www.theguardian.com/uk/rss' },
@@ -919,26 +920,41 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
 
 function extractCoherenceStems(str) {
   const stop = new Set([
-    'after','amid','also','back','been','before','between','both','call','calls','city','come','comes','could',
-    'days','down','during','early','earlier','even','first','five','four','from','good','government','great',
-    'group','have','head','help','helped','here','high','into','just','keep','last','late','latest','lead',
-    'left','less','life','like','live','long','look','made','make','many','month','more','most','move','much',
-    'must','near','need','never','news','next','nine','official','officials','once','only','open','other',
-    'over','part','past','people','plan','plans','play','point','public','push','report','reports','return',
-    'right','rise','risk','said','says','second','secure','secured','seen','send','seven','show','side','sign',
-    'since','some','soon','spark','state','states','still','stop','story','study','support','take','talk',
-    'team','tell','test','than','that','their','them','then','there','these','they','thing','think','three',
-    'through','time','times','today','told','took','turn','under','until','update','used','very','view','vote',
-    'wait','wants','warn','watch','week','weeks','well','were','what','when','where','which','while','will',
-    'with','within','without','work','world','would','year','years','reuters','bloomberg','guardian','country',
-    'countries','minister','president','leader','leaders','national','global','international','million','billion'
+    'about','accord','according','across','after','against','alread','already','also','although','amid','amidst',
+    'among','announc','announce','announced','announces','around','author','authorities','authority','back','becam',
+    'became','becaus','because','becom','become','becomes','been','before','behind','between','beyond','billion',
+    'both','bloomberg','call','calls','cannot','city','come','comes','confirm','confirmed','confirms','could',
+    'countries','country','days','despit','despite','down','during','earlier','early','even','extern','external',
+    'first','five','four','from','global','good','government','great','group','guardian','have','having','head',
+    'help','helped','here','high','however','intern','internal','international','into','just','keep','last','late',
+    'latest','lead','leader','leaders','left','less','life','like','live','long','look','made','make','making',
+    'many','meanwhile','million','minister','month','more','most','move','much','must','national','near','need',
+    'never','news','next','nine','official','officials','once','only','open','other','over','part','past','people',
+    'plan','plans','play','point','president','public','push','recent','recently','report','reports','return',
+    'reuters','right','rise','risk','said','says','second','secure','secured','seen','send','separat','separate',
+    'separately','several','seven','show','side','sign','since','some','soon','spark','state','states','still',
+    'stop','story','study','support','take','taking','talk','team','tell','test','than','that','their','them',
+    'then','there','these','they','thing','think','those','though','three','through','time','times','today','told',
+    'took','toward','towards','tried','tries','turn','under','until','update','used','very','view','vote','wait',
+    'wants','warn','watch','week','weeks','well','were','what','when','where','whether','which','while','will',
+    'with','within','without','work','world','would','year','years','young'
   ]);
   const demonymMap = {
     french: 'france', british: 'britain', spanish: 'spain', dutch: 'netherlands',
     polish: 'poland', turkish: 'turkey', swedish: 'sweden', danish: 'denmark',
     finnish: 'finland', irish: 'ireland', scottish: 'scotland', greek: 'greece',
     swiss: 'switzerland', lebanese: 'lebanon', congolese: 'congo', sudanese: 'sudan',
-    taiwanese: 'taiwan', japanese: 'japan', chinese: 'china'
+    taiwanese: 'taiwan', japanese: 'japan', chinese: 'china', tunisian: 'tunisia',
+    tunisians: 'tunisia', brazilian: 'brazil', brazilians: 'brazil', ecuadorian: 'ecuador',
+    ecuadorean: 'ecuador', albanian: 'albania', indonesian: 'indonesia', malaysian: 'malaysia',
+    israeli: 'israel', israelis: 'israel', palestinian: 'palestine', palestinians: 'palestine',
+    iranian: 'iran', iranians: 'iran', russian: 'russia', russians: 'russia',
+    ukrainian: 'ukraine', ukrainians: 'ukraine', australian: 'australia', australians: 'australia',
+    canadian: 'canada', canadians: 'canada', mexican: 'mexico', italian: 'italy',
+    german: 'germany', indian: 'india', pakistani: 'pakistan', egyptian: 'egypt',
+    syrian: 'syria', yemeni: 'yemen', detained: 'arrest', detains: 'arrest',
+    detain: 'arrest', detention: 'arrest', custody: 'arrest', investigations: 'probe',
+    investigation: 'probe', investigating: 'probe'
   };
   return String(str || '')
     .toLowerCase()
@@ -948,7 +964,7 @@ function extractCoherenceStems(str) {
     .map(w => demonymMap[w] || w)
     .filter(w => w.length >= 4 && !stop.has(w))
     .map(w => w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
-    .filter(w => w.length >= 3);
+    .filter(w => w.length >= 3 && !stop.has(w));
 }
 
 // Cross-Outlet Story Clustering (Smart Candidate Pool + 14-Day Dormant Cluster Wake-Up + Peer-to-Peer Coherence Guard)
@@ -1093,15 +1109,19 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
   const maxAllStemDf = Math.max(30, Math.min(135, Math.round(totalCorpusDocs * 0.038)));
   const maxRareTitleStemDf = Math.max(10, Math.min(35, Math.round(totalCorpusDocs * 0.01)));
   const GENERIC_CANDIDATE_STEMS = new Set([
-    'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'train', 'charg', 'releas', 'crash',
-    'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
-    'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
-    'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
-    'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study',
-    'united', 'state', 'americ', 'administr', 'white', 'house', 'feder', 'nation', 'global', 'world',
-    'donald', 'trump', 'biden', 'europe', 'middl', 'east', 'foreig', 'defens', 'first', 'after', 'amid',
-    'cancer', 'vaccin', 'patien', 'treat', 'diseas', 'medic', 'health', 'hospit', 'doctor', 'clinic',
-    'trial', 'resear', 'breakt', 'stock', 'share', 'market', 'compan', 'corpor', 'indust', 'techno'
+    'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'army', 'servic', 'draft', 'train', 'charg', 'releas',
+    'crash', 'fire', 'attack', 'protes', 'court', 'suprem', 'appeal', 'judg', 'justic', 'senten', 'offend',
+    'prison', 'family', 'polic', 'arrest', 'strik', 'launch', 'approv', 'reject', 'elect', 'voter', 'campai',
+    'midter', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist', 'presid', 'invest', 'probe', 'threat',
+    'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay', 'announ', 'reveal', 'confirm', 'report', 'discov',
+    'found', 'scient', 'astron', 'study', 'united', 'state', 'americ', 'administr', 'white', 'house', 'feder',
+    'nation', 'global', 'world', 'donald', 'trump', 'biden', 'europe', 'middl', 'east', 'foreig', 'defens',
+    'first', 'after', 'amid', 'cancer', 'vaccin', 'patien', 'treat', 'diseas', 'medic', 'health', 'hospit',
+    'doctor', 'clinic', 'trial', 'resear', 'breakt', 'stock', 'share', 'market', 'budget', 'fiscal', 'treasu',
+    'econom', 'financ', 'compan', 'corpor', 'indust', 'techno', 'tunisi', 'tunis', 'brazil', 'ecuado', 'albani',
+    'indone', 'malays', 'israel', 'palest', 'iran', 'saudi', 'yemen', 'syria', 'lebanon', 'egypt', 'turk',
+    'ukrain', 'russia', 'china', 'chines', 'taiwan', 'japan', 'kore', 'india', 'pakist', 'austral', 'canad',
+    'mexic', 'britain', 'france', 'german', 'ital', 'spain', 'poland'
   ]);
 
   const matchedAnchorIndices = new Set();
@@ -1256,19 +1276,27 @@ Return JSON array in format:
       // 2. Every candidate must ALSO share stems with at least one PEER item from a DIFFERENT outlet in the cluster.
       const BROAD_THEATRE_ACTOR_STEMS = new Set([
         'ukrain', 'zelens', 'russia', 'vladim', 'putin', 'donald', 'trump', 'washin', 'moscow',
-        'israel', 'netany', 'tehran', 'palest', 'chines', 'beijin', 'white', 'hous', 'americ',
-        'united', 'europe', 'middl', 'east', 'foreig', 'milit', 'defens', 'govern', 'offici',
-        'west', 'bank', 'gaza', 'lebanon', 'syria', 'iran', 'london', 'britain', 'british',
-        'france', 'french', 'paris', 'german', 'berlin', 'attack', 'strike', 'polic', 'secur',
-        'minist', 'presid', 'state', 'nation', 'people', 'report', 'update', 'order', 'forc',
-        'cancer', 'vaccin', 'patien', 'treat', 'diseas', 'medic', 'health', 'hospit', 'doctor',
-        'clinic', 'trial', 'resear', 'scient', 'breakt', 'stock', 'share', 'market', 'invest',
-        'compan', 'corpor', 'indust', 'techno', 'artifi', 'intell'
+        'israel', 'netany', 'tehran', 'palest', 'chines', 'china', 'beijin', 'white', 'hous', 'americ',
+        'united', 'europe', 'middl', 'east', 'foreig', 'milit', 'army', 'servic', 'draft', 'defens',
+        'govern', 'offici', 'west', 'bank', 'gaza', 'lebanon', 'syria', 'iran', 'saudi', 'yemen',
+        'egypt', 'turk', 'tunisi', 'tunis', 'albani', 'tirana', 'brazil', 'ecuado', 'argent', 'colomb',
+        'venezu', 'mexic', 'canad', 'austral', 'sydney', 'japan', 'tokyo', 'kore', 'taiwan', 'indone',
+        'malays', 'india', 'pakist', 'nigeria', 'kenya', 'sudan', 'congo', 'south', 'africa',
+        'london', 'britain', 'british', 'engl', 'scotla', 'irelan', 'france', 'french', 'paris',
+        'german', 'berlin', 'ital', 'rome', 'milan', 'spain', 'madrid', 'poland', 'greece', 'sweden',
+        'nether', 'belgi', 'switze', 'austri', 'romani', 'bulgar', 'attack', 'strike', 'polic', 'secur',
+        'suprem', 'court', 'appeal', 'federa', 'judg', 'justic', 'senten', 'offend', 'prison', 'crimin',
+        'family', 'ban', 'uncons', 'budget', 'fiscal', 'treasu', 'econom', 'financ', 'campai', 'midter',
+        'elect', 'voter', 'senat', 'congre', 'parlia', 'minist', 'presid', 'state', 'nation', 'people',
+        'citize', 'report', 'update', 'order', 'forc', 'cancer', 'vaccin', 'patien', 'treat', 'diseas',
+        'medic', 'health', 'hospit', 'doctor', 'clinic', 'trial', 'resear', 'scient', 'breakt', 'stock',
+        'share', 'market', 'invest', 'compan', 'corpor', 'indust', 'techno', 'artifi', 'intell'
       ]);
       const directAnchorInIds = rawCandidates.find(m => m.isClusterAnchor && m.anchorCluster);
       const primaryStoryText = directAnchorInIds?.anchorCluster?.story || cl.story || '';
+      const primaryHeadlineStems = extractCoherenceStems(primaryStoryText);
       const specificHeadlineStems = new Set(
-        extractCoherenceStems(primaryStoryText).filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxTitleStemDf)
+        primaryHeadlineStems.filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxTitleStemDf)
       );
       const clusterAnchorStems = new Set(extractCoherenceStems(
         `${cl.story || ''} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.story || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`
@@ -1288,6 +1316,17 @@ Return JSON array in format:
           console.warn(`[Clusters] Dropped actor-only theatre drift from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
           return false;
         }
+        // Single-Entity / Single-Country Tangent Gate:
+        // If an unclustered article shares only 1 stem total with the cluster's story+summary anchor while the headline has >=3 stems,
+        // reject it unless it also matches at least 1 other non-anchor peer in this batch on >=2 specific stems.
+        if (!art.isClusterAnchor && primaryHeadlineStems.length >= 3 && clusterAnchorStems.size >= 4) {
+          const anchorSharedCount = [...myAllStems].filter(s => clusterAnchorStems.has(s)).length;
+          const anchorSpecSharedCount = [...myAllStems].filter(s => specificAnchorStems.has(s)).length;
+          if (anchorSharedCount <= 1 || (specificHeadlineStems.size >= 2 && anchorSpecSharedCount === 0)) {
+            console.warn(`[Clusters] Dropped single-stem/country/entity tangent from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
+            return false;
+          }
+        }
         const keep = rawCandidates.some((other, j) => {
           if (j === idx) return false;
           if (!art.isClusterAnchor && !other.isClusterAnchor && other.sourceId === art.sourceId) return false;
@@ -1296,8 +1335,8 @@ Return JSON array in format:
           const sharedTitle = [...myTitleStems].filter(s => otherTitleStems.has(s));
           const sharedTitleToFull = [...myTitleStems].filter(s => otherAllStems.has(s));
           const sharedAll = [...myAllStems].filter(s => otherAllStems.has(s));
-          const hasSpecificAll = sharedAll.some(s => !GENERIC_CANDIDATE_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf);
-          const hasRareTitle = sharedTitle.some(s => !GENERIC_CANDIDATE_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxRareTitleStemDf) && sharedAll.length >= 2;
+          const hasSpecificAll = sharedAll.some(s => !GENERIC_CANDIDATE_STEMS.has(s) && !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf);
+          const hasRareTitle = sharedTitle.some(s => !GENERIC_CANDIDATE_STEMS.has(s) && !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxRareTitleStemDf) && sharedAll.length >= 2;
           return (sharedTitle.length >= 1 && sharedAll.length >= 2 && hasSpecificAll) ||
             hasRareTitle ||
             (sharedTitleToFull.length >= 2 && sharedAll.length >= 3 && hasSpecificAll);
@@ -1367,10 +1406,16 @@ Return JSON array in format:
             if (sharedWithAnchor === 0 && matchingArticles.length < 2) {
               continue;
             }
-            // Guard 1 (Anti-Hijack Anchor Gate): When new articles share 0 URLs with ancCluster, require >=1 specific non-theatre
-            // headline stem OR >=2 specific non-theatre summary/coverage stems so a new incident in the same theatre never hijacks an existing cluster
-            if (ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) {
-              console.warn(`[Clusters] Detached theatre-only anchor "${ancCluster.story}" from new incident "${cl.story}" (0 shared URLs, 0 specific headline stems)`);
+            // Guard 1 (Anti-Hijack & Anti-Single-Tangent Anchor Gate):
+            // When new articles share 0 URLs with ancCluster:
+            // (a) Require >=1 specific non-theatre headline stem OR >=2 specific non-theatre summary/coverage stems, AND
+            // (b) When only a single new article (`matchingArticles.length === 1`) is trying to attach to an existing cluster,
+            //     require >=2 shared anchor stems including >=2 specific stems (or >=1 specific headline stem + >=3 total anchor stems)
+            //     so a single unrelated article sharing only a country/company/court name (e.g. Tunisia, OpenAI, Supreme Court, Budget) never pollutes the cluster.
+            const isSingleArticleTangent = ancUrlHits === 0 && matchingArticles.length === 1 &&
+              (sharedWithAnchor < 2 || (sharedSpecAll < 2 && !(sharedSpecHead >= 1 && sharedWithAnchor >= 3)));
+            if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent) {
+              console.warn(`[Clusters] Detached theatre/single-entity anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor})`);
               continue;
             }
             if (!matchedPrev) {
@@ -2445,19 +2490,35 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         continue;
       }
 
-      // Coherence guard against off-by-one index slips & off-topic wire roundups:
-      // Ensure noteText shares >= 1 specific stem with the cluster headline (or >= 2 specific stems with its summary)
-      const BROAD_DEV_STEMS = new Set(["saudi","arabia","houthi","yemen","iran","israel","gaza","ukrain","ukrainian","russia","russian","zelensky","zelenskyy","putin","china","chines","trump","biden","ameri","united","state","europ","european","britain","british","protes","riot","unrest","strik","attack","crisis","forces","milit","govern","minist","presid","offici","polic","disrup","restric","impos","prompt","order","escalat","report","update"]);
+      // Coherence guard against off-by-one index slips, single-country/entity tangents & off-topic wire roundups:
+      // Ensure noteText shares >= 1 specific non-country/non-generic stem with the cluster headline (or >= 2 specific stems with its summary),
+      // and when the cluster headline has >= 3 stems, require >= 2 total shared stems with story+summary so a single shared company/country name (e.g. "OpenAI", "Tunisia") cannot pass alone.
+      const BROAD_DEV_STEMS = new Set([
+        "saudi","arabia","houthi","yemen","iran","tehran","israel","netany","palest","west","bank","gaza","lebanon","syria",
+        "egypt","turk","tunisi","tunis","albani","tirana","brazil","ecuado","argent","colomb","venezu","mexic","canad",
+        "austral","sydney","japan","tokyo","kore","taiwan","indone","malays","india","pakist","nigeria","kenya","sudan",
+        "congo","south","africa","ukrain","ukrainian","russia","russian","zelens","zelensky","zelenskyy","putin","moscow",
+        "china","chines","beijin","trump","biden","ameri","americ","united","state","washin","europ","european","britain",
+        "british","london","engl","scotla","irelan","france","french","paris","german","berlin","ital","rome","milan",
+        "spain","madrid","poland","greece","sweden","nether","belgi","switze","austri","romani","bulgar",
+        "protes","riot","unrest","strik","attack","crisis","forces","forc","milit","army","servic","draft","govern",
+        "minist","presid","offici","polic","secur","suprem","court","appeal","federa","judg","justic","senten","offend",
+        "prison","crimin","family","ban","uncons","budget","fiscal","treasu","econom","financ","campai","midter","elect",
+        "voter","senat","congre","parlia","citize","disrup","restric","impos","prompt","order","escalat","report","update"
+      ]);
       const headStems = extractCoherenceStems(c.story || "");
       const specificHeadStems = new Set(headStems.filter(s => !BROAD_DEV_STEMS.has(s)));
       const anchorHeadStems = specificHeadStems.size > 0 ? specificHeadStems : new Set(headStems);
-      const specificSumStems = new Set(extractCoherenceStems(`${c.story || ""} ${c.summary || ""}`).filter(s => !BROAD_DEV_STEMS.has(s)));
+      const allClusterStems = new Set(extractCoherenceStems(`${c.story || ""} ${c.summary || ""}`));
+      const specificSumStems = new Set([...allClusterStems].filter(s => !BROAD_DEV_STEMS.has(s)));
       const noteOnlyStems = extractCoherenceStems(noteText);
       if (noteOnlyStems.length > 0 && anchorHeadStems.size > 0) {
         const matchesHead = noteOnlyStems.some(s => anchorHeadStems.has(s));
         const matchesSumCount = noteOnlyStems.filter(s => specificSumStems.has(s)).length;
-        if (!matchesHead && matchesSumCount < 2) {
-          console.warn(`[Clusters] Rejected off-topic roundup / index slip on cluster [${idx}] "${c.story}": "${noteText}"`);
+        const totalSharedWithCluster = new Set(noteOnlyStems.filter(s => allClusterStems.has(s))).size;
+        const isSingleEntityTangent = headStems.length >= 3 && allClusterStems.size >= 5 && totalSharedWithCluster <= 1 && matchesSumCount <= 1;
+        if ((!matchesHead && matchesSumCount < 2) || isSingleEntityTangent) {
+          console.warn(`[Clusters] Rejected off-topic / single-entity tangent on cluster [${idx}] "${c.story}": "${noteText}" (matchesHead=${matchesHead}, matchesSumCount=${matchesSumCount}, totalShared=${totalSharedWithCluster})`);
           continue;
         }
       }
@@ -2495,7 +2556,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         const novelStemCount = substantiveNoteStems.length - alreadyInBaseline;
         const overlapRatio = alreadyInBaseline / substantiveNoteStems.length;
         const maxAllowedOverlap = uType === 'clarification' ? 0.60 : 0.72;
-        if ((uType === 'clarification' && noteNums.length === 0 && novelStemCount < 2) || (noteNums.length === 0 && overlapRatio >= maxAllowedOverlap)) {
+        if ((noteNums.length === 0 && novelStemCount < 2) || (noteNums.length === 0 && overlapRatio >= maxAllowedOverlap)) {
           console.log(`[Clusters] Suppressed syndication echo on "${c.story}": "${noteText}" (${alreadyInBaseline}/${substantiveNoteStems.length} stems already in baseline)`);
           continue;
         }

@@ -451,33 +451,62 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
   }
 
-  // 2c. Law 1D: Zero-Specific-Anchor Thematic Beat Outlier Sanitizer
+  // 2c. Law 1D: Zero-Specific-Anchor Thematic Beat & Single-Country/Entity Tangent Sanitizer
   const RAW_BROAD_BEAT_WORDS = [
     "cancer","vaccine","patient","treat","treatment","disease","medical","health","hospital","doctor","clinical","trial",
     "study","research","researcher","scientist","breakthrough","stock","share","market","investor","company","corporate","industry",
-    "technology","artificial","intelligence","model","system","tool","police","court","judge","government","minister","president","official",
-    "world","global","national","federal","first","major","reveal","announce","report","confirm","discover","found","develop",
-    "launch","plan","order","warn","spark","prompt","strain","trouble","crisis","risk","death","dead","kill","fatal","record",
-    "high","low","surge","plunge","plummet","slump","drop","fall","rise","jump","cut","slash","boost","secret","scandal"
+    "technology","artificial","intelligence","model","system","tool","police","court","supreme","appeal","appeals","judge","justice",
+    "sentence","sentencing","offender","prison","family","ban","unconstitutional","government","minister","president","official",
+    "authorities","authority","citizen","citizens","military","army","service","draft","force","forces","security",
+    "budget","fiscal","treasury","economic","economy","financial","campaign","midterm","midterms","election","elections","voter","voters",
+    "world","global","national","federal","internal","external","separate","separately","first","major","reveal","announce","report",
+    "confirm","discover","found","develop","launch","plan","order","warn","spark","prompt","strain","trouble","crisis","risk",
+    "death","dead","kill","fatal","record","high","low","surge","plunge","plummet","slump","drop","fall","rise","jump","cut",
+    "slash","boost","secret","scandal","tunisia","tunisian","tunisians","tunis","brazil","brazilian","ecuador","ecuadorian",
+    "ecuadorean","albania","albanian","tirana","indonesia","indonesian","malaysia","malaysian","israel","israeli","palestine",
+    "palestinian","west","bank","gaza","iran","iranian","saudi","arabia","yemen","houthi","syria","lebanon","egypt","turkey",
+    "turkish","ukraine","ukrainian","russia","russian","china","chinese","taiwan","japan","korea","india","pakistan","australia",
+    "australian","canada","canadian","mexico","mexican","britain","british","uk","london","england","france","french","paris",
+    "germany","german","italy","italian","milan","rome","spain","spanish","united","states","american","us","trump","biden"
   ];
   const BROAD_BEAT_STEMS = new Set(RAW_BROAD_BEAT_WORDS.map(stemWord));
   for (const cl of byId.values()) {
     const cov = cl.coverage || [];
-    if (cov.length < 3) continue;
     const domCov = getDominantCoverageTitleStems(cl);
     const headStems = getStems(cl.story);
     const specHeadStems = new Set([...headStems].filter(s => !BROAD_BEAT_STEMS.has(s)));
     const anchorStems = new Set([...getStems(`${cl.story} ${cl.summary}`), ...domCov]);
     const specAnchorStems = new Set([...anchorStems].filter(s => !BROAD_BEAT_STEMS.has(s)));
-    if (specHeadStems.size < 2 || specAnchorStems.size < 4) continue;
 
-    const filteredCov = cov.filter(art => {
-      const artStems = getStems(`${art.title || ''} ${art.description || ''}`);
-      return [...artStems].some(s => specAnchorStems.has(s));
-    });
-    if (filteredCov.length >= 2 && filteredCov.length !== cov.length) {
-      cl.coverage = filteredCov;
-      cl.outletCount = filteredCov.length;
+    if (cov.length >= 3 && specHeadStems.size >= 1 && specAnchorStems.size >= 3) {
+      const filteredCov = cov.filter(art => {
+        const artStems = getStems(`${art.title || ''} ${art.description || ''}`);
+        const sharedSpec = [...artStems].filter(s => specAnchorStems.has(s)).length;
+        const sharedTotal = [...artStems].filter(s => anchorStems.has(s)).length;
+        if (sharedSpec === 0) return false;
+        if (headStems.size >= 3 && anchorStems.size >= 6 && sharedTotal <= 1 && sharedSpec <= 1) return false;
+        return true;
+      });
+      if (filteredCov.length >= 2 && filteredCov.length !== cov.length) {
+        cl.coverage = filteredCov;
+        cl.outletCount = filteredCov.length;
+      }
+    }
+
+    if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1 && specAnchorStems.size >= 2) {
+      cl.evolutionHistory = cl.evolutionHistory.filter((h, idx) => {
+        if (idx === 0 || !h || h.type === 'initial') return true;
+        if (h.type === 'clarification' && h.note) {
+          const noteStems = getStems(h.note);
+          if (noteStems.size > 0) {
+            const sharedSpec = [...noteStems].filter(s => specAnchorStems.has(s)).length;
+            const sharedTotal = [...noteStems].filter(s => anchorStems.has(s)).length;
+            if (sharedSpec === 0) return false;
+            if (headStems.size >= 3 && anchorStems.size >= 6 && sharedTotal <= 1 && sharedSpec <= 1) return false;
+          }
+        }
+        return true;
+      });
     }
   }
 
@@ -504,6 +533,9 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       if (cl.summarySynthesizedSig && cl.summarySynthesizedSig.startsWith(`${cl.id}|v${cl.version || 1}|`)) {
         cl.summarySynthesizedSig = `${cl.id}|v${cl.version || 1}|h${cleanHist.length}`;
       }
+    }
+    if ((cl.version || 1) <= 1 && (!Array.isArray(cl.evolutionHistory) || cl.evolutionHistory.length <= 1) && !cl.developmentNote) {
+      delete cl.lastDevelopedAt;
     }
     result.push(cl);
   }
