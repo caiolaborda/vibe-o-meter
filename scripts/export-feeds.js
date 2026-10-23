@@ -283,6 +283,9 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         }
       }
       cl.evolutionHistory = cleanHist;
+      if (cl.summarySynthesizedSig && cl.summarySynthesizedSig.startsWith(`${cl.id}|v${cl.version || 1}|`)) {
+        cl.summarySynthesizedSig = `${cl.id}|v${cl.version || 1}|h${cleanHist.length}`;
+      }
     }
     result.push(cl);
   }
@@ -415,6 +418,7 @@ function exportPublicJsonFeeds(fullPayload) {
       story: cl.story,
       summary: cl.summary || '',
       version,
+      ...(cl.summarySynthesizedSig ? { summarySynthesizedSig: cl.summarySynthesizedSig } : {}),
       ...(lastDevelopedAt ? { lastDevelopedAt } : {}),
       ...(developmentNote ? { developmentNote } : {}),
       ...(evolvedFromIds ? { evolvedFromIds } : {}),
@@ -519,6 +523,7 @@ function exportPublicJsonFeeds(fullPayload) {
       story: cl.story,
       summary: cl.summary || '',
       version: cl.version || 1,
+      ...(cl.summarySynthesizedSig ? { summarySynthesizedSig: cl.summarySynthesizedSig } : {}),
       ...(cl.lastDevelopedAt ? { lastDevelopedAt: cl.lastDevelopedAt } : {}),
       ...(cl.developmentNote ? { developmentNote: cl.developmentNote } : {}),
       ...(cl.evolvedFromIds ? { evolvedFromIds: cl.evolvedFromIds } : {}),

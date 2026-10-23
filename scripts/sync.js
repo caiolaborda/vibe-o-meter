@@ -1433,6 +1433,7 @@ Return JSON array in format:
         let prevEvaluatedDesyncTokens = null;
         let prevLastEvaluatedCoverageMs = null;
         let prevLateralConnections = null;
+        let prevSummarySynthesizedSig = null;
         let pendingUpdate = null;
 
         if (matchedPrev) {
@@ -1481,6 +1482,7 @@ Return JSON array in format:
           prevFirstSeenAt = prevStorySupported ? (matchedPrev.firstSeenAt || matchedPrev.evolutionHistory?.[0]?.timestamp || null) : null;
           prevLastDevelopedAt = prevStorySupported ? (matchedPrev.lastDevelopedAt || null) : null;
           prevDevelopmentNote = prevStorySupported ? (matchedPrev.developmentNote || null) : null;
+          prevSummarySynthesizedSig = prevStorySupported ? (matchedPrev.summarySynthesizedSig || null) : null;
 
           const mergedLat = [];
           const seenLatIds = new Set();
@@ -1685,6 +1687,7 @@ Return JSON array in format:
           ...(prevEvaluatedDesyncTokens ? { evaluatedDesyncTokens: prevEvaluatedDesyncTokens } : {}),
           ...(prevLastEvaluatedCoverageMs ? { lastEvaluatedCoverageMs: prevLastEvaluatedCoverageMs } : {}),
           ...(prevLateralConnections ? { lateralConnections: prevLateralConnections } : {}),
+          ...(prevSummarySynthesizedSig ? { summarySynthesizedSig: prevSummarySynthesizedSig } : {}),
           ...(pendingUpdate ? { _pendingUpdate: pendingUpdate } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
@@ -1929,6 +1932,9 @@ Return JSON array in format:
 
     // Longitudinal Cluster Consolidation & Development Verification Pass
     const consolidatedClusters = await consolidateEvolvingClusters(formattedClusters, apiKey);
+
+    // Post-Consolidation Integrated Summary Synthesis Pass (honing newly created & newly updated clusters across all covering outlets + history)
+    await synthesizeIntegratedClusterSummaries(consolidatedClusters, apiKey, finalSources);
 
     // Smooth 4-tier recency curve across the 7-day rolling window so fresh breaking stories lead while major developing stories stay visible
     const nowMs = Date.now();
@@ -2425,6 +2431,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         c.id = groundedSlug;
         c.story = groundedStory;
         c.summary = newSummary;
+        delete c.summarySynthesizedSig;
         if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
           c.evolutionHistory[0].headline = groundedStory;
           c.evolutionHistory[0].summary = newSummary;
@@ -2907,7 +2914,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         });
       }
 
-      result.push({
+      const mergedClusterObj = {
         ...anchor,
         id: finalSlug,
         story: finalStory,
@@ -2924,7 +2931,9 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         outletCount: dedupedCov.length,
         newestMs: maxNewestMs || Date.now(),
         coverage: dedupedCov
-      });
+      };
+      delete mergedClusterObj.summarySynthesizedSig;
+      result.push(mergedClusterObj);
     }
 
     clusters.forEach((c, idx) => {
@@ -2938,6 +2947,203 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
     console.warn('[Clusters] Consolidation pass skipped:', e.message);
     return clusters;
   }
+}
+
+function getClusterSummarySynthesisSignature(c) {
+  if (!c) return '';
+  const slug = c.id || String(c.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const ver = typeof c.version === 'number' ? c.version : 1;
+  const histLen = Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0 ? c.evolutionHistory.length : 1;
+  return `${slug}|v${ver}|h${histLen}`;
+}
+
+function cleanSynthesizedClusterSummary(rawText) {
+  if (!rawText) return '';
+  let s = String(rawText).trim();
+  s = s.replace(/^On\s+(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+[A-Z][a-z]+\s+\d{1,2},\s+\d{4},\s+/i, '');
+  s = s.replace(/\s+(?:Outlets|Media\s+outlets|News\s+outlets|International\s+outlets|Reports|Coverage|Media\s+coverage|Press\s+coverage|News\s+coverage)\s+(?:highlight|highlights|highlighted|emphasize|emphasizes|emphasized|focus\s+on|focuses\s+on|focused\s+on|frame|frames|framed|note|notes|noted|examine|examines|examined|detail|details|detailed|underscore|underscores|underscored|portray|portrays|portrayed|are\s+framing|have\s+focused|broadly\s+frame)[^.!?]*[.!?]\s*$/i, '');
+  if (s.length > 1 && /^[a-z]/.test(s)) {
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  return s.trim();
+}
+
+// Post-Consolidation Integrated Summary Synthesis Pass:
+// Generates Isobar-grade ("whatHappened") summaries directly at the Vibe-O-Meter level for newly formed or newly updated clusters,
+// weaving up to 10 full covering outlet descriptions + the complete Recorded Wire Evolution Stages so Isobar never has to silently rewrite summaries on open.
+async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSources = null, options = {}) {
+  if (!apiKey || !Array.isArray(clusters) || clusters.length === 0) return clusters;
+
+  // Enrich coverage descriptions in-place from finalSources when available so the prompt sees full article descriptions
+  if (finalSources && typeof finalSources === 'object') {
+    for (const cl of clusters) {
+      if (!Array.isArray(cl?.coverage)) continue;
+      for (const cov of cl.coverage) {
+        const srcArts = finalSources[cov.sourceId]?.articles || [];
+        const match = srcArts.find(a =>
+          (cov.link && a.link && canonicalUrl(a.link) === canonicalUrl(cov.link)) ||
+          (cov.title && a.title && cleanHeadlineTitle(a.title) === cleanHeadlineTitle(cov.title))
+        );
+        if (match?.description && match.description.length > (cov.description || '').length) {
+          cov.description = match.description;
+        }
+      }
+    }
+  }
+
+  const forceAll = Boolean(options.forceAll || process.argv.includes('--polish-summaries-all'));
+  const cutoffHours = typeof options.cutoffHours === 'number' ? options.cutoffHours : 168;
+  const nowMs = Date.now();
+
+  const candidates = [];
+  clusters.forEach((c, idx) => {
+    if (!c || !Array.isArray(c.coverage) || c.coverage.length < 2) return;
+    const targetSig = getClusterSummarySynthesisSignature(c);
+    if (!forceAll && c.summarySynthesizedSig === targetSig) return;
+
+    const newestMs = c.newestMs || Math.max(...c.coverage.map(a => new Date(a.pubDate).getTime() || 0), 0);
+    const ageHours = newestMs > 0 ? Math.max(0, (nowMs - newestMs) / 3600000) : 999;
+    if (!forceAll && !process.argv.includes('--polish-summaries') && ageHours > cutoffHours) return;
+
+    candidates.push({ idx, c, targetSig, newestMs, histLen: (c.evolutionHistory || []).length });
+  });
+
+  if (candidates.length === 0) return clusters;
+
+  // Prioritize recently updated & multi-stage evolving stories first
+  candidates.sort((a, b) => (b.newestMs - a.newestMs) || (b.histLen - a.histLen) || ((b.c.outletCount || 0) - (a.c.outletCount || 0)));
+
+  const maxClustersThisRun = (forceAll || process.argv.includes('--polish-summaries'))
+    ? candidates.length
+    : Math.min(candidates.length, 36);
+  const selected = candidates.slice(0, maxClustersThisRun);
+  const batchSize = 12;
+
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const activeTiers = getOrderedKeyTiers(apiKey);
+  const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+  let totalPolished = 0;
+
+  console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length} newly formed/updated cluster(s)...`);
+
+  for (let offset = 0; offset < selected.length; offset += batchSize) {
+    const batch = selected.slice(offset, offset + batchSize);
+    const clusterBlocks = batch.map((item, bIdx) => {
+      const c = item.c;
+      const covSorted = [...(c.coverage || [])].sort((a, b) => {
+        const descDiff = (b.description ? 1 : 0) - (a.description ? 1 : 0);
+        if (descDiff !== 0) return descDiff;
+        return new Date(b.pubDate || 0) - new Date(a.pubDate || 0);
+      });
+      const covLines = covSorted.slice(0, 10).map(cov =>
+        `  - [${cov.sourceName || cov.sourceId}] "${cov.title}" (${cov.pubDate || 'recent'}): ${(cov.description || '').slice(0, 380)}`
+      ).join('\n');
+
+      const histArr = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
+      const historyBlock = histArr.length > 0
+        ? `\nRecorded Wire Evolution Stages (${histArr.length}):\n` + histArr.map((h, i) =>
+            `  Stage ${i + 1} (${h.timestamp || 'earlier'} · v${h.version || 1} · ${h.outletCount || 2} outlets): "${h.headline}"${h.note ? ` — ${h.note}` : ''}${h.summary ? ` [Prior Summary: ${h.summary}]` : ''}`
+          ).join('\n')
+        : '';
+      const devLine = c.developmentNote ? `\nLatest Development Note: ${c.developmentNote}` : '';
+
+      return `[CLUSTER ${bIdx}] id="${c.id}" (v${c.version || 1})
+Headline: ${c.story}
+Current Draft Summary: ${c.summary || ''}${devLine}${historyBlock}
+Covering Dispatches (${Math.min(10, covSorted.length)} of ${covSorted.length} outlets):
+${covLines}`;
+    }).join('\n\n---\n\n');
+
+    const prompt = `You are a senior correspondent and analytical editor writing for an intelligent, time-pressed reader (think Financial Times Lex and The Economist's briefings).
+For each of the ${batch.length} news clusters below, synthesize its definitive top-level "summary" (1–2 crisp, detail-packed sentences, ~35–60 words) from its Covering Dispatches and Recorded Wire Evolution Stages.
+
+STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
+1. INTEGRATED CHRONOLOGICAL JOURNEY + CONCRETE FLASHPOINT SPECIFICS:
+   - Weave the story's integrated chronological journey (how it broke -> how it shifted or developed across Recorded Wire Evolution Stages -> where it stands now) WITH the concrete specifics from the Covering Dispatches (exact named institutions/agencies/companies, named individuals/roles/ages, specific venues/streets/cities, exact figures/tallies, and causal mechanisms).
+   - Readers rely on this summary for the actual concrete details so they immediately know who, where, how much, and by what mechanism.
+2. STRICT NUMERICAL & FACTUAL PRESERVATION (NO RECENCY AMNESIA):
+   - NEVER drop any concrete figure, casualty/arrest tally, dollar valuation, troop count, or multi-country/multi-city geographic scope present in the cluster's Headline, Current Draft Summary, Latest Development Note, or earlier Evolution Stages.
+3. TEMPORAL & ROLE HYGIENE (NEVER INJECT PRE-CUTOFF TITLES):
+   - Only attribute an active political, corporate, or institutional office/title to a person if that exact current title is explicitly stated in the Covering Dispatches below. Because offices, prime ministers, mayors, and ministers change over time, NEVER supply a person's former or pre-training-cutoff role from internal memory.
+4. BANNED CLICHÉS & ZERO META-COVERAGE FILLER:
+   - NEVER open with a robotic "On [Weekday], [Date], ..." (weave timing naturally mid-sentence if helpful).
+   - NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
+   - NEVER use stock AI transitions ("underscores how", "highlights the delicate interplay", "serves as a stark reminder", "all eyes now turn to").
+
+Clusters to synthesize:
+${clusterBlocks}
+
+Return ONLY a valid JSON array matching this exact schema:
+[
+  {
+    "index": 0,
+    "id": "cluster-id",
+    "summary": "1-2 crisp, detail-packed sentences (~35-60 words) weaving the integrated chronological journey with exact named actors, institutions, venues, figures, and mechanisms."
+  }
+]`;
+
+    let parsedBatch = null;
+    for (const modelName of modelsToTry) {
+      if (parsedBatch) break;
+      for (const keyObj of activeTiers) {
+        if (parsedBatch) break;
+        try {
+          const genAI = new GoogleGenerativeAI(keyObj.key);
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: { temperature: 0.15, maxOutputTokens: 8192, responseMimeType: 'application/json' }
+          });
+          const resp = await Promise.race([
+            model.generateContent(prompt),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Summary synthesis call timed out after 75s')), 75000))
+          ]);
+          let text = resp.response.text().trim();
+          if (text.startsWith('```json')) text = text.substring(7);
+          else if (text.startsWith('```')) text = text.substring(3);
+          if (text.endsWith('```')) text = text.substring(0, text.length - 3);
+          const arr = JSON.parse(tryRepairJsonArray(text.trim()));
+          if (Array.isArray(arr) && arr.length > 0) {
+            parsedBatch = arr;
+          }
+        } catch (err) {
+          console.warn(`[Clusters] Summary synthesis attempt (${modelName} / ${keyObj.tier}) notice: ${err.message}`);
+          if (keyObj.tier === 'FREE' && activeTiers.length > 1) {
+            freeKeyExhaustedThisRun = true;
+          }
+        }
+      }
+    }
+
+    if (!Array.isArray(parsedBatch)) continue;
+
+    for (const entry of parsedBatch) {
+      const bIdx = typeof entry?.index === 'number' ? entry.index : batch.findIndex(x => x.c.id === entry?.id);
+      if (bIdx < 0 || bIdx >= batch.length) continue;
+      const { c } = batch[bIdx];
+      const candidateSum = cleanSynthesizedClusterSummary(entry.summary || '');
+      if (!candidateSum || candidateSum.length < 45) continue;
+
+      // Ensure candidateSum did not drop any concrete multi-digit number (>1, non-year) from the headline or existing summary
+      const requiredNums = (`${c.story || ''} ${c.summary || ''} ${c.developmentNote || ''}`.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [])
+        .filter(n => Number(n.replace(/,/g, '')) > 1 && !/^(19|20)\d{2}$/.test(n));
+      const candNums = new Set(candidateSum.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []);
+      const droppedHeadlineOrSumNum = requiredNums.some(n => !candNums.has(n));
+
+      if (!droppedHeadlineOrSumNum) {
+        c.summary = candidateSum;
+        if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
+          c.evolutionHistory[c.evolutionHistory.length - 1].summary = candidateSum;
+        }
+      }
+      c.summarySynthesizedSig = getClusterSummarySynthesisSignature(c);
+      totalPolished++;
+    }
+  }
+
+  if (totalPolished > 0) {
+    console.log(`[Clusters] ✨ Synthesized integrated multi-outlet & history-honed summaries for ${totalPolished} cluster(s).`);
+  }
+  return clusters;
 }
 
 // Enrich top constructive/positive articles with Open Graph images and descriptions if missing in RSS
@@ -3486,6 +3692,7 @@ async function main() {
         if (match && typeof match.sentiment === 'number') {
           cov.sentiment = match.sentiment;
           if (match.title) cov.title = match.title;
+          if (match.description && match.description.length > (cov.description || '').length) cov.description = match.description;
           if (typeof match.eventBase === 'number') cov.eventBase = match.eventBase;
           if (typeof match.framingMod === 'number') cov.framingMod = match.framingMod;
         }
@@ -3533,6 +3740,14 @@ async function main() {
         cl.sentimentSpread = Number((Math.max(...validScores) - Math.min(...validScores)).toFixed(2));
       }
     });
+
+    if (shouldRunClustering || process.argv.includes('--polish-summaries') || process.argv.includes('--polish-summaries-all')) {
+      try {
+        await synthesizeIntegratedClusterSummaries(sharedStoryClusters, geminiKeyTiers, finalSources);
+      } catch (sumErr) {
+        console.warn('[Sync] Non-blocking summary synthesis notice:', sumErr.message);
+      }
+    }
   }
 
   // 5.8 Daily Editorial Briefing (Uses fresh in-memory sources & clusters)
@@ -3650,5 +3865,6 @@ async function main() {
     canonicalUrl,
     clusterCrossOutletStories,
     consolidateEvolvingClusters,
+    synthesizeIntegratedClusterSummaries,
     detectCrossRegionBreakingBurst
   };
