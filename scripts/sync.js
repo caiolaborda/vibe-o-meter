@@ -1255,7 +1255,10 @@ Return JSON array in format:
       const BROAD_THEATRE_ACTOR_STEMS = new Set([
         'ukrain', 'zelens', 'russia', 'vladim', 'putin', 'donald', 'trump', 'washin', 'moscow',
         'israel', 'netany', 'tehran', 'palest', 'chines', 'beijin', 'white', 'hous', 'americ',
-        'united', 'europe', 'middl', 'east', 'foreig', 'milit', 'defens', 'govern', 'offici'
+        'united', 'europe', 'middl', 'east', 'foreig', 'milit', 'defens', 'govern', 'offici',
+        'west', 'bank', 'gaza', 'lebanon', 'syria', 'iran', 'london', 'britain', 'british',
+        'france', 'french', 'paris', 'german', 'berlin', 'attack', 'strike', 'polic', 'secur',
+        'minist', 'presid', 'state', 'nation', 'people', 'report', 'update', 'order', 'forc'
       ]);
       const directAnchorInIds = rawCandidates.find(m => m.isClusterAnchor && m.anchorCluster);
       const primaryStoryText = directAnchorInIds?.anchorCluster?.story || cl.story || '';
@@ -1347,10 +1350,22 @@ Return JSON array in format:
             // Verify that the surviving non-anchor articles share at least 1 coherent stem with this anchor cluster
             // (prevents a single leftover article after outlier-stripping from hijacking or dropping an unrelated EXISTING_CLUSTER anchor)
             const ancStems = new Set(extractCoherenceStems(`${ancCluster.story || ''} ${ancCluster.summary || ''} ${(ancCluster.coverage || []).slice(0, 5).map(c => c.title || '').join(' ')}`));
+            const ancSpecHeadStems = new Set(extractCoherenceStems(ancCluster.story || '').filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
+            const ancSpecAllStems = new Set([...ancStems].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
+            const ancUrls = new Set((ancCluster.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean));
+            const ancUrlHits = matchingArticles.filter(m => m.link && ancUrls.has(canonicalUrl(m.link))).length;
             const nonAnchorBagStems = new Set();
             matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => nonAnchorBagStems.add(s)));
             const sharedWithAnchor = [...nonAnchorBagStems].filter(s => ancStems.has(s)).length;
+            const sharedSpecHead = [...nonAnchorBagStems].filter(s => ancSpecHeadStems.has(s)).length;
+            const sharedSpecAll = [...nonAnchorBagStems].filter(s => ancSpecAllStems.has(s)).length;
             if (sharedWithAnchor === 0 && matchingArticles.length < 2) {
+              continue;
+            }
+            // Guard 1 (Anti-Hijack Anchor Gate): When new articles share 0 URLs with ancCluster, require >=1 specific non-theatre
+            // headline stem OR >=2 specific non-theatre summary/coverage stems so a new incident in the same theatre never hijacks an existing cluster
+            if (ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) {
+              console.warn(`[Clusters] Detached theatre-only anchor "${ancCluster.story}" from new incident "${cl.story}" (0 shared URLs, 0 specific headline stems)`);
               continue;
             }
             if (!matchedPrev) {
@@ -1401,10 +1416,16 @@ Return JSON array in format:
             const sharedTitleStemCount = [...new Set(prevTitleStems)].filter(s => newTitleStems.has(s)).length;
             const sharedAllStemCount = [...new Set(prevAllStems)].filter(s => newAllStems.has(s)).length;
 
+            const sharedSpecTitleCount = [...new Set(prevTitleStems)].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && newTitleStems.has(s)).length;
+            const sharedSpecAllCount = [...new Set(prevAllStems)].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && newAllStems.has(s)).length;
+
             const isUrlTitleMatch = sharedCount >= 2 || (sharedCount >= 1 && ((prev.coverage.length <= 2 && matchingArticles.length <= 2) || sharedTitleStemCount >= 1));
             const isHighSpecificityStemMatch = sharedCount >= 1 && sharedTitleStemCount >= 2 && sharedAllStemCount >= 4;
+            // Guard 2 (Zero-URL Specific-Entity Continuity Gate): Merge small follow-up clusters in the same ongoing campaign
+            // when they share >=1 specific non-theatre headline stem and >=3 specific non-theatre summary/coverage stems
+            const isZeroUrlCampaignContinuity = sharedCount === 0 && matchingArticles.length <= 4 && sharedSpecTitleCount >= 1 && sharedSpecAllCount >= 3;
 
-            if (isUrlTitleMatch || isHighSpecificityStemMatch) {
+            if (isUrlTitleMatch || isHighSpecificityStemMatch || isZeroUrlCampaignContinuity) {
               const candidateScore = sharedCount * 100 + sharedTitleStemCount * 25 + sharedAllStemCount * 5 + ((prev.version || 1) * 10) + (prev.coverage.length || 0);
               if (candidateScore > bestPrevScore) {
                 bestPrevScore = candidateScore;
