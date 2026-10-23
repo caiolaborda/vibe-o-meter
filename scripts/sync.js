@@ -1434,6 +1434,7 @@ Return JSON array in format:
         let prevLastEvaluatedCoverageMs = null;
         let prevLateralConnections = null;
         let prevSummarySynthesizedSig = null;
+        let prevPrimaryLocation = null;
         let pendingUpdate = null;
 
         if (matchedPrev) {
@@ -1483,6 +1484,7 @@ Return JSON array in format:
           prevLastDevelopedAt = prevStorySupported ? (matchedPrev.lastDevelopedAt || null) : null;
           prevDevelopmentNote = prevStorySupported ? (matchedPrev.developmentNote || null) : null;
           prevSummarySynthesizedSig = prevStorySupported ? (matchedPrev.summarySynthesizedSig || null) : null;
+          prevPrimaryLocation = prevStorySupported ? (matchedPrev.primaryLocation || null) : null;
 
           const mergedLat = [];
           const seenLatIds = new Set();
@@ -1688,6 +1690,7 @@ Return JSON array in format:
           ...(prevLastEvaluatedCoverageMs ? { lastEvaluatedCoverageMs: prevLastEvaluatedCoverageMs } : {}),
           ...(prevLateralConnections ? { lateralConnections: prevLateralConnections } : {}),
           ...(prevSummarySynthesizedSig ? { summarySynthesizedSig: prevSummarySynthesizedSig } : {}),
+          ...(prevPrimaryLocation ? { primaryLocation: prevPrimaryLocation } : {}),
           ...(pendingUpdate ? { _pendingUpdate: pendingUpdate } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
@@ -2999,7 +3002,8 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
   clusters.forEach((c, idx) => {
     if (!c || !Array.isArray(c.coverage) || c.coverage.length < 2) return;
     const targetSig = getClusterSummarySynthesisSignature(c);
-    if (!forceAll && c.summarySynthesizedSig === targetSig) return;
+    const hasPinpointLoc = Boolean(c.primaryLocation && typeof c.primaryLocation.lat === 'number' && typeof c.primaryLocation.lon === 'number' && c.primaryLocation.name);
+    if (!forceAll && c.summarySynthesizedSig === targetSig && hasPinpointLoc) return;
 
     const newestMs = c.newestMs || Math.max(...c.coverage.map(a => new Date(a.pubDate).getTime() || 0), 0);
     const ageHours = newestMs > 0 ? Math.max(0, (nowMs - newestMs) / 3600000) : 999;
@@ -3054,12 +3058,14 @@ Covering Dispatches (${Math.min(10, covSorted.length)} of ${covSorted.length} ou
 ${covLines}`;
     }).join('\n\n---\n\n');
 
-    const prompt = `You are a senior correspondent and analytical editor writing for an intelligent, time-pressed reader (think Financial Times Lex and The Economist's briefings).
-For each of the ${batch.length} news clusters below, synthesize its definitive top-level "summary" (1–2 crisp, detail-packed sentences, ~35–60 words) from its Covering Dispatches and Recorded Wire Evolution Stages.
+    const prompt = `You are a senior correspondent, analytical editor, and geographic intelligence editor writing for an intelligent, time-pressed reader (think Financial Times Lex and The Economist's briefings).
+For each of the ${batch.length} news clusters below, synthesize:
+(A) Its definitive top-level "summary" (1–2 crisp, detail-packed sentences, ~35–60 words) from its Covering Dispatches and Recorded Wire Evolution Stages.
+(B) Its pinpoint "primaryLocation" representing the single most specific real-world origin epicenter / center of gravity where the story took place, using the full Covering Dispatches (not just the headline!).
 
 STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
 1. INTEGRATED CHRONOLOGICAL JOURNEY + CONCRETE FLASHPOINT SPECIFICS:
-   - Weave the story's integrated chronological journey (how it broke -> how it shifted or developed across Recorded Wire Evolution Stages -> where it stands now) WITH the concrete specifics from the Covering Dispatches (exact named institutions/agencies/companies, named individuals/roles/ages, specific venues/streets/cities, exact figures/tallies, and causal mechanisms).
+   - Weave the story's integrated chronological journey (how it broke -> how it shifted or developed across Recorded Wire Evolution Stages -> where it stands now) WITH the concrete specifics from the Covering Dispatches (exact named institutions/agencies/companies, named individuals/roles/ages, specific venues/streets/cities/prefectures, exact figures/tallies, and causal mechanisms).
    - Readers rely on this summary for the actual concrete details so they immediately know who, where, how much, and by what mechanism.
 2. STRICT NUMERICAL & FACTUAL PRESERVATION (NO RECENCY AMNESIA):
    - NEVER drop any concrete figure, casualty/arrest tally, dollar valuation, troop count, or multi-country/multi-city geographic scope present in the cluster's Headline, Current Draft Summary, Latest Development Note, or earlier Evolution Stages.
@@ -3069,6 +3075,10 @@ STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
    - NEVER open with a robotic "On [Weekday], [Date], ..." (weave timing naturally mid-sentence if helpful).
    - NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
    - NEVER use stock AI transitions ("underscores how", "highlights the delicate interplay", "serves as a stark reminder", "all eyes now turn to").
+5. PINPOINT PRIMARY LOCATION FROM FULL COVERING DISPATCHES:
+   - Inspect the Covering Dispatches for the exact city, prefecture, county, or specific venue/building where the event occurred. For example, if a headline says "Tibet Autonomous Region Hit by Magnitude-7.0 Earthquake" and the dispatches name "Nagqu", set "name": "Nagqu, Tibet Autonomous Region" (NEVER fall back to a national capital like "Beijing, China" or a vague province centroid when a specific city/prefecture/venue is named in the dispatches!).
+   - Whenever the event takes place at a specific stadium, arena, parliament, court, university campus, hospital, airport, military base, or facility, name that exact venue followed by its city ("Specific Venue, City" in "name", e.g. "City Ground, Nottingham", "Palace of Westminster, London").
+   - "region" MUST be "State/Province/Autonomous Region, Country" or "Country", always ending with the sovereign Country name (e.g. "Tibet Autonomous Region, China", "Tennessee, United States", "England, United Kingdom").
 
 Clusters to synthesize:
 ${clusterBlocks}
@@ -3078,7 +3088,15 @@ Return ONLY a valid JSON array matching this exact schema:
   {
     "index": 0,
     "id": "cluster-id",
-    "summary": "1-2 crisp, detail-packed sentences (~35-60 words) weaving the integrated chronological journey with exact named actors, institutions, venues, figures, and mechanisms."
+    "summary": "1-2 crisp, detail-packed sentences (~35-60 words) weaving the integrated chronological journey with exact named actors, institutions, venues, figures, and mechanisms.",
+    "primaryLocation": {
+      "name": "Specific Venue/City, City/Region (e.g. 'Nagqu, Tibet Autonomous Region' or 'Palace of Westminster, London')",
+      "region": "State/Province, Country (MUST end with sovereign Country name)",
+      "lat": 31.4769,
+      "lon": 92.0519,
+      "zoom": 9,
+      "whyHere": "1 short sentence explaining why the story is anchored at this exact location."
+    }
   }
 ]`;
 
@@ -3134,6 +3152,18 @@ Return ONLY a valid JSON array matching this exact schema:
         if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
           c.evolutionHistory[c.evolutionHistory.length - 1].summary = candidateSum;
         }
+      }
+      const rawLoc = entry.primaryLocation;
+      if (rawLoc && typeof rawLoc === 'object' && typeof rawLoc.lat === 'number' && typeof rawLoc.lon === 'number' && rawLoc.name) {
+        c.primaryLocation = {
+          name: String(rawLoc.name).trim(),
+          region: String(rawLoc.region || '').trim(),
+          lat: Number(rawLoc.lat),
+          lon: Number(rawLoc.lon),
+          lng: Number(rawLoc.lon),
+          zoom: typeof rawLoc.zoom === 'number' ? rawLoc.zoom : 10,
+          whyHere: String(rawLoc.whyHere || '').trim()
+        };
       }
       c.summarySynthesizedSig = getClusterSummarySynthesisSignature(c);
       totalPolished++;
