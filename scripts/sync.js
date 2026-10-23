@@ -956,15 +956,90 @@ function extractCoherenceStems(str) {
     detain: 'arrest', detention: 'arrest', custody: 'arrest', investigations: 'probe',
     investigation: 'probe', investigating: 'probe'
   };
-  return String(str || '')
+  const rawStr = String(str || '').replace(/\b(?:([A-Z])\.){2,}/g, (m) => m.replace(/\./g, ''));
+  const acronymTokens = (rawStr.match(/\b[A-Z]{2,5}\b/g) || [])
+    .map(a => a.toLowerCase())
+    .filter(a => !stop.has(a) && !/^q[1-4]$/.test(a))
+    .map(a => demonymMap[a] || a);
+  return [
+    ...acronymTokens,
+    ...rawStr
     .toLowerCase()
     .replace(/\bstarshield\b/g, 'starlink')
+    .replace(/\bu\.?k\.?(?!\w)/g, 'britain')
+    .replace(/\bu\.?s\.?(?:a\.?)?(?!\w)/g, 'america')
+    .replace(/\bboj\b/g, 'japan')
+    .replace(/\bboe\b/g, 'britain')
+    .replace(/\bstatscan\b|\bstatcan\b/g, 'canada')
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .map(w => demonymMap[w] || w)
     .filter(w => w.length >= 4 && !stop.has(w))
     .map(w => w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
-    .filter(w => w.length >= 3 && !stop.has(w));
+    .filter(w => w.length >= 3 && !stop.has(w))
+  ];
+}
+
+const SOVEREIGN_COUNTRY_PATTERNS = [
+  ['uk', /\b(u\.?k\.?(?!\w)|united kingdom|britain|british|england|english|scotland|scottish|wales|welsh|london|westminster|downing street|bank of england|\bboe\b|chancellor|healey|starmer)\b/i],
+  ['canada', /\b(canada|canadian|ottawa|toronto|ontario|quebec|statscan|statcan|statistics canada|bank of canada)\b/i],
+  ['japan', /\b(japan|japanese|tokyo|bank of japan|\bboj\b|\byen\b)\b/i],
+  ['us', /\b(u\.?s\.?(?:a\.?)?(?!\w)|united states|america|american|washington|white house|pentagon|congress|senate|federal reserve|wall street)\b/i],
+  ['france', /\b(france|french|paris|macron|elysee)\b/i],
+  ['germany', /\b(germany|german|berlin|bundesbank|scholz|merz)\b/i],
+  ['italy', /\b(italy|italian|rome|milan|meloni)\b/i],
+  ['spain', /\b(spain|spanish|madrid)\b/i],
+  ['australia', /\b(australia|australian|sydney|canberra|melbourne|\brba\b)\b/i],
+  ['china', /\b(china|chinese|beijing|shanghai|\bpboc\b)\b/i],
+  ['india', /\b(india|indian|new delhi|mumbai|\brbi\b)\b/i],
+  ['brazil', /\b(brazil|brazilian|brasilia|lula)\b/i],
+  ['russia', /\b(russia|russian|moscow|kremlin|putin)\b/i],
+  ['ukraine', /\b(ukraine|ukrainian|kyiv|zelensky|zelenskyy)\b/i],
+  ['israel', /\b(israel|israeli|jerusalem|tel aviv|\bidf\b|west bank|gaza)\b/i],
+  ['saudi', /\b(saudi|riyadh|jeddah)\b/i],
+  ['egypt', /\b(egypt|egyptian|cairo)\b/i],
+  ['haiti', /\b(haiti|haitian|port-au-prince)\b/i],
+  ['el_salvador', /\b(el salvador|salvadoran|bukele)\b/i],
+  ['ecuador', /\b(ecuador|ecuadorian|quito)\b/i],
+  ['albania', /\b(albania|albanian|tirana)\b/i],
+  ['indonesia', /\b(indonesia|indonesian|jakarta|sulawesi)\b/i],
+  ['ireland', /\b(ireland|irish|dublin|leinster|munster)\b/i]
+];
+
+function detectSovereignCountries(text) {
+  const s = new Set();
+  const str = String(text || '');
+  for (const [code, re] of SOVEREIGN_COUNTRY_PATTERNS) {
+    if (re.test(str)) s.add(code);
+  }
+  return s;
+}
+
+const GENERIC_DOMESTIC_BEAT_STEMS = new Set(extractCoherenceStems(
+  'inflation september october november december january february march april june july august ' +
+  'annual monthly quarterly percent rate interest price prices fuel gasoline energy growth economy economic ' +
+  'budget fiscal treasury finance debt borrowing deficit surplus tax bank central tightening ' +
+  'consumer confidence cost living market stock share investor record high low surge jump climb ' +
+  'rise rises rising rose fall falls falling drop drops plunge plummet slump supreme court appeal federal judge justice sentencing ' +
+  'offender offenders prison criminal ban unconstitutional campaign midterm election voter senate congress ' +
+  'parliament minister president government official police security protest riot unrest strike strikes ' +
+  'attack attacks crisis force forces military army service draft disruption restriction impose prompt order orders ' +
+  'escalate report reports update updates britain canada japan america brazil france germany italy spain australia ' +
+  'china india russia ukraine israel saudi arabia egypt haiti ecuador albania indonesia ireland'
+));
+
+function hasDisjointSovereignCountryConflict(textA, textB, headA = '', headB = '') {
+  const headCountriesA = detectSovereignCountries(headA || textA);
+  if (headCountriesA.size === 0) return false;
+  const allCountriesA = detectSovereignCountries(textA);
+  const allCountriesB = detectSovereignCountries(textB);
+  if (allCountriesB.size === 0) return false;
+  if ([...allCountriesA].some(c => allCountriesB.has(c))) return false;
+  if ([...headCountriesA].some(c => allCountriesB.has(c))) return false;
+  const stemsA = new Set(extractCoherenceStems(headA || textA).filter(s => !GENERIC_DOMESTIC_BEAT_STEMS.has(s)));
+  const stemsB = new Set(extractCoherenceStems(`${headB || ''} ${textB || ''}`).filter(s => !GENERIC_DOMESTIC_BEAT_STEMS.has(s)));
+  const sharedSpecific = [...stemsA].filter(s => stemsB.has(s));
+  return sharedSpecific.length === 0;
 }
 
 // Cross-Outlet Story Clustering (Smart Candidate Pool + 14-Day Dormant Cluster Wake-Up + Peer-to-Peer Coherence Guard)
@@ -1290,7 +1365,9 @@ Return JSON array in format:
         'elect', 'voter', 'senat', 'congre', 'parlia', 'minist', 'presid', 'state', 'nation', 'people',
         'citize', 'report', 'update', 'order', 'forc', 'cancer', 'vaccin', 'patien', 'treat', 'diseas',
         'medic', 'health', 'hospit', 'doctor', 'clinic', 'trial', 'resear', 'scient', 'breakt', 'stock',
-        'share', 'market', 'invest', 'compan', 'corpor', 'indust', 'techno', 'artifi', 'intell'
+        'share', 'market', 'invest', 'compan', 'corpor', 'indust', 'techno', 'artifi', 'intell',
+        'infla', 'septem', 'octobe', 'novemb', 'decemb', 'januar', 'februa', 'august', 'annual',
+        'quarte', 'percen', 'rate', 'intere', 'price', 'pric', 'centra', 'tighte'
       ]);
       const directAnchorInIds = rawCandidates.find(m => m.isClusterAnchor && m.anchorCluster);
       const primaryStoryText = directAnchorInIds?.anchorCluster?.story || cl.story || '';
@@ -1314,6 +1391,15 @@ Return JSON array in format:
         }
         if (!art.isClusterAnchor && specificHeadlineStems.size > 0 && specificAnchorStems.size > 0 && ![...myAllStems].some(s => specificAnchorStems.has(s))) {
           console.warn(`[Clusters] Dropped actor-only theatre drift from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
+          return false;
+        }
+        if (!art.isClusterAnchor && hasDisjointSovereignCountryConflict(
+          `${primaryStoryText} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`,
+          `${art.title || ''} ${art.description || ''}`,
+          primaryStoryText,
+          art.title || ''
+        )) {
+          console.warn(`[Clusters] Dropped disjoint sovereign-country domestic tangent from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
           return false;
         }
         // Single-Entity / Single-Country Tangent Gate:
@@ -1414,7 +1500,13 @@ Return JSON array in format:
             //     so a single unrelated article sharing only a country/company/court name (e.g. Tunisia, OpenAI, Supreme Court, Budget) never pollutes the cluster.
             const isSingleArticleTangent = ancUrlHits === 0 && matchingArticles.length === 1 &&
               (sharedWithAnchor < 2 || (sharedSpecAll < 2 && !(sharedSpecHead >= 1 && sharedWithAnchor >= 3)));
-            if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent) {
+            const isDisjointCountryAnchor = ancUrlHits === 0 && hasDisjointSovereignCountryConflict(
+              `${ancCluster.story || ''} ${ancCluster.summary || ''}`,
+              matchingArticles.map(m => `${m.title || ''} ${m.description || ''}`).join(' '),
+              ancCluster.story || '',
+              cl.story || ''
+            );
+            if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor) {
               console.warn(`[Clusters] Detached theatre/single-entity anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor})`);
               continue;
             }
@@ -2318,6 +2410,7 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
 - CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, conferences, economic reactions, debates, or studies that merely involve the same country, leader, election campaign, or war!
   • Example of FORBIDDEN merge #1: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
   • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate diplomatic or economic fallout ("Saudi Arabia Postpones Investor Conference" or "Egypt Pledges Support to Saudi Arabia") are DISTINCT EVENTS with different actors and severities. NEVER merge an economic/diplomatic reaction cluster into a casualty/strike cluster — link them via "lateralConnections" (Job 3) instead!
+  • Example of FORBIDDEN merge #3 (Parallel Domestic / Corporate Releases Across Different Countries or Entities): NEVER merge two clusters that report parallel domestic economic indicators (e.g. "UK Inflation Rises to 3.5%" + "Canada Inflation Rises to 3.1%" + "Japan Core Inflation Surges to 2.1%"), budgets, court rulings, elections, or corporate earnings in DIFFERENT countries or for DIFFERENT companies/central banks — those are separate national/corporate releases and belong ONLY in "lateralConnections" (Job 3), NEVER in "merges"!
   • Example of VALID merge #1: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
   • Example of VALID merge #2 (Same-Decision Policy Action + Leader Defense): If one cluster reports a specific government policy decision, waiver, or order (e.g. "U.S. Cuts Russia Sanctions and Rifts With Ukraine") and another cluster in the same window reports the leader's public remarks defending, announcing, or explaining that EXACT SAME decision (e.g. "Trump Defends Russia Sanctions Waiver"), they are the SAME specific policy event and MUST be merged in "merges" (never left separate in "lateralConnections")!
   • Example of VALID merge #3 (Direct Diplomatic/Rhetorical Exchange — Criticism + Target Leader Counter-Rebuke): If an earlier cluster specifically reports foreign leaders or observers criticizing a country/leader over an event (e.g. "International Observers React to French Unrest" or "Trump Remarks on France Riots and Immigration") and a subsequent cluster reports the targeted leader directly rebuking or responding to those exact remarks (e.g. "Macron Slams Foreign Leaders Over Riot Comments"), they are chronological stages of the EXACT SAME diplomatic war-of-words and MUST be merged in "merges" with "updateType": "material_shift" (while keeping the separate on-the-ground domestic street-protest cluster linked via "lateralConnections")!
@@ -2328,6 +2421,7 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches — Eligible Indices: ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : 'NONE (return "inPlaceDevelopments": [])'}):
 Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly limited to indices ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : '[]'}):
 - NEVER include any cluster index that does not have a "[CANDIDATE IN-PLACE UPDATE]" line!
+- OFF-TOPIC / PARALLEL-COUNTRY CANDIDATE REJECTION: If a "[CANDIDATE IN-PLACE UPDATE]" dispatch is actually about a DIFFERENT country's domestic metric/budget/court, a DIFFERENT company, or a separate unrelated incident that only matched on generic words (e.g. a Bank of Japan or Statistics Canada inflation dispatch attached to a UK inflation cluster, or a Brazilian budget dispatch attached to a US deficit cluster), IGNORE that off-topic dispatch completely (and if no other genuinely on-topic dispatches remain, set "updateType": "none"). NEVER stitch a separate country's or company's domestic news into the cluster with "Concurrently..." or "Meanwhile..."!
 - If the new dispatches are redundant with the existing headline, summary, or [PRIOR RECORDED HISTORY], omit the cluster (or set "updateType": "none").
 - Otherwise, generate "developmentNote" and "stateBoundaryCrossed" first, then set "updateType": "clarification" | "material_shift" using the State-Envelope Meta-Rule and Disjunctive Batch Principle.
 
@@ -2452,6 +2546,15 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           return false;
         }
       }
+      const clA = clusters[idxs[0]];
+      const clB = clusters[idxs[1]];
+      if (clA && clB && (
+        hasDisjointSovereignCountryConflict(`${clA.story || ''} ${clA.summary || ''}`, `${clB.story || ''} ${clB.summary || ''}`, clA.story || '', clB.story || '') ||
+        hasDisjointSovereignCountryConflict(`${clB.story || ''} ${clB.summary || ''}`, `${clA.story || ''} ${clA.summary || ''}`, clB.story || '', clA.story || '')
+      )) {
+        console.warn(`[Clusters] Rejected disjoint sovereign-country domestic merge between [${idxs[0]}] "${clA.story}" and [${idxs[1]}] "${clB.story}"`);
+        return false;
+      }
       return true;
     });
 
@@ -2504,8 +2607,18 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         "protes","riot","unrest","strik","attack","crisis","forces","forc","milit","army","servic","draft","govern",
         "minist","presid","offici","polic","secur","suprem","court","appeal","federa","judg","justic","senten","offend",
         "prison","crimin","family","ban","uncons","budget","fiscal","treasu","econom","financ","campai","midter","elect",
-        "voter","senat","congre","parlia","citize","disrup","restric","impos","prompt","order","escalat","report","update"
+        "voter","senat","congre","parlia","citize","disrup","restric","impos","prompt","order","escalat","report","update",
+        "infla","septem","octobe","novemb","decemb","januar","februa","august","annual","quarte","percen","rate","intere","price","pric","centra","tighte"
       ]);
+      if (hasDisjointSovereignCountryConflict(
+        `${c.story || ''} ${c.summary || ''}`,
+        `${noteText} ${(c._pendingUpdate?.addedHeadlines || []).join(' ')}`,
+        c.story || '',
+        noteText
+      )) {
+        console.warn(`[Clusters] Rejected disjoint sovereign-country domestic update on cluster [${idx}] "${c.story}": "${noteText}"`);
+        continue;
+      }
       const headStems = extractCoherenceStems(c.story || "");
       const specificHeadStems = new Set(headStems.filter(s => !BROAD_DEV_STEMS.has(s)));
       const anchorHeadStems = specificHeadStems.size > 0 ? specificHeadStems : new Set(headStems);
