@@ -2,7 +2,7 @@ name: Autonomous News Ingestion & Sentiment Audit
 
 on:
   schedule:
-    # Relay Slot A (:13 and :43) — each scheduled wake-up runs 3 pulses (T=0m, T=+30m, T=+60m)
+    # Relay Slot A (:13 and :43) — each wake-up runs a 6-pulse relay chain (T=0m..+150m) to bridge GitHub cron throttling gaps
     - cron: '13 * * * *'
     - cron: '43 * * * *'
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
   wait-1:
     name: Interval Wait (30m)
     needs: pulse-1
-    if: always() && github.event_name == 'schedule'
+    if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -40,7 +40,7 @@ jobs:
   pulse-2:
     name: Sync Pulse 2 (T+30m)
     needs: wait-1
-    if: always() && github.event_name == 'schedule'
+    if: always()
     uses: ./.github/workflows/sync-pulse.yml
     with:
       pulse_id: pulse-2
@@ -49,7 +49,7 @@ jobs:
   wait-2:
     name: Interval Wait (60m)
     needs: pulse-2
-    if: always() && github.event_name == 'schedule'
+    if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -59,8 +59,65 @@ jobs:
   pulse-3:
     name: Sync Pulse 3 (T+60m)
     needs: wait-2
-    if: always() && github.event_name == 'schedule'
+    if: always()
     uses: ./.github/workflows/sync-pulse.yml
     with:
       pulse_id: pulse-3
+    secrets: inherit
+
+  wait-3:
+    name: Interval Wait (90m)
+    needs: pulse-3
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Wait 30 minutes before Pulse 4 (no concurrency lock held)
+        run: sleep 1800
+
+  pulse-4:
+    name: Sync Pulse 4 (T+90m)
+    needs: wait-3
+    if: always()
+    uses: ./.github/workflows/sync-pulse.yml
+    with:
+      pulse_id: pulse-4
+    secrets: inherit
+
+  wait-4:
+    name: Interval Wait (120m)
+    needs: pulse-4
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Wait 30 minutes before Pulse 5 (no concurrency lock held)
+        run: sleep 1800
+
+  pulse-5:
+    name: Sync Pulse 5 (T+120m)
+    needs: wait-4
+    if: always()
+    uses: ./.github/workflows/sync-pulse.yml
+    with:
+      pulse_id: pulse-5
+    secrets: inherit
+
+  wait-5:
+    name: Interval Wait (150m)
+    needs: pulse-5
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Wait 30 minutes before Pulse 6 (no concurrency lock held)
+        run: sleep 1800
+
+  pulse-6:
+    name: Sync Pulse 6 (T+150m)
+    needs: wait-5
+    if: always()
+    uses: ./.github/workflows/sync-pulse.yml
+    with:
+      pulse_id: pulse-6
     secrets: inherit

@@ -1099,7 +1099,9 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
     'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
     'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study',
     'united', 'state', 'americ', 'administr', 'white', 'house', 'feder', 'nation', 'global', 'world',
-    'donald', 'trump', 'biden', 'europe', 'middl', 'east', 'foreig', 'defens', 'first', 'after', 'amid'
+    'donald', 'trump', 'biden', 'europe', 'middl', 'east', 'foreig', 'defens', 'first', 'after', 'amid',
+    'cancer', 'vaccin', 'patien', 'treat', 'diseas', 'medic', 'health', 'hospit', 'doctor', 'clinic',
+    'trial', 'resear', 'breakt', 'stock', 'share', 'market', 'compan', 'corpor', 'indust', 'techno'
   ]);
 
   const matchedAnchorIndices = new Set();
@@ -1258,7 +1260,10 @@ Return JSON array in format:
         'united', 'europe', 'middl', 'east', 'foreig', 'milit', 'defens', 'govern', 'offici',
         'west', 'bank', 'gaza', 'lebanon', 'syria', 'iran', 'london', 'britain', 'british',
         'france', 'french', 'paris', 'german', 'berlin', 'attack', 'strike', 'polic', 'secur',
-        'minist', 'presid', 'state', 'nation', 'people', 'report', 'update', 'order', 'forc'
+        'minist', 'presid', 'state', 'nation', 'people', 'report', 'update', 'order', 'forc',
+        'cancer', 'vaccin', 'patien', 'treat', 'diseas', 'medic', 'health', 'hospit', 'doctor',
+        'clinic', 'trial', 'resear', 'scient', 'breakt', 'stock', 'share', 'market', 'invest',
+        'compan', 'corpor', 'indust', 'techno', 'artifi', 'intell'
       ]);
       const directAnchorInIds = rawCandidates.find(m => m.isClusterAnchor && m.anchorCluster);
       const primaryStoryText = directAnchorInIds?.anchorCluster?.story || cl.story || '';
@@ -2014,12 +2019,21 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   const slugify = (str) => String(str || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const nowMs = Date.now();
 
-  // Precompute stems and age for each cluster across the 7-day window
+  // Precompute stems (including dominant >=30% coverage title stems so umbrella-titled clusters surface in pair hints) and age
   const meta = clusters.map((c, origIdx) => {
-    const newestMs = c.newestMs || Math.max(...(c.coverage || []).map(a => new Date(a.pubDate).getTime() || 0), 0);
+    const cov = c.coverage || [];
+    const newestMs = c.newestMs || Math.max(...cov.map(a => new Date(a.pubDate).getTime() || 0), 0);
     const ageHours = newestMs > 0 ? Math.max(0, (nowMs - newestMs) / 3600000) : 999;
-    const titleStems = new Set(extractCoherenceStems(c.story || ''));
-    const allStems = new Set(extractCoherenceStems(`${c.story || ''} ${c.summary || ''} ${(c.coverage || []).slice(0, 4).map(a => a.title || '').join(' ')}`));
+    const domCovCounts = new Map();
+    for (const a of cov) {
+      for (const st of new Set(extractCoherenceStems(a.title || ''))) {
+        domCovCounts.set(st, (domCovCounts.get(st) || 0) + 1);
+      }
+    }
+    const minDomHits = Math.max(2, Math.ceil(cov.length * 0.30));
+    const domCovStems = [...domCovCounts.entries()].filter(([, cnt]) => cnt >= minDomHits).map(([st]) => st);
+    const titleStems = new Set([...extractCoherenceStems(c.story || ''), ...domCovStems]);
+    const allStems = new Set([...extractCoherenceStems(`${c.story || ''} ${c.summary || ''} ${cov.slice(0, 6).map(a => a.title || '').join(' ')}`), ...domCovStems]);
     return { origIdx, c, ageHours, titleStems, allStems };
   });
 
@@ -2262,6 +2276,7 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
   • Example of VALID merge #1: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
   • Example of VALID merge #2 (Same-Decision Policy Action + Leader Defense): If one cluster reports a specific government policy decision, waiver, or order (e.g. "U.S. Cuts Russia Sanctions and Rifts With Ukraine") and another cluster in the same window reports the leader's public remarks defending, announcing, or explaining that EXACT SAME decision (e.g. "Trump Defends Russia Sanctions Waiver"), they are the SAME specific policy event and MUST be merged in "merges" (never left separate in "lateralConnections")!
   • Example of VALID merge #3 (Direct Diplomatic/Rhetorical Exchange — Criticism + Target Leader Counter-Rebuke): If an earlier cluster specifically reports foreign leaders or observers criticizing a country/leader over an event (e.g. "International Observers React to French Unrest" or "Trump Remarks on France Riots and Immigration") and a subsequent cluster reports the targeted leader directly rebuking or responding to those exact remarks (e.g. "Macron Slams Foreign Leaders Over Riot Comments"), they are chronological stages of the EXACT SAME diplomatic war-of-words and MUST be merged in "merges" with "updateType": "material_shift" (while keeping the separate on-the-ground domestic street-protest cluster linked via "lateralConnections")!
+  • Example of VALID merge #4 (Same-Announcement Dual-Facet Split — Market/Leak Reaction + Official Substantive Release, or Umbrella-vs-Specific Twin): If one cluster captures the initial data leak, rumor, or stock/market reaction to a specific clinical trial, scientific study, earnings report, or corporate announcement (e.g. "Moderna Stock Plummets Following Cancer Vaccine Leak") and another cluster captures the substantive clinical, scientific, or product findings of that EXACT SAME trial/announcement (e.g. "Global Pharmaceutical Firms Launch Advanced Cancer Vaccines" covering the same personalized mRNA melanoma vaccine trial, or "Global IT Disruption Caused by Critical Software Flaw" + "PHP Vulnerabilities Force Websites Offline"), they are two facets of the EXACT SAME underlying event and MUST be merged in "merges" with "updateType": "material_shift" (updating "story" to name the specific actor/entity and substantive outcome), NEVER left split in "lateralConnections"!
 - If no two clusters report the exact same specific incident or direct rhetorical exchange, return "merges": [].
 - For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary (or executes a direct head-of-state counter-rebuke to prior foreign criticism); otherwise set "updateType": "clarification" (deduplication).
 
@@ -2612,7 +2627,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           (/\b(halts?|halted|stops?|stopped|blocks?|blocked|cancels?|canceled)\b/.test(storyLower) && /\b(pushed forward|pushing forward|proceeds?|proceeding|will officially begin|will begin|resumes?|resumed)\b/.test(sumLower)) ||
           (/\b(prepares?|preparing|plans?|planning|set to|gears? up)\b/.test(storyLower) && /\b(successfully launched|lifts? off|lifted off|completed|concluded|rejected|approved|enacted)\b/.test(sumLower)) ||
           (/\b(holds?|holding)\s+(referendum|election|vote)\b/.test(storyLower) && /\b(voters\s+(?:decisively\s+)?(?:reject|approve|elect|back)|official results confirm)\b/.test(sumLower)) ||
-          (/\b(injured|wounded|hospitalized|critical)\b/.test(storyLower) && !/\b(dead|dies?|died|killed|fatal)\b/.test(storyLower) && /\b(died|dies|succumbed|passed away|killed)\b/.test(sumLower))
+          (/\b(injured|wounded|hospitalized|critical)\b/.test(storyLower) && !/\b(dead|dies?|died|killed|fatal)\b/.test(storyLower) && /\b(died|dies|succumbed|passed away|killed)\b/.test(sumLower)) ||
+          (/\b(stock|shares)\s+(plummet|plunge|sink|fall|drop|tumble|slump)s?\b/.test(storyLower) && (c.averageSentiment || 0) >= 0.20)
         );
 
         if (hasStaleHeadlineNumber || hasSemanticContradiction) {

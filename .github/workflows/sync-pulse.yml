@@ -28,16 +28,16 @@ jobs:
           ref: main
           fetch-depth: 1
 
-      - name: Check schedule cooldown (25m)
+      - name: Check schedule cooldown (20m)
         id: cooldown
         run: |
-          if [ "${{ github.event_name }}" = "schedule" ]; then
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.pulse_id }}" != "pulse-1" ]; then
             SKIP=$(node -e "
               try {
                 const s = JSON.parse(require('fs').readFileSync('public/data/summary.json', 'utf8'));
                 const ageMin = (Date.now() - Date.parse(s.lastUpdated)) / 60000;
-                console.error('Last sync age: ' + ageMin.toFixed(1) + 'm (cooldown threshold: 25m)');
-                process.stdout.write(ageMin < 25 ? 'true' : 'false');
+                console.error('Last sync age: ' + ageMin.toFixed(1) + 'm (cooldown threshold: 20m)');
+                process.stdout.write(ageMin < 20 ? 'true' : 'false');
               } catch (e) {
                 process.stdout.write('false');
               }

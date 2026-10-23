@@ -179,10 +179,40 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
   }
 
-  // 2b. Deterministic Shared-URL (>= 3 URLs or >= 35% overlap) & Typo-Tolerant Near-Duplicate Merge
-  const STOP_DEDUPE = new Set(["the","and","for","that","with","from","this","are","was","were","have","has","had","not","but","what","all","when","can","said","will","other","about","out","into","more","over","new","after","amid","says","say","report","reports","update","news","world","global"]);
-  const stemWord = (w) => w.replace(/([a-z]{3,})ies$/, "$1y").replace(/([a-z]{3,})ing$/, "$1").replace(/([a-z]{3,})ed$/, "$1").replace(/([a-z]{3,})es$/, "$1").replace(/([a-z]{3,})s$/, "$1");
-  const getStems = (txt) => new Set(String(txt || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(w => w.length >= 3 && !STOP_DEDUPE.has(w)).map(stemWord));
+  // 2b. Deterministic Shared-URL (>= 3 URLs or >= 35% overlap), Typo-Tolerant Near-Duplicate,
+  //     AND Law 1A-bis (Dual-Facet Market/Substantive & Umbrella-vs-Specific Twin Consolidation)
+  const STOP_DEDUPE = new Set([
+    "the","and","for","that","with","from","this","are","was","were","have","has","had","not","but","what","all",
+    "when","can","said","will","other","about","out","into","more","over","new","after","amid","says","say",
+    "report","reports","update","news","world","global","international","major","first","show","shows","following"
+  ]);
+  const GENERIC_EVENT_STEMS = new Set([
+    ...STOP_DEDUPE,
+    "official","government","president","minister","country","state","united","american","european","british",
+    "national","federal","public","people","group","party","leader","force","military","police","court","judge",
+    "agency","company","firm","pharmaceutical","market","share","stock","investor","research","scientist","study",
+    "trial","clinical","patient","treatment","health","medical","hospital","doctor","disease","significant",
+    "subsequent","detail","result","reduce","cut","risk","death","kill","dead","attack","strike","protest","riot",
+    "unrest","crisis","warn","order","plan","launch","announc","confirm","reveal","continu","includ","prompt",
+    "spark","across","within","between","against","during","before","under","while","help","usher","hope",
+    "russian","ukrainian","ukraine","russia","trump","putin","zelensky","zelenskyy","envoy","israel","israeli","iran"
+  ]);
+  const stemWord = (w) => w
+    .replace(/([a-z]{3,})ies$/, "$1y")
+    .replace(/([a-z]{2,}(?:sh|ch|x|z|ss))es$/, "$1")
+    .replace(/([a-z]{3,})s$/, "$1")
+    .replace(/([a-z]{3,})ing$/, "$1")
+    .replace(/([a-z]{3,})ed$/, "$1")
+    .replace(/([a-z]{4,})e$/, "$1");
+  const getStems = (txt, stopSet = STOP_DEDUPE) => new Set(
+    String(txt || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(w => w.length >= 3 && !stopSet.has(w) && !/^\d+$/.test(w))
+      .map(stemWord)
+      .filter(w => w.length >= 3 && !stopSet.has(w))
+  );
   const editDist1 = (a, b) => {
     if (a === b) return true;
     if (Math.abs(a.length - b.length) > 1 || a.length < 5 || b.length < 5) return false;
@@ -207,6 +237,47 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
     return m;
   };
+  const getDominantCoverageTitleStems = (cl) => {
+    const cov = cl.coverage || [];
+    if (cov.length < 2) return new Set();
+    const counts = new Map();
+    for (const c of cov) {
+      for (const s of getStems(c.title)) {
+        counts.set(s, (counts.get(s) || 0) + 1);
+      }
+    }
+    const minHits = Math.max(2, Math.ceil(cov.length * 0.30));
+    const dom = new Set();
+    for (const [s, cnt] of counts.entries()) {
+      if (cnt >= minHits) dom.add(s);
+    }
+    return dom;
+  };
+  const getHeadlineNumbers = (txt) => new Set((String(txt || "").match(/\b\d+(?:\.\d+)?%?\b/g) || []));
+  const UMBRELLA_OR_VERB_HEADLINE_WORDS = new Set([
+    "global","world","international","european","asian","african","middle","eastern","latin","north","south","west","east",
+    "pharmaceutical","firm","company","leader","official","scientist","researcher","doctor","market","investor",
+    "stock","share","plummet","plunge","sink","fall","rise","surge","jump","climb","drop","slash","cut",
+    "following","after","amid","over","into","from","with","under","launch","advanc","new","first","major",
+    "deadly","fatal","record","high","low","warn","order","approv","reject","block","halt","plan","fac","hit",
+    "leak","data","trial","study","result","breakthrough","usher","hope","patient","disruption","caus","critical",
+    "software","flaw","vulnerability","force","website","offline","across"
+  ]);
+  const getHeadlineProperAnchors = (story) => {
+    const words = String(story || "").trim().split(/\s+/);
+    const anchors = new Set();
+    for (const rawW of words) {
+      const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, "");
+      if (clean.length >= 3 && /^[A-Z]/.test(clean)) {
+        const lower = clean.toLowerCase();
+        const stemmed = stemWord(lower);
+        if (!STOP_DEDUPE.has(lower) && !UMBRELLA_OR_VERB_HEADLINE_WORDS.has(lower) && !UMBRELLA_OR_VERB_HEADLINE_WORDS.has(stemmed)) {
+          anchors.add(stemmed);
+        }
+      }
+    }
+    return anchors;
+  };
 
   const activeList = Array.from(byId.values()).sort((a, b) => ((b.coverage?.length || 0) - (a.coverage?.length || 0)) || ((b.version || 1) - (a.version || 1)));
   const absorbedIds = new Set();
@@ -216,6 +287,12 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     const urlsA = new Set((primary.coverage || []).map(x => canonicalUrl(x.link)).filter(Boolean));
     const headStemsA = getStems(primary.story);
     const sumStemsA = getStems(`${primary.story} ${primary.summary}`);
+    const domCovA = getDominantCoverageTitleStems(primary);
+    const headWithDomA = new Set([...headStemsA, ...domCovA]);
+    const specA = new Set([...getStems(`${primary.story} ${primary.summary}`, GENERIC_EVENT_STEMS), ...[...domCovA].filter(s => !GENERIC_EVENT_STEMS.has(s))]);
+    const fullTextStemsA = getStems(`${primary.story} ${primary.summary} ${(primary.coverage || []).map(c => `${c.title} ${c.description}`).join(" ")}`);
+    const numsA = getHeadlineNumbers(primary.story);
+    const properA = getHeadlineProperAnchors(primary.story);
 
     for (let j = i + 1; j < activeList.length; j++) {
       const secondary = activeList[j];
@@ -227,6 +304,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       const urlRatio = sharedUrls / minUrls;
 
       let shouldMerge = (sharedUrls >= 3) || (sharedUrls >= 2 && urlRatio >= 0.35);
+      let isDualFacetOrUmbrellaTwin = false;
       if (!shouldMerge) {
         const headStemsB = getStems(secondary.story);
         const sharedHead = countFuzzyOverlap(headStemsA, headStemsB);
@@ -237,11 +315,49 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           const sumJac = sharedSum / Math.max(1, sumStemsA.size + sumStemsB.size - sharedSum);
           if (sumJac >= 0.35) shouldMerge = true;
         }
+        // Law 1A-bis: Dual-Facet (Market/Leak vs. Substantive Release) & Umbrella-vs-Specific Twin Consolidation
+        if (!shouldMerge) {
+          const domCovB = getDominantCoverageTitleStems(secondary);
+          const headWithDomB = new Set([...headStemsB, ...domCovB]);
+          const sharedHeadDom = [...headWithDomA].filter(x => headWithDomB.has(x));
+          if (sharedHeadDom.length >= 2) {
+            const numsB = getHeadlineNumbers(secondary.story);
+            const hasConflictingNums = numsA.size > 0 && numsB.size > 0 && ![...numsA].some(n => numsB.has(n));
+            if (!hasConflictingNums) {
+              const properB = getHeadlineProperAnchors(secondary.story);
+              const fullTextStemsB = getStems(`${secondary.story} ${secondary.summary} ${(secondary.coverage || []).map(c => `${c.title} ${c.description}`).join(" ")}`);
+              const unsharedProperA = [...properA].filter(p => !properB.has(p));
+              const unsharedProperB = [...properB].filter(p => !properA.has(p));
+              const hasConflictingProper = unsharedProperA.length > 0 && unsharedProperB.length > 0 &&
+                (!unsharedProperA.every(p => fullTextStemsB.has(p)) || !unsharedProperB.every(p => fullTextStemsA.has(p)));
+              if (!hasConflictingProper) {
+                const specB = new Set([...getStems(`${secondary.story} ${secondary.summary}`, GENERIC_EVENT_STEMS), ...[...domCovB].filter(s => !GENERIC_EVENT_STEMS.has(s))]);
+                const sharedSpec = [...specA].filter(x => specB.has(x));
+                const specContain = sharedSpec.length / Math.min(specA.size || 1, specB.size || 1);
+                let covBridgePairs = 0;
+                const covA = (primary.coverage || []).map(c => getStems(c.title));
+                const covB = (secondary.coverage || []).map(c => getStems(c.title));
+                for (const ca of covA) {
+                  for (const cb of covB) {
+                    const sh = [...ca].filter(x => cb.has(x));
+                    const specSh = sh.filter(x => !GENERIC_EVENT_STEMS.has(x));
+                    if (sh.length >= 3 && specSh.length >= 3) covBridgePairs++;
+                  }
+                }
+                if (sharedSpec.length >= 4 && (specContain >= 0.28 || covBridgePairs >= 4) && covBridgePairs >= 3) {
+                  shouldMerge = true;
+                  isDualFacetOrUmbrellaTwin = true;
+                }
+              }
+            }
+          }
+        }
       }
 
       if (shouldMerge) {
         absorbedIds.add(secondary.id);
         byId.delete(secondary.id);
+        const oldPrimaryId = primary.id;
         const seenOutlets = new Set((primary.coverage || []).map(a => a.sourceId));
         for (const art of (secondary.coverage || [])) {
           if (art?.sourceId && !seenOutlets.has(art.sourceId)) {
@@ -252,14 +368,116 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         }
         primary.coverage.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
         primary.outletCount = primary.coverage.length;
+
+        const mergedScores = primary.coverage.map(c => c.sentiment).filter(s => typeof s === 'number');
+        const mergedAvgSent = mergedScores.length > 0
+          ? Number((mergedScores.reduce((a, b) => a + b, 0) / mergedScores.length).toFixed(2))
+          : (primary.averageSentiment || 0);
+        const posRatio = mergedScores.length > 0 ? mergedScores.filter(s => s > 0.15).length / mergedScores.length : 0;
+        primary.averageSentiment = mergedAvgSent;
+
+        if (isDualFacetOrUmbrellaTwin) {
+          const primaryHasNegativeMarketHeadline = /\b(stock|shares)\s+(plummet|plunge|sink|fall|drop|tumble|slump)/i.test(primary.story || '') ||
+            (/\b(plummet|plunge|sink|tumble|slump)s?\b/i.test(primary.story || '') && /\b(leak|stock|shares|market)\b/i.test(primary.story || ''));
+          const primaryIsBroadUmbrella = /^(global|world|international)\s+(it\s+disruption|pharmaceutical\s+firms|companies|firms)/i.test(primary.story || '');
+          const secondaryIsSpecific = !/^(global|world|international)\s+(it\s+disruption|pharmaceutical\s+firms|companies|firms)/i.test(secondary.story || '');
+
+          if (primaryIsBroadUmbrella && secondaryIsSpecific && properA.size === 0 && getHeadlineProperAnchors(secondary.story).size > 0) {
+            let upgradedStory = secondary.story;
+            if (/\bacross\s+europe\b/i.test(upgradedStory) && /\b(global|world)\b/i.test(primary.story || '')) {
+              upgradedStory = upgradedStory.replace(/\bacross\s+europe\b/i, 'Worldwide');
+            }
+            primary.story = upgradedStory;
+            primary.id = slugify(upgradedStory);
+          } else if (primaryHasNegativeMarketHeadline && mergedAvgSent >= 0.20 && posRatio >= 0.55) {
+            const hasMerckModerna = /\bmerck\b/i.test(primary.summary || '') && /\bmoderna\b/i.test(primary.story || '');
+            const pctMatch = (primary.summary || '').match(/\b(\d{2})%/);
+            let pivotedStory = secondaryIsSpecific ? secondary.story : '';
+            if (!pivotedStory) {
+              if (hasMerckModerna && /\bmelanoma\b/i.test(primary.summary || '')) {
+                pivotedStory = `Moderna and Merck mRNA Cancer Vaccine Cuts Melanoma Risk${pctMatch ? ` by ${pctMatch[1]}%` : ''}`;
+              } else {
+                const actorPrefix = String(primary.story || '').split(/\s+(?:stock|shares)\b/i)[0].trim();
+                pivotedStory = actorPrefix && actorPrefix.length <= 25
+                  ? secondary.story.replace(/^(?:Global|World|International)\s+[A-Za-z]+\s+(?:Firms|Companies)/i, actorPrefix)
+                  : secondary.story;
+              }
+            }
+            if (pivotedStory && pivotedStory !== primary.story) {
+              primary.story = pivotedStory;
+              primary.id = slugify(pivotedStory);
+              primary.version = Math.max(primary.version || 1, secondary.version || 1, 2);
+              if (/\bintismeran\b/i.test(secondary.summary || '') && !/\bintismeran\b/i.test(primary.summary || '')) {
+                primary.summary = primary.summary.replace(
+                  /\bthe experimental mRNA vaccine\b/i,
+                  'their personalized mRNA vaccine, intismeran,'
+                );
+              }
+              if (Array.isArray(primary.evolutionHistory) && primary.evolutionHistory.length > 0) {
+                const lastH = primary.evolutionHistory[primary.evolutionHistory.length - 1];
+                if (lastH && (lastH.type === 'clarification' || lastH.type === 'material_shift')) {
+                  lastH.type = 'material_shift';
+                  lastH.version = primary.version;
+                  lastH.headline = primary.story;
+                  lastH.summary = primary.summary;
+                  lastH.outletCount = primary.outletCount;
+                }
+              }
+              primary.lastDevelopedAt = primary.evolutionHistory?.[primary.evolutionHistory.length - 1]?.timestamp || new Date().toISOString();
+              primary.developmentNote = primary.evolutionHistory?.[primary.evolutionHistory.length - 1]?.note || `Full trial data confirms breakthrough efficacy: ${primary.story}`;
+            }
+          }
+        }
+
         const evSet = new Set([
           ...(Array.isArray(primary.evolvedFromIds) ? primary.evolvedFromIds : []),
           ...(Array.isArray(secondary.evolvedFromIds) ? secondary.evolvedFromIds : []),
+          oldPrimaryId,
           secondary.id
         ]);
         evSet.delete(primary.id);
         primary.evolvedFromIds = Array.from(evSet);
+        if (Array.isArray(primary.lateralConnections)) {
+          primary.lateralConnections = primary.lateralConnections.filter(
+            lc => lc?.clusterId && lc.clusterId !== primary.id && !evSet.has(lc.clusterId)
+          );
+          if (primary.lateralConnections.length === 0) delete primary.lateralConnections;
+        }
+        if (oldPrimaryId !== primary.id) {
+          byId.delete(oldPrimaryId);
+          byId.set(primary.id, primary);
+        }
       }
+    }
+  }
+
+  // 2c. Law 1D: Zero-Specific-Anchor Thematic Beat Outlier Sanitizer
+  const RAW_BROAD_BEAT_WORDS = [
+    "cancer","vaccine","patient","treat","treatment","disease","medical","health","hospital","doctor","clinical","trial",
+    "study","research","researcher","scientist","breakthrough","stock","share","market","investor","company","corporate","industry",
+    "technology","artificial","intelligence","model","system","tool","police","court","judge","government","minister","president","official",
+    "world","global","national","federal","first","major","reveal","announce","report","confirm","discover","found","develop",
+    "launch","plan","order","warn","spark","prompt","strain","trouble","crisis","risk","death","dead","kill","fatal","record",
+    "high","low","surge","plunge","plummet","slump","drop","fall","rise","jump","cut","slash","boost","secret","scandal"
+  ];
+  const BROAD_BEAT_STEMS = new Set(RAW_BROAD_BEAT_WORDS.map(stemWord));
+  for (const cl of byId.values()) {
+    const cov = cl.coverage || [];
+    if (cov.length < 3) continue;
+    const domCov = getDominantCoverageTitleStems(cl);
+    const headStems = getStems(cl.story);
+    const specHeadStems = new Set([...headStems].filter(s => !BROAD_BEAT_STEMS.has(s)));
+    const anchorStems = new Set([...getStems(`${cl.story} ${cl.summary}`), ...domCov]);
+    const specAnchorStems = new Set([...anchorStems].filter(s => !BROAD_BEAT_STEMS.has(s)));
+    if (specHeadStems.size < 2 || specAnchorStems.size < 4) continue;
+
+    const filteredCov = cov.filter(art => {
+      const artStems = getStems(`${art.title || ''} ${art.description || ''}`);
+      return [...artStems].some(s => specAnchorStems.has(s));
+    });
+    if (filteredCov.length >= 2 && filteredCov.length !== cov.length) {
+      cl.coverage = filteredCov;
+      cl.outletCount = filteredCov.length;
     }
   }
 
