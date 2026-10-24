@@ -429,15 +429,16 @@ function computeFourFactorScore(match) {
   let framingMod;
 
   if (pol >= 0) {
-    const polCurve = Math.pow(pol, 1.32);
-    const geoMag = Math.pow(Math.max(0.01, reach), 0.62) * Math.pow(Math.max(0.01, perm), 0.38);
-    const gPow = Math.pow(geoMag, 1.75);
-    const kPow = Math.pow(0.32, 1.75);
+    const polExp = (reach >= 0.55 && perm >= 0.50 && pol >= 0.20) ? 1.05 : 1.32;
+    const polCurve = Math.pow(pol, polExp);
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.55) * Math.pow(Math.max(0.01, perm), 0.45);
+    const gPow = Math.pow(geoMag, 1.85);
+    const kPow = Math.pow(0.44, 1.85);
     const hill = gPow / (gPow + kPow);
-    const impactScale = Math.min(1, 0.12 * geoMag + 0.88 * hill);
-    eventBase = Number(Math.min(1, polCurve * impactScale * 1.12).toFixed(3));
-    const rawFramingMod = frame * (0.10 + 0.22 * reach);
-    const maxFraming = Math.abs(eventBase) * 0.35;
+    const impactScale = Math.min(1, 0.10 * geoMag + 0.90 * hill);
+    eventBase = Number(Math.min(1, polCurve * impactScale * 1.18).toFixed(3));
+    const rawFramingMod = frame * (0.08 + 0.20 * reach);
+    const maxFraming = Math.abs(eventBase) * 0.28;
     framingMod = Number(Math.max(-maxFraming, Math.min(maxFraming, rawFramingMod)).toFixed(3));
   } else {
     const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);
@@ -567,11 +568,11 @@ Evaluate each article across FOUR continuous higher-order dimensions using preci
 
 1. "polarity" (integer -100 to 100 — Whole-Event Counterfactual Valence & Substantive Angle):
    Evaluate the net human and societal valence of the reality described in the dispatch along a continuous spectrum from -100 (maximum net harm, loss, or destruction) through 0 (neutral, routine, commercial/transactional, or offsetting outcomes) to +100 (maximum net constructive advancement).
-   - Whole-Event Baseline vs. Isolated Verb Delta: Evaluate the net state of the entire situation described in the dispatch against a normal, unharmed baseline—never score the isolated delta of a final procedural verb while ignoring the underlying subject. When a dispatch reports a downstream judicial verdict, conviction, sentencing, bail/custody release, arrest, or survival response following an atrocity, violent attack, preventive arrest, civil crackdown, or irreversible loss of life, the net valence of the complete event remains negative in proportion to the underlying harm or institutional friction; score polarity positively only when the event produces a net advance above an unharmed baseline (such as curing disease, advancing knowledge, or building durable capacity).
+   - Whole-Event Baseline vs. Isolated Verb Delta: Evaluate the net state of the entire situation described in the dispatch against a normal, unharmed baseline—never score the isolated delta of a final procedural or relief verb while ignoring the underlying subject. When a dispatch reports a hostage/kidnap release, prisoner-of-war exchange, police/fraud crackdown, mass arrest, drug/asset seizure, downstream judicial verdict, conviction, sentencing, bail/custody release, or accident/disaster survival response (e.g. rescuing a driver from a sinking car or finding a patient alive in a morgue), the event is a remediation or enforcement response to underlying captivity, war, crime, or trauma rather than a net advance above an unharmed baseline—keep "polarity" negative or strictly near zero (-25 to +8) and capture any relieved or celebratory tone strictly in "framing". Score polarity positively (+25 to +95) ONLY when the event produces a genuine net advancement above a normal unharmed baseline (such as curing disease, discovering scientific/historical truth, restoring ecosystems, or enacting durable public capacity).
    - Protests, Strikes, Demonstrations & Grievance Rallies: Treat protests, strikes, marches, and political grievance rallies as symptoms of underlying societal friction, institutional failure, or unresolved public grievance—scoring their baseline "polarity" as negative (-10 to -25 for peaceful demonstrations, marches, or protest-led voter mobilization; -25 to -45 for disruptive strikes, camp clearances, blockades, or protest detentions; -45 or lower for violent clashes or riots), unless the dispatch reports a concrete, completed constructive resolution (such as an enacted reform or signed agreement). When coverage profiles protesters sympathetically, heroically, or as an inspiring civic experiment, capture that upbeat journalistic angle strictly in "framing" (+15 to +50) while keeping "polarity" negative to reflect the underlying grievance or unrest.
    - Contested Policy & Polarized Perspectives: When an event is a contested political, economic, regulatory, or social development (rather than an objective physical tragedy, atrocity, or civil unrest), evaluate the substantive causal outcome foregrounded by this specific outlet's angle so genuine cross-outlet perspective differences are preserved.
-   - Structural Advancement vs. Routine Administration, Minor Comfort, Speculation, or Commercial Solicitation: Reserve high positive polarity for verified, completed discoveries and breakthroughs across science, natural history, archaeology, ecology, medicine, and society. Discount routine administrative maintenance, minor symptom-comfort or lifestyle tips, unverified corporate/political pledges, and commercial/wagering promotional copy toward zero, attributing promotional hype or spin to "framing".
-   - Epistemic Actuality (Completed Discovery vs. Anticipatory Preview, Speculative Question, or Explainer): Score strictly what has ALREADY been empirically discovered, proven, or enacted—never score the hypothetical future payoff of an experiment that is merely "poised to find out", a spacecraft "due to launch", an open question headline ("Are we about to solve...?", "Can X solve Y?"), or a retrospective/educational explainer ("How did life arise?"). When a breakthrough has not yet occurred, keep "polarity" and "permanence" modest (0 to +22) to reflect only the concrete preparatory step or ongoing inquiry, and assign any "could transform physics forever" hype to "framing".
+   - Structural Advancement vs. Commercial Auctions, Windfalls, Routine Profits & Sports: Reserve high positive polarity (+40 to +95) and high reach/permanence for verified, tangible discoveries, medical/public-health breakthroughs, ecological restoration, and structural legislative/infrastructure advances that demonstrably improve human life or universal knowledge. Keep commercial art/collectible auctions (e.g. a Monet painting or vintage Pokémon cards selling for millions), individual lottery/attic windfalls, single-company quarterly profit surges, IPOs, and routine sports matches modest in polarity (+5 to +28) and bounded in reach/permanence (15 to 40) so they sit in the mild/mid range rather than rivaling scientific or societal breakthroughs.
+   - Epistemic Actuality (Completed Milestone vs. Anticipatory Preview, Speculative Question, or Explainer): Score strictly what has ALREADY been empirically discovered, proven, launched, or enacted. When a major physical mission, legislative reform, or clinical trial has concretely succeeded or launched (e.g. a spacecraft successfully launching to Mars's moons or a legislature enacting a national workweek reform), score it as a verified tangible milestone (polarity +32 to +65, reach 60 to 85). Conversely, when an article is merely an unexecuted preview ("due to launch", "poised to find out"), an open question ("Could X solve Y?"), or an educational explainer, keep "polarity" and "permanence" modest (0 to +20) and assign speculative hype to "framing".
 
 2. "reach" (integer 0 to 100 — Logarithmic Scope of Direct Real-World Impact):
    Measure the proportional breadth of the population, societal system, or universal knowledge domain directly impacted by the verified event along a continuous logarithmic scale from an isolated individual, 1–2 person medical/accident case, or single micro-location at the low end up to humanity at large, planetary ecosystems, or verified scientific/natural-history discoveries at the high end. Measure the population or domain directly affected by what has concretely occurred, not hypothetical future possibilities or the media audience reading about it.
@@ -1277,7 +1278,12 @@ ${promptLines}
 
 Return JSON array in format:
 [
-  { "story": "Topic Title", "summary": "1-2 sentence detail-packed summary with exact named actors, institutions, venues, figures, and mechanisms (no meta-coverage filler).", "ids": [0, 4, 12] }
+  {
+    "story": "Topic Title",
+    "summary": "1-2 sentence detail-packed summary with exact named actors, institutions, venues, figures, and mechanisms (no meta-coverage filler).",
+    "primaryLocation": { "name": "Specific Venue/City, City/Region", "region": "State/Province, Country", "countryIso": "2-letter lowercase ISO code (e.g. 'us', 'gb', 'fr', 'ua', 'cn')", "lat": 51.5074, "lon": -0.1278, "zoom": 10 },
+    "ids": [0, 4, 12]
+  }
 ]`;
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -1563,11 +1569,16 @@ Return JSON array in format:
 
             const isUrlTitleMatch = sharedCount >= 2 || (sharedCount >= 1 && ((prev.coverage.length <= 2 && matchingArticles.length <= 2) || sharedTitleStemCount >= 1));
             const isHighSpecificityStemMatch = sharedCount >= 1 && sharedTitleStemCount >= 2 && sharedAllStemCount >= 4;
-            // Guard 2 (Zero-URL Specific-Entity Continuity Gate): Merge small follow-up clusters in the same ongoing campaign
-            // when they share >=1 specific non-theatre headline stem and >=3 specific non-theatre summary/coverage stems
-            const isZeroUrlCampaignContinuity = sharedCount === 0 && matchingArticles.length <= 4 && sharedSpecTitleCount >= 1 && sharedSpecAllCount >= 3;
+            const hasCountryConflict = hasDisjointSovereignCountryConflict(
+              `${prev.story || ''} ${prev.summary || ''}`,
+              `${cl.story || ''} ${cl.summary || ''}`,
+              prev.story || '',
+              cl.story || ''
+            );
 
-            if (isUrlTitleMatch || isHighSpecificityStemMatch || isZeroUrlCampaignContinuity) {
+            // Never deterministically hijack a previous cluster when sharedCount === 0 (zero shared URLs/titles);
+            // zero-URL duplicate-incident merges are evaluated by the LLM in consolidateEvolvingClusters (Job 1).
+            if (!hasCountryConflict && (isUrlTitleMatch || isHighSpecificityStemMatch)) {
               const candidateScore = sharedCount * 100 + sharedTitleStemCount * 25 + sharedAllStemCount * 5 + ((prev.version || 1) * 10) + (prev.coverage.length || 0);
               if (candidateScore > bestPrevScore) {
                 bestPrevScore = candidateScore;
@@ -1853,7 +1864,23 @@ Return JSON array in format:
           ...(prevLastEvaluatedCoverageMs ? { lastEvaluatedCoverageMs: prevLastEvaluatedCoverageMs } : {}),
           ...(prevLateralConnections ? { lateralConnections: prevLateralConnections } : {}),
           ...(prevSummarySynthesizedSig ? { summarySynthesizedSig: prevSummarySynthesizedSig } : {}),
-          ...(prevPrimaryLocation ? { primaryLocation: prevPrimaryLocation } : {}),
+          ...((prevPrimaryLocation || (cl.primaryLocation && typeof cl.primaryLocation.lat === 'number' && typeof cl.primaryLocation.lon === 'number' && cl.primaryLocation.name ? {
+            name: String(cl.primaryLocation.name).trim(),
+            region: String(cl.primaryLocation.region || '').trim(),
+            ...(typeof cl.primaryLocation.countryIso === 'string' && cl.primaryLocation.countryIso.trim() ? { countryIso: cl.primaryLocation.countryIso.trim().toLowerCase() } : {}),
+            lat: Number(cl.primaryLocation.lat),
+            lon: Number(cl.primaryLocation.lon),
+            lng: Number(cl.primaryLocation.lon),
+            zoom: typeof cl.primaryLocation.zoom === 'number' ? cl.primaryLocation.zoom : 10
+          } : null)) ? { primaryLocation: prevPrimaryLocation || {
+            name: String(cl.primaryLocation.name).trim(),
+            region: String(cl.primaryLocation.region || '').trim(),
+            ...(typeof cl.primaryLocation.countryIso === 'string' && cl.primaryLocation.countryIso.trim() ? { countryIso: cl.primaryLocation.countryIso.trim().toLowerCase() } : {}),
+            lat: Number(cl.primaryLocation.lat),
+            lon: Number(cl.primaryLocation.lon),
+            lng: Number(cl.primaryLocation.lon),
+            zoom: typeof cl.primaryLocation.zoom === 'number' ? cl.primaryLocation.zoom : 10
+          } } : {}),
           ...(pendingUpdate ? { _pendingUpdate: pendingUpdate } : {}),
           averageSentiment: avgScore,
           sentimentSpread: spreadRange,
@@ -1988,8 +2015,11 @@ Return JSON array in format:
       const maxMs = times.length ? Math.max(...times) : 0;
       const clTitleArr = extractCoherenceStems(cl.story || '');
       const clAllStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''}`));
+      // Corpus IDF entity gate: only treat stems appearing in <= ~1.5% of the 48h article corpus (maxTitleStemDf)
+      // as specific entity anchors, so common verbs/nouns never act as entity anchors.
+      const entityDfCap = Math.max(18, Math.min(48, maxTitleStemDf));
       const clEntityStems = clTitleArr
-        .filter(s => !GENERIC_PREDICATE_OR_ROLE_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= 180)
+        .filter(s => !GENERIC_PREDICATE_OR_ROLE_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= entityDfCap)
         .sort((a, b) => (stemDocFreq.get(a) || 999) - (stemDocFreq.get(b) || 999));
       const peerStems = cov.map(peer => ({
         titleStems: new Set(extractCoherenceStems(peer.title || '')),
@@ -2007,6 +2037,12 @@ Return JSON array in format:
         if (cov.some(c => c.sourceId === art.sourceId)) continue;
         if (cm.minMs > 0 && (art.pubMs < cm.minMs - 72 * 3600 * 1000 || art.pubMs > cm.maxMs + 72 * 3600 * 1000)) continue;
         if (!art.titleStems.has(cm.clEntityStems[0])) continue;
+        if (hasDisjointSovereignCountryConflict(
+          `${cm.cl.story || ''} ${cm.cl.summary || ''}`,
+          `${art.title || ''} ${art.description || ''}`,
+          cm.cl.story || '',
+          art.title || ''
+        )) continue;
         if (cm.clEntityStems.length >= 2 && !art.allStems.has(cm.clEntityStems[1])) continue;
         const matchedEntitiesInTitle = cm.clEntityStems.filter(s => art.titleStems.has(s));
         const matchedEntitiesInAll = cm.clEntityStems.filter(s => art.allStems.has(s));
@@ -2309,13 +2345,16 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     const sampleOutlets = (c.coverage || []).slice(0, 4).map(a => a.sourceId).join(',');
     const cStoryStems = new Set(extractCoherenceStems(c.story || ''));
     const covList = c.coverage || [];
-    const alignedSample = [...covList].sort((a, b) => {
+    const pendingRawLines = Array.isArray(c._pendingUpdate?.addedHeadlines) ? c._pendingUpdate.addedHeadlines : [];
+    const baselineCov = covList.filter(a => !pendingRawLines.some(line => a.title && line.includes(a.title)));
+    const samplePool = baselineCov.length >= 2 ? baselineCov : covList;
+    const alignedSample = [...samplePool].sort((a, b) => {
       const aH = extractCoherenceStems(a.title || '').filter(s => cStoryStems.has(s)).length;
       const bH = extractCoherenceStems(b.title || '').filter(s => cStoryStems.has(s)).length;
       return bH - aH;
     });
     const pickedSamples = [];
-    for (const item of [covList[0], ...alignedSample.slice(0, 3), ...covList.slice(0, 3)].filter(Boolean)) {
+    for (const item of [samplePool[0], ...alignedSample.slice(0, 3), ...samplePool.slice(0, 3)].filter(Boolean)) {
       if (pickedSamples.length < 3 && !pickedSamples.includes(item)) pickedSamples.push(item);
     }
     const sampleHeadlines = pickedSamples.map(a => `${a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 140).trim()})` : ''}`).join(' | ');
@@ -2366,10 +2405,12 @@ Every news story has a current State Envelope defined by:
   (B) Institutional / Legal / Operational Regime (what formal powers, legal statuses, or operational timelines are in force),
   (C) Causal Phase & Outcome Direction (whether the situation is in an active/deliberative phase, escalating, reversing, or decisively resolved).
 
-STEP 0 — MANDATORY BASELINE-SUBTRACTION GATE (Preventing Syndication Echoes):
-Before classifying ANY update in Job 2, compare the facts in [CANDIDATE IN-PLACE UPDATE] against the facts ALREADY stated in the cluster's existing headline, summary, and [PRIOR RECORDED HISTORY]:
-  • An action, order, ruling, verdict, or casualty tally in [CANDIDATE IN-PLACE UPDATE] only counts as a new development if it is NOT ALREADY stated in the cluster's existing summary!
-  • If a newly arriving outlet (e.g. a late regional or international syndicate) reports a government ban, court conviction, hospital discharge, or fatality count that is ALREADY described in the cluster's current summary, it is 100% syndication catch-up ("none") — NEVER trigger a "material_shift" or a "clarification" ("Outlet X confirms...") for a milestone the cluster summary already states!
+STEP 0 — MANDATORY BASELINE-SUBTRACTION & EVENT-TIME vs. PUBLICATION-TIME GATE (Preventing Syndication & Currency Echoes):
+Before classifying ANY update in Job 2, distinguish between WHEN AN ARTICLE WAS PUBLISHED vs. WHETHER A NEW REAL-WORLD EVENT OCCURRED AFTER THE INITIAL BREAK:
+  • An action, order, ruling, verdict, or casualty tally in [CANDIDATE IN-PLACE UPDATE] only counts as a new development if a new chronological action or official revision occurred in the real world AFTER the baseline event already stated in the cluster's existing headline, summary, and [PRIMARY HEADLINES]!
+  • If a newly arriving outlet (e.g. a late regional or international syndicate in another timezone) reports a government ban, court conviction, hospital discharge, or fatality count that is ALREADY described in the cluster's current summary, it is 100% syndication catch-up ("none") — NEVER trigger a "material_shift" or a "clarification" ("Outlet X confirms...") for a milestone the cluster summary already states!
+  • FIXED ONE-TIME RULING/TRANSACTION FIGURES vs. EVOLVING CUMULATIVE TALLIES: Distinguish between cumulative counts that genuinely grow over time (e.g. casualty tolls, arrests, flight cancellations) versus a fixed one-time court fine, verdict amount, or acquisition price. When [PRIMARY HEADLINES] establish a consensus figure for a one-time ruling/deal (e.g. "$25 billion" USD across US/global outlets) and a single international outlet reports that exact same one-time ruling converted into its local currency (e.g. "$35 billion" AUD in an Australian outlet or "€22.2bn" in a European outlet), NO new fine or ruling occurred — that is a local-currency expression of the original event ("none"), NEVER a "material_shift" or headline figure replacement!
+  • DIGEST / MARKET-WRAP BUNDLING: If a candidate dispatch is a broader market wrap or digest that mentions the cluster's topic alongside unrelated market indices or other companies' earnings (e.g. "notes Wall Street climb and forthcoming earnings alongside..."), ignore the unrelated digest items completely ("none").
 
 When evaluating what remains AFTER subtracting the existing summary baseline, distinguish between THREE states:
 1. "none" (Same-Event Syndication / Static Background Color — Omit):
@@ -2528,21 +2569,19 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         if (sharedU < 3 && (sharedU < 2 || (sharedU / minU) < 0.35)) return false;
         lateralPairKeys.delete(pairKey);
       }
-      // Deterministic stem-overlap guard: reject any LLM index slip or broad-country over-merge
-      // where merged clusters do not share at least 1 specific title stem (excluding broad geopolitical actors)
-      const broadMergeGeoStems = new Set([
-        'saudi', 'arabia', 'houthi', 'yemen', 'iran', 'israel', 'gaza', 'ukrain', 'russia',
-        'china', 'chines', 'trump', 'biden', 'ameri', 'europ', 'britain', 'british', 'attack'
-      ]);
+      // Corpus IDF specificity guard: reject any LLM index slip or broad-theatre over-merge
+      // where merged clusters do not share at least 1 low-document-frequency specific stem (<= 4% of active clusters)
+      const maxSpecificMergeClusterDf = Math.max(6, Math.min(16, Math.round(meta.length * 0.04)));
+      const isBroadCorpusStem = (s) => (clusterStemFreq.get(s) || 0) > maxSpecificMergeClusterDf;
       const metaA = meta[idxs[0]];
       const metaB = meta[idxs[1]];
       if (metaA && metaB) {
         const sharedTitle = [...metaA.titleStems].filter(s => metaB.titleStems.has(s));
-        const sharedSpecificTitle = sharedTitle.filter(s => !broadMergeGeoStems.has(s));
+        const sharedSpecificTitle = sharedTitle.filter(s => !isBroadCorpusStem(s));
         const sharedAll = [...metaA.allStems].filter(s => metaB.allStems.has(s));
-        const sharedSpecificAll = sharedAll.filter(s => !broadMergeGeoStems.has(s));
+        const sharedSpecificAll = sharedAll.filter(s => !isBroadCorpusStem(s));
         if ((sharedTitle.length < 1 && sharedAll.length < 2) || (sharedSpecificTitle.length < 1 && sharedSpecificAll.length < 2)) {
-          console.warn(`[Clusters] Rejected low-specificity/broad-geo merge between [${idxs[0]}] "${clusters[idxs[0]]?.story}" and [${idxs[1]}] "${clusters[idxs[1]]?.story}"`);
+          console.warn(`[Clusters] Rejected low-IDF/broad-corpus merge between [${idxs[0]}] "${clusters[idxs[0]]?.story}" and [${idxs[1]}] "${clusters[idxs[1]]?.story}"`);
           return false;
         }
       }
@@ -2772,7 +2811,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           outletCount: afterSnapshot.outletCount,
           note: c.developmentNote
         });
-        c.evolutionHistory = hist.slice(-20);
+        c.evolutionHistory = hist.length > 20 ? [hist[0], ...hist.slice(-19)] : hist;
 
         auditLogEntries.push({
           timestamp: new Date().toISOString(),
@@ -2848,7 +2887,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           outletCount: afterSnapshot.outletCount,
           note: noteText || 'Factual details and figures clarified across incoming dispatches'
         });
-        c.evolutionHistory = hist.slice(-20);
+        c.evolutionHistory = hist.length > 20 ? [hist[0], ...hist.slice(-19)] : hist;
 
         auditLogEntries.push({
           timestamp: new Date().toISOString(),
@@ -3138,7 +3177,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         ...(nextDevNote ? { developmentNote: nextDevNote } : {}),
         ...(mergedGroupLateral.length > 0 ? { lateralConnections: mergedGroupLateral } : {}),
         evolvedFromIds: Array.from(evolvedIds),
-        evolutionHistory: hist.slice(-20),
+        evolutionHistory: hist.length > 20 ? [hist[0], ...hist.slice(-19)] : hist,
         seenArticleKeys: Array.from(mergedSeenKeys).slice(-120),
         averageSentiment: avgScore,
         sentimentSpread: spreadRange,
@@ -3303,6 +3342,7 @@ Return ONLY a valid JSON array matching this exact schema:
     "primaryLocation": {
       "name": "Specific Venue/City, City/Region (e.g. 'Nagqu, Tibet Autonomous Region' or 'Palace of Westminster, London')",
       "region": "State/Province, Country (MUST end with sovereign Country name)",
+      "countryIso": "2-letter lowercase ISO-3166-1 alpha-2 code for the sovereign host country (e.g. 'us', 'gb', 'fr', 'ua', 'cn', 'br')",
       "lat": 31.4769,
       "lon": 92.0519,
       "zoom": 9,
@@ -3369,6 +3409,7 @@ Return ONLY a valid JSON array matching this exact schema:
         c.primaryLocation = {
           name: String(rawLoc.name).trim(),
           region: String(rawLoc.region || '').trim(),
+          ...(typeof rawLoc.countryIso === 'string' && rawLoc.countryIso.trim() ? { countryIso: rawLoc.countryIso.trim().toLowerCase() } : (c.primaryLocation?.countryIso ? { countryIso: c.primaryLocation.countryIso } : {})),
           lat: Number(rawLoc.lat),
           lon: Number(rawLoc.lon),
           lng: Number(rawLoc.lon),

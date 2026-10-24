@@ -56,6 +56,57 @@ function isValidImage(url) {
   );
 }
 
+const CLDR_COUNTRY_ISO_MAP = (() => {
+  const map = new Map();
+  try {
+    const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    for (let i = 65; i <= 90; i++) {
+      for (let j = 65; j <= 90; j++) {
+        const code = String.fromCharCode(i) + String.fromCharCode(j);
+        try {
+          const name = regionNames.of(code);
+          if (name && name !== code) {
+            map.set(name.toLowerCase(), code.toLowerCase());
+            const stripped = name.toLowerCase().replace(/\s*\([^)]*\)\s*/g, '').replace(/\s+sar\s+china$/, '').trim();
+            if (stripped) map.set(stripped, code.toLowerCase());
+          }
+        } catch {}
+      }
+    }
+  } catch {}
+  const aliases = {
+    'usa': 'us', 'u.s.': 'us', 'u.s.a.': 'us', 'uk': 'gb', 'great britain': 'gb', 'england': 'gb', 'scotland': 'gb', 'wales': 'gb', 'northern ireland': 'gb',
+    'russia': 'ru', 'russian federation': 'ru', 'south korea': 'kr', 'north korea': 'kp', 'iran': 'ir', 'syria': 'sy', 'venezuela': 've', 'bolivia': 'bo',
+    'tanzania': 'tz', 'moldova': 'md', 'vietnam': 'vn', 'laos': 'la', 'taiwan': 'tw', 'palestine': 'ps', 'palestinian territories': 'ps', 'west bank': 'ps', 'gaza': 'ps',
+    'democratic republic of the congo': 'cd', 'dr congo': 'cd', 'drc': 'cd', 'republic of the congo': 'cg', 'ivory coast': 'ci', "cote d'ivoire": 'ci',
+    'czechia': 'cz', 'czech republic': 'cz', 'turkey': 'tr', 'türkiye': 'tr', 'vatican': 'va', 'vatican city': 'va', 'holy see': 'va', 'brunei': 'bn', 'eswatini': 'sz', 'cape verde': 'cv'
+  };
+  for (const [k, v] of Object.entries(aliases)) map.set(k.toLowerCase(), v);
+  return map;
+})();
+
+function ensurePrimaryLocationCountryIso(loc, story = '') {
+  if (!loc || typeof loc !== 'object') return loc;
+  if (loc.countryIso && /^[a-z]{2}$/.test(loc.countryIso)) return loc;
+  const locParts = [loc.region, loc.name].filter(Boolean).join(', ').split(/[\/,]/).map(s => s.trim().toLowerCase()).filter(Boolean);
+  for (let idx = locParts.length - 1; idx >= 0; idx--) {
+    const p = locParts[idx].replace(/^the\s+/, '');
+    if (CLDR_COUNTRY_ISO_MAP.has(p) || CLDR_COUNTRY_ISO_MAP.has(locParts[idx])) {
+      loc.countryIso = CLDR_COUNTRY_ISO_MAP.get(locParts[idx]) || CLDR_COUNTRY_ISO_MAP.get(p);
+      return loc;
+    }
+  }
+  const text = `${story || ''} ${loc.whyHere || ''}`.toLowerCase();
+  for (const [countryName, iso] of CLDR_COUNTRY_ISO_MAP.entries()) {
+    const escaped = countryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (countryName.length >= 4 && new RegExp(`\\b${escaped}\\b`, 'i').test(text)) {
+      loc.countryIso = iso;
+      return loc;
+    }
+  }
+  return loc;
+}
+
 function inferClusterTopic(cluster, sources) {
   const categoryCounts = {};
   for (const cov of (cluster.coverage || [])) {
@@ -661,6 +712,7 @@ function exportPublicJsonFeeds(fullPayload) {
     if (computedFirstSeenAt) cl.firstSeenAt = computedFirstSeenAt;
     if (computedLatestUpdateAt) cl.latestUpdateAt = computedLatestUpdateAt;
     if (bestImg) cl.imageUrl = bestImg;
+    if (cl.primaryLocation) cl.primaryLocation = ensurePrimaryLocationCountryIso(cl.primaryLocation, cl.story);
     cl.coverage = enrichedCov;
 
     return {
@@ -689,12 +741,56 @@ function exportPublicJsonFeeds(fullPayload) {
     };
   });
 
+  // Export top 60 unclustered high-signal 72h raw RSS scoops so remote/Netlify NewsApp can rescue early scoops without needing data/vibe-data.json
+  const clusteredLinksSet = new Set();
+  for (const c of enrichedClusters) {
+    for (const cov of (c.coverage || [])) {
+      if (cov?.link) clusteredLinksSet.add(cov.link);
+    }
+  }
+  const scoopCutoffMs = Date.now() - (72 * 3600 * 1000);
+  const rawScoopPool = [];
+  const seenScoopNorm = new Set();
+  for (const [srcId, srcObj] of Object.entries(sources)) {
+    for (const art of (srcObj.articles || [])) {
+      if (!art.title || !art.link || clusteredLinksSet.has(art.link)) continue;
+      const pubMs = Date.parse(art.pubDate || '') || 0;
+      if (!pubMs || pubMs < scoopCutoffMs) continue;
+      const f = art.factors;
+      if (!Array.isArray(f) || f.length < 4) continue;
+      const cat = (art.categoryGemini || art.category || 'world').toLowerCase();
+      if (['sports', 'entertainment', 'lifestyle'].includes(cat)) continue;
+      const eb = typeof art.eventBase === 'number' ? art.eventBase : (art.sentimentScore || 0);
+      if (f[1] >= 65 && f[2] >= 55 && (Math.abs(f[0]) >= 35 || Math.abs(eb) >= 0.35)) {
+        const normT = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
+        if (seenScoopNorm.has(normT)) continue;
+        seenScoopNorm.add(normT);
+        const weight = (f[1] * 0.45) + (f[2] * 0.45) + (Math.abs(f[0]) * 0.25);
+        rawScoopPool.push({
+          sourceId: srcId,
+          sourceName: srcObj.name || srcId,
+          title: art.title,
+          description: (art.description || '').slice(0, 180),
+          link: art.link,
+          pubDate: art.pubDate,
+          category: cat,
+          eventBase: eb,
+          factors: f,
+          weight: Math.round(weight * 10) / 10
+        });
+      }
+    }
+  }
+  rawScoopPool.sort((a, b) => b.weight - a.weight);
+  const rawScoops72h = rawScoopPool.slice(0, 60);
+
   const clustersPayload = {
     dataset: 'vibe-o-meter/clusters',
     lastUpdated: nowIso,
     lastClusteredAt: fullPayload.lastClusteredAt || nowIso,
     count: enrichedClusters.length,
-    clusters: enrichedClusters
+    clusters: enrichedClusters,
+    rawScoops72h
   };
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'clusters.json'), JSON.stringify(clustersPayload, null, 2), 'utf8');
 
@@ -842,10 +938,11 @@ function exportPublicJsonFeeds(fullPayload) {
   const articleClusterMap = new Map();
   const clusterTokenEntries = [];
   enrichedClusters.forEach(cl => {
-    if (cl.averageSentiment < 0.10) return;
+    if (cl.averageSentiment < 0.14) return;
     const titleTokens = new Set(tokenizeHeadline(cl.story));
     const allTokens = new Set(tokenizeHeadline(`${cl.story || ''} ${(cl.coverage || []).map(c => c.title || '').join(' ')}`));
-    clusterTokenEntries.push({ cl, titleTokens, allTokens });
+    const isCancerVaccineCl = /\b(cancer|melanoma)\b/i.test(cl.story || '') && /\bvaccine\b/i.test(cl.story || '');
+    clusterTokenEntries.push({ cl, titleTokens, allTokens, isCancerVaccineCl });
     (cl.coverage || []).forEach(cov => {
       const u = canonicalUrl(cov.link);
       const t = cleanHeadlineTitle(cov.title);
@@ -862,7 +959,12 @@ function exportPublicJsonFeeds(fullPayload) {
     for (const entry of clusterTokenEntries) {
       const sharedTitle = aTokens.filter(t => entry.titleTokens.has(t)).length;
       const sharedAll = aTokens.filter(t => entry.allTokens.has(t)).length;
-      if ((sharedTitle >= 2 && sharedAll >= 3) || (sharedAll >= 4 && sharedAll / aTokens.length >= 0.55)) {
+      const isCancerVaccineArt = entry.isCancerVaccineCl && /\b(cancer|melanoma)\b/i.test(art.title || '') && /\bvaccine\b/i.test(`${art.title || ''} ${art.description || ''}`);
+      if (
+        (sharedTitle >= 2 && sharedAll >= 3) ||
+        (sharedAll >= 4 && sharedAll / aTokens.length >= 0.55) ||
+        isCancerVaccineArt
+      ) {
         return entry.cl;
       }
     }
@@ -884,8 +986,23 @@ function exportPublicJsonFeeds(fullPayload) {
 
       const matchedCl = findClusterForArticle(art, cUrl, cTitle);
       const outletCount = matchedCl ? matchedCl.outletCount : 1;
-      const clusterBoost = outletCount > 1 ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : 0;
-      const significanceScore = Number(Math.min(1, score + clusterBoost).toFixed(3));
+      const clusterBoost = outletCount > 1 ? Math.min(0.22, 0.065 * Math.log2(outletCount)) : 0;
+      // Use cluster consensus (50% median + 50% mean of positive coverage) as base when attached to a multi-outlet cluster so 1 outlier score doesn't hijack significanceScore
+      let baseConsensusScore = score;
+      if (matchedCl && Array.isArray(matchedCl.coverage) && matchedCl.coverage.length >= 2) {
+        const posCov = matchedCl.coverage.map(c => c.sentiment).filter(s => typeof s === 'number' && s >= 0.15).sort((a, b) => a - b);
+        if (posCov.length >= 2) {
+          const mid = Math.floor(posCov.length / 2);
+          const med = posCov.length % 2 === 0 ? (posCov[mid - 1] + posCov[mid]) / 2 : posCov[mid];
+          const mean = posCov.reduce((a, b) => a + b, 0) / posCov.length;
+          baseConsensusScore = Number((0.50 * med + 0.50 * mean).toFixed(3));
+        }
+      }
+      const fac = Array.isArray(art.factors) ? art.factors : (matchedCl?.factors || null);
+      const reach = Array.isArray(fac) ? (fac[1] || 0) : 0;
+      const perm = Array.isArray(fac) ? (fac[2] || 0) : 0;
+      const tangibleMod = (reach >= 60 && perm >= 55) ? 0.05 : ((reach > 0 && reach <= 40 && perm <= 40) ? -0.05 : 0);
+      const significanceScore = Number(Math.min(1, baseConsensusScore + clusterBoost + tangibleMod).toFixed(3));
 
       goodStories7d.push({
         title: art.title,

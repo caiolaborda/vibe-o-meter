@@ -694,13 +694,14 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
   const feedItems = [];
   const clusters = state.sharedStoryClusters || (state.vibeData && state.vibeData.sharedStoryClusters) || [];
 
-  // 1. Group via AI-verified sharedStoryClusters (plus absorb late-arriving articles that match the cluster's tokens)
+  // 1. Group via AI-verified sharedStoryClusters (plus absorb late-arriving articles that match the cluster's headline tokens)
   clusters.forEach(cl => {
     const matched = [];
     const clTokens = new Set(normalizeSilverTokens(
       `${cl.story || ''} ${(cl.coverage || []).map(c => c.title || '').join(' ')}`
     ));
     const clTitleTokens = new Set(normalizeSilverTokens(cl.story || ''));
+    const isCancerVaccineCl = /\b(cancer|melanoma)\b/i.test(cl.story || '') && /\bvaccine\b/i.test(cl.story || '');
 
     uniqueArticles.forEach((a, idx) => {
       if (used.has(idx)) return;
@@ -720,9 +721,11 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
         const sharedWithTitle = aTokens.filter(t => clTitleTokens.has(t)).length;
         const sharedWithAll = aTokens.filter(t => clTokens.has(t)).length;
         const ratio = sharedWithAll / aTokens.length;
+        const isCancerVaccineArt = isCancerVaccineCl && /\b(cancer|melanoma)\b/i.test(a.title || '') && /\bvaccine\b/i.test(`${a.title || ''} ${a.description || ''}`);
         if (
           (sharedWithTitle >= 2 && (sharedWithTitle / clTitleTokens.size >= 0.5 || ratio >= 0.4 || sharedWithAll >= 3)) ||
-          (sharedWithAll >= 3 && ratio >= 0.55)
+          (sharedWithAll >= 3 && ratio >= 0.55) ||
+          isCancerVaccineArt
         ) {
           matched.push({ a, idx });
         }
@@ -732,24 +735,27 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
     const positiveClusterCov = (cl.coverage || []).filter(c => typeof c.sentiment === 'number' && c.sentiment >= 0.15);
     const allPosCount = new Set([...matched.map(m => m.a.sourceId), ...positiveClusterCov.map(c => c.sourceId)]).size;
 
-    // Group whenever 2+ positive outlets belong to this cluster and cluster average is >= 0.10
-    // (so borderline clusters like +0.14 avg with 6 positive outlets collapse into 1 card instead of spilling 4-6 separate cards!)
-    if (matched.length >= 1 && cl.averageSentiment >= 0.10 && allPosCount >= 2) {
+    // Group whenever 2+ positive outlets belong to this cluster and cluster average is >= 0.14
+    if (matched.length >= 1 && cl.averageSentiment >= 0.14 && allPosCount >= 2) {
       matched.forEach(m => used.add(m.idx));
-      const rawCov = [...matched.map(m => m.a)];
+      const rawCov = [];
+      // Prefer canonical cluster coverage dispatches first so an unclustered duplicate outlier from the same outlet doesn't hijack the outlet score
       positiveClusterCov.forEach(c => {
-        if (!rawCov.some(x => x.sourceId === c.sourceId)) {
-          const srcArticles = state.sources?.[c.sourceId]?.articles || [];
-          const fullArt = srcArticles.find(sa =>
-            (c.link && sa.link && canonicalUrl(sa.link) === canonicalUrl(c.link)) ||
-            (c.title && sa.title && cleanHeadlineTitle(sa.title) === cleanHeadlineTitle(c.title))
-          );
-          rawCov.push(fullArt ? {
-            ...fullArt,
-            sourceId: c.sourceId,
-            sourceName: c.sourceName || state.sources?.[c.sourceId]?.name || c.sourceId,
-            sentiment: typeof c.sentiment === 'number' ? c.sentiment : fullArt.sentiment
-          } : c);
+        const srcArticles = state.sources?.[c.sourceId]?.articles || [];
+        const fullArt = srcArticles.find(sa =>
+          (c.link && sa.link && canonicalUrl(sa.link) === canonicalUrl(c.link)) ||
+          (c.title && sa.title && cleanHeadlineTitle(sa.title) === cleanHeadlineTitle(c.title))
+        );
+        rawCov.push(fullArt ? {
+          ...fullArt,
+          sourceId: c.sourceId,
+          sourceName: c.sourceName || state.sources?.[c.sourceId]?.name || c.sourceId,
+          sentiment: typeof c.sentiment === 'number' ? c.sentiment : fullArt.sentiment
+        } : c);
+      });
+      matched.forEach(({ a }) => {
+        if (!rawCov.some(x => x.sourceId === a.sourceId)) {
+          rawCov.push(a);
         }
       });
       rawCov.sort((x, y) => y.sentiment - x.sentiment);
@@ -763,9 +769,13 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
       });
 
       if (dedupedCov.length >= 2) {
-        const avgPosScore = dedupedCov.reduce((s, x) => s + x.sentiment, 0) / dedupedCov.length;
+        const scores = dedupedCov.map(x => x.sentiment).sort((a, b) => a - b);
+        const meanScore = scores.reduce((s, x) => s + x, 0) / scores.length;
+        const mid = Math.floor(scores.length / 2);
+        const medianScore = scores.length % 2 === 0 ? (scores[mid - 1] + scores[mid]) / 2 : scores[mid];
         const maxScore = dedupedCov[0].sentiment;
-        const blendedScore = Number((0.70 * maxScore + 0.30 * avgPosScore).toFixed(2));
+        // True consensus score (50% median + 50% mean across covering outlets) so 1 high outlier doesn't turn a mid story into a top breakthrough
+        const blendedScore = Number((0.50 * medianScore + 0.50 * meanScore).toFixed(2));
         const leadArt = matched[0].a;
         feedItems.push({
           isCluster: true,
@@ -774,8 +784,9 @@ function groupSilverArticlesIntoFeedItems(uniqueArticles) {
           category: leadArt.category || 'world',
           pubDate: leadArt.pubDate,
           sentiment: blendedScore,
-          avgSentiment: Number(avgPosScore.toFixed(2)),
+          avgSentiment: Number(meanScore.toFixed(2)),
           maxSentiment: maxScore,
+          factors: cl.factors || leadArt.factors,
           leadArticle: rawCov.find(x => isValidEditorialImage(x.imageUrl)) || leadArt,
           articles: dedupedCov
         });
@@ -2629,14 +2640,18 @@ function renderSilverEdition() {
   function computeSilverItemRank(item) {
     const isMulti = item.isCluster && !item.isBorderlineCluster && item.articles?.length > 1;
     const outletCount = isMulti ? item.articles.length : 1;
-    const clusterBoost = isMulti ? Math.min(0.25, 0.075 * Math.log2(outletCount)) : 0;
+    const clusterBoost = isMulti ? Math.min(0.22, 0.065 * Math.log2(outletCount)) : 0;
+    const fac = item.factors || item.leadArticle?.factors;
+    const reach = Array.isArray(fac) ? (fac[1] || 0) : 0;
+    const perm = Array.isArray(fac) ? (fac[2] || 0) : 0;
+    const tangibleMod = (reach >= 60 && perm >= 55) ? 0.05 : ((reach > 0 && reach <= 40 && perm <= 40) ? -0.05 : 0);
     let recencyDecay = 0;
     if (activeMode === 'antidote' && item.pubDate) {
       const hoursAgo = Math.max(0, (nowRenderMs - new Date(item.pubDate).getTime()) / 3600000);
       const decayRate = isMulti ? 0.035 : 0.07;
       recencyDecay = hoursAgo > 24 ? ((hoursAgo - 24) / 24) * decayRate : 0;
     }
-    return item.sentiment + clusterBoost - recencyDecay - (isBackgroundSeriesOrMixedFeature(item) ? 0.22 : 0);
+    return item.sentiment + clusterBoost + tangibleMod - recencyDecay - (isBackgroundSeriesOrMixedFeature(item) ? 0.22 : 0);
   }
   feedItems.sort((a, b) => {
     const rankA = computeSilverItemRank(a);

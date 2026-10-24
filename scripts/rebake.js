@@ -21,15 +21,16 @@ function computeFourFactorScore(item) {
   let framingMod;
 
   if (pol >= 0) {
-    const polCurve = Math.pow(pol, 1.32);
-    const geoMag = Math.pow(Math.max(0.01, reach), 0.62) * Math.pow(Math.max(0.01, perm), 0.38);
-    const gPow = Math.pow(geoMag, 1.75);
-    const kPow = Math.pow(0.32, 1.75);
+    const polExp = (reach >= 0.55 && perm >= 0.50 && pol >= 0.20) ? 1.05 : 1.32;
+    const polCurve = Math.pow(pol, polExp);
+    const geoMag = Math.pow(Math.max(0.01, reach), 0.55) * Math.pow(Math.max(0.01, perm), 0.45);
+    const gPow = Math.pow(geoMag, 1.85);
+    const kPow = Math.pow(0.44, 1.85);
     const hill = gPow / (gPow + kPow);
-    const impactScale = Math.min(1, 0.12 * geoMag + 0.88 * hill);
-    eventBase = Number(Math.min(1, polCurve * impactScale * 1.12).toFixed(3));
-    const rawFramingMod = frame * (0.10 + 0.22 * reach);
-    const maxFraming = Math.abs(eventBase) * 0.35;
+    const impactScale = Math.min(1, 0.10 * geoMag + 0.90 * hill);
+    eventBase = Number(Math.min(1, polCurve * impactScale * 1.18).toFixed(3));
+    const rawFramingMod = frame * (0.08 + 0.20 * reach);
+    const maxFraming = Math.abs(eventBase) * 0.28;
     framingMod = Number(Math.max(-maxFraming, Math.min(maxFraming, rawFramingMod)).toFixed(3));
   } else {
     const geoMag = Math.pow(Math.max(0.01, reach), 0.78) * Math.pow(Math.max(0.01, perm), 0.22);
