@@ -492,9 +492,8 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   // Default to gemini-3.5-flash-lite first so all batches across the day use one consistent high-quota model (zero cross-model variance, no 20-RPD cap stalls)
   const modelsToTry = [
     'gemini-3.5-flash-lite',
-    'gemini-3.5-flash',
     'gemini-3.8-flash',
-    'gemini-2.5-flash'
+    'gemini-3.1-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   // Pre-tokenize recent 4-factor articles from the last 36 hours for verified same-incident calibration
@@ -1294,9 +1293,8 @@ Return JSON array in format:
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const modelsToTry = [
     'gemini-3.5-flash-lite',
-    'gemini-3.5-flash',
     'gemini-3.8-flash',
-    'gemini-2.5-flash'
+    'gemini-3.1-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   let clusters = null;
@@ -1614,6 +1612,7 @@ Return JSON array in format:
         let prevLateralConnections = null;
         let prevSummarySynthesizedSig = null;
         let prevPrimaryLocation = null;
+        let prevBriefing = null;
         let pendingUpdate = null;
 
         if (matchedPrev) {
@@ -1664,6 +1663,7 @@ Return JSON array in format:
           prevDevelopmentNote = prevStorySupported ? (matchedPrev.developmentNote || null) : null;
           prevSummarySynthesizedSig = prevStorySupported ? (matchedPrev.summarySynthesizedSig || null) : null;
           prevPrimaryLocation = prevStorySupported ? (matchedPrev.primaryLocation || null) : null;
+          prevBriefing = prevStorySupported ? (matchedPrev.briefing || null) : null;
 
           const mergedLat = [];
           const seenLatIds = new Set();
@@ -1869,6 +1869,7 @@ Return JSON array in format:
           ...(prevLastEvaluatedCoverageMs ? { lastEvaluatedCoverageMs: prevLastEvaluatedCoverageMs } : {}),
           ...(prevLateralConnections ? { lateralConnections: prevLateralConnections } : {}),
           ...(prevSummarySynthesizedSig ? { summarySynthesizedSig: prevSummarySynthesizedSig } : {}),
+          ...(prevBriefing ? { briefing: prevBriefing } : {}),
           ...((prevPrimaryLocation || (cl.primaryLocation && typeof cl.primaryLocation.lat === 'number' && typeof cl.primaryLocation.lon === 'number' && cl.primaryLocation.name ? {
             name: String(cl.primaryLocation.name).trim(),
             region: String(cl.primaryLocation.region || '').trim(),
@@ -3275,7 +3276,8 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
     if (!c || !Array.isArray(c.coverage) || c.coverage.length < 2) return;
     const targetSig = getClusterSummarySynthesisSignature(c);
     const hasPinpointLoc = Boolean(c.primaryLocation && typeof c.primaryLocation.lat === 'number' && typeof c.primaryLocation.lon === 'number' && c.primaryLocation.name);
-    if (!forceAll && c.summarySynthesizedSig === targetSig && hasPinpointLoc) return;
+    const hasBriefing = Boolean(c.briefing && c.briefing.whyItMatters && c.briefing.whatsNext);
+    if (!forceAll && c.summarySynthesizedSig === targetSig && hasPinpointLoc && hasBriefing) return;
 
     const newestMs = c.newestMs || Math.max(...c.coverage.map(a => new Date(a.pubDate).getTime() || 0), 0);
     const ageHours = newestMs > 0 ? Math.max(0, (nowMs - newestMs) / 3600000) : 999;
@@ -3297,7 +3299,7 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const activeTiers = getOrderedKeyTiers(apiKey);
-  const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+  const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
   let totalPolished = 0;
 
   console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length} newly formed/updated cluster(s)...`);
@@ -3334,6 +3336,7 @@ ${covLines}`;
 For each of the ${batch.length} news clusters below, synthesize:
 (A) Its definitive top-level "summary" (1–2 crisp, detail-packed sentences, ~35–60 words) from its Covering Dispatches and Recorded Wire Evolution Stages.
 (B) Its pinpoint "primaryLocation" representing the single most specific real-world origin epicenter / center of gravity where the story took place, using the full Covering Dispatches (not just the headline!).
+(C) Its 2-part analytical stakes "briefing" ("whyItMatters" & "whatsNext") calibrated to the story's true scale: for macro/policy/science events, explain the concrete causal mechanism (who wins, loses, pays, or has leverage shifted) and name the next concrete test/deadline/vote/ruling; for isolated local incidents, freak accidents, or human-interest stories, set "whyItMattersLabel": "Why It Resonated" and "whatsNextLabel": "Where Things Stand" and explain the grounded human context without inventing pompous bureaucratic or regulatory morals.
 
 STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
 1. INTEGRATED CHRONOLOGICAL JOURNEY + CONCRETE FLASHPOINT SPECIFICS:
@@ -3369,6 +3372,12 @@ Return ONLY a valid JSON array matching this exact schema:
       "lon": 92.0519,
       "zoom": 9,
       "whyHere": "1 short sentence explaining why the story is anchored at this exact location."
+    },
+    "briefing": {
+      "whyItMattersLabel": "Why It Matters | Why It Resonated | The Context",
+      "whyItMatters": "1-2 sharp, concrete sentences in plain journalistic English explaining the real-world stakes/mechanism or human context (zero cliches).",
+      "whatsNextLabel": "What's Next | The Aftermath | Where Things Stand",
+      "whatsNext": "1-2 concrete sentences naming the next specific test, deadline, vote, ruling, or grounded local follow-up."
     }
   }
 ]`;
@@ -3437,6 +3446,14 @@ Return ONLY a valid JSON array matching this exact schema:
           lng: Number(rawLoc.lon),
           zoom: typeof rawLoc.zoom === 'number' ? rawLoc.zoom : 10,
           whyHere: String(rawLoc.whyHere || '').trim()
+        };
+      }
+      if (entry.briefing && typeof entry.briefing === 'object' && entry.briefing.whyItMatters && entry.briefing.whatsNext) {
+        c.briefing = {
+          whyItMattersLabel: String(entry.briefing.whyItMattersLabel || 'Why It Matters').trim(),
+          whyItMatters: cleanSynthesizedClusterSummary(entry.briefing.whyItMatters),
+          whatsNextLabel: String(entry.briefing.whatsNextLabel || "What's Next").trim(),
+          whatsNext: cleanSynthesizedClusterSummary(entry.briefing.whatsNext)
         };
       }
       c.summarySynthesizedSig = getClusterSummarySynthesisSignature(c);
