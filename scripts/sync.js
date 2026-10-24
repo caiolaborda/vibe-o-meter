@@ -1033,7 +1033,7 @@ const GENERIC_DOMESTIC_BEAT_STEMS = new Set(extractCoherenceStems(
   'china india russia ukraine israel saudi arabia egypt haiti ecuador albania indonesia ireland'
 ));
 
-function hasDisjointSovereignCountryConflict(textA, textB, headA = '', headB = '') {
+function hasDisjointSovereignCountryConflict(textA, textB, headA = '', headB = '', stemDfMap = null, maxDf = 8) {
   const headCountriesA = detectSovereignCountries(headA || textA);
   if (headCountriesA.size === 0) return false;
   const allCountriesA = detectSovereignCountries(textA);
@@ -1041,8 +1041,9 @@ function hasDisjointSovereignCountryConflict(textA, textB, headA = '', headB = '
   if (allCountriesB.size === 0) return false;
   if ([...allCountriesA].some(c => allCountriesB.has(c))) return false;
   if ([...headCountriesA].some(c => allCountriesB.has(c))) return false;
-  const stemsA = new Set(extractCoherenceStems(headA || textA).filter(s => !GENERIC_DOMESTIC_BEAT_STEMS.has(s)));
-  const stemsB = new Set(extractCoherenceStems(`${headB || ''} ${textB || ''}`).filter(s => !GENERIC_DOMESTIC_BEAT_STEMS.has(s)));
+  const isRareSpecificStem = (s) => !GENERIC_DOMESTIC_BEAT_STEMS.has(s) && (!stemDfMap || (stemDfMap.get(s) || 0) <= maxDf);
+  const stemsA = new Set(extractCoherenceStems(headA || textA).filter(isRareSpecificStem));
+  const stemsB = new Set(extractCoherenceStems(`${headB || ''} ${textB || ''}`).filter(isRareSpecificStem));
   const sharedSpecific = [...stemsA].filter(s => stemsB.has(s));
   return sharedSpecific.length === 0;
 }
@@ -1378,16 +1379,17 @@ Return JSON array in format:
         'infla', 'septem', 'octobe', 'novemb', 'decemb', 'januar', 'februa', 'august', 'annual',
         'quarte', 'percen', 'rate', 'intere', 'price', 'pric', 'centra', 'tighte'
       ]);
+      const isSpecificCorpusStem = (s, maxDf = maxAllStemDf) => !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxDf;
       const directAnchorInIds = rawCandidates.find(m => m.isClusterAnchor && m.anchorCluster);
       const primaryStoryText = directAnchorInIds?.anchorCluster?.story || cl.story || '';
       const primaryHeadlineStems = extractCoherenceStems(primaryStoryText);
       const specificHeadlineStems = new Set(
-        primaryHeadlineStems.filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxTitleStemDf)
+        primaryHeadlineStems.filter(s => isSpecificCorpusStem(s, maxTitleStemDf))
       );
       const clusterAnchorStems = new Set(extractCoherenceStems(
         `${cl.story || ''} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.story || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`
       ));
-      const specificAnchorStems = new Set([...clusterAnchorStems].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
+      const specificAnchorStems = new Set([...clusterAnchorStems].filter(s => isSpecificCorpusStem(s, maxAllStemDf)));
       const rawMatching = rawCandidates.filter((art, idx) => {
         if (/\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel)\b/i.test(art.title || '')) {
           return false;
@@ -1406,7 +1408,9 @@ Return JSON array in format:
           `${primaryStoryText} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`,
           `${art.title || ''} ${art.description || ''}`,
           primaryStoryText,
-          art.title || ''
+          art.title || '',
+          stemDocFreq,
+          maxRareTitleStemDf
         )) {
           console.warn(`[Clusters] Dropped disjoint sovereign-country domestic tangent from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
           return false;
@@ -1489,8 +1493,8 @@ Return JSON array in format:
             // Verify that the surviving non-anchor articles share at least 1 coherent stem with this anchor cluster
             // (prevents a single leftover article after outlier-stripping from hijacking or dropping an unrelated EXISTING_CLUSTER anchor)
             const ancStems = new Set(extractCoherenceStems(`${ancCluster.story || ''} ${ancCluster.summary || ''} ${(ancCluster.coverage || []).slice(0, 5).map(c => c.title || '').join(' ')}`));
-            const ancSpecHeadStems = new Set(extractCoherenceStems(ancCluster.story || '').filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
-            const ancSpecAllStems = new Set([...ancStems].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
+            const ancSpecHeadStems = new Set(extractCoherenceStems(ancCluster.story || '').filter(s => isSpecificCorpusStem(s, maxTitleStemDf)));
+            const ancSpecAllStems = new Set([...ancStems].filter(s => isSpecificCorpusStem(s, maxAllStemDf)));
             const ancUrls = new Set((ancCluster.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean));
             const ancUrlHits = matchingArticles.filter(m => m.link && ancUrls.has(canonicalUrl(m.link))).length;
             const nonAnchorBagStems = new Set();
@@ -1513,7 +1517,9 @@ Return JSON array in format:
               `${ancCluster.story || ''} ${ancCluster.summary || ''}`,
               matchingArticles.map(m => `${m.title || ''} ${m.description || ''}`).join(' '),
               ancCluster.story || '',
-              cl.story || ''
+              cl.story || '',
+              stemDocFreq,
+              maxRareTitleStemDf
             );
             if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor) {
               console.warn(`[Clusters] Detached theatre/single-entity anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor})`);
@@ -1526,10 +1532,18 @@ Return JSON array in format:
               // lumped two different stories from the same geopolitical theatre into one candidate group.
               const prevUrlsSet = new Set((matchedPrev.coverage || []).map(c => c.link ? canonicalUrl(c.link) : '').filter(Boolean));
               const ancUrlsOverlap = (ancCluster.coverage || []).filter(c => c.link && prevUrlsSet.has(canonicalUrl(c.link))).length;
-              const prevSpecificTitleStems = extractCoherenceStems(matchedPrev.story || '').filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s));
-              const ancSpecificTitleStems = new Set(extractCoherenceStems(ancCluster.story || '').filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s)));
+              const prevSpecificTitleStems = extractCoherenceStems(matchedPrev.story || '').filter(s => isSpecificCorpusStem(s, maxRareTitleStemDf));
+              const ancSpecificTitleStems = new Set(extractCoherenceStems(ancCluster.story || '').filter(s => isSpecificCorpusStem(s, maxRareTitleStemDf)));
               const sharedSpecificTitle = prevSpecificTitleStems.filter(s => ancSpecificTitleStems.has(s)).length;
-              if (ancUrlsOverlap < 2 && sharedSpecificTitle < 2) {
+              const hasSecondaryCountryConflict = hasDisjointSovereignCountryConflict(
+                `${matchedPrev.story || ''} ${matchedPrev.summary || ''}`,
+                `${ancCluster.story || ''} ${ancCluster.summary || ''}`,
+                matchedPrev.story || '',
+                ancCluster.story || '',
+                stemDocFreq,
+                maxRareTitleStemDf
+              );
+              if (hasSecondaryCountryConflict || (ancUrlsOverlap < 2 && sharedSpecificTitle < 2)) {
                 continue;
               }
               secondaryAnchors.push(ancCluster);
@@ -1567,16 +1581,18 @@ Return JSON array in format:
             const sharedTitleStemCount = [...new Set(prevTitleStems)].filter(s => newTitleStems.has(s)).length;
             const sharedAllStemCount = [...new Set(prevAllStems)].filter(s => newAllStems.has(s)).length;
 
-            const sharedSpecTitleCount = [...new Set(prevTitleStems)].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && newTitleStems.has(s)).length;
-            const sharedSpecAllCount = [...new Set(prevAllStems)].filter(s => !BROAD_THEATRE_ACTOR_STEMS.has(s) && newAllStems.has(s)).length;
+            const sharedSpecTitleCount = [...new Set(prevTitleStems)].filter(s => isSpecificCorpusStem(s, maxTitleStemDf) && newTitleStems.has(s)).length;
+            const sharedSpecAllCount = [...new Set(prevAllStems)].filter(s => isSpecificCorpusStem(s, maxAllStemDf) && newAllStems.has(s)).length;
 
-            const isUrlTitleMatch = sharedCount >= 2 || (sharedCount >= 1 && ((prev.coverage.length <= 2 && matchingArticles.length <= 2) || sharedTitleStemCount >= 1));
-            const isHighSpecificityStemMatch = sharedCount >= 1 && sharedTitleStemCount >= 2 && sharedAllStemCount >= 4;
+            const isUrlTitleMatch = sharedCount >= 2 || (sharedCount >= 1 && ((prev.coverage.length <= 2 && matchingArticles.length <= 2) || sharedSpecTitleCount >= 1));
+            const isHighSpecificityStemMatch = sharedCount >= 1 && sharedSpecTitleCount >= 2 && sharedSpecAllCount >= 3;
             const hasCountryConflict = hasDisjointSovereignCountryConflict(
               `${prev.story || ''} ${prev.summary || ''}`,
               `${cl.story || ''} ${cl.summary || ''}`,
               prev.story || '',
-              cl.story || ''
+              cl.story || '',
+              stemDocFreq,
+              maxRareTitleStemDf
             );
 
             // Never deterministically hijack a previous cluster when sharedCount === 0 (zero shared URLs/titles);
@@ -1587,10 +1603,13 @@ Return JSON array in format:
                 bestPrevScore = candidateScore;
                 matchedPrev = prev;
               }
-              if (prevSlug) evolvedIds.add(prevSlug);
-              if (Array.isArray(prev.evolvedFromIds)) {
-                prev.evolvedFromIds.forEach(id => evolvedIds.add(id));
-              }
+            }
+          }
+          if (matchedPrev) {
+            const winSlug = matchedPrev.id || String(matchedPrev.story || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            if (winSlug) evolvedIds.add(winSlug);
+            if (Array.isArray(matchedPrev.evolvedFromIds)) {
+              matchedPrev.evolvedFromIds.forEach(id => evolvedIds.add(id));
             }
           }
         }
@@ -2047,7 +2066,9 @@ Return JSON array in format:
           `${cm.cl.story || ''} ${cm.cl.summary || ''}`,
           `${art.title || ''} ${art.description || ''}`,
           cm.cl.story || '',
-          art.title || ''
+          art.title || '',
+          stemDocFreq,
+          maxRareTitleStemDf
         )) continue;
         if (cm.clEntityStems.length >= 2 && !art.allStems.has(cm.clEntityStems[1])) continue;
         const matchedEntitiesInTitle = cm.clEntityStems.filter(s => art.titleStems.has(s));
@@ -2594,8 +2615,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const clA = clusters[idxs[0]];
       const clB = clusters[idxs[1]];
       if (clA && clB && (
-        hasDisjointSovereignCountryConflict(`${clA.story || ''} ${clA.summary || ''}`, `${clB.story || ''} ${clB.summary || ''}`, clA.story || '', clB.story || '') ||
-        hasDisjointSovereignCountryConflict(`${clB.story || ''} ${clB.summary || ''}`, `${clA.story || ''} ${clA.summary || ''}`, clB.story || '', clA.story || '')
+        hasDisjointSovereignCountryConflict(`${clA.story || ''} ${clA.summary || ''}`, `${clB.story || ''} ${clB.summary || ''}`, clA.story || '', clB.story || '', clusterStemFreq, maxSpecificMergeClusterDf) ||
+        hasDisjointSovereignCountryConflict(`${clB.story || ''} ${clB.summary || ''}`, `${clA.story || ''} ${clA.summary || ''}`, clB.story || '', clA.story || '', clusterStemFreq, maxSpecificMergeClusterDf)
       )) {
         console.warn(`[Clusters] Rejected disjoint sovereign-country domestic merge between [${idxs[0]}] "${clA.story}" and [${idxs[1]}] "${clB.story}"`);
         return false;
@@ -2618,6 +2639,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
 
     let materialInPlaceCount = 0;
     let clarificationInPlaceCount = 0;
+    const maxSpecificDevClusterDf = Math.max(6, Math.min(16, Math.round(meta.length * 0.04)));
 
     for (const [idx, dev] of inPlaceByIdx.entries()) {
       const c = clusters[idx];
@@ -2655,20 +2677,23 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         "voter","senat","congre","parlia","citize","disrup","restric","impos","prompt","order","escalat","report","update",
         "infla","septem","octobe","novemb","decemb","januar","februa","august","annual","quarte","percen","rate","intere","price","pric","centra","tighte"
       ]);
+      const isSpecificDevStem = (s) => !BROAD_DEV_STEMS.has(s) && (clusterStemFreq.get(s) || 0) <= maxSpecificDevClusterDf;
       if (hasDisjointSovereignCountryConflict(
         `${c.story || ''} ${c.summary || ''}`,
         `${noteText} ${(c._pendingUpdate?.addedHeadlines || []).join(' ')}`,
         c.story || '',
-        noteText
+        noteText,
+        clusterStemFreq,
+        maxSpecificDevClusterDf
       )) {
         console.warn(`[Clusters] Rejected disjoint sovereign-country domestic update on cluster [${idx}] "${c.story}": "${noteText}"`);
         continue;
       }
       const headStems = extractCoherenceStems(c.story || "");
-      const specificHeadStems = new Set(headStems.filter(s => !BROAD_DEV_STEMS.has(s)));
+      const specificHeadStems = new Set(headStems.filter(isSpecificDevStem));
       const anchorHeadStems = specificHeadStems.size > 0 ? specificHeadStems : new Set(headStems);
       const allClusterStems = new Set(extractCoherenceStems(`${c.story || ""} ${c.summary || ""}`));
-      const specificSumStems = new Set([...allClusterStems].filter(s => !BROAD_DEV_STEMS.has(s)));
+      const specificSumStems = new Set([...allClusterStems].filter(isSpecificDevStem));
       const noteOnlyStems = extractCoherenceStems(noteText);
       if (noteOnlyStems.length > 0 && anchorHeadStems.size > 0) {
         const matchesHead = noteOnlyStems.some(s => anchorHeadStems.has(s));

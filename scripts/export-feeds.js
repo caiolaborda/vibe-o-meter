@@ -202,36 +202,6 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
   }
 
-  // 2. Suppress any ancestor cluster whose ID is listed in another active cluster's evolvedFromIds
-  const supersededToSuccessor = new Map();
-  for (const [id, cl] of byId.entries()) {
-    if (Array.isArray(cl.evolvedFromIds)) {
-      for (const oldId of cl.evolvedFromIds) {
-        if (oldId && oldId !== id && byId.has(oldId)) {
-          supersededToSuccessor.set(oldId, id);
-        }
-      }
-    }
-  }
-  for (const [oldId, succId] of supersededToSuccessor.entries()) {
-    const oldCl = byId.get(oldId);
-    const succCl = byId.get(succId);
-    if (oldCl && succCl) {
-      const seenOutlets = new Set((succCl.coverage || []).map(a => a.sourceId));
-      for (const art of (oldCl.coverage || [])) {
-        if (art?.sourceId && !seenOutlets.has(art.sourceId)) {
-          seenOutlets.add(art.sourceId);
-          succCl.coverage.push(art);
-        }
-      }
-      succCl.coverage.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
-      succCl.outletCount = succCl.coverage.length;
-      byId.delete(oldId);
-    }
-  }
-
-  // 2b. Deterministic Shared-URL (>= 3 URLs or >= 35% overlap), Typo-Tolerant Near-Duplicate,
-  //     AND Law 1A-bis (Dual-Facet Market/Substantive & Umbrella-vs-Specific Twin Consolidation)
   const STOP_DEDUPE = new Set([
     "the","and","for","that","with","from","this","are","was","were","have","has","had","not","but","what","all",
     "when","can","said","will","other","about","out","into","more","over","new","after","amid","says","say",
@@ -264,6 +234,97 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       .map(stemWord)
       .filter(w => w.length >= 3 && !stopSet.has(w))
   );
+
+  // Dynamic Corpus-IDF across active clusters so evolvedFromIds validation never relies on hardcoded topic lists
+  const clusterStemDf = new Map();
+  for (const cl of byId.values()) {
+    const clStems = getStems(`${cl.story || ""} ${cl.summary || ""}`);
+    for (const s of clStems) {
+      clusterStemDf.set(s, (clusterStemDf.get(s) || 0) + 1);
+    }
+  }
+  const maxRareClusterDf = Math.max(3, Math.min(6, Math.round(byId.size * 0.025)));
+
+  const extractTextCountryIsos = (txt) => {
+    const isos = new Set();
+    const lower = String(txt || "").toLowerCase();
+    for (const [countryName, iso] of CLDR_COUNTRY_ISO_MAP.entries()) {
+      if (countryName.length >= 4 && lower.includes(countryName)) {
+        const escaped = countryName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        if (new RegExp(`\\b${escaped}\\b`, "i").test(lower)) isos.add(iso);
+      }
+    }
+    if (/\b(u\.?k\.?(?!\w)|britain|british|england|scotland|wales|welsh)\b/i.test(lower)) isos.add("gb");
+    if (/\b(u\.?s\.?(?:a\.?)?(?!\w)|america|american)\b/i.test(lower)) isos.add("us");
+    if (/\b(canad(?:a|ian)|nova scotia|quebec|ontario|alberta)\b/i.test(lower)) isos.add("ca");
+    return isos;
+  };
+
+  // 2. Suppress any verified ancestor cluster whose ID is listed in another active cluster's evolvedFromIds
+  //    (First-Principles Corpus-IDF Gate: strips unrelated/polluted evolvedFromIds that share 0 URLs and 0 low-DF corpus stems)
+  const supersededToSuccessor = new Map();
+  for (const [id, cl] of byId.entries()) {
+    if (Array.isArray(cl.evolvedFromIds)) {
+      const clUrls = new Set((cl.coverage || []).map(c => canonicalUrl(c.link)).filter(Boolean));
+      const clBaseText = `${cl.story || ""} ${cl.summary || ""} ${cl.evolutionHistory?.[0]?.headline || ""} ${cl.evolutionHistory?.[0]?.summary || ""}`;
+      const clStems = getStems(clBaseText);
+      const clHeadIsos = extractTextCountryIsos(cl.story || "");
+      const clAllIsos = extractTextCountryIsos(clBaseText);
+
+      cl.evolvedFromIds = cl.evolvedFromIds.filter(oldId => {
+        if (!oldId || oldId === id) return false;
+        const oldCl = byId.get(oldId);
+        let sharedUrls = 0;
+        if (oldCl && Array.isArray(oldCl.coverage)) {
+          for (const c of oldCl.coverage) {
+            const u = canonicalUrl(c.link);
+            if (u && clUrls.has(u)) sharedUrls++;
+          }
+        }
+        if (sharedUrls >= 1) return true;
+
+        const oldPhrase = oldCl ? `${oldCl.story || ""} ${oldCl.summary || ""}` : String(oldId).replace(/-/g, " ");
+        const oldHeadPhrase = oldCl ? (oldCl.story || "") : String(oldId).replace(/-/g, " ");
+        const oldIsos = extractTextCountryIsos(oldHeadPhrase);
+        const hasDisjointCountry = clHeadIsos.size > 0 && oldIsos.size > 0 &&
+          ![...oldIsos].some(iso => clAllIsos.has(iso) || clHeadIsos.has(iso));
+
+        const oldStems = getStems(oldHeadPhrase);
+        const sharedStems = [...oldStems].filter(s => clStems.has(s));
+        const sharedRareStems = sharedStems.filter(s => !GENERIC_EVENT_STEMS.has(s) && (clusterStemDf.get(s) || 0) <= maxRareClusterDf);
+
+        if (hasDisjointCountry && sharedRareStems.length === 0) return false;
+        if (sharedRareStems.length === 0 && sharedStems.length < 2) return false;
+        if (oldCl && sharedRareStems.length === 0) return false;
+        return true;
+      });
+
+      for (const oldId of cl.evolvedFromIds) {
+        if (oldId && oldId !== id && byId.has(oldId)) {
+          supersededToSuccessor.set(oldId, id);
+        }
+      }
+    }
+  }
+  for (const [oldId, succId] of supersededToSuccessor.entries()) {
+    const oldCl = byId.get(oldId);
+    const succCl = byId.get(succId);
+    if (oldCl && succCl) {
+      const seenOutlets = new Set((succCl.coverage || []).map(a => a.sourceId));
+      for (const art of (oldCl.coverage || [])) {
+        if (art?.sourceId && !seenOutlets.has(art.sourceId)) {
+          seenOutlets.add(art.sourceId);
+          succCl.coverage.push(art);
+        }
+      }
+      succCl.coverage.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+      succCl.outletCount = succCl.coverage.length;
+      byId.delete(oldId);
+    }
+  }
+
+  // 2b. Deterministic Shared-URL (>= 3 URLs or >= 35% overlap), Typo-Tolerant Near-Duplicate,
+  //     AND Law 1A-bis (Dual-Facet Market/Substantive & Umbrella-vs-Specific Twin Consolidation)
   const editDist1 = (a, b) => {
     if (a === b) return true;
     if (Math.abs(a.length - b.length) > 1 || a.length < 5 || b.length < 5) return false;
