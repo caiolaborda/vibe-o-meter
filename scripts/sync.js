@@ -3276,7 +3276,13 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
     if (!c || !Array.isArray(c.coverage) || c.coverage.length < 2) return;
     const targetSig = getClusterSummarySynthesisSignature(c);
     const hasPinpointLoc = Boolean(c.primaryLocation && typeof c.primaryLocation.lat === 'number' && typeof c.primaryLocation.lon === 'number' && c.primaryLocation.name);
-    const hasBriefing = Boolean(c.briefing && c.briefing.whyItMatters && c.briefing.whatsNext);
+    const hasBriefing = Boolean(
+      c.briefing &&
+      c.briefing.whyItMatters &&
+      c.briefing.whyItMatters.length >= 210 &&
+      c.briefing.whatsNext &&
+      c.briefing.whatsNext.length >= 130
+    );
     if (!forceAll && c.summarySynthesizedSig === targetSig && hasPinpointLoc && hasBriefing) return;
 
     const newestMs = c.newestMs || Math.max(...c.coverage.map(a => new Date(a.pubDate).getTime() || 0), 0);
@@ -3293,13 +3299,13 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
 
   const maxClustersThisRun = (forceAll || process.argv.includes('--polish-summaries'))
     ? candidates.length
-    : Math.min(candidates.length, 36);
+    : Math.min(candidates.length, 24);
   const selected = candidates.slice(0, maxClustersThisRun);
-  const batchSize = 12;
+  const batchSize = 6;
 
   const { GoogleGenerativeAI } = require('@google/generative-ai');
   const activeTiers = getOrderedKeyTiers(apiKey);
-  const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
+  const modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
   let totalPolished = 0;
 
   console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length} newly formed/updated cluster(s)...`);
@@ -3332,11 +3338,23 @@ Covering Dispatches (${Math.min(10, covSorted.length)} of ${covSorted.length} ou
 ${covLines}`;
     }).join('\n\n---\n\n');
 
-    const prompt = `You are a senior correspondent, analytical editor, and geographic intelligence editor writing for an intelligent, time-pressed reader (think Financial Times Lex and The Economist's briefings).
+    const prompt = `You are a senior correspondent, analytical editor, and geographic intelligence editor writing for an intelligent, time-pressed reader (think Matt Levine's Money Stuff, Financial Times Lex, and The Economist's briefings — sharp, insightful, concrete, and written in clear, natural, accessible journalistic English without dense academic jargon).
+Current Date: October 2026.
+
 For each of the ${batch.length} news clusters below, synthesize:
 (A) Its definitive top-level "summary" (1–2 crisp, detail-packed sentences, ~35–60 words) from its Covering Dispatches and Recorded Wire Evolution Stages.
 (B) Its pinpoint "primaryLocation" representing the single most specific real-world origin epicenter / center of gravity where the story took place, using the full Covering Dispatches (not just the headline!).
-(C) Its 2-part analytical stakes "briefing" ("whyItMatters" & "whatsNext") calibrated to the story's true scale: for macro/policy/science events, explain the concrete causal mechanism (who wins, loses, pays, or has leverage shifted) and name the next concrete test/deadline/vote/ruling; for isolated local incidents, freak accidents, or human-interest stories, set "whyItMattersLabel": "Why It Resonated" and "whatsNextLabel": "Where Things Stand" and explain the grounded human context without inventing pompous bureaucratic or regulatory morals.
+(C) Its 2-part analytical stakes "briefing" ("whyItMatters" & "whatsNext") calibrated to the story's true scale:
+    - If MACRO / POLICY / GEOPOLITICS / MARKETS / SCIENCE:
+      * Set "whyItMattersLabel": "Why It Matters" and "whatsNextLabel": "What's Next".
+      * "whyItMatters" (2–3 rich, substantive sentences, ~50–80 words):
+        - Sentence 1 (The Concrete Lever): Explain who actually wins, loses, pays, or has their leverage shifted right now — naming the specific real-world mechanism or lever (supply choke point, statutory threshold, balance-sheet hit, coalition math, constitutional/legal mechanism, or operational constraint) rather than restating the headline.
+        - Sentences 2–3 (The Deeper Baseline & Competing Incentives): Unpack the concrete historical/financial baseline and the non-obvious tension, trade-off, or split across competing actors, allies, or critics (why this move is happening now and what competing constraint each side is trapped by).
+      * "whatsNext" (2 concrete sentences, ~35–55 words):
+        - Sentence 1: Name the exact next test, deadline, parliamentary vote, court ruling, summit, or operational milestone.
+        - Sentence 2: Explain what tips the outcome — the specific bottleneck, threshold, or condition that determines whether the effort holds, stalls, or escalates.
+    - If ISOLATED LOCAL INCIDENT / FREAK ACCIDENT / HUMAN-INTEREST / CRIME:
+      * Set "whyItMattersLabel": "Why It Resonated" or "The Context", and "whatsNextLabel": "The Aftermath" or "Where Things Stand" (2–3 grounded sentences on the human/community reality and factual local follow-up, zero fake bureaucratic or regulatory morals).
 
 STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
 1. INTEGRATED CHRONOLOGICAL JOURNEY + CONCRETE FLASHPOINT SPECIFICS:
@@ -3344,12 +3362,13 @@ STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
    - Readers rely on this summary for the actual concrete details so they immediately know who, where, how much, and by what mechanism.
 2. STRICT NUMERICAL & FACTUAL PRESERVATION (NO RECENCY AMNESIA):
    - NEVER drop any concrete figure, casualty/arrest tally, dollar valuation, troop count, or multi-country/multi-city geographic scope present in the cluster's Headline, Current Draft Summary, Latest Development Note, or earlier Evolution Stages.
-3. TEMPORAL & ROLE HYGIENE (NEVER INJECT PRE-CUTOFF TITLES):
-   - Only attribute an active political, corporate, or institutional office/title to a person if that exact current title is explicitly stated in the Covering Dispatches below. Because offices, prime ministers, mayors, and ministers change over time, NEVER supply a person's former or pre-training-cutoff role from internal memory.
-4. BANNED CLICHÉS & ZERO META-COVERAGE FILLER:
+3. TEMPORAL & ROLE HYGIENE (OCTOBER 2026 — NEVER INJECT PRE-CUTOFF TITLES):
+   - Only attribute an active political, corporate, or institutional office/title to a person if that exact current title is explicitly stated in the Covering Dispatches below. Because offices, prime ministers, mayors, and ministers change over time, NEVER supply a person's former or pre-training-cutoff role from internal memory, and never refer to sitting 2026 administrations as "incoming".
+4. PLAIN JOURNALISTIC ENGLISH & BANNED CLICHÉS:
+   - Keep 100% of the analytical depth, concrete mechanisms, incentives, and historical baselines, but write in clear, natural, everyday journalistic English rather than dense academic or bureaucratic jargon.
    - NEVER open with a robotic "On [Weekday], [Date], ..." (weave timing naturally mid-sentence if helpful).
    - NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
-   - NEVER use stock AI transitions ("underscores how", "highlights the delicate interplay", "serves as a stark reminder", "all eyes now turn to").
+   - NEVER use stock AI transitions ("underscores how", "highlights the delicate interplay", "serves as a stark reminder", "all eyes now turn to", "remains to be seen").
 5. PINPOINT PRIMARY LOCATION FROM FULL COVERING DISPATCHES:
    - Inspect the Covering Dispatches for the exact city, prefecture, county, or specific venue/building where the event occurred. For example, if a headline says "Tibet Autonomous Region Hit by Magnitude-7.0 Earthquake" and the dispatches name "Nagqu", set "name": "Nagqu, Tibet Autonomous Region" (NEVER fall back to a national capital like "Beijing, China" or a vague province centroid when a specific city/prefecture/venue is named in the dispatches!).
    - Only include a specific venue prefix ("Specific Venue, City" in "name", e.g. "Musée du Louvre, Paris", "City Ground, Nottingham") when the event physically occurred at a famous landmark, stadium, museum, university, airport, or military base explicitly named in the Covering Dispatches. NEVER invent or prepend bureaucratic council, ministry, or agency names (never write "Devon Rural District Council, Devon" or "Department of Foreign Affairs, Canberra" — write "Devon, England" or "Canberra, Australia").
@@ -3375,9 +3394,9 @@ Return ONLY a valid JSON array matching this exact schema:
     },
     "briefing": {
       "whyItMattersLabel": "Why It Matters | Why It Resonated | The Context",
-      "whyItMatters": "1-2 sharp, concrete sentences in plain journalistic English explaining the real-world stakes/mechanism or human context (zero cliches).",
+      "whyItMatters": "2-3 rich, substantive sentences (~50-80 words) in clear journalistic English unpacking (1) the concrete causal lever/mechanism and (2) the deeper baseline, competing incentives, or structural trade-off across actors.",
       "whatsNextLabel": "What's Next | The Aftermath | Where Things Stand",
-      "whatsNext": "1-2 concrete sentences naming the next specific test, deadline, vote, ruling, or grounded local follow-up."
+      "whatsNext": "2 concrete sentences (~35-55 words) naming (1) the exact next test, deadline, vote, ruling, or milestone and (2) what specific bottleneck or condition tips the outcome."
     }
   }
 ]`;
@@ -3391,7 +3410,12 @@ Return ONLY a valid JSON array matching this exact schema:
           const genAI = new GoogleGenerativeAI(keyObj.key);
           const model = genAI.getGenerativeModel({
             model: modelName,
-            generationConfig: { temperature: 0.15, maxOutputTokens: 8192, responseMimeType: 'application/json' }
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 8192,
+              responseMimeType: 'application/json',
+              ...(modelName === 'gemini-3.8-flash' ? { thinkingConfig: { thinkingLevel: 'LOW' } } : {})
+            }
           });
           const resp = await Promise.race([
             model.generateContent(prompt),
