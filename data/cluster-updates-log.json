@@ -1,55 +1,5 @@
 [
   {
-    "timestamp": "2026-10-21T16:13:59.018Z",
-    "eventTimestamp": "2026-10-21T13:29:00.000Z",
-    "updateType": "clarification",
-    "source": "inPlaceClarification",
-    "before": {
-      "id": "amazon-deforestation-falls-to-record-low",
-      "version": 1,
-      "story": "Amazon Deforestation Falls to Record Low",
-      "summary": "Official satellite monitoring data from Brazil's space research agency INPE revealed that Amazon rainforest deforestation fell to its lowest recorded level in four decades ahead of the presidential runoff, with economic studies estimating macroeconomic benefits of up to R$ 1.16 trillion globally.",
-      "outletCount": 8
-    },
-    "after": {
-      "id": "amazon-deforestation-falls-to-record-low",
-      "version": 1,
-      "story": "Amazon Deforestation Falls to Record Low",
-      "summary": "Official satellite monitoring data from INPE revealed that Amazon rainforest deforestation fell to its lowest recorded level in four decades ahead of the presidential runoff—with global economic benefits estimated up to R$ 1.16 trillion—even as October recorded a 62% surge in fires.",
-      "outletCount": 8
-    },
-    "note": "MercoPress reports Amazon fires rising 62% in October despite record low overall deforestation.",
-    "addedHeadlines": [
-      "MercoPress: \"Amazon fires rise 62% in October as deforestation falls to a record low\""
-    ]
-  },
-  {
-    "timestamp": "2026-10-21T16:13:59.019Z",
-    "eventTimestamp": "2026-10-21T15:32:58.000Z",
-    "updateType": "clarification",
-    "source": "inPlaceClarification",
-    "before": {
-      "id": "comedian-russell-brand-faces-rape-trial",
-      "version": 1,
-      "story": "Comedian Russell Brand Faces Rape Trial",
-      "summary": "British actor and comedian Russell Brand appeared at Southwark Crown Court to face trial denying multiple counts of rape, sexual assault, and indecent assault stemming from historical allegations.",
-      "outletCount": 7
-    },
-    "after": {
-      "id": "comedian-russell-brand-faces-rape-trial",
-      "version": 1,
-      "story": "Comedian Russell Brand Faces Rape Trial",
-      "summary": "British actor and comedian Russell Brand appeared at Southwark Crown Court to face trial denying historical counts of rape and sexual assault, as jurors heard graphic testimony from a complainant alleging he treated her like an animal.",
-      "outletCount": 7
-    },
-    "note": "BBC and Guardian report testimony from a complainant stating Brand treated her like an animal after rape.",
-    "addedHeadlines": [
-      "The Guardian: \"Woman told Russell Brand he treated her ‘like an animal’, court hears\"",
-      "ABC News Australia: \"Russell Brand treated 21yo woman 'like an animal' after rape, court hears\"",
-      "BBC News: \"Woman told Russell Brand he 'treated her like an animal', court hears\""
-    ]
-  },
-  {
     "timestamp": "2026-10-21T16:13:59.019Z",
     "eventTimestamp": "2026-10-21T16:13:10.840Z",
     "updateType": "clarification",
@@ -6262,5 +6212,54 @@
       "outletCount": 24
     },
     "note": "Defense Minister Umerov confirms satellite connectivity is fully stabilized at 400 kph after SpaceX lifted restrictions."
+  },
+  {
+    "timestamp": "2026-10-24T17:35:16.360Z",
+    "eventTimestamp": "2026-10-24T17:21:42.000Z",
+    "updateType": "material_shift",
+    "source": "inPlaceDevelopment",
+    "before": {
+      "id": "israel-displaces-families-in-hebron-following-deadly-attack",
+      "version": 1,
+      "story": "Israel Displaces Families in Hebron Following Deadly Attack",
+      "summary": "Israeli forces blocked access to Hebron and displaced hundreds of Palestinian families following a checkpoint shooting attack that killed two Israeli soldiers, drawing sharp international condemnation and calls for restraint.",
+      "outletCount": 4
+    },
+    "after": {
+      "id": "israel-displaces-families-in-hebron-following-deadly-attack",
+      "version": 2,
+      "story": "Israel Displaces Families in Hebron Following Deadly Attack",
+      "summary": "Israeli forces blocked access to Hebron and displaced over 2,000 Palestinian families through home demolitions following a checkpoint shooting attack that killed two Israeli soldiers. Local officials reported the crackdown comes just days ahead of Israel's national elections, drawing sharp international condemnation.",
+      "outletCount": 4
+    },
+    "note": "Local officials confirm Israeli forces demolish Hebron homes ahead of upcoming elections.",
+    "addedHeadlines": [
+      "BBC News: \"Palestinian families displaced as Israeli forces demolish Hebron homes, local officials say\" (The crackdown follows the killing of two Israeli soldiers by two Palestinian gunmen on Friday - and comes just days ahead of Israel's election.)"
+    ]
+  },
+  {
+    "timestamp": "2026-10-24T17:35:16.361Z",
+    "eventTimestamp": "2026-10-24T17:21:42.000Z",
+    "updateType": "material_shift",
+    "source": "clusterMerge",
+    "mergedClusterIds": [
+      "israel-displaces-families-in-hebron-following-deadly-attack",
+      "israel-demolishes-buildings-and-closes-west-bank"
+    ],
+    "before": {
+      "id": "israel-demolishes-buildings-and-closes-west-bank",
+      "version": 2,
+      "story": "Israel Demolishes Buildings and Closes West Bank",
+      "summary": "Following a checkpoint shootout in Hebron that left two Israeli soldiers and two Palestinian gunmen dead and five Israelis wounded, Prime Minister Benjamin Netanyahu ordered a major West Bank closure and military offensive. Israeli forces escalated operations by beginning the demolition of local Palestinian buildings.",
+      "outletCount": 23
+    },
+    "after": {
+      "id": "israel-displaces-families-and-demolishes-hebron-buildings",
+      "version": 3,
+      "story": "Israel Displaces Families and Demolishes Hebron Buildings",
+      "summary": "Israeli forces blocked access to Hebron, displacing more than 2,000 Palestinian families and beginning building demolitions following a checkpoint shooting attack that killed two Israeli soldiers. The operation forms part of a wider West Bank offensive ordered by Prime Minister Benjamin Netanyahu, drawing sharp international condemnation and calls for restraint.",
+      "outletCount": 24
+    },
+    "note": "Israeli forces escalate Hebron crackdown, forcibly displacing over 2,000 residents and demolishing buildings."
   }
 ]
