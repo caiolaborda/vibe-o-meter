@@ -1244,9 +1244,15 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
     }
   }
 
+  // Sort matched unclustered dispatches newest-first so freshly corroborated 2-outlet leads across any region
+  // (APAC, LATAM, MEA, EU, NA) sit at the top of the prompt and cluster immediately instead of waiting behind older 48h items
+  const sortedMatchedUnclustered = [...matchedUnclusteredIndices]
+    .map(idx => rawUnclustered[idx])
+    .sort((a, b) => (b.pubMs || 0) - (a.pubMs || 0));
+
   const candidates = [
     ...[...matchedAnchorIndices].map(idx => activeClusterAnchors[idx]),
-    ...[...matchedUnclusteredIndices].map(idx => rawUnclustered[idx])
+    ...sortedMatchedUnclustered
   ];
 
   console.log(`[Clusters] Smart candidate pool built: ${matchedAnchorIndices.size} active/dormant cluster anchors + ${matchedUnclusteredIndices.size} unclustered dispatches (${candidates.length} total items from ${rawUnclustered.length} unclustered 48h articles).`);
