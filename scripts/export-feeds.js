@@ -587,7 +587,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     'today','told','took','total','toward','turn','under','until','updat','used','very','view','warn',
     'watch','week','weeken','well','were','what','when','where','whether','which','while','wide','widespread',
     'will','with','within','without','work','world','would','year','person','personal','personally',
-    'program','programm','vulner','affect'
+    'program','programm','vulner','affect','widen','firest','surrou','fallou','contro','politi','campai','advert','discus','meet','meetin','positi','hold','arriv'
   ]);
   const EVO_SYN = {
     french:'france', british:'britain', spanish:'spain', israeli:'israel', israelis:'israel',
@@ -692,25 +692,35 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           if (prev.timestamp && h.timestamp && prev.timestamp === h.timestamp) return true;
           if (prev.note && h.note && prev.note.toLowerCase().trim() === h.note.toLowerCase().trim()) return true;
 
+          const hBaseCore = stripKnownEvoRecapClauses(h.note || '', baseStems);
+          const hBaseStems = extractEvoDeltaStems(hBaseCore);
+          const hBaseNovel = hBaseStems.filter(s => !baseStems.has(s));
+          const hBaseNums = extractEvoNums(h.note || '', baseStems);
+
           const pCoreText = stripKnownEvoRecapClauses(prev.note || '', baseStems);
           const pStems = extractEvoDeltaStems(pCoreText);
           const pNovel = pStems.filter(s => !baseStems.has(s));
           const pNums = extractEvoNums(prev.note || '', baseStems);
           const pMs = new Date(prev.timestamp || 0).getTime();
 
-          const sharedNovelNums = [...hNums].filter(n => pNums.has(n) && !baseNums.has(n));
-          const hasNewDisjointNum = [...hNums].some(n => !pNums.has(n) && !baseNums.has(n));
-          const sharedNovelStems = hNovel.filter(s => pNovel.includes(s));
-          const sharedAllStems = hStems.filter(s => pStems.includes(s));
+          const sharedNovelNums = [...hBaseNums].filter(n => pNums.has(n) && !baseNums.has(n));
+          const hasNewDisjointNum = [...hBaseNums].some(n => !pNums.has(n) && !baseNums.has(n));
+          const prevHasDisjointNum = [...pNums].some(n => !hBaseNums.has(n) && !baseNums.has(n));
+          const sharedNovelStems = hBaseNovel.filter(s => pNovel.includes(s));
+          const sharedAllStems = hBaseStems.filter(s => pStems.includes(s));
 
-          const hNovelCoverage = hNovel.length > 0 ? (sharedNovelStems.length / hNovel.length) : 0;
-          const hAllCoverage = hStems.length > 0 ? (sharedAllStems.length / hStems.length) : 0;
+          const hNovelCoverage = hBaseNovel.length > 0 ? (sharedNovelStems.length / hBaseNovel.length) : 0;
+          const pNovelCoverage = pNovel.length > 0 ? (sharedNovelStems.length / pNovel.length) : 0;
+          const hAllCoverage = hBaseStems.length > 0 ? (sharedAllStems.length / hBaseStems.length) : 0;
+          const pAllCoverage = pStems.length > 0 ? (sharedAllStems.length / pStems.length) : 0;
           const closeTime = !isNaN(hMs) && !isNaN(pMs) && Math.abs(hMs - pMs) <= 15 * 60 * 1000;
 
           if (
             (sharedNovelNums.length > 0 && !hasNewDisjointNum && (sharedNovelStems.length >= 2 || (sharedNovelStems.length >= 1 && hNovelCoverage >= 0.45) || sharedAllStems.length >= 2)) ||
             (!hasNewDisjointNum && sharedNovelStems.length >= 2 && hNovelCoverage >= 0.55) ||
+            (!prevHasDisjointNum && sharedNovelStems.length >= 3 && pNovelCoverage >= 0.65) ||
             (!hasNewDisjointNum && sharedAllStems.length >= 3 && hAllCoverage >= 0.60) ||
+            (!prevHasDisjointNum && sharedAllStems.length >= 4 && pAllCoverage >= 0.65) ||
             (closeTime && !hasNewDisjointNum && sharedAllStems.length >= 2 && hAllCoverage >= 0.40)
           ) {
             return true;
@@ -721,11 +731,14 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         if (dupIdx === -1) {
           cleanHist.push(h);
         } else if (h.type === 'material_shift' && cleanHist[dupIdx].type === 'clarification') {
-          cleanHist[dupIdx] = {
+          const prevStep = cleanHist[dupIdx];
+          const useNewNote = (h.note || '').length >= (prevStep.note || '').length * 0.85;
+          cleanHist.splice(dupIdx, 1);
+          cleanHist.push({
             ...h,
-            timestamp: cleanHist[dupIdx].timestamp || h.timestamp,
-            note: cleanHist[dupIdx].note || h.note
-          };
+            timestamp: h.timestamp || prevStep.timestamp,
+            note: useNewNote ? (h.note || prevStep.note) : prevStep.note
+          });
         }
       }
 
