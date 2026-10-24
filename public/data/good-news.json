@@ -1,27 +1,53 @@
 {
   "dataset": "vibe-o-meter/good-news",
-  "lastUpdated": "2026-10-24T22:55:40.445Z",
-  "count24h": 23,
-  "count7d": 204,
-  "constructiveClusterCount": 47,
+  "lastUpdated": "2026-10-24T23:27:21.261Z",
+  "count24h": 22,
+  "count7d": 202,
+  "constructiveClusterCount": 48,
   "top5DailyAntidote": [
+    {
+      "title": "WHO announces start of Ebola vaccine clinical trial in DR Congo",
+      "description": "A clinical trial begins to test the safety, efficacy and immunogenicity of multiple vaccines.",
+      "sentiment": 0.603,
+      "significanceScore": 0.998,
+      "factors": [
+        65,
+        70,
+        75,
+        30
+      ],
+      "clusterId": "moderna-and-merck-cancer-vaccine-trial",
+      "clusterStory": "Moderna and Merck Cancer Vaccine Trial",
+      "outletCount": 15,
+      "explanation": "A major international public health step initiating clinical trials for new Ebola vaccines. [Event Base: +0.54 | Editorial Framing: +0.07]",
+      "category": "health",
+      "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/ap_6adbf28ec9cc3-1792799374.jpg?resize=1920%2C1440",
+      "sourceId": "aljazeera",
+      "sourceName": "Al Jazeera",
+      "region": "ME",
+      "link": "https://www.aljazeera.com/news/2026/10/24/who-announces-start-of-ebola-vaccine-clinical-trial-in-dr-congo?traffic_source=rss",
+      "pubDate": "Sat, 24 Oct 2026 00:27:21 +0000",
+      "isPast24h": true,
+      "isPast48h": true,
+      "antidoteRank": 0.998
+    },
     {
       "title": "Amgen drug combined with immunotherapy extends survival in lung cancer trial - Reuters",
       "description": "Comprehensive up-to-date news coverage, aggregated from sources all over the world by Google News.",
       "sentiment": 0.824,
-      "significanceScore": 0.998,
+      "significanceScore": 0.933,
       "factors": [
         82,
         85,
         80,
         35
       ],
-      "clusterId": "moderna-and-merck-cancer-vaccine-trial",
-      "clusterStory": "Moderna and Merck Cancer Vaccine Trial",
-      "outletCount": 15,
+      "clusterId": "amgen-lung-cancer-drug-trial-results",
+      "clusterStory": "Amgen Lung Cancer Drug Trial Results",
+      "outletCount": 2,
       "explanation": "Clinical trial results showing a major drug combination extending survival in aggressive lung cancer mark a profound medical and public-health advancement. [Event Base: +0.74 | Editorial Framing: +0.09]",
       "category": "health",
-      "imageUrl": "https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iMQ3zEOBRbks/v3/500x-1.webp",
+      "imageUrl": "https://image.cnbcfm.com/api/v1/image/107243224-1684411224877-gettyimages-1491059980-mt_15744_opmy4ayv.jpeg?v=1750872566&amp;w=1920&amp;h=1080",
       "sourceId": "reuters",
       "sourceName": "Reuters",
       "region": "GLOBAL",
@@ -29,7 +55,7 @@
       "pubDate": "Sat, 24 Oct 2026 18:47:08 GMT",
       "isPast24h": true,
       "isPast48h": true,
-      "antidoteRank": 0.998
+      "antidoteRank": 0.933
     },
     {
       "title": "Deforestation in protected areas of the Amazon and Cerrado shows a decline",
@@ -55,7 +81,7 @@
       "pubDate": "Fri, 23 Oct 2026 17:56:00 -0300",
       "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.84
+      "antidoteRank": 0.839
     },
     {
       "title": "Good to see you after all this time. Chinese scientists put a face to the Denisovans",
@@ -79,7 +105,7 @@
       "pubDate": "Fri, 23 Oct 2026 11:09:08 +0000",
       "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.74
+      "antidoteRank": 0.739
     },
     {
       "title": "Ebola vaccine trial begins in DR Congo",
@@ -103,34 +129,104 @@
       "pubDate": "Sat, 24 Oct 2026 00:50:32 +0200",
       "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.649
-    },
-    {
-      "title": "New Tumaini Ebola vaccine trial launches in Bunia as DRC struggles",
-      "description": "A clinical trial for a new Ebola vaccine is getting underway in DR Congo’s Ituri province. The TUMAini trial will evaluate candidate vaccines against the Bundibugyo strain of the virus.",
-      "sentiment": 0.592,
-      "significanceScore": 0.642,
-      "factors": [
-        65,
-        70,
-        75,
-        25
-      ],
-      "outletCount": 1,
-      "explanation": "A new clinical trial for the TUMAini Ebola vaccine launches in the DRC's Ituri province to combat the Bundibugyo strain. [Event Base: +0.54 | Editorial Framing: +0.06]",
-      "category": "health",
-      "imageUrl": "http://images.euronews.com/articles/stories/09/96/53/74/640x360_cmsv2_cdadcd1c-00fa-5ce5-874d-a2ae4e52d9e4-9965374.jpg?1792808478",
-      "sourceId": "africanews",
-      "sourceName": "Africanews",
-      "region": "ME",
-      "link": "http://www.africanews.com/2026/10/24/new-tumaini-ebola-vaccine-trial-launches-in-bunia-as-drc-struggles/",
-      "pubDate": "Sat, 24 Oct 2026 08:38:44 +0000",
-      "isPast24h": true,
-      "isPast48h": true,
-      "antidoteRank": 0.642
+      "antidoteRank": 0.647
     }
   ],
   "constructiveClusters": [
+    {
+      "id": "amgen-lung-cancer-drug-trial-results",
+      "story": "Amgen Lung Cancer Drug Trial Results",
+      "summary": "Clinical trial results demonstrated that combining an experimental drug from Amgen with AstraZeneca's immunotherapy extended progression-free survival and cut the risk of death by 58% in patients with aggressive lung cancer.",
+      "version": 1,
+      "summarySynthesizedSig": "amgen-lung-cancer-drug-trial-results|v1|h1",
+      "primaryLocation": {
+        "name": "Thousand Oaks, California",
+        "region": "California, United States",
+        "countryIso": "us",
+        "lat": 34.1706,
+        "lon": -118.8376,
+        "lng": -118.8376,
+        "zoom": 9,
+        "whyHere": "Thousand Oaks is the corporate headquarters of Amgen, where researchers and executives oversaw the development and clinical evaluation of the experimental lung cancer therapy."
+      },
+      "briefing": {
+        "whyItMattersLabel": "Why It Matters",
+        "whyItMatters": "Successful combination therapies validate joint clinical pipelines between major pharmaceutical firms, reshaping treatment standards for difficult oncological indications and driving significant market valuation shifts. Drug developers rely on robust progression-free survival data to clear strict regulatory approval thresholds and secure favorable reimbursement terms from national healthcare payers.",
+        "whatsNextLabel": "What's Next",
+        "whatsNext": "The companies must submit comprehensive trial data to regulatory bodies such as the US Food and Drug Administration for priority review and commercial clearance. Commercial adoption will depend on subsequent phase 3 trial confirmations and inclusion in international oncology treatment guidelines."
+      },
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-10-24T14:30:01.000Z",
+          "batchConsolidatedAt": "2026-10-24T23:27:36.881Z",
+          "headline": "Amgen Lung Cancer Drug Trial Results",
+          "summary": "Clinical trial results demonstrated that combining an experimental drug from Amgen with AstraZeneca's immunotherapy extended progression-free survival and cut the risk of death by 58% in patients with aggressive lung cancer.",
+          "outletCount": 2,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "topic": "health",
+      "imageUrl": "https://image.cnbcfm.com/api/v1/image/107243224-1684411224877-gettyimages-1491059980-mt_15744_opmy4ayv.jpeg?v=1750872566&amp;w=1920&amp;h=1080",
+      "averageSentiment": 0.82,
+      "eventBase": 0.737,
+      "significanceScore": 0.895,
+      "factors": [
+        82,
+        85,
+        80,
+        33
+      ],
+      "sentimentSpread": 0.01,
+      "outletCount": 2,
+      "firstSeenAt": "2026-10-24T14:30:01.000Z",
+      "latestUpdateAt": "2026-10-24T18:47:08.000Z",
+      "coverage": [
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Amgen drug combined with immunotherapy extends survival in lung cancer trial - Reuters",
+          "description": "Comprehensive up-to-date news coverage, aggregated from sources all over the world by Google News.",
+          "sentiment": 0.824,
+          "eventBase": 0.737,
+          "framingMod": 0.087,
+          "factors": [
+            82,
+            85,
+            80,
+            35
+          ],
+          "explanation": "Clinical trial results showing a major drug combination extending survival in aggressive lung cancer mark a profound medical and public-health advancement. [Event Base: +0.74 | Editorial Framing: +0.09]",
+          "category": "health",
+          "imageUrl": null,
+          "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQNkp5SkpQWTcySnpWVEtXVGN2azJZYnFERjh6WHJBR3NPcEE0TDNGWUVuQ0Q0WF91VnFFVkRYZjF1NFJ3N01XdzVTZzNXQ0F4NlVMMzVZY0JUNldtZW1CS0hSX3d4TUZVZ3lfX2xjeVF6UElWanluMXNOV05ybUdFb2YwbUJ2eGY3NkR0ZUhabWhaMGp5SERfajdZMzlUcGZsX3RULXNZMlI1eTMwbjFxWTlweW5uNHpNTWlVbmVKS2libTlG?oc=5",
+          "pubDate": "Sat, 24 Oct 2026 18:47:08 GMT"
+        },
+        {
+          "sourceId": "cnbc",
+          "sourceName": "CNBC News",
+          "region": "NA",
+          "title": "Amgen says drug combo cuts risk of death by 58% in patients with aggressive lung cancer",
+          "description": "A drug from Amgen could give patients with an aggressive form of lung cancer significantly more time to live when added to an immunotherapy from AstraZeneca.",
+          "sentiment": 0.812,
+          "eventBase": 0.737,
+          "framingMod": 0.075,
+          "factors": [
+            82,
+            85,
+            80,
+            30
+          ],
+          "explanation": "Clinical trial results showing a major reduction in mortality for aggressive lung cancer represent a significant medical advancement with high permanence. [Event Base: +0.74 | Editorial Framing: +0.07]",
+          "category": "health",
+          "imageUrl": "https://image.cnbcfm.com/api/v1/image/107243224-1684411224877-gettyimages-1491059980-mt_15744_opmy4ayv.jpeg?v=1750872566&amp;w=1920&amp;h=1080",
+          "link": "https://www.cnbc.com/2026/10/24/amgen-imdelltra-lung-cancer-data.html",
+          "pubDate": "Sat, 24 Oct 2026 14:30:01 GMT"
+        }
+      ]
+    },
     {
       "id": "moderna-and-merck-cancer-vaccine-trial",
       "story": "Moderna and Merck Cancer Vaccine Trial",
@@ -4873,7 +4969,7 @@
       "sentimentSpread": 0.06,
       "outletCount": 2,
       "firstSeenAt": "2026-10-24T20:21:38.000Z",
-      "latestUpdateAt": "2026-10-24T20:43:28.000Z",
+      "latestUpdateAt": "2026-10-24T23:08:15.000Z",
       "coverage": [
         {
           "sourceId": "smh",
@@ -4894,7 +4990,7 @@
           "category": "business",
           "imageUrl": "https://static.ffx.io/images/$width_800%2C$height_450/t_crop_fill/q_86%2Cf_jpg/d67ef697ecabf7f51eec5b2051f9ec38e2d6c38e",
           "link": "https://www.smh.com.au/national/historic-day-as-sydney-s-new-airport-finally-opens-20261025-p618bv.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-          "pubDate": "Sun, 25 Oct 2026 07:43:28 +1100"
+          "pubDate": "Sun, 25 Oct 2026 10:08:15 +1100"
         },
         {
           "sourceId": "abcau",
@@ -7170,22 +7266,47 @@
   ],
   "stories24h": [
     {
+      "title": "WHO announces start of Ebola vaccine clinical trial in DR Congo",
+      "description": "A clinical trial begins to test the safety, efficacy and immunogenicity of multiple vaccines.",
+      "sentiment": 0.603,
+      "significanceScore": 0.998,
+      "factors": [
+        65,
+        70,
+        75,
+        30
+      ],
+      "clusterId": "moderna-and-merck-cancer-vaccine-trial",
+      "clusterStory": "Moderna and Merck Cancer Vaccine Trial",
+      "outletCount": 15,
+      "explanation": "A major international public health step initiating clinical trials for new Ebola vaccines. [Event Base: +0.54 | Editorial Framing: +0.07]",
+      "category": "health",
+      "imageUrl": "https://www.aljazeera.com/wp-content/uploads/2026/10/ap_6adbf28ec9cc3-1792799374.jpg?resize=1920%2C1440",
+      "sourceId": "aljazeera",
+      "sourceName": "Al Jazeera",
+      "region": "ME",
+      "link": "https://www.aljazeera.com/news/2026/10/24/who-announces-start-of-ebola-vaccine-clinical-trial-in-dr-congo?traffic_source=rss",
+      "pubDate": "Sat, 24 Oct 2026 00:27:21 +0000",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
       "title": "Amgen drug combined with immunotherapy extends survival in lung cancer trial - Reuters",
       "description": "Comprehensive up-to-date news coverage, aggregated from sources all over the world by Google News.",
       "sentiment": 0.824,
-      "significanceScore": 0.998,
+      "significanceScore": 0.933,
       "factors": [
         82,
         85,
         80,
         35
       ],
-      "clusterId": "moderna-and-merck-cancer-vaccine-trial",
-      "clusterStory": "Moderna and Merck Cancer Vaccine Trial",
-      "outletCount": 15,
+      "clusterId": "amgen-lung-cancer-drug-trial-results",
+      "clusterStory": "Amgen Lung Cancer Drug Trial Results",
+      "outletCount": 2,
       "explanation": "Clinical trial results showing a major drug combination extending survival in aggressive lung cancer mark a profound medical and public-health advancement. [Event Base: +0.74 | Editorial Framing: +0.09]",
       "category": "health",
-      "imageUrl": "https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iMQ3zEOBRbks/v3/500x-1.webp",
+      "imageUrl": "https://image.cnbcfm.com/api/v1/image/107243224-1684411224877-gettyimages-1491059980-mt_15744_opmy4ayv.jpeg?v=1750872566&amp;w=1920&amp;h=1080",
       "sourceId": "reuters",
       "sourceName": "Reuters",
       "region": "GLOBAL",
@@ -7314,29 +7435,6 @@
       "isPast48h": true
     },
     {
-      "title": "Healey to give £20bn boost to UK’s business lender and infrastructure bank",
-      "description": "Treasury predicts extra funding will create and support 100,000 jobs as chancellor seeks to exploit flexibility in government’s fiscal rules",
-      "sentiment": 0.283,
-      "significanceScore": 0.333,
-      "factors": [
-        32,
-        60,
-        55,
-        35
-      ],
-      "outletCount": 1,
-      "explanation": "The UK Chancellor injecting significant capital into the national business lender and infrastructure bank to stimulate job creation, representing a tangible fiscal policy advance. [Event Base: +0.22 | Editorial Framing: +0.06]",
-      "category": "business",
-      "imageUrl": null,
-      "sourceId": "ft",
-      "sourceName": "Financial Times",
-      "region": "UK",
-      "link": "https://www.ft.com/content/4111c10c-c13c-4620-8ce7-df3b4f9324f1?syn-25a6b1a6=1",
-      "pubDate": "Fri, 23 Oct 2026 23:01:00 GMT",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
       "title": "Historic day as Sydney’s new airport finally opens",
       "description": "After years of anticipation, Western Sydney Airport opens to passengers today, with the first flights taking off and touching down.",
       "sentiment": 0.234,
@@ -7357,7 +7455,7 @@
       "sourceName": "Sydney Morning Herald",
       "region": "APAC",
       "link": "https://www.smh.com.au/national/historic-day-as-sydney-s-new-airport-finally-opens-20261025-p618bv.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-      "pubDate": "Sun, 25 Oct 2026 07:43:28 +1100",
+      "pubDate": "Sun, 25 Oct 2026 10:08:15 +1100",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -7496,29 +7594,6 @@
       "region": "UK",
       "link": "https://www.theguardian.com/environment/2026/oct/24/norfolk-couple-who-took-on-environmental-regulators-three-times-and-won",
       "pubDate": "Sat, 24 Oct 2026 07:00:27 GMT",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
-      "title": "UK sets up AI lab to monitor biosecurity threats",
-      "description": "Move comes amid widespread fears that users could create new viruses and bioweapons",
-      "sentiment": 0.207,
-      "significanceScore": 0.257,
-      "factors": [
-        25,
-        70,
-        60,
-        10
-      ],
-      "outletCount": 1,
-      "explanation": "The UK establishing a dedicated AI laboratory to monitor biosecurity threats, representing a proactive structural institutional safeguard against technological misuse. [Event Base: +0.18 | Editorial Framing: +0.02]",
-      "category": "technology",
-      "imageUrl": null,
-      "sourceId": "ft",
-      "sourceName": "Financial Times",
-      "region": "UK",
-      "link": "https://www.ft.com/content/e4481867-fecc-48fc-ad9d-4daaf05d14ba?syn-25a6b1a6=1",
-      "pubDate": "Fri, 23 Oct 2026 23:01:00 GMT",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -7731,6 +7806,31 @@
       "link": "https://www.abc.net.au/news/2026-10-23/melanoma-cancer-vaccine-breakthrough-georgina-long/107303082",
       "pubDate": "Fri, 23 Oct 2026 07:08:03 +0000",
       "isPast24h": false,
+      "isPast48h": true
+    },
+    {
+      "title": "Amgen drug combined with immunotherapy extends survival in lung cancer trial - Reuters",
+      "description": "Comprehensive up-to-date news coverage, aggregated from sources all over the world by Google News.",
+      "sentiment": 0.824,
+      "significanceScore": 0.933,
+      "factors": [
+        82,
+        85,
+        80,
+        35
+      ],
+      "clusterId": "amgen-lung-cancer-drug-trial-results",
+      "clusterStory": "Amgen Lung Cancer Drug Trial Results",
+      "outletCount": 2,
+      "explanation": "Clinical trial results showing a major drug combination extending survival in aggressive lung cancer mark a profound medical and public-health advancement. [Event Base: +0.74 | Editorial Framing: +0.09]",
+      "category": "health",
+      "imageUrl": "https://image.cnbcfm.com/api/v1/image/107243224-1684411224877-gettyimages-1491059980-mt_15744_opmy4ayv.jpeg?v=1750872566&amp;w=1920&amp;h=1080",
+      "sourceId": "reuters",
+      "sourceName": "Reuters",
+      "region": "GLOBAL",
+      "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQNkp5SkpQWTcySnpWVEtXVGN2azJZYnFERjh6WHJBR3NPcEE0TDNGWUVuQ0Q0WF91VnFFVkRYZjF1NFJ3N01XdzVTZzNXQ0F4NlVMMzVZY0JUNldtZW1CS0hSX3d4TUZVZ3lfX2xjeVF6UElWanluMXNOV05ybUdFb2YwbUJ2eGY3NkR0ZUhabWhaMGp5SERfajdZMzlUcGZsX3RULXNZMlI1eTMwbjFxWTlweW5uNHpNTWlVbmVKS2libTlG?oc=5",
+      "pubDate": "Sat, 24 Oct 2026 18:47:08 GMT",
+      "isPast24h": true,
       "isPast48h": true
     },
     {
@@ -7968,29 +8068,6 @@
       "pubDate": "Sat, 24 Oct 2026 00:50:32 +0200",
       "isPast24h": false,
       "isPast48h": true
-    },
-    {
-      "title": "AstraZeneca-Amgen asthma drug hits 69% remission in esophageal disease trial - Reuters",
-      "description": "Clinical trial results indicate that an AstraZeneca and Amgen asthma treatment achieved a 69 percent remission rate in patients suffering from a severe esophageal disease.",
-      "sentiment": 0.645,
-      "significanceScore": 0.645,
-      "factors": [
-        85,
-        48,
-        75,
-        28
-      ],
-      "outletCount": 1,
-      "explanation": "Clinical trial results showing high remission rates for an asthma drug treating esophageal disease. [Event Base: +0.60 | Editorial Framing: +0.05]",
-      "category": "health",
-      "imageUrl": null,
-      "sourceId": "reuters",
-      "sourceName": "Reuters",
-      "region": "GLOBAL",
-      "link": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxPRVhRRmJVdENpM1dwVEtJc0xRUk02YmpkM0p0T1ZEc3QtNFdRZWVJMkVxaVYxTFV1VjZocER1SHpYVlhldzRnLVNKdklRcUN5aDAwUkQxWWdJQ0huM2t1R0dsUU10VW04azdEWGVmOHZOUlVHUDJFbDRweXc1bEJKZkpBckZsU1FqOC1lYmpSTmpHNXhKM0FuUDYzd0RJc000VFVLTFlOUTRveEtSOTRQUjNrcFJZTFl1dXVJbjFxdXY1RW81aTR3NUxWUjRJbHhDMEl6NExmMmhGTzB0?oc=5",
-      "pubDate": "Tue, 20 Oct 2026 16:10:28 GMT",
-      "isPast24h": false,
-      "isPast48h": false
     },
     {
       "title": "New Tumaini Ebola vaccine trial launches in Bunia as DRC struggles",
@@ -9102,7 +9179,7 @@
       "region": "UK",
       "link": "https://www.ft.com/content/4111c10c-c13c-4620-8ce7-df3b4f9324f1?syn-25a6b1a6=1",
       "pubDate": "Fri, 23 Oct 2026 23:01:00 GMT",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
@@ -9151,7 +9228,7 @@
       "link": "https://agenciabrasil.ebc.com.br/esportes/noticia/2026-10/fifa-anuncia-eua-como-sede-da-1a-copa-do-mundo-de-clubes-feminina",
       "pubDate": "Thu, 22 Oct 2026 20:03:00 -0300",
       "isPast24h": false,
-      "isPast48h": true
+      "isPast48h": false
     },
     {
       "title": "OpenAI nears up to $30 billion funding round at $1.25 trillion valuation led by UAE investors",
@@ -9220,7 +9297,7 @@
       "sourceName": "Sydney Morning Herald",
       "region": "APAC",
       "link": "https://www.smh.com.au/national/historic-day-as-sydney-s-new-airport-finally-opens-20261025-p618bv.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-      "pubDate": "Sun, 25 Oct 2026 07:43:28 +1100",
+      "pubDate": "Sun, 25 Oct 2026 10:08:15 +1100",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -10099,7 +10176,7 @@
       "region": "UK",
       "link": "https://www.ft.com/content/e4481867-fecc-48fc-ad9d-4daaf05d14ba?syn-25a6b1a6=1",
       "pubDate": "Fri, 23 Oct 2026 23:01:00 GMT",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
@@ -10193,29 +10270,6 @@
       "pubDate": "Wed, 21 Oct 2026 13:49:00 -0300",
       "isPast24h": false,
       "isPast48h": false
-    },
-    {
-      "title": "Mega-Sena draws R$ 206 million prize on Thursday; see drawn numbers",
-      "description": "Caixa Econômica Federal held the Mega-Sena lottery draw with a multi-million-real prize up for grabs.",
-      "sentiment": 0.246,
-      "significanceScore": 0.246,
-      "factors": [
-        40,
-        65,
-        35,
-        30
-      ],
-      "outletCount": 1,
-      "explanation": "Massive lottery jackpot draw represents significant transactional wealth transfer for winners. [Event Base: +0.19 | Editorial Framing: +0.05]",
-      "category": "world",
-      "imageUrl": "https://s2-oglobo.glbimg.com/1MUKRmU3q-8VGB9y1IgcYSU5nrU=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/I/3/ItfAz2RRazAlC2zzpH7Q/mega-3073.jpg",
-      "sourceId": "oglobo",
-      "sourceName": "O Globo",
-      "region": "LATAM",
-      "link": "https://oglobo.globo.com/economia/noticia/2026/10/22/mega-sena-sorteia-premio-de-r-206-milhoes-nesta-quinta-feira-veja-dezenas-sorteadas.ghtml",
-      "pubDate": "Fri, 23 Oct 2026 00:04:00 -0000",
-      "isPast24h": false,
-      "isPast48h": true
     },
     {
       "title": "Nvidia announces plug and play Vera Rubin racks that can be shipped on a truck",
@@ -10446,29 +10500,6 @@
       "region": "APAC",
       "link": "https://www.abc.net.au/news/2026-10-23/australia-makes-offer-to-send-australian-of-the-year-to-space/107300194",
       "pubDate": "Thu, 22 Oct 2026 23:01:32 +0000",
-      "isPast24h": false,
-      "isPast48h": true
-    },
-    {
-      "title": "Anvisa approves new drug for advanced lung cancer",
-      "description": "Brazil's health surveillance agency has approved a new targeted therapy for adults with locally advanced or metastatic non-small cell lung cancer.",
-      "sentiment": 0.235,
-      "significanceScore": 0.235,
-      "factors": [
-        45,
-        50,
-        40,
-        15
-      ],
-      "outletCount": 1,
-      "explanation": "Health regulators approving a new targeted lung cancer medication offers a tangible medical advancement. [Event Base: +0.21 | Editorial Framing: +0.03]",
-      "category": "health",
-      "imageUrl": "https://cdn.jsdelivr.net/gh/sergiosdlima/assets-ebc@1.0.0/abr/assets/images/logo-agenciabrasil.svg",
-      "sourceId": "agenciabrasil",
-      "sourceName": "Agência Brasil",
-      "region": "LATAM",
-      "link": "https://agenciabrasil.ebc.com.br/saude/noticia/2026-10/anvisa-aprova-novo-medicamento-para-cancer-de-pulmao-avancado",
-      "pubDate": "Thu, 22 Oct 2026 09:48:00 -0300",
       "isPast24h": false,
       "isPast48h": false
     },
@@ -12176,7 +12207,7 @@
       "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxPNkVLZDlMTHpYQ3NKQVdYUmhibWRhQkdWRTcxUXQ3N3lzSDZnS2hYZjhhSmxhcXFob0ZHbjNTVnktRFNSRmJvZnRJcEtadjhHZWFZLXA0TUI0ODExWHJxUW5uWjRlOXp5QlhUWW12WWVpeDVCUHV2ODlWbHlNcU5pU3JKalhDbUpFYWtfTGUzWnA5Z096dldmcFVPVTV2eWlDcWVzTGhSZ3hEODBjS3BROW4yN3BFSFdLYUN3XzIyUFpLbmo4N2MxbXRQNXJKc1R4V05Neg?oc=5",
       "pubDate": "Thu, 22 Oct 2026 23:02:06 GMT",
       "isPast24h": false,
-      "isPast48h": true
+      "isPast48h": false
     },
     {
       "title": "Russia releases American imprisoned for four years after being accused of working as a mercenary in Ukraine",
