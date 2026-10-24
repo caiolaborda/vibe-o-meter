@@ -954,8 +954,13 @@ function extractCoherenceStems(str) {
     canadian: 'canada', canadians: 'canada', mexican: 'mexico', italian: 'italy',
     german: 'germany', indian: 'india', pakistani: 'pakistan', egyptian: 'egypt',
     syrian: 'syria', yemeni: 'yemen', detained: 'arrest', detains: 'arrest',
-    detain: 'arrest', detention: 'arrest', custody: 'arrest', investigations: 'probe',
-    investigation: 'probe', investigating: 'probe'
+    detain: 'arrest', detention: 'arrest', custody: 'arrest', rearrested: 'arrest',
+    rearresting: 'arrest', investigations: 'probe', investigation: 'probe', investigating: 'probe',
+    shutting: 'clos', shuts: 'clos', shut: 'clos', closures: 'clos', closure: 'clos',
+    cancelled: 'cancel', cancels: 'cancel', canceled: 'cancel', cancellations: 'cancel',
+    postpones: 'cancel', postponed: 'cancel', forces: 'milit', military: 'milit', troops: 'milit',
+    deaths: 'kill', dead: 'kill', fatalities: 'kill', fatality: 'kill', killed: 'kill', killing: 'kill',
+    injured: 'injur', injuries: 'injur', wounded: 'injur', cuts: 'cut', cutting: 'cut', slashes: 'cut', reductions: 'cut'
   };
   const rawStr = String(str || '').replace(/\b(?:([A-Z])\.){2,}/g, (m) => m.replace(/\./g, ''));
   const acronymTokens = (rawStr.match(/\b[A-Z]{2,5}\b/g) || [])
@@ -2723,17 +2728,34 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       }, 0);
       const ts = new Date(Math.max(rawTsMs, maxPrevHistMs > 0 ? maxPrevHistMs + 60000 : 0)).toISOString();
 
-      // Guard against no-op, duplicate timestamp, or paraphrased note already in evolutionHistory (excluding initial baseline stems from shared count)
-      const initBaseStems = new Set(extractCoherenceStems(`${hist[0]?.headline || ''} ${hist[0]?.summary || ''}`));
+      // Guard against no-op, duplicate timestamp, or paraphrased note already in evolutionHistory (Novel-Delta Coverage + Shared-Number check)
+      const initBaseText = `${hist[0]?.headline || ''} ${hist[0]?.summary || ''}`;
+      const initBaseStems = new Set(extractCoherenceStems(initBaseText));
+      const initBaseNums = new Set((initBaseText.match(/\b\d+(?:[.,]\d+)?\b/g) || []).map(n => n.replace(/,/g, '')));
+      const candNovelStems = substantiveNoteStems.filter(s => !initBaseStems.has(s));
+      const candAllNums = (noteText.match(/\b\d+(?:[.,]\d+)?\b/g) || []).map(n => n.replace(/,/g, '')).filter(n => Number(n) > 1 && !/^(18|19|20)\d{2}$/.test(n));
       const alreadyRecorded = hist.some(h => {
         if (h.timestamp && h.timestamp === ts) return true;
         if (noteText && h.note && h.note.toLowerCase() === noteText.toLowerCase()) return true;
         if (newSummary && h.summary && h.summary.toLowerCase() === newSummary.toLowerCase()) return true;
-        if (noteStems.length >= 2 && h.note && h.type !== 'initial') {
-          const hStems = new Set(extractCoherenceStems(h.note));
-          const sharedNovel = noteStems.filter(s => hStems.has(s) && !initBaseStems.has(s)).length;
-          const sharedAll = noteStems.filter(s => hStems.has(s)).length;
-          if ((sharedNovel >= 3 && (sharedAll / Math.min(noteStems.length, hStems.size || 1)) >= 0.60) || (sharedAll / Math.min(noteStems.length, hStems.size || 1)) >= 0.68) return true;
+        if (substantiveNoteStems.length >= 2 && h.note && h.type !== 'initial') {
+          const hStemsArr = extractCoherenceStems(h.note).filter(s => !outletNameStems.has(s));
+          const hStems = new Set(hStemsArr);
+          const hNovelSet = new Set(hStemsArr.filter(s => !initBaseStems.has(s)));
+          const hNums = new Set(((h.note || '').match(/\b\d+(?:[.,]\d+)?\b/g) || []).map(n => n.replace(/,/g, '')).filter(n => Number(n) > 1 && !/^(18|19|20)\d{2}$/.test(n)));
+          const sharedNovelNums = candAllNums.filter(n => hNums.has(n) && !initBaseNums.has(n));
+          const hasNewDisjointNum = candAllNums.some(n => !hNums.has(n) && !initBaseNums.has(n));
+          const sharedNovel = candNovelStems.filter(s => hNovelSet.has(s)).length;
+          const sharedAll = substantiveNoteStems.filter(s => hStems.has(s)).length;
+          const novelCoverage = candNovelStems.length > 0 ? (sharedNovel / candNovelStems.length) : 0;
+          const allCoverage = substantiveNoteStems.length > 0 ? (sharedAll / substantiveNoteStems.length) : 0;
+          if (
+            (sharedNovelNums.length > 0 && !hasNewDisjointNum && (sharedNovel >= 2 || (sharedNovel >= 1 && novelCoverage >= 0.45) || sharedAll >= 2)) ||
+            (!hasNewDisjointNum && sharedNovel >= 2 && novelCoverage >= 0.55) ||
+            (!hasNewDisjointNum && sharedAll >= 3 && allCoverage >= 0.60)
+          ) {
+            return true;
+          }
         }
         return false;
       });

@@ -561,26 +561,190 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
   }
 
-  // 3. Deduplicate same-timestamp or paraphrased evolutionHistory entries
+  // 3. First-Principles Novel-Delta Coverage & Baseline-Echo Deduplication for evolutionHistory
+  const EVO_WORD_NUMS = {
+    one:'1', two:'2', three:'3', four:'4', five:'5', six:'6', seven:'7', eight:'8', nine:'9', ten:'10',
+    eleven:'11', twelve:'12', dozen:'12', thirteen:'13', fourteen:'14', fifteen:'15', sixteen:'16',
+    seventeen:'17', eighteen:'18', nineteen:'19', twenty:'20', thirty:'30', forty:'40', fifty:'50',
+    sixty:'60', seventy:'70', eighty:'80', ninety:'90', hundred:'100'
+  };
+  const EVO_STOP = new Set([
+    'about','accord','across','after','against','ahead','alread','also','amid','among','announc','around',
+    'author','back','becam','becaus','becom','been','before','begin','behind','between','beyond','both',
+    'bring','call','cannot','city','come','confirm','continu','could','countr','coverage','days','despit',
+    'detail','down','during','earlier','early','effect','emphas','enter','even','examin','expand','face',
+    'first','follo','follow','formal','formally','fresh','from','further','global','good','govern','great',
+    'group','have','having','head','help','here','high','highlight','however','immedi','implement','includ',
+    'indic','initia','initial','intern','into','issu','just','keep','last','late','latest','launch','lead',
+    'leader','left','less','life','like','live','local','long','look','made','major','make','many','mark',
+    'meanwhil','media','million','minist','month','more','most','move','much','must','nation','near','need',
+    'never','news','next','note','offi','official','once','ongo','only','open','other','outlin','outlet',
+    'over','part','past','peopl','plan','play','point','presid','press','provid','public','publish','push',
+    'reach','react','recent','reiter','remain','report','result','return','right','rise','risk','said','says',
+    'schedul','second','see','seen','send','separ','sever','share','show','side','sign','sinc','some','soon',
+    'sourc','spark','start','state','still','stop','stori','support','take','talk','team','tell','than',
+    'that','their','them','then','there','these','they','thing','think','those','though','through','time',
+    'today','told','took','total','toward','turn','under','until','updat','used','very','view','warn',
+    'watch','week','weeken','well','were','what','when','where','whether','which','while','wide','widespread',
+    'will','with','within','without','work','world','would','year','person','personal','personally',
+    'program','programm','vulner','affect'
+  ]);
+  const EVO_SYN = {
+    french:'france', british:'britain', spanish:'spain', israeli:'israel', israelis:'israel',
+    palestinian:'palestin', palestinians:'palestin', gazans:'gaza', gazan:'gaza',
+    russian:'russia', russians:'russia', ukrainian:'ukrain', ukrainians:'ukrain',
+    canadian:'canada', american:'america',
+    detained:'arrest', detains:'arrest', detain:'arrest', detention:'arrest', custody:'arrest',
+    rearrested:'arrest', rearresting:'arrest', arrested:'arrest', arrests:'arrest',
+    deaths:'kill', dead:'kill', deadly:'kill', fatal:'kill', fatalities:'kill', fatality:'kill',
+    killed:'kill', killing:'kill', kills:'kill',
+    injured:'injur', injuries:'injur', injury:'injur', wounded:'injur',
+    shutting:'clos', shuts:'clos', shut:'clos', closures:'clos', closure:'clos', closed:'clos', close:'clos', closes:'clos',
+    cancelled:'cancel', cancels:'cancel', canceled:'cancel', cancellations:'cancel', cancellation:'cancel',
+    postpones:'cancel', postponed:'cancel', postpone:'cancel',
+    forces:'milit', military:'milit', troops:'milit', army:'milit', soldiers:'milit',
+    officers:'polic', cops:'polic',
+    suspects:'suspect', individuals:'suspect', people:'person', residents:'person', civilians:'person',
+    cuts:'cut', cutting:'cut', slashes:'cut', reductions:'cut', reduction:'cut',
+    assistance:'aid', shortages:'crisis', shortage:'crisis', shortfalls:'crisis',
+    terminating:'drop', drops:'drop', dropped:'drop',
+    criticism:'critic', critical:'critic', condemns:'critic', condemn:'critic', denounces:'critic', rebuked:'critic',
+    elon:'musk', vladimir:'putin', donald:'trump', benjamin:'netanyahu', volodymyr:'zelensky', steve:'witkoff', stephen:'witkoff', brendan:'nugent'
+  };
+  const stripEvoOutletPrefix = (text) => {
+    let s = String(text || '').trim();
+    const verbRe = /\b(report|reports|reported|confirm|confirms|confirmed|reaffirm|reaffirms|reaffirmed|detail|details|detailed|highlight|highlights|highlighted|note|notes|noted|add|adds|added|state|states|stated|say|says|said|cover|covers|covered|outline|outlines|outlined|examine|examines|examined|analyze|analyzes|analyzed|share|shares|shared|publish|publishes|published|emphasize|emphasizes)\b(?:\s+that)?\s+/i;
+    const m = s.match(verbRe);
+    if (m && m.index !== undefined && m.index <= 85) {
+      s = s.slice(m.index + m[0].length).trim();
+    }
+    return s;
+  };
+  const extractEvoDeltaStems = (text) => {
+    const s = stripEvoOutletPrefix(text).toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+    const tokens = s.split(/\s+/).map(w => EVO_SYN[w] || w).filter(w => w.length >= 3 && !EVO_STOP.has(w));
+    const stems = tokens.map(w => {
+      if (EVO_SYN[w]) return EVO_SYN[w];
+      const st = w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6);
+      return EVO_SYN[st] || st;
+    }).filter(w => w.length >= 3 && !EVO_STOP.has(w));
+    return [...new Set(stems)];
+  };
+  const stripKnownEvoRecapClauses = (text, priorStemsSet) => {
+    let s = stripEvoOutletPrefix(text);
+    if (!priorStemsSet || priorStemsSet.size === 0) return s;
+    s = s.replace(/,?\s*\b(?:despite|following|after|ahead of|amid|in the wake of)\s+([^.;]+)/gi, (full, clause) => {
+      const clStems = extractEvoDeltaStems(clause);
+      if (clStems.length === 0) return ' ';
+      const known = clStems.filter(st => priorStemsSet.has(st)).length;
+      return (known / clStems.length) >= 0.50 ? ' ' : full;
+    });
+    return s.trim().length >= 12 ? s.trim() : stripEvoOutletPrefix(text);
+  };
+  const extractEvoNums = (text, priorStemsSet) => {
+    const s = (priorStemsSet ? stripKnownEvoRecapClauses(text, priorStemsSet) : stripEvoOutletPrefix(text)).toLowerCase()
+      .replace(/\b\d+\s*-\s*(?:year|month|day|week|hour|second|minute|decade)s?(?:\s*-\s*(?:old|long|high|low))?\b/g, ' ')
+      .replace(/\b(?:age[d]?|at)\s+\d{1,3}\b/g, ' ');
+    const out = new Set();
+    for (const m of (s.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [])) {
+      const raw = m.replace(/,/g, '');
+      if (/^(18|19|20)\d{2}$/.test(raw)) continue;
+      if (Number(raw) <= 1) continue;
+      out.add(String(Number(raw)));
+    }
+    for (const w of (s.match(/\b[a-z]+\b/g) || [])) {
+      if (EVO_WORD_NUMS[w] && Number(EVO_WORD_NUMS[w]) > 1) out.add(EVO_WORD_NUMS[w]);
+    }
+    return out;
+  };
+
   const result = [];
   for (const cl of byId.values()) {
     if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1) {
-      const cleanHist = [];
-      for (const h of cl.evolutionHistory) {
-        if (!h) continue;
+      const initStep = cl.evolutionHistory[0];
+      const baseText = (initStep?.headline || cl.story || '') + ' ' + (initStep?.summary || '');
+      const baseStems = new Set(extractEvoDeltaStems(baseText));
+      const baseNums = extractEvoNums(baseText, null);
+      const cleanHist = [initStep];
+
+      const postSteps = cl.evolutionHistory.slice(1).filter(Boolean).sort((a, b) => {
+        return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime();
+      });
+
+      for (const h of postSteps) {
+        const priorHistoryStems = new Set([...baseStems]);
+        for (let k = 1; k < cleanHist.length; k++) {
+          for (const st of extractEvoDeltaStems(cleanHist[k].note || '')) priorHistoryStems.add(st);
+        }
+        const hCoreText = stripKnownEvoRecapClauses(h.note || '', priorHistoryStems);
+        const hStems = extractEvoDeltaStems(hCoreText);
+        const hNovel = hStems.filter(s => !baseStems.has(s));
+        const hNums = extractEvoNums(h.note || '', priorHistoryStems);
+        const hNovelNums = [...hNums].filter(n => !baseNums.has(n));
+        const hMs = new Date(h.timestamp || 0).getTime();
+
+        if (h.type === 'clarification' && hNovelNums.length === 0 && hNovel.length <= 1) {
+          continue;
+        }
+
         const dupIdx = cleanHist.findIndex((prev, idx) => {
-          if (idx === 0 && h.type !== 'initial') return false;
+          if (idx === 0) return false;
           if (prev.timestamp && h.timestamp && prev.timestamp === h.timestamp) return true;
-          if (prev.note && h.note && prev.note.toLowerCase() === h.note.toLowerCase()) return true;
+          if (prev.note && h.note && prev.note.toLowerCase().trim() === h.note.toLowerCase().trim()) return true;
+
+          const pCoreText = stripKnownEvoRecapClauses(prev.note || '', baseStems);
+          const pStems = extractEvoDeltaStems(pCoreText);
+          const pNovel = pStems.filter(s => !baseStems.has(s));
+          const pNums = extractEvoNums(prev.note || '', baseStems);
+          const pMs = new Date(prev.timestamp || 0).getTime();
+
+          const sharedNovelNums = [...hNums].filter(n => pNums.has(n) && !baseNums.has(n));
+          const hasNewDisjointNum = [...hNums].some(n => !pNums.has(n) && !baseNums.has(n));
+          const sharedNovelStems = hNovel.filter(s => pNovel.includes(s));
+          const sharedAllStems = hStems.filter(s => pStems.includes(s));
+
+          const hNovelCoverage = hNovel.length > 0 ? (sharedNovelStems.length / hNovel.length) : 0;
+          const hAllCoverage = hStems.length > 0 ? (sharedAllStems.length / hStems.length) : 0;
+          const closeTime = !isNaN(hMs) && !isNaN(pMs) && Math.abs(hMs - pMs) <= 15 * 60 * 1000;
+
+          if (
+            (sharedNovelNums.length > 0 && !hasNewDisjointNum && (sharedNovelStems.length >= 2 || (sharedNovelStems.length >= 1 && hNovelCoverage >= 0.45) || sharedAllStems.length >= 2)) ||
+            (!hasNewDisjointNum && sharedNovelStems.length >= 2 && hNovelCoverage >= 0.55) ||
+            (!hasNewDisjointNum && sharedAllStems.length >= 3 && hAllCoverage >= 0.60) ||
+            (closeTime && !hasNewDisjointNum && sharedAllStems.length >= 2 && hAllCoverage >= 0.40)
+          ) {
+            return true;
+          }
           return false;
         });
+
         if (dupIdx === -1) {
           cleanHist.push(h);
         } else if (h.type === 'material_shift' && cleanHist[dupIdx].type === 'clarification') {
-          cleanHist[dupIdx] = h;
+          cleanHist[dupIdx] = {
+            ...h,
+            timestamp: cleanHist[dupIdx].timestamp || h.timestamp,
+            note: cleanHist[dupIdx].note || h.note
+          };
         }
       }
+
+      let monoVer = 1;
+      cleanHist[0].version = 1;
+      for (let i = 1; i < cleanHist.length; i++) {
+        if (cleanHist[i].type === 'material_shift') monoVer++;
+        cleanHist[i].version = monoVer;
+      }
+      cl.version = monoVer;
       cl.evolutionHistory = cleanHist;
+      if (cleanHist.length <= 1) {
+        delete cl.developmentNote;
+        delete cl.lastDevelopedAt;
+      } else {
+        const lastStep = cleanHist[cleanHist.length - 1];
+        if (lastStep?.note) cl.developmentNote = lastStep.note;
+        if (lastStep?.timestamp) cl.lastDevelopedAt = lastStep.timestamp;
+      }
       if (cl.summarySynthesizedSig && cl.summarySynthesizedSig.startsWith(`${cl.id}|v${cl.version || 1}|`)) {
         cl.summarySynthesizedSig = `${cl.id}|v${cl.version || 1}|h${cleanHist.length}`;
       }
