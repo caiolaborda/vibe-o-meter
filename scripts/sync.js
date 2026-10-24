@@ -3352,7 +3352,7 @@ STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
    - NEVER use stock AI transitions ("underscores how", "highlights the delicate interplay", "serves as a stark reminder", "all eyes now turn to").
 5. PINPOINT PRIMARY LOCATION FROM FULL COVERING DISPATCHES:
    - Inspect the Covering Dispatches for the exact city, prefecture, county, or specific venue/building where the event occurred. For example, if a headline says "Tibet Autonomous Region Hit by Magnitude-7.0 Earthquake" and the dispatches name "Nagqu", set "name": "Nagqu, Tibet Autonomous Region" (NEVER fall back to a national capital like "Beijing, China" or a vague province centroid when a specific city/prefecture/venue is named in the dispatches!).
-   - Whenever the event takes place at a specific stadium, arena, parliament, court, university campus, hospital, airport, military base, or facility, name that exact venue followed by its city ("Specific Venue, City" in "name", e.g. "City Ground, Nottingham", "Palace of Westminster, London").
+   - Only include a specific venue prefix ("Specific Venue, City" in "name", e.g. "Musée du Louvre, Paris", "City Ground, Nottingham") when the event physically occurred at a famous landmark, stadium, museum, university, airport, or military base explicitly named in the Covering Dispatches. NEVER invent or prepend bureaucratic council, ministry, or agency names (never write "Devon Rural District Council, Devon" or "Department of Foreign Affairs, Canberra" — write "Devon, England" or "Canberra, Australia").
    - "region" MUST be "State/Province/Autonomous Region, Country" or "Country", always ending with the sovereign Country name (e.g. "Tibet Autonomous Region, China", "Tennessee, United States", "England, United Kingdom").
 
 Clusters to synthesize:
