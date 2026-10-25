@@ -1000,7 +1000,7 @@ const SOVEREIGN_COUNTRY_PATTERNS = [
   ['taiwan', /\b(taiwan|taiwanese|taipei)\b/i],
   ['india', /\b(india|indian|new delhi|delhi|mumbai|bengaluru|chennai|kolkata|hyderabad|\brbi\b|modi)\b/i],
   ['pakistan', /\b(pakistan|pakistani|islamabad|karachi|lahore)\b/i],
-  ['brazil', /\b(brazil|brazilian|brazilians|brasilia|sao paulo|são paulo|rio de janeiro|lula|bolsonaro)\b/i],
+  ['brazil', /\b(brazil|brazilian|brazilians|brasilia|sao paulo|são paulo|rio de janeiro|bahia|\bstf\b|\btse\b|tre-ba|nunes marques|lula|bolsonaro)\b/i],
   ['russia', /\b(russia|russian|moscow|kremlin|st\.?\s*petersburg|putin)\b/i],
   ['ukraine', /\b(ukraine|ukrainian|kyiv|kharkiv|odesa|odessa|lviv|donbas|crimea|zelensky|zelenskyy)\b/i],
   ['israel', /\b(israel|israeli|jerusalem|tel aviv|haifa|\bidf\b|west bank|gaza|netanyahu)\b/i],
@@ -1089,8 +1089,9 @@ const COMMON_HEADLINE_NON_ENTITY_STEMS = new Set(extractCoherenceStems(
   'funding round valuation revenue earnings profit quarter billion million trillion record high low surge surges jump jumps climb climbs ' +
   'rise rises rising rose fall falls falling drop drops plunge plunges plummet plummets slump slumps tumble tumbles sink sinks ' +
   'supreme court appeal appeals federal judge justice sentencing offender offenders prison prisoner detained custody release released freed ' +
-  'criminal ban unconstitutional campaign midterm election elections runoff voter voters vote votes voting poll polls ballot ballots ' +
+  'criminal ban unconstitutional campaign midterm election elections electoral runoff voter voters vote votes voting extend extends extended poll polls ballot ballots tally counting ' +
   'debate debates spar spars sparring welfare payment payments subsidy subsidies fast track tracks ahead ' +
+  'bus buses fleet fleets shortage shortages restoration restore restores transit transport mobility ' +
   'senate congress parliament minister prime president government official officials police security arrest arrested suspect suspects ' +
   'protest protests riot riots unrest strike strikes clash clashes curfew curfews blockade ' +
   'attack attacks crisis force forces military army troop troops service draft disruption restriction impose prompt order orders ' +
@@ -1392,8 +1393,8 @@ function hasDisjointProperSubjectMergeConflict(clA, clB, stemDfMap = null, maxDf
   const subjB = factsB.headProperStems.size > 0 ? factsB.headProperStems : factsB.properStems;
   const sharedSubj = [...subjA].filter(s => subjB.has(s));
   if (subjA.size >= 1 && subjB.size >= 1 && sharedSubj.length === 0) {
-    const covStemsA = new Set(extractCoherenceStems((clA.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ')));
-    const covStemsB = new Set(extractCoherenceStems((clB.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ')));
+    const covStemsA = new Set(extractCoherenceStems(`${clA.story || ''} ${clA.summary || ''} ${(clA.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ')}`));
+    const covStemsB = new Set(extractCoherenceStems(`${clB.story || ''} ${clB.summary || ''} ${(clB.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ')}`));
     const aMentionsB = [...subjB].some(s => covStemsA.has(s));
     const bMentionsA = [...subjA].some(s => covStemsB.has(s));
     if (!aMentionsB || !bMentionsA) {
@@ -2631,13 +2632,15 @@ Return JSON array in format:
       return scoreB - scoreA;
     });
     consolidatedClusters.forEach(c => {
-      if (c._pendingUpdate?.desyncTokens) {
-        const prevEval = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
-        c._pendingUpdate.desyncTokens.forEach(t => prevEval.add(t));
-        c.evaluatedDesyncTokens = Array.from(prevEval).slice(-30);
-      }
-      if (c._pendingUpdate && c.newestMs) {
-        c.lastEvaluatedCoverageMs = Math.max(c.lastEvaluatedCoverageMs || 0, c.newestMs);
+      if (c._pendingUpdate?._acceptedOrEvaluated) {
+        if (c._pendingUpdate?.desyncTokens) {
+          const prevEval = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
+          c._pendingUpdate.desyncTokens.forEach(t => prevEval.add(t));
+          c.evaluatedDesyncTokens = Array.from(prevEval).slice(-30);
+        }
+        if (c.newestMs) {
+          c.lastEvaluatedCoverageMs = Math.max(c.lastEvaluatedCoverageMs || 0, c.newestMs);
+        }
       }
       delete c.newestMs;
       delete c._pendingUpdate;
@@ -2713,39 +2716,64 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     const cov = c.coverage || [];
     if (cov.length < 3) continue;
     const newestCovMs = Math.max(...cov.map(a => new Date(a.pubDate).getTime() || 0), 0);
-    if (c.lastEvaluatedCoverageMs && newestCovMs <= c.lastEvaluatedCoverageMs) continue;
-    const baseText = `${c.story || ''} ${c.summary || ''} ${c.developmentNote || ''} ${(c.evolutionHistory || []).map(h => h.note || '').join(' ')}`.toLowerCase();
+    const histArr = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
+    const lastHistMs = Math.max(
+      c.lastDevelopedAt ? (new Date(c.lastDevelopedAt).getTime() || 0) : 0,
+      ...histArr.map(h => h?.timestamp ? (new Date(h.timestamp).getTime() || 0) : 0),
+      0
+    );
+    const postHistCov = lastHistMs > 0
+      ? cov.filter(a => (new Date(a.pubDate).getTime() || 0) > lastHistMs + 20 * 60000)
+      : [];
+    const hasPostHistSurge = postHistCov.length >= 2 && newestCovMs > lastHistMs + 30 * 60000;
+    if (!hasPostHistSurge && c.lastEvaluatedCoverageMs && newestCovMs <= c.lastEvaluatedCoverageMs) continue;
+    const baseText = `${c.story || ''} ${c.summary || ''} ${c.developmentNote || ''} ${histArr.map(h => h.note || '').join(' ')}`.toLowerCase();
+    const baseStems = new Set(extractCoherenceStems(baseText));
     const evalSet = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
-    const recentCov = cov.slice(0, 5);
+    const recentCov = hasPostHistSurge ? postHistCov.slice(0, 8) : cov.slice(0, 5);
     const tokenHits = new Map();
     for (const a of recentCov) {
       const cleanT = String(a.title || '').replace(/\s+[-–—|]\s+[^-–—|]+$/, '');
-      const tokens = cleanT.split(/\s+/).slice(1);
+      const tokens = cleanT.split(/\s+/);
       const seenInArt = new Set();
-      for (const tok of tokens) {
+      for (let ti = 0; ti < tokens.length; ti++) {
+        const tok = tokens[ti];
         const w = tok.replace(/[^a-zA-Z0-9]/g, '');
         const wl = w.toLowerCase();
-        if (evalSet.has(wl)) continue;
-        const isProper = w.length >= 4 && /^[A-Z][a-z]+$/.test(w) && !DESYNC_IGNORE_WORDS.has(wl);
-        const isNumber = /^\d{2,}$/.test(w) && Number(w) >= 12 && Number(w) !== 2026 && Number(w) !== 2027;
-        if ((isProper || isNumber) && !baseText.includes(wl.slice(0, Math.min(5, wl.length)))) {
+        if (!wl || evalSet.has(wl)) continue;
+        const isProper = ti > 0 && w.length >= 4 && /^[A-Z][a-z]+$/.test(w) && !DESYNC_IGNORE_WORDS.has(wl);
+        const isAcronym = w.length >= 3 && w.length <= 6 && /^[A-Z]{3,6}$/.test(w) && !['USA', 'CNN', 'BBC', 'NPR', 'PBS', 'AFP', 'TASS', 'NATO'].includes(w);
+        const isNumber = (/^\d+$/.test(w) && Number(w) >= 2 && Number(w) !== 2026 && Number(w) !== 2027) ||
+          ['two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'dozen'].includes(wl);
+        if ((isProper || isAcronym || isNumber) && !baseText.includes(wl.slice(0, Math.min(5, wl.length)))) {
           seenInArt.add(wl);
+        }
+      }
+      if (hasPostHistSurge) {
+        for (const st of extractCoherenceStems(cleanT)) {
+          if (st.length >= 4 && !evalSet.has(st) && !DESYNC_IGNORE_WORDS.has(st) && !baseStems.has(st) && !baseText.includes(st)) {
+            seenInArt.add(st);
+          }
         }
       }
       for (const wl of seenInArt) tokenHits.set(wl, (tokenHits.get(wl) || 0) + 1);
     }
     const missingShared = [...tokenHits.entries()].filter(([, cnt]) => cnt >= 2).map(([wl]) => wl);
-    if (missingShared.length > 0) {
-      const matchArts = recentCov.filter(a => missingShared.some(wl => String(a.title || '').toLowerCase().includes(wl)));
+    if (missingShared.length > 0 && (!hasPostHistSurge || missingShared.length >= 2)) {
+      const matchArts = recentCov.filter(a => {
+        const tLow = String(a.title || '').toLowerCase();
+        const tStems = new Set(extractCoherenceStems(a.title || ''));
+        return missingShared.some(wl => tLow.includes(wl) || tStems.has(wl));
+      });
       const newestMatchMs = Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0), 0);
-      if (matchArts.length >= 2 && (!c.lastEvaluatedCoverageMs || newestMatchMs > c.lastEvaluatedCoverageMs)) {
-        console.log(`[Clusters] Self-healing desync detected on "${c.story}" (missing from summary: ${missingShared.join(', ')}) — queueing for Job 2.`);
+      if (matchArts.length >= 2 && (hasPostHistSurge || !c.lastEvaluatedCoverageMs || newestMatchMs > c.lastEvaluatedCoverageMs)) {
+        console.log(`[Clusters] Self-healing desync detected on "${c.story}" (missing from summary: ${missingShared.slice(0, 8).join(', ')}) — queueing for Job 2.`);
         c._pendingUpdate = {
           candidateStory: c.story,
           candidateSummary: c.summary || '',
           newestAddedMs: newestMatchMs || Date.now(),
-          addedHeadlines: matchArts.slice(0, 5).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`),
-          desyncTokens: missingShared
+          addedHeadlines: (hasPostHistSurge ? postHistCov.slice(0, 7) : matchArts.slice(0, 5)).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`),
+          desyncTokens: missingShared.slice(0, 12)
         };
       }
     }
@@ -3126,7 +3154,12 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
     // Apply verified in-place developments & clarifications first (ONLY for clusters that actually have a _pendingUpdate!)
     const inPlaceByIdx = new Map();
     for (const dev of inPlaceDevs) {
-      if (dev?.updateType === 'none') continue;
+      if (dev?.updateType === 'none') {
+        if (Number.isInteger(dev?.index) && clusters[dev.index]?._pendingUpdate) {
+          clusters[dev.index]._pendingUpdate._acceptedOrEvaluated = true;
+        }
+        continue;
+      }
       if (Number.isInteger(dev?.index) && dev.index >= 0 && dev.index < clusters.length && (dev.summary || dev.story)) {
         const targetCl = clusters[dev.index];
         if (!targetCl || !targetCl._pendingUpdate || !Array.isArray(targetCl._pendingUpdate.addedHeadlines) || targetCl._pendingUpdate.addedHeadlines.length === 0) {
@@ -3156,12 +3189,13 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
 
       // Skip routine restatements ("Re-emphasizes...", "Reaffirms...") that add no new factual detail
       if (uType === 'clarification' && /^(re-?emphasiz|reaffirm|reiterat|continu(es|ed) to report)/i.test(noteText)) {
+        if (c._pendingUpdate) c._pendingUpdate._acceptedOrEvaluated = true;
         continue;
       }
 
       // Coherence guard against off-by-one index slips, single-country/entity tangents & off-topic wire roundups:
-      // Ensure noteText shares >= 1 specific non-country/non-generic stem with the cluster headline (or >= 2 specific stems with its summary),
-      // and when the cluster headline has >= 3 stems, require >= 2 total shared stems with story+summary so a single shared company/country name (e.g. "OpenAI", "Tunisia") cannot pass alone.
+      // Ensure noteText is grounded in the cluster's added/existing coverage dispatches and that the updated step
+      // (noteText + dev.story + newSummary) shares >= 1 specific stem with the cluster headline (or >= 2 specific stems with its summary/coverage).
       const BROAD_DEV_STEMS = new Set([
         "saudi","arabia","houthi","yemen","iran","tehran","israel","netany","palest","west","bank","gaza","lebanon","syria",
         "egypt","turk","tunisi","tunis","albani","tirana","brazil","ecuado","argent","colomb","venezu","mexic","canad",
@@ -3201,16 +3235,24 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const headStems = extractCoherenceStems(c.story || "");
       const specificHeadStems = new Set(headStems.filter(isSpecificDevStem));
       const anchorHeadStems = specificHeadStems.size > 0 ? specificHeadStems : new Set(headStems);
-      const allClusterStems = new Set(extractCoherenceStems(`${c.story || ""} ${c.summary || ""}`));
+      const covContextText = (c.coverage || []).slice(0, 10).map(a => `${a.title || ''} ${a.description || ''}`).join(' ');
+      const addedCovStems = new Set(extractCoherenceStems((c._pendingUpdate?.addedHeadlines || []).join(' ')));
+      const allClusterStems = new Set(extractCoherenceStems(`${c.story || ""} ${c.summary || ""} ${covContextText}`));
       const specificSumStems = new Set([...allClusterStems].filter(isSpecificDevStem));
       const noteOnlyStems = extractCoherenceStems(noteText);
+      const stepCombinedStems = extractCoherenceStems(`${noteText} ${dev.story || ''} ${newSummary || ''}`);
       if (noteOnlyStems.length > 0 && anchorHeadStems.size > 0) {
-        const matchesHead = noteOnlyStems.some(s => anchorHeadStems.has(s));
-        const matchesSumCount = noteOnlyStems.filter(s => specificSumStems.has(s)).length;
-        const totalSharedWithCluster = new Set(noteOnlyStems.filter(s => allClusterStems.has(s))).size;
-        const isSingleEntityTangent = headStems.length >= 3 && allClusterStems.size >= 5 && totalSharedWithCluster <= 1 && matchesSumCount <= 1;
-        if ((!matchesHead && matchesSumCount < 2) || isSingleEntityTangent) {
-          console.warn(`[Clusters] Rejected off-topic / single-entity tangent on cluster [${idx}] "${c.story}": "${noteText}" (matchesHead=${matchesHead}, matchesSumCount=${matchesSumCount}, totalShared=${totalSharedWithCluster})`);
+        const noteGroundedInCov = noteOnlyStems.filter(s => addedCovStems.has(s) || allClusterStems.has(s)).length;
+        const matchesHead = noteOnlyStems.some(s => anchorHeadStems.has(s)) ||
+          (noteGroundedInCov >= 2 && stepCombinedStems.some(s => anchorHeadStems.has(s)));
+        const matchesSumCount = Math.max(
+          noteOnlyStems.filter(s => specificSumStems.has(s)).length,
+          noteGroundedInCov >= 2 ? stepCombinedStems.filter(s => specificSumStems.has(s)).length : 0
+        );
+        const totalSharedWithCluster = new Set(stepCombinedStems.filter(s => allClusterStems.has(s))).size;
+        const isSingleEntityTangent = headStems.length >= 3 && allClusterStems.size >= 5 && (totalSharedWithCluster <= 1 || noteGroundedInCov === 0) && matchesSumCount <= 1;
+        if (noteGroundedInCov === 0 || (!matchesHead && matchesSumCount < 2) || isSingleEntityTangent) {
+          console.warn(`[Clusters] Rejected off-topic / single-entity tangent on cluster [${idx}] "${c.story}": "${noteText}" (matchesHead=${matchesHead}, matchesSumCount=${matchesSumCount}, noteGroundedInCov=${noteGroundedInCov}, totalShared=${totalSharedWithCluster})`);
           continue;
         }
       }
@@ -3228,6 +3270,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           c.evolutionHistory[0].headline = groundedStory;
           c.evolutionHistory[0].summary = newSummary;
         }
+        c._pendingUpdate._acceptedOrEvaluated = true;
         continue;
       }
 
@@ -3250,6 +3293,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         const maxAllowedOverlap = uType === 'clarification' ? 0.60 : 0.72;
         if ((noteNums.length === 0 && novelStemCount < 2) || (noteNums.length === 0 && overlapRatio >= maxAllowedOverlap)) {
           console.log(`[Clusters] Suppressed syndication echo on "${c.story}": "${noteText}" (${alreadyInBaseline}/${substantiveNoteStems.length} stems already in baseline)`);
+          if (c._pendingUpdate) c._pendingUpdate._acceptedOrEvaluated = true;
           continue;
         }
       }
@@ -3294,7 +3338,12 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         }
         return false;
       });
-      if (alreadyRecorded) continue;
+      if (alreadyRecorded) {
+        if (c._pendingUpdate) c._pendingUpdate._acceptedOrEvaluated = true;
+        continue;
+      }
+
+      if (c._pendingUpdate) c._pendingUpdate._acceptedOrEvaluated = true;
 
       const beforeSnapshot = {
         id: c.id || slugify(c.story),

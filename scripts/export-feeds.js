@@ -646,14 +646,23 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
 
     if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1 && specAnchorStems.size >= 2) {
+      const allCovStems = getStems((cl.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' '));
       cl.evolutionHistory = cl.evolutionHistory.filter((h, idx) => {
         if (idx === 0 || !h || h.type === 'initial') return true;
         if (h.type === 'clarification' && h.note) {
           const noteStems = getStems(h.note);
+          const stepStems = getStems(`${h.note || ''} ${h.headline || ''} ${h.summary || ''}`);
           if (noteStems.size > 0) {
-            const sharedSpec = [...noteStems].filter(s => specAnchorStems.has(s)).length;
-            const sharedTotal = [...noteStems].filter(s => anchorStems.has(s)).length;
-            if (sharedSpec === 0) return false;
+            const noteInCovOrAnchor = [...noteStems].filter(s => allCovStems.has(s) || anchorStems.has(s)).length;
+            const sharedSpec = Math.max(
+              [...noteStems].filter(s => specAnchorStems.has(s)).length,
+              noteInCovOrAnchor >= 2 ? [...stepStems].filter(s => specAnchorStems.has(s)).length : 0
+            );
+            const sharedTotal = Math.max(
+              [...noteStems].filter(s => anchorStems.has(s)).length,
+              noteInCovOrAnchor >= 2 ? [...stepStems].filter(s => anchorStems.has(s)).length : 0
+            );
+            if (sharedSpec === 0 || noteInCovOrAnchor === 0) return false;
             if (headStems.size >= 3 && anchorStems.size >= 6 && sharedTotal <= 1 && sharedSpec <= 1) return false;
           }
         }
