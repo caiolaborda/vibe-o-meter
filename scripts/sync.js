@@ -986,29 +986,73 @@ function extractCoherenceStems(str) {
 }
 
 const SOVEREIGN_COUNTRY_PATTERNS = [
-  ['uk', /\b(u\.?k\.?(?!\w)|united kingdom|britain|british|england|english|scotland|scottish|wales|welsh|london|westminster|downing street|bank of england|\bboe\b|chancellor|healey|starmer)\b/i],
-  ['canada', /\b(canada|canadian|ottawa|toronto|ontario|quebec|statscan|statcan|statistics canada|bank of canada)\b/i],
-  ['japan', /\b(japan|japanese|tokyo|bank of japan|\bboj\b|\byen\b)\b/i],
-  ['us', /\b(u\.?s\.?(?:a\.?)?(?!\w)|united states|america|american|washington|white house|pentagon|congress|senate|federal reserve|wall street)\b/i],
-  ['france', /\b(france|french|paris|macron|elysee)\b/i],
-  ['germany', /\b(germany|german|berlin|bundesbank|scholz|merz)\b/i],
-  ['italy', /\b(italy|italian|rome|milan|meloni)\b/i],
-  ['spain', /\b(spain|spanish|madrid)\b/i],
-  ['australia', /\b(australia|australian|sydney|canberra|melbourne|\brba\b)\b/i],
-  ['china', /\b(china|chinese|beijing|shanghai|\bpboc\b)\b/i],
-  ['india', /\b(india|indian|new delhi|mumbai|\brbi\b)\b/i],
-  ['brazil', /\b(brazil|brazilian|brasilia|lula)\b/i],
-  ['russia', /\b(russia|russian|moscow|kremlin|putin)\b/i],
-  ['ukraine', /\b(ukraine|ukrainian|kyiv|zelensky|zelenskyy)\b/i],
-  ['israel', /\b(israel|israeli|jerusalem|tel aviv|\bidf\b|west bank|gaza)\b/i],
+  ['uk', /\b(u\.?k\.?(?!\w)|united kingdom|britain|british|england|english|scotland|scottish|wales|welsh|northern ireland|belfast|london|westminster|downing street|isles of scilly|cornwall|devon|bank of england|\bboe\b|met office|chancellor|healey|starmer|burnham)\b/i],
+  ['canada', /\b(canada|canadian|ottawa|toronto|montreal|vancouver|halifax|ontario|quebec|nova scotia|newfoundland|labrador|new brunswick|prince edward island|alberta|british columbia|manitoba|saskatchewan|atlantic canada|statscan|statcan|statistics canada|bank of canada)\b/i],
+  ['japan', /\b(japan|japanese|tokyo|osaka|kyoto|chiba|hokkaido|okinawa|bank of japan|\bboj\b|\byen\b)\b/i],
+  ['us', /\b(u\.?s\.?(?:a\.?)?(?!\w)|united states|america|american|washington|white house|pentagon|congress|senate|federal reserve|wall street|california|texas|florida|new york|chicago|los angeles|oregon|pennsylvania|michigan|georgia|ohio|arizona)\b/i],
+  ['france', /\b(france|french|paris|marseille|lyon|toulouse|nice|normandy|brittany|macron|elysee)\b/i],
+  ['germany', /\b(germany|german|berlin|munich|frankfurt|hamburg|cologne|leipzig|dresden|stuttgart|bavaria|saxony|berchtesgaden|bundesbank|scholz|merz)\b/i],
+  ['italy', /\b(italy|italian|rome|milan|naples|turin|venice|florence|sicily|meloni)\b/i],
+  ['spain', /\b(spain|spanish|madrid|barcelona|catalonia|valencia|seville|andalusia)\b/i],
+  ['australia', /\b(australia|australian|sydney|canberra|melbourne|brisbane|perth|adelaide|hobart|darwin|queensland|victoria|new south wales|south australia|western australia|tasmania|\brba\b)\b/i],
+  ['new_zealand', /\b(new zealand|auckland|wellington|christchurch|kiwi)\b/i],
+  ['china', /\b(china|chinese|beijing|shanghai|shenzhen|guangzhou|chengdu|wuhan|tibet|xinjiang|hong kong|\bpboc\b)\b/i],
+  ['taiwan', /\b(taiwan|taiwanese|taipei)\b/i],
+  ['india', /\b(india|indian|new delhi|delhi|mumbai|bengaluru|chennai|kolkata|hyderabad|\brbi\b|modi)\b/i],
+  ['pakistan', /\b(pakistan|pakistani|islamabad|karachi|lahore)\b/i],
+  ['brazil', /\b(brazil|brazilian|brazilians|brasilia|sao paulo|são paulo|rio de janeiro|lula|bolsonaro)\b/i],
+  ['russia', /\b(russia|russian|moscow|kremlin|st\.?\s*petersburg|putin)\b/i],
+  ['ukraine', /\b(ukraine|ukrainian|kyiv|kharkiv|odesa|odessa|lviv|donbas|crimea|zelensky|zelenskyy)\b/i],
+  ['israel', /\b(israel|israeli|jerusalem|tel aviv|haifa|\bidf\b|west bank|gaza|netanyahu)\b/i],
+  ['palestine', /\b(palestine|palestinian|ramallah|gaza|west bank)\b/i],
+  ['iran', /\b(iran|iranian|tehran)\b/i],
+  ['iraq', /\b(iraq|iraqi|baghdad|erbil)\b/i],
+  ['syria', /\b(syria|syrian|damascus|aleppo)\b/i],
+  ['lebanon', /\b(lebanon|lebanese|beirut)\b/i],
+  ['yemen', /\b(yemen|yemeni|sanaa|aden|houthi)\b/i],
   ['saudi', /\b(saudi|riyadh|jeddah)\b/i],
-  ['egypt', /\b(egypt|egyptian|cairo)\b/i],
+  ['uae', /\b(u\.?a\.?e\.?|united arab emirates|dubai|abu dhabi)\b/i],
+  ['turkey', /\b(turkey|turkiye|türkiye|turkish|ankara|istanbul|erdogan)\b/i],
+  ['egypt', /\b(egypt|egyptian|cairo|alexandria)\b/i],
   ['haiti', /\b(haiti|haitian|port-au-prince)\b/i],
   ['el_salvador', /\b(el salvador|salvadoran|bukele)\b/i],
-  ['ecuador', /\b(ecuador|ecuadorian|quito)\b/i],
+  ['ecuador', /\b(ecuador|ecuadorian|quito|guayaquil)\b/i],
+  ['mexico', /\b(mexico|mexican|mexico city|guadalajara|monterrey|sheinbaum)\b/i],
+  ['argentina', /\b(argentina|argentine|argentinian|buenos aires|milei)\b/i],
+  ['colombia', /\b(colombia|colombian|bogota|medellin)\b/i],
+  ['chile', /\b(chile|chilean|santiago)\b/i],
+  ['venezuela', /\b(venezuela|venezuelan|caracas|maduro)\b/i],
   ['albania', /\b(albania|albanian|tirana)\b/i],
-  ['indonesia', /\b(indonesia|indonesian|jakarta|sulawesi)\b/i],
-  ['ireland', /\b(ireland|irish|dublin|leinster|munster)\b/i]
+  ['indonesia', /\b(indonesia|indonesian|jakarta|sulawesi|bali|sumatra|prabowo)\b/i],
+  ['malaysia', /\b(malaysia|malaysian|kuala lumpur)\b/i],
+  ['singapore', /\b(singapore|singaporean)\b/i],
+  ['philippines', /\b(philippines|philippine|filipino|manila)\b/i],
+  ['south_korea', /\b(south korea|south korean|seoul)\b/i],
+  ['north_korea', /\b(north korea|north korean|pyongyang)\b/i],
+  ['ireland', /\b(ireland|irish|dublin|cork|galway|leinster|munster|connacht|ulster|met éireann|met eireann)\b/i],
+  ['netherlands', /\b(netherlands|dutch|amsterdam|rotterdam|the hague)\b/i],
+  ['belgium', /\b(belgium|belgian|brussels|antwerp)\b/i],
+  ['switzerland', /\b(switzerland|swiss|zurich|geneva|bern)\b/i],
+  ['austria', /\b(austria|austrian|vienna)\b/i],
+  ['poland', /\b(poland|polish|warsaw|krakow)\b/i],
+  ['greece', /\b(greece|greek|athens|thessaloniki)\b/i],
+  ['sweden', /\b(sweden|swedish|stockholm)\b/i],
+  ['norway', /\b(norway|norwegian|oslo)\b/i],
+  ['denmark', /\b(denmark|danish|copenhagen)\b/i],
+  ['finland', /\b(finland|finnish|helsinki)\b/i],
+  ['portugal', /\b(portugal|portuguese|lisbon|porto)\b/i],
+  ['lithuania', /\b(lithuania|lithuanian|vilnius|kaunas)\b/i],
+  ['latvia', /\b(latvia|latvian|riga)\b/i],
+  ['estonia', /\b(estonia|estonian|tallinn)\b/i],
+  ['bulgaria', /\b(bulgaria|bulgarian|sofia)\b/i],
+  ['romania', /\b(romania|romanian|bucharest)\b/i],
+  ['south_africa', /\b(south africa|south african|johannesburg|cape town|pretoria)\b/i],
+  ['nigeria', /\b(nigeria|nigerian|lagos|abuja)\b/i],
+  ['kenya', /\b(kenya|kenyan|nairobi)\b/i],
+  ['sudan', /\b(sudan|sudanese|khartoum|darfur)\b/i],
+  ['niger', /\b(niger|niamey)\b/i],
+  ['libya', /\b(libya|libyan|tripoli|benghazi)\b/i],
+  ['tunisia', /\b(tunisia|tunisian|tunis)\b/i]
 ];
 
 function detectSovereignCountries(text) {
@@ -1020,32 +1064,389 @@ function detectSovereignCountries(text) {
   return s;
 }
 
-const GENERIC_DOMESTIC_BEAT_STEMS = new Set(extractCoherenceStems(
+function haversineKm(locA, locB) {
+  if (!locA || !locB || typeof locA.lat !== 'number' || typeof locA.lon !== 'number' || typeof locB.lat !== 'number' || typeof locB.lon !== 'number') {
+    return null;
+  }
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(locB.lat - locA.lat);
+  const dLon = toRad(locB.lon - locA.lon);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(locA.lat)) * Math.cos(toRad(locB.lat)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Common English vocabulary (verbs, adjectives, generic news nouns, time words, and broad country/region labels)
+// that appear capitalized in Title-Case headlines without being specific Proper-Noun Subject Entities.
+const COMMON_HEADLINE_NON_ENTITY_STEMS = new Set(extractCoherenceStems(
   'inflation september october november december january february march april june july august ' +
-  'annual monthly quarterly percent rate interest price prices fuel gasoline energy growth economy economic ' +
-  'budget fiscal treasury finance debt borrowing deficit surplus tax bank central tightening ' +
-  'consumer confidence cost living market stock share investor record high low surge jump climb ' +
-  'rise rises rising rose fall falls falling drop drops plunge plummet slump supreme court appeal federal judge justice sentencing ' +
-  'offender offenders prison criminal ban unconstitutional campaign midterm election voter senate congress ' +
-  'parliament minister president government official police security protest riot unrest strike strikes ' +
-  'attack attacks crisis force forces military army service draft disruption restriction impose prompt order orders ' +
-  'escalate report reports update updates britain canada japan america brazil france germany italy spain australia ' +
-  'china india russia ukraine israel saudi arabia egypt haiti ecuador albania indonesia ireland'
+  'monday tuesday wednesday thursday friday saturday sunday today yesterday tomorrow weekend morning evening ' +
+  'annual monthly quarterly percent rate interest price prices fuel gasoline energy oil crude gas growth economy economic ' +
+  'budget fiscal treasury finance financial debt borrowing deficit surplus tax bank central tightening ' +
+  'consumer confidence cost living market markets stock stocks share shares investor investors tech technology rout rally ' +
+  'funding round valuation revenue earnings profit quarter billion million trillion record high low surge surges jump jumps climb climbs ' +
+  'rise rises rising rose fall falls falling drop drops plunge plunges plummet plummets slump slumps tumble tumbles sink sinks ' +
+  'supreme court appeal appeals federal judge justice sentencing offender offenders prison prisoner detained custody release released freed ' +
+  'criminal ban unconstitutional campaign midterm election elections runoff voter voters vote votes voting poll polls ballot ballots ' +
+  'debate debates spar spars sparring welfare payment payments subsidy subsidies fast track tracks ahead ' +
+  'senate congress parliament minister prime president government official officials police security arrest arrested suspect suspects ' +
+  'protest protests riot riots unrest strike strikes clash clashes curfew curfews blockade ' +
+  'attack attacks crisis force forces military army troop troops service draft disruption restriction impose prompt order orders ' +
+  'escalate report reports update updates announce announces reveal reveals confirm confirms discover discovers found ' +
+  'scientist scientists astronomer astronomers researcher researchers doctor doctors study trial clinical vaccine vaccines ' +
+  'pharmaceutical firm firms company companies corporation corporations advanced novel experimental bespoke ' +
+  'cancer patient patients treatment disease medical health hospital outbreak virus infection ' +
+  'storm storms subtropical hurricane typhoon cyclone severe weather gale gales wind winds rain flood floods flooding warning warnings ' +
+  'impact impacts hit hits strike strikes batter batters lash lashes bring brings trigger triggers prompt prompts spark sparks ' +
+  'wildfire fire fires blaze earthquake tremor landslide avalanche power outage outages blackout ' +
+  'flight flights plane aircraft airport airspace divert diverts diverted bomb threat threats drone drones explode explodes explosion ' +
+  'suspected breach breaches investigate investigated investigation probe crash crashes derailment train ship vessel ' +
+  'hostage hostages return returns home woman man child children family people citizen citizens ' +
+  'defeat defeats beat beats win wins lose loses draw draws match game league premier championship title ambitions defend defends ' +
+  'gear gears run season player players coach team club ' +
+  'britain united kingdom england scotland wales ireland canada japan america france germany italy spain australia new zealand ' +
+  'china taiwan india pakistan brazil russia ukraine israel palestine iran iraq syria lebanon yemen saudi arabia egypt ' +
+  'haiti ecuador mexico argentina colombia chile venezuela albania indonesia malaysia singapore singaporean philippines korea ' +
+  'netherlands belgium switzerland austria poland greece sweden norway denmark finland portugal lithuania latvia estonia ' +
+  'bulgaria romania south africa nigeria kenya sudan niger libya tunisia ' +
+  'europe european asia asian southeast africa african latin american middle east eastern north south west western gulf atlantic pacific ' +
+  'prabowo subianto macron emmanuel trump donald putin vladimir zelensky volodymyr netanyahu benjamin lula silva bolsonaro jair ' +
+  'starmer keir burnham andy albanese anthony modi narendra xi jinping biden joe harris kamala erdogan milei sheinbaum carney merz scholz meloni'
 ));
 
+const GENERIC_DOMESTIC_BEAT_STEMS = COMMON_HEADLINE_NON_ENTITY_STEMS;
+
+// Extract Named Storm/Disaster Designators (e.g. "Storm Austen" -> "austen", "Subtropical Storm Josephine" -> "josephine")
+function extractNamedWeatherDesignators(text) {
+  const out = new Set();
+  const str = String(text || '');
+  const re = /\b(?:Subtropical\s+)?(?:Storm|Hurricane|Typhoon|Cyclone)\s+([A-Z][a-z]{2,})\b/g;
+  let m;
+  while ((m = re.exec(str)) !== null) {
+    const name = m[1].toLowerCase();
+    if (!/^(warning|warnings|watch|watches|system|systems|season|track|center|centre|force|surge|damage|hit|hits|strike|strikes|bring|brings)$/.test(name)) {
+      out.add(name);
+    }
+  }
+  return out;
+}
+
+// Extract case-preserved Proper-Noun Subject Entities from a headline + supporting prose (summary/descriptions).
+// Uses mid-sentence capitalization in prose + non-generic Title-Case tokens in headlines so common nouns
+// ("storm", "defeats", "flight", "drone", "hostages", "stocks") are never mistaken for proper-noun entities.
+function extractProperSubjectEntities(headline = '', bodyText = '') {
+  const properStems = new Set();
+  const headProperStems = new Set();
+  const properDisplay = [];
+  const headProperDisplay = [];
+  const seenDisplayLower = new Set();
+  const seenHeadDisplayLower = new Set();
+  const midSentenceConfirmedStems = new Set();
+
+  const addEntity = (rawWord, isHead = false) => {
+    const clean = String(rawWord || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
+    if (clean.length < 3) return;
+    const stems = extractCoherenceStems(clean);
+    const validStems = stems.filter(s => !COMMON_HEADLINE_NON_ENTITY_STEMS.has(s) && !/^\d+$/.test(s));
+    if (validStems.length === 0) return;
+    validStems.forEach(s => {
+      properStems.add(s);
+      if (isHead) headProperStems.add(s);
+    });
+    const lower = clean.toLowerCase();
+    if (!seenDisplayLower.has(lower) && properDisplay.length < 8) {
+      seenDisplayLower.add(lower);
+      properDisplay.push(clean);
+    }
+    if (isHead && !seenHeadDisplayLower.has(lower) && headProperDisplay.length < 6) {
+      seenHeadDisplayLower.add(lower);
+      headProperDisplay.push(clean);
+    }
+  };
+
+  // 1. Named weather systems ("Storm Austen", "Subtropical Storm Josephine")
+  const combined = `${headline || ''} ${bodyText || ''}`;
+  const stormRe = /\b((?:Subtropical\s+)?(?:Storm|Hurricane|Typhoon|Cyclone)\s+([A-Z][a-z]{2,}))\b/g;
+  let sm;
+  while ((sm = stormRe.exec(combined)) !== null) {
+    extractCoherenceStems(sm[2]).forEach(s => midSentenceConfirmedStems.add(s));
+    addEntity(sm[1], String(headline || '').includes(sm[2]));
+  }
+
+  // 2. Mid-sentence capitalized words in prose (summary/descriptions) — guaranteed proper nouns by English orthography,
+  // plus sentence-initial words that carry possessive "'s", are followed by another capitalized proper noun/title, or match the headline's opening subject word.
+  const firstHeadWordClean = String(headline || '').trim().split(/\s+/)[0]?.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '').toLowerCase() || '';
+  const sentences = String(bodyText || '').split(/(?<=[.!?])\s+/);
+  for (const sent of sentences) {
+    const allWords = sent.trim().split(/\s+/);
+    for (let wi = 0; wi < allWords.length; wi++) {
+      const rawW = allWords[wi];
+      const hasPossessive = /'s$/i.test(rawW);
+      const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
+      if (clean.length < 3 || !/^[A-Z][A-Za-z0-9-]+$/.test(clean)) continue;
+      if (wi === 0) {
+        const nextClean = (allWords[1] || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
+        const thirdClean = (allWords[2] || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
+        const nextIsCap = nextClean.length >= 2 && /^[A-Z]/.test(nextClean);
+        const coordNextIsCap = /^(and|&|vs\.?|or)$/i.test(allWords[1] || '') && thirdClean.length >= 2 && /^[A-Z]/.test(thirdClean);
+        const matchesHeadSubject = clean.toLowerCase() === firstHeadWordClean;
+        if (!hasPossessive && !nextIsCap && !coordNextIsCap && !matchesHeadSubject) continue;
+      }
+      extractCoherenceStems(clean).forEach(s => midSentenceConfirmedStems.add(s));
+      addEntity(clean, false);
+    }
+  }
+
+  // 3. Headline capitalized tokens & acronyms: when prose bodyText is available, confirm Title-Case headline words
+  // against midSentenceConfirmedStems (or acronyms/possessive landmarks) so Title-Case verbs/adjectives never masquerade as proper nouns!
+  const hasRichProse = String(bodyText || '').trim().length >= 25;
+  const headWords = String(headline || '').trim().split(/\s+/);
+  for (const rawW of headWords) {
+    const hasPossessive = /'s$/i.test(rawW);
+    const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
+    const isAcronymOrNumTeam = /^(?:[A-Z]{2,5}|\d+ers)$/.test(clean);
+    if ((clean.length >= 3 && /^[A-Z]/.test(clean)) || isAcronymOrNumTeam) {
+      const wStems = extractCoherenceStems(clean).filter(s => !COMMON_HEADLINE_NON_ENTITY_STEMS.has(s) && !/^\d+$/.test(s));
+      if (wStems.length === 0) continue;
+      if (!hasRichProse || isAcronymOrNumTeam || hasPossessive || wStems.some(s => midSentenceConfirmedStems.has(s))) {
+        addEntity(clean, true);
+      }
+    }
+  }
+
+  return { properStems, headProperStems, properDisplay, headProperDisplay };
+}
+
+function formatShortUtcDate(msOrIso) {
+  const t = typeof msOrIso === 'number' ? msOrIso : Date.parse(String(msOrIso || ''));
+  if (isNaN(t) || t <= 0) return '';
+  const d = new Date(t);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mm = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${months[d.getUTCMonth()]} ${d.getUTCDate()} ${hh}:${mm}Z`;
+}
+
+// Extract structured Event Fact Attributes (Timing Window, Sovereign/Pinpoint Geography, Proper-Noun Subjects, Weather Designators)
+function extractEventFactAttributes(itemOrCluster) {
+  if (!itemOrCluster) return { timeTag: '', locTag: '', countries: new Set(), properStems: new Set(), headProperStems: new Set(), weatherDesignators: new Set(), minMs: 0, maxMs: 0 };
+  const isCluster = Array.isArray(itemOrCluster.coverage) || Boolean(itemOrCluster.story);
+  const headline = isCluster ? (itemOrCluster.story || '') : (itemOrCluster.title || '');
+  const cov = isCluster ? (itemOrCluster.coverage || []) : [];
+  const bodyText = isCluster
+    ? `${itemOrCluster.summary || ''} ${cov.slice(0, 5).map(a => `${a.title || ''}. ${a.description || ''}`).join(' ')}`
+    : (itemOrCluster.description || '');
+  const fullText = `${headline} ${bodyText}`;
+
+  const times = [];
+  if (isCluster) {
+    if (itemOrCluster.firstSeenAt) {
+      const t0 = Date.parse(itemOrCluster.firstSeenAt);
+      if (!isNaN(t0) && t0 > 0) times.push(t0);
+    }
+    if (itemOrCluster.evolutionHistory?.[0]?.timestamp) {
+      const th0 = Date.parse(itemOrCluster.evolutionHistory[0].timestamp);
+      if (!isNaN(th0) && th0 > 0) times.push(th0);
+    }
+    for (const a of cov) {
+      const ta = Date.parse(a?.pubDate || '');
+      if (!isNaN(ta) && ta > 0) times.push(ta);
+    }
+  } else {
+    const ta = itemOrCluster.pubMs || Date.parse(itemOrCluster.pubDate || '');
+    if (!isNaN(ta) && ta > 0) times.push(ta);
+  }
+  const minMs = times.length > 0 ? Math.min(...times) : 0;
+  const maxMs = times.length > 0 ? Math.max(...times) : 0;
+  const timeTag = isCluster
+    ? (minMs > 0 ? `${formatShortUtcDate(minMs)} -> ${formatShortUtcDate(maxMs)}` : '')
+    : (maxMs > 0 ? formatShortUtcDate(maxMs) : '');
+
+  const countries = detectSovereignCountries(fullText);
+  const pl = itemOrCluster.primaryLocation;
+  if (pl?.countryIso) {
+    const isoMap = { gb: 'uk', us: 'us', ca: 'canada', au: 'australia', nz: 'new_zealand', fr: 'france', de: 'germany', it: 'italy', es: 'spain', jp: 'japan', cn: 'china', tw: 'taiwan', in: 'india', pk: 'pakistan', br: 'brazil', ru: 'russia', ua: 'ukraine', il: 'israel', ps: 'palestine', ir: 'iran', iq: 'iraq', sy: 'syria', lb: 'lebanon', ye: 'yemen', sa: 'saudi', ae: 'uae', tr: 'turkey', eg: 'egypt', nl: 'netherlands', be: 'belgium', ch: 'switzerland', at: 'austria', pl: 'poland', gr: 'greece', se: 'sweden', no: 'norway', dk: 'denmark', fi: 'finland', pt: 'portugal', lt: 'lithuania', lv: 'latvia', ee: 'estonia', bg: 'bulgaria', ro: 'romania', ie: 'ireland', za: 'south_africa', ng: 'nigeria', ke: 'kenya', sd: 'sudan', ne: 'niger', ly: 'libya', tn: 'tunisia', mx: 'mexico', ar: 'argentina', co: 'colombia', cl: 'chile', ve: 'venezuela' };
+    const mapped = isoMap[String(pl.countryIso).toLowerCase()];
+    if (mapped) countries.add(mapped);
+  }
+  const locParts = [];
+  if (pl?.name) locParts.push(`${pl.name}${pl.region ? `, ${pl.region}` : ''}${pl.countryIso ? ` (${pl.countryIso})` : ''}`);
+  if (countries.size > 0) locParts.push(`countries=${Array.from(countries).slice(0, 4).join(',')}`);
+  const locTag = locParts.join(' | ');
+
+  const { properStems, headProperStems, properDisplay, headProperDisplay } = extractProperSubjectEntities(headline, bodyText);
+  const weatherDesignators = extractNamedWeatherDesignators(fullText);
+
+  return {
+    timeTag,
+    locTag,
+    countries,
+    headCountries: detectSovereignCountries(headline),
+    properStems,
+    headProperStems,
+    properDisplay: headProperDisplay.length > 0 ? headProperDisplay : properDisplay.slice(0, 6),
+    weatherDesignators,
+    minMs,
+    maxMs
+  };
+}
+
 function hasDisjointSovereignCountryConflict(textA, textB, headA = '', headB = '', stemDfMap = null, maxDf = 8) {
+  const weatherA = extractNamedWeatherDesignators(`${headA || ''} ${textA || ''}`);
+  const weatherB = extractNamedWeatherDesignators(`${headB || ''} ${textB || ''}`);
+  if (weatherA.size > 0 && weatherB.size > 0 && ![...weatherA].some(w => weatherB.has(w))) {
+    return true;
+  }
   const headCountriesA = detectSovereignCountries(headA || textA);
-  if (headCountriesA.size === 0) return false;
   const allCountriesA = detectSovereignCountries(textA);
   const allCountriesB = detectSovereignCountries(textB);
+  // If one side names specific storm designators (e.g. UK Storm Austen/Boelo) and the other is in a disjoint sovereign country (e.g. Australia or Canada) with 0 shared designators
+  if ((weatherA.size > 0 || weatherB.size > 0) && allCountriesA.size > 0 && allCountriesB.size > 0 && ![...allCountriesA].some(c => allCountriesB.has(c))) {
+    return true;
+  }
+  if (headCountriesA.size === 0 && allCountriesA.size === 0) return false;
   if (allCountriesB.size === 0) return false;
   if ([...allCountriesA].some(c => allCountriesB.has(c))) return false;
   if ([...headCountriesA].some(c => allCountriesB.has(c))) return false;
-  const isRareSpecificStem = (s) => !GENERIC_DOMESTIC_BEAT_STEMS.has(s) && (!stemDfMap || (stemDfMap.get(s) || 0) <= maxDf);
-  const stemsA = new Set(extractCoherenceStems(headA || textA).filter(isRareSpecificStem));
-  const stemsB = new Set(extractCoherenceStems(`${headB || ''} ${textB || ''}`).filter(isRareSpecificStem));
-  const sharedSpecific = [...stemsA].filter(s => stemsB.has(s));
-  return sharedSpecific.length === 0;
+  // Two events in disjoint sovereign countries can only be the same event if they share at least 1 specific Proper-Noun Subject stem
+  // (common nouns like "storm", "weather", "flight", "drone", "hostage", "prison", "defeat", "league" never bridge disjoint countries!)
+  const { properStems: propA } = extractProperSubjectEntities(headA || '', textA || '');
+  const { properStems: propB } = extractProperSubjectEntities(headB || '', textB || '');
+  const isRareProperStem = (s) => !COMMON_HEADLINE_NON_ENTITY_STEMS.has(s) && (!stemDfMap || (stemDfMap.get(s) || 0) <= maxDf);
+  const sharedRareProper = [...propA].filter(s => propB.has(s) && isRareProperStem(s));
+  return sharedRareProper.length === 0;
+}
+
+// Episodic Milestone vs. New Campaign/Theatre Phase Gate:
+// Prevents an older episodic cluster (e.g., Oct 19 "Lula and Bolsonaro Spar in Debate" or Oct 20 "Lula Fast-Tracks Welfare Payments")
+// from swallowing general Election-Day voting articles ("Polls open in Brazil presidential runoff", "Brazil Holds High-Stakes Presidential Runoff Election")
+// that only share the broad campaign actors/country/runoff backdrop and zero episode-specific predicate stems.
+const CAMPAIGN_OR_THEATRE_FRAME_STEMS = new Set(extractCoherenceStems(
+  'brazil brazilian brasilia lula silva bolsonaro jair runoff election elections presidential president ' +
+  'vote votes voter voters voting poll polls polling station stations ballot ballots cast casting open opens ' +
+  'hold holds holding tight high stakes race head campaign candidate candidates result results ' +
+  'trump biden harris america american united states washington midterm midterms senate congress ' +
+  'israel israeli netanyahu gaza palestine palestinian ukraine ukrainian zelensky russia russian putin ' +
+  'france french macron paris britain british london starmer burnham china chinese beijing'
+));
+
+function getEpisodeSpecificHeadlineStems(storyText, extraActorStems = null) {
+  const stems = extractCoherenceStems(storyText || '');
+  return new Set(
+    stems.filter(s =>
+      !CAMPAIGN_OR_THEATRE_FRAME_STEMS.has(s) &&
+      (!extraActorStems || !extraActorStems.has(s)) &&
+      !/^(hold|held|high|stak|tight|open|cast|lead|head|face|amid|after|ahead|befor|first|final|new|major)$/.test(s)
+    )
+  );
+}
+
+function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0) {
+  const episodeStems = getEpisodeSpecificHeadlineStems(anchorStory);
+  if (episodeStems.size === 0) return false;
+  const candStems = new Set(extractCoherenceStems(candidateText || ''));
+  const sharedEpisode = [...episodeStems].filter(s => candStems.has(s));
+  if (sharedEpisode.length > 0) return false;
+  // Candidate text shares 0 episode-specific headline stems with the anchor!
+  // Check if the candidate text is purely matching on campaign/election/theatre frame stems or is separated by >24h from the episode origin:
+  const ageGapHours = (anchorFirstSeenMs > 0 && newestCandidateMs > anchorFirstSeenMs)
+    ? (newestCandidateMs - anchorFirstSeenMs) / 3600000
+    : 0;
+  const candHasCampaignVotingFrame = /\b(polls?\s+open|cast\s+(?:their\s+)?ballots?|voting\s+(?:begins|underway|procedures|stations)|holds?\s+(?:high-stakes\s+)?(?:presidential\s+)?runoff|head\s+to\s+the\s+polls|tight\s+(?:presidential\s+)?runoff)\b/i.test(candidateText || '');
+  if (ageGapHours >= 24 || candHasCampaignVotingFrame) {
+    return true;
+  }
+  return false;
+}
+
+// Parallel-Event / Disjoint Proper-Subject Conflict Gate for 0-URL Cluster Merges:
+// Blocks merging two clusters that have disjoint Proper-Noun Subjects in their headlines (e.g. "Aston Villa + Manchester City" vs "Tottenham + Chelsea",
+// "Eagle's Nest" vs "Leipzig Airport", "Global Stocks" vs "OpenAI", "Knicks" vs "LeBron James + 76ers", "Storm Austen" vs "Storm Josephine")
+// when they share 0 URLs and neither cluster's articles cross-reference the other cluster's proper-noun subjects.
+function hasDisjointProperSubjectMergeConflict(clA, clB, stemDfMap = null, maxDf = 8) {
+  if (!clA || !clB) return false;
+  const textA = `${clA.story || ''} ${clA.summary || ''} ${(clA.coverage || []).slice(0, 5).map(a => a.title || '').join(' ')}`;
+  const textB = `${clB.story || ''} ${clB.summary || ''} ${(clB.coverage || []).slice(0, 5).map(a => a.title || '').join(' ')}`;
+  if (
+    hasDisjointSovereignCountryConflict(textA, textB, clA.story || '', clB.story || '', stemDfMap, maxDf) ||
+    hasDisjointSovereignCountryConflict(textB, textA, clB.story || '', clA.story || '', stemDfMap, maxDf)
+  ) {
+    return true;
+  }
+  const distKm = haversineKm(clA.primaryLocation, clB.primaryLocation);
+  const factsA = extractEventFactAttributes(clA);
+  const factsB = extractEventFactAttributes(clB);
+  const sharedHeadProper = [...factsA.headProperStems].filter(s => factsB.headProperStems.has(s));
+  const sharedAllProper = [...factsA.properStems].filter(s => factsB.properStems.has(s));
+
+  // If primaryLocation coordinates are > 1,500 km apart and they share 0 headline proper-noun subjects, block merge
+  if (distKm !== null && distKm > 1500 && sharedHeadProper.length === 0 && sharedAllProper.length === 0) {
+    return true;
+  }
+
+  // If both clusters have specific Proper-Noun Subject stems (headline proper subjects when present, falling back to prose proper subjects)
+  // and they are completely disjoint, check if their coverage articles genuinely cross-reference each other:
+  const subjA = factsA.headProperStems.size > 0 ? factsA.headProperStems : factsA.properStems;
+  const subjB = factsB.headProperStems.size > 0 ? factsB.headProperStems : factsB.properStems;
+  const sharedSubj = [...subjA].filter(s => subjB.has(s));
+  if (subjA.size >= 1 && subjB.size >= 1 && sharedSubj.length === 0) {
+    const covStemsA = new Set(extractCoherenceStems((clA.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ')));
+    const covStemsB = new Set(extractCoherenceStems((clB.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ')));
+    const aMentionsB = [...subjB].some(s => covStemsA.has(s));
+    const bMentionsA = [...subjA].some(s => covStemsB.has(s));
+    if (!aMentionsB || !bMentionsA) {
+      return true;
+    }
+  }
+
+  // Also check episodic phase mismatch between the two clusters (e.g. Oct 19 Debate or Oct 20 Welfare vs Oct 25 Election-Day Voting)
+  if (
+    hasEpisodicPhaseMismatch(clA.story || '', factsA.minMs, `${clB.story || ''} ${clB.summary || ''}`, factsB.maxMs) ||
+    hasEpisodicPhaseMismatch(clB.story || '', factsB.minMs, `${clA.story || ''} ${clA.summary || ''}`, factsA.maxMs)
+  ) {
+    return true;
+  }
+
+  // Headline Phenomenon-Anchor Merge Gate:
+  // Blocks 0-URL merges between two stories in the same country or involving the same national leader (e.g. "Indonesian Wildfire Haze Disrupts Flights" +
+  // "Indonesia Trims Pipeline Gas Exports to Singapore", or "Trump Envoy Calls Putin a Humanitarian" + "Tanker Carrying Russian Diesel En Route to US",
+  // or "Macron Slams Foreign Leaders Over Riot Comments" + "Macron Secures Gulf Diesel Supply Commitments") when their non-geographic, non-leader
+  // headline phenomenon stems have 0 overlap in the headlines AND at least one cluster's headline phenomenon is completely absent from the other's summary.
+  const NON_PHENOMENON_HEADLINE_FRAME_STEMS = new Set([
+    ...CAMPAIGN_OR_THEATRE_FRAME_STEMS,
+    ...extractCoherenceStems(
+      'indonesia indonesian jakarta sulawesi sumatra malaysia malaysian singapore singaporean southeast asia asian ' +
+      'prabowo subianto macron emmanuel france french paris gulf australia australian western mp lawmaker senator ' +
+      'russia russian moscow putin vladimir trump donald us america american washington uk britain british london ' +
+      'israel israeli netanyahu gaza palestine palestinian ukraine ukrainian zelensky kyiv iran iranian tehran ' +
+      'china chinese beijing xi india indian modi japan japanese tokyo canada canadian mexico mexican ' +
+      'germany german berlin italy italian rome spain spanish madrid brazil brazilian lula bolsonaro ' +
+      'president prime minister leader leaders official officials government administration authority authorities ' +
+      'report reports announce announces order orders say says call calls warn warns urge urges slam slams ' +
+      'secure secures face faces hold holds amid after over under ahead first new major high'
+    )
+  ]);
+  const getHeadlinePhenomenonStems = (storyText) => new Set(
+    extractCoherenceStems(storyText || '').filter(s => !NON_PHENOMENON_HEADLINE_FRAME_STEMS.has(s) && !/^\d+$/.test(s))
+  );
+  const phenomA = getHeadlinePhenomenonStems(clA.story || '');
+  const phenomB = getHeadlinePhenomenonStems(clB.story || '');
+  if (phenomA.size >= 2 && phenomB.size >= 2) {
+    const sharedPhenomHead = [...phenomA].filter(s => phenomB.has(s));
+    if (sharedPhenomHead.length === 0) {
+      const proseStemsA = new Set(extractCoherenceStems(`${clA.story || ''} ${clA.summary || ''}`));
+      const proseStemsB = new Set(extractCoherenceStems(`${clB.story || ''} ${clB.summary || ''}`));
+      const aInB = [...phenomA].filter(s => proseStemsB.has(s)).length;
+      const bInA = [...phenomB].filter(s => proseStemsA.has(s)).length;
+      if (aInB === 0 || bInA === 0) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 // Cross-Outlet Story Clustering (Smart Candidate Pool + 14-Day Dormant Cluster Wake-Up + Peer-to-Peer Coherence Guard)
@@ -1213,6 +1614,16 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
     for (let cIdx = 0; cIdx < activeClusterAnchors.length; cIdx++) {
       const anc = activeClusterAnchors[cIdx];
       if (anc.outletPubMs.has(a.sourceId) && a.pubMs <= (anc.outletPubMs.get(a.sourceId) || 0) + 2 * 3600 * 1000) continue;
+      const ancFirstMs = anc.anchorCluster?.firstSeenAt ? Date.parse(anc.anchorCluster.firstSeenAt) : 0;
+      if (hasEpisodicPhaseMismatch(anc.anchorStory || '', ancFirstMs, `${a.title || ''} ${a.description || ''}`, a.pubMs)) continue;
+      if (hasDisjointSovereignCountryConflict(
+        `${anc.anchorStory || ''} ${anc.description || ''}`,
+        `${a.title || ''} ${a.description || ''}`,
+        anc.anchorStory || '',
+        a.title || '',
+        stemDocFreq,
+        maxRareTitleStemDf
+      )) continue;
       const shT = [...a.titleStems].filter(s => anc.titleStems.has(s) && (stemDocFreq.get(s) || 0) <= maxTitleStemDf);
       const shA = [...a.allStems].filter(s => anc.allStems.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf);
       const hasSpecificAnchorStem = shT.some(s => !GENERIC_CANDIDATE_STEMS.has(s)) || shA.filter(s => !GENERIC_CANDIDATE_STEMS.has(s)).length >= 2;
@@ -1259,13 +1670,25 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
 
   if (candidates.length < 4) return previousClusters;
 
-  // Pass headline + brief lead snippet so Gemini resolves oblique headlines semantically without any hardcoded token matching
+  // Pass headline + brief lead snippet + extracted Event Fact Attributes (timing, geography, proper-noun subjects)
   const promptLines = candidates.map((c, idx) => {
     if (c.isClusterAnchor) {
-      return `[${idx}] EXISTING_CLUSTER(${c.sourceId}): ${c.anchorStory} — ${c.title} (${c.description})`;
+      const f = extractEventFactAttributes(c.anchorCluster || c);
+      const metaParts = [
+        f.timeTag ? `time: ${f.timeTag}` : '',
+        f.locTag ? `geo: ${f.locTag}` : '',
+        f.properDisplay.length ? `subjects: ${f.properDisplay.slice(0, 5).join(', ')}` : ''
+      ].filter(Boolean).join(' | ');
+      return `[${idx}] EXISTING_CLUSTER(${c.sourceId})${metaParts ? ` [${metaParts}]` : ''}: ${c.anchorStory} — ${c.title} (${c.description})`;
     }
+    const f = extractEventFactAttributes(c);
+    const metaParts = [
+      f.timeTag ? `pub: ${f.timeTag}` : '',
+      f.countries.size ? `geo: ${Array.from(f.countries).slice(0, 3).join(',')}` : '',
+      f.properDisplay.length ? `subjects: ${f.properDisplay.slice(0, 4).join(', ')}` : ''
+    ].filter(Boolean).join(' | ');
     const snippet = c.description ? ` — ${c.description}` : '';
-    return `[${idx}] ${c.sourceId}: ${c.title}${snippet}`;
+    return `[${idx}] ${c.sourceId}${metaParts ? ` [${metaParts}]` : ''}: ${c.title}${snippet}`;
   }).join('\n');
 
   const prompt = `You are a senior news editor analyzing recent dispatches across global newsrooms.
@@ -1273,6 +1696,9 @@ Identify distinct real-world events, developments, or discoveries that are cover
 
 Rules:
 - Group dispatches strictly by the exact same underlying real-world event, specific incident, single court ruling, single economic data release, game result, or discovery.
+- FACT-ATTRIBUTE GROUNDING (TIME, GEOGRAPHY, NAMED SUBJECTS & EPISODE PHASE): Each item includes extracted factual metadata ([pub/time | geo | subjects]). Treat these facts as hard constraints:
+  • NEVER group parallel weather systems, storms, sports games, aviation incidents, crimes, or market stories occurring in different countries/continents or involving different named subjects (e.g. NEVER combine UK "Storm Austen/Boelo" with Australian storms or Canadian "Subtropical Storm Josephine"; NEVER combine two different Premier League or NBA matches).
+  • NEVER attach general Election-Day voting dispatches ("polls open", "voters cast ballots", "tight runoff") to an older campaign-episode cluster from days earlier (such as a prior TV debate "Lula and Bolsonaro Spar in Debate" or a policy announcement "Lula Fast-Tracks Welfare Payments") — form or match the dedicated Election-Day voting cluster instead.
 - NEVER group articles by a broad theme, commodity, industry, or beat (for example, NEVER create thematic buckets like "Climate Change Assessments", "Global Gold Mining", "Midterm Campaign Trails", "Healthcare Costs", or "AI Industry Trends"). If two articles are feature stories or reports about different places/companies on a similar theme, DO NOT group them.
 - Match dispatches by their primary headline subject; use the short description snippet only to disambiguate who or where an oblique headline refers to, never to match multi-story digest roundups ("...and more top headlines") or sportsbook promo codes.
 - Scan the entire list across all regions (NA, LATAM, UK, EU, APAC, MEA) thoroughly and output all genuine event clusters (whether 35 or 95 clusters), including regional stories covered by 2+ outlets and new outlets matching an EXISTING_CLUSTER.
@@ -1410,6 +1836,15 @@ Return JSON array in format:
           console.warn(`[Clusters] Dropped actor-only theatre drift from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
           return false;
         }
+        if (!art.isClusterAnchor && directAnchorInIds?.anchorCluster && hasEpisodicPhaseMismatch(
+          directAnchorInIds.anchorCluster.story || '',
+          directAnchorInIds.anchorCluster.firstSeenAt ? Date.parse(directAnchorInIds.anchorCluster.firstSeenAt) : 0,
+          `${art.title || ''} ${art.description || ''}`,
+          art.pubMs || (art.pubDate ? Date.parse(art.pubDate) : 0)
+        )) {
+          console.warn(`[Clusters] Dropped episodic phase-mismatch article from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
+          return false;
+        }
         if (!art.isClusterAnchor && hasDisjointSovereignCountryConflict(
           `${primaryStoryText} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`,
           `${art.title || ''} ${art.description || ''}`,
@@ -1527,8 +1962,15 @@ Return JSON array in format:
               stemDocFreq,
               maxRareTitleStemDf
             );
-            if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor) {
-              console.warn(`[Clusters] Detached theatre/single-entity anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor})`);
+            const newestMatchArtMs = Math.max(...matchingArticles.map(m => m.pubMs || (m.pubDate ? Date.parse(m.pubDate) : 0) || 0), 0);
+            const isEpisodicMismatchAnchor = ancUrlHits === 0 && hasEpisodicPhaseMismatch(
+              ancCluster.story || '',
+              ancCluster.firstSeenAt ? Date.parse(ancCluster.firstSeenAt) : 0,
+              `${cl.story || ''} ${matchingArticles.map(m => `${m.title || ''} ${m.description || ''}`).join(' ')}`,
+              newestMatchArtMs
+            );
+            if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor || isEpisodicMismatchAnchor) {
+              console.warn(`[Clusters] Detached theatre/single-entity/episodic-mismatch anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor}, episodicMismatch=${isEpisodicMismatchAnchor})`);
               continue;
             }
             if (!matchedPrev) {
@@ -2068,6 +2510,12 @@ Return JSON array in format:
         if (cov.some(c => c.sourceId === art.sourceId)) continue;
         if (cm.minMs > 0 && (art.pubMs < cm.minMs - 72 * 3600 * 1000 || art.pubMs > cm.maxMs + 72 * 3600 * 1000)) continue;
         if (!art.titleStems.has(cm.clEntityStems[0])) continue;
+        if (hasEpisodicPhaseMismatch(
+          cm.cl.story || '',
+          cm.minMs,
+          `${art.title || ''} ${art.description || ''}`,
+          art.pubMs
+        )) continue;
         if (hasDisjointSovereignCountryConflict(
           `${cm.cl.story || ''} ${cm.cl.summary || ''}`,
           `${art.title || ''} ${art.description || ''}`,
@@ -2326,6 +2774,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       // At least one of the pair should be within 72h (or have a pending update)
       if (meta[i].ageHours > 72 && meta[j].ageHours > 72 && !meta[i].c._pendingUpdate && !meta[j].c._pendingUpdate) continue;
       const GENERIC_PAIR_TEMPLATE_STEMS = new Set([
+        ...COMMON_HEADLINE_NON_ENTITY_STEMS,
         'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'train', 'charg', 'releas', 'crash',
         'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
         'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
@@ -2333,6 +2782,14 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
         'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study',
         'united', 'state', 'americ', 'administr', 'white', 'house', 'feder', 'nation', 'global', 'world'
       ]);
+      const clA = meta[i].c;
+      const clB = meta[j].c;
+      if (
+        hasDisjointSovereignCountryConflict(`${clA.story || ''} ${clA.summary || ''}`, `${clB.story || ''} ${clB.summary || ''}`, clA.story || '', clB.story || '', clusterStemFreq, 8) ||
+        hasDisjointSovereignCountryConflict(`${clB.story || ''} ${clB.summary || ''}`, `${clA.story || ''} ${clA.summary || ''}`, clB.story || '', clA.story || '', clusterStemFreq, 8)
+      ) {
+        continue;
+      }
       const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
       const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
       const crossTitleStems = new Set([
@@ -2351,10 +2808,11 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
           (crossTitleStems.size >= 2 && sharedAll.length >= 4 && specificSharedAll.length >= 3)
         )
       ) {
+        const isSeparateEpisodeOrSubject = hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxClusterEntityFreq);
         includedOrigIndices.add(i);
         includedOrigIndices.add(j);
-        const pairSpecScore = (specificSharedTitle.length * 10) + (sharedTitle.length * 4) + (specificSharedAll.length * 2);
-        candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll, specificSharedTitle, specificSharedAll, pairSpecScore });
+        const pairSpecScore = (specificSharedTitle.length * 10) + (sharedTitle.length * 4) + (specificSharedAll.length * 2) - (isSeparateEpisodeOrSubject ? 15 : 0);
+        candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll, specificSharedTitle, specificSharedAll, pairSpecScore, isSeparateEpisodeOrSubject });
       }
     }
   }
@@ -2390,8 +2848,17 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     for (const item of [samplePool[0], ...alignedSample.slice(0, 3), ...samplePool.slice(0, 3)].filter(Boolean)) {
       if (pickedSamples.length < 3 && !pickedSamples.includes(item)) pickedSamples.push(item);
     }
-    const sampleHeadlines = pickedSamples.map(a => `${a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 140).trim()})` : ''}`).join(' | ');
-    let line = `[${pIdx}] id="${id}" (v${c.version || 1}) | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
+    const f = extractEventFactAttributes(c);
+    const factBanner = [
+      f.timeTag ? `time: ${f.timeTag}` : '',
+      f.locTag ? `geo: ${f.locTag}` : '',
+      f.properDisplay.length ? `subjects: ${f.properDisplay.join(', ')}` : ''
+    ].filter(Boolean).join(' | ');
+    const sampleHeadlines = pickedSamples.map(a => {
+      const pTime = formatShortUtcDate(a.pubDate);
+      return `${a.sourceId}${pTime ? ` (${pTime})` : ''}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 140).trim()})` : ''}`;
+    }).join(' | ');
+    let line = `[${pIdx}] id="${id}" (v${c.version || 1})${factBanner ? ` [${factBanner}]` : ''} | "${c.story}" (${c.outletCount || c.coverage?.length || 2} outlets: ${sampleOutlets}) — ${c.summary || ''}`;
     if (sampleHeadlines) {
       line += `\n    [PRIMARY HEADLINES: ${sampleHeadlines}]`;
     }
@@ -2425,7 +2892,10 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       candidatePairHints.slice(0, 25).map(p => {
         const pA = origToPromptIdx.get(p.origA);
         const pB = origToPromptIdx.get(p.origB);
-        return `- Compare [${pA}] "${clusters[p.origA].story}" <-> [${pB}] "${clusters[p.origB].story}" (shared stems: ${p.sharedAll.slice(0, 6).join(', ')})`;
+        const tag = p.isSeparateEpisodeOrSubject
+          ? ' [SEPARATE EPISODES / SUBJECTS — evaluate ONLY for JOB 3 lateralConnections, DO NOT merge in Job 1]'
+          : '';
+        return `- Compare [${pA}] "${clusters[p.origA].story}" <-> [${pB}] "${clusters[p.origB].story}" (shared stems: ${p.sharedAll.slice(0, 6).join(', ')})${tag}`;
       }).join('\n')
     : '';
 
@@ -2485,6 +2955,8 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
   • Example of FORBIDDEN merge #1: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
   • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate diplomatic or economic fallout ("Saudi Arabia Postpones Investor Conference" or "Egypt Pledges Support to Saudi Arabia") are DISTINCT EVENTS with different actors and severities. NEVER merge an economic/diplomatic reaction cluster into a casualty/strike cluster — link them via "lateralConnections" (Job 3) instead!
   • Example of FORBIDDEN merge #3 (Parallel Domestic / Corporate Releases Across Different Countries or Entities): NEVER merge two clusters that report parallel domestic economic indicators (e.g. "UK Inflation Rises to 3.5%" + "Canada Inflation Rises to 3.1%" + "Japan Core Inflation Surges to 2.1%"), budgets, court rulings, elections, or corporate earnings in DIFFERENT countries or for DIFFERENT companies/central banks — those are separate national/corporate releases and belong ONLY in "lateralConnections" (Job 3), NEVER in "merges"!
+  • Example of FORBIDDEN merge #4 (Parallel Weather Systems, Sports Games, Aviation/Crime Incidents, or Market/Company Stories With Different Subjects or Locations): NEVER merge two clusters about different named storms or weather systems in different countries/oceans (e.g. UK "Storm Austen and Storm Boelo" vs "Severe Weather in Australia" vs Canadian "Subtropical Storm Josephine"), different sports matches in the same league (e.g. "Aston Villa Defeats Man City" vs "Tottenham Defeats Chelsea", or "Knicks" vs "76ers"), unrelated aviation/drone incidents ("Tel Aviv Flight Diverted" vs "Drone Explodes in Lithuania"), or a broad market wrap ("Global Stocks Tumble") with a single company's funding round ("OpenAI Nears $30B Funding"). NEVER stitch two separate events together using "Simultaneously," "Concurrently," or "Meanwhile,"!
+  • Example of FORBIDDEN merge #5 (Earlier Campaign Episode vs. Election-Day Voting): NEVER merge an earlier campaign-trail episode from days prior (such as "Lula and Bolsonaro Spar in Debate" or "Lula Fast-Tracks Welfare Payments") with the general Election-Day voting cluster ("Brazil Holds High-Stakes Presidential Runoff Election") — keep each milestone separate and link them in "lateralConnections" (Job 3)!
   • Example of VALID merge #1: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
   • Example of VALID merge #2 (Same-Decision Policy Action + Leader Defense): If one cluster reports a specific government policy decision, waiver, or order (e.g. "U.S. Cuts Russia Sanctions and Rifts With Ukraine") and another cluster in the same window reports the leader's public remarks defending, announcing, or explaining that EXACT SAME decision (e.g. "Trump Defends Russia Sanctions Waiver"), they are the SAME specific policy event and MUST be merged in "merges" (never left separate in "lateralConnections")!
   • Example of VALID merge #3 (Direct Diplomatic/Rhetorical Exchange — Criticism + Target Leader Counter-Rebuke): If an earlier cluster specifically reports foreign leaders or observers criticizing a country/leader over an event (e.g. "International Observers React to French Unrest" or "Trump Remarks on France Riots and Immigration") and a subsequent cluster reports the targeted leader directly rebuking or responding to those exact remarks (e.g. "Macron Slams Foreign Leaders Over Riot Comments"), they are chronological stages of the EXACT SAME diplomatic war-of-words and MUST be merged in "merges" with "updateType": "material_shift" (while keeping the separate on-the-ground domestic street-protest cluster linked via "lateralConnections")!
@@ -2541,25 +3013,33 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
   try {
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     const activeTiers = getOrderedKeyTiers(apiKey);
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
     let parsed = null;
-    for (const keyObj of activeTiers) {
-      try {
-        const genAI = new GoogleGenerativeAI(keyObj.key);
-        const model = genAI.getGenerativeModel({
-          model: 'gemini-3.5-flash-lite',
-          generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-        });
-        const resp = await model.generateContent(prompt);
-        parsed = JSON.parse(resp.response.text().trim());
-        break;
-      } catch (tierErr) {
-        const msg = String(tierErr.message || tierErr);
-        console.warn(`[Clusters] Consolidation pass warning [${keyObj.tier} key]: ${msg}`);
-        if (keyObj.tier === 'FREE' && activeTiers.length > 1) {
-          freeKeyExhaustedThisRun = true;
-          console.log('[Clusters] Switching consolidation pass to PAID fallback key...');
-        } else {
-          throw tierErr;
+    for (const modelName of modelsToTry) {
+      if (parsed) break;
+      for (const keyObj of activeTiers) {
+        if (parsed) break;
+        try {
+          const genAI = new GoogleGenerativeAI(keyObj.key);
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: 'application/json',
+              ...(modelName === 'gemini-3.8-flash' ? { thinkingConfig: { thinkingLevel: 'LOW' } } : {})
+            }
+          });
+          const resp = await model.generateContent(prompt);
+          parsed = JSON.parse(resp.response.text().trim());
+          break;
+        } catch (tierErr) {
+          const msg = String(tierErr.message || tierErr);
+          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+          console.warn(`[Clusters] Consolidation pass warning with ${modelName} [${keyObj.tier} key]: ${msg}`);
+          if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
+            freeKeyExhaustedThisRun = true;
+            console.log('[Clusters] Switching consolidation pass to PAID fallback key...');
+          }
         }
       }
     }
@@ -2620,12 +3100,25 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       }
       const clA = clusters[idxs[0]];
       const clB = clusters[idxs[1]];
-      if (clA && clB && (
-        hasDisjointSovereignCountryConflict(`${clA.story || ''} ${clA.summary || ''}`, `${clB.story || ''} ${clB.summary || ''}`, clA.story || '', clB.story || '', clusterStemFreq, maxSpecificMergeClusterDf) ||
-        hasDisjointSovereignCountryConflict(`${clB.story || ''} ${clB.summary || ''}`, `${clA.story || ''} ${clA.summary || ''}`, clB.story || '', clA.story || '', clusterStemFreq, maxSpecificMergeClusterDf)
-      )) {
-        console.warn(`[Clusters] Rejected disjoint sovereign-country domestic merge between [${idxs[0]}] "${clA.story}" and [${idxs[1]}] "${clB.story}"`);
-        return false;
+      if (clA && clB) {
+        const urlsA = new Set((clA.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
+        const urlsB = new Set((clB.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
+        let sharedUrlsCount = 0;
+        for (const u of urlsB) { if (urlsA.has(u)) sharedUrlsCount++; }
+        if (sharedUrlsCount === 0 && hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxSpecificMergeClusterDf)) {
+          console.warn(`[Clusters] Rejected disjoint proper-subject / geographic / episodic merge between [${idxs[0]}] "${clA.story}" and [${idxs[1]}] "${clB.story}"`);
+          return false;
+        }
+        const hasParallelStitchAdv = /\b(simultaneously|concurrently|meanwhile|in a separate\s+(?:incident|development|match|game|event)|separately,)\b/i.test(`${m.summary || ''} ${m.developmentNote || ''}`);
+        if (sharedUrlsCount === 0 && hasParallelStitchAdv) {
+          const fA = extractEventFactAttributes(clA);
+          const fB = extractEventFactAttributes(clB);
+          const shHeadProp = [...fA.headProperStems].filter(s => fB.headProperStems.has(s));
+          if (shHeadProp.length === 0) {
+            console.warn(`[Clusters] Rejected parallel-event ("Simultaneously/Concurrently") stitch merge between [${idxs[0]}] "${clA.story}" and [${idxs[1]}] "${clB.story}"`);
+            return false;
+          }
+        }
       }
       return true;
     });
@@ -2693,6 +3186,16 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         maxSpecificDevClusterDf
       )) {
         console.warn(`[Clusters] Rejected disjoint sovereign-country domestic update on cluster [${idx}] "${c.story}": "${noteText}"`);
+        continue;
+      }
+      const cFacts = extractEventFactAttributes(c);
+      if (hasEpisodicPhaseMismatch(
+        c.story || '',
+        cFacts.minMs,
+        `${noteText} ${(c._pendingUpdate?.addedHeadlines || []).join(' ')}`,
+        c._pendingUpdate?.newestAddedMs || 0
+      )) {
+        console.warn(`[Clusters] Rejected episodic phase-mismatch update on cluster [${idx}] "${c.story}": "${noteText}"`);
         continue;
       }
       const headStems = extractCoherenceStems(c.story || "");

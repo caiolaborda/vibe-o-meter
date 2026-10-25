@@ -575,12 +575,41 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     "confirm","discover","found","develop","launch","plan","order","warn","spark","prompt","strain","trouble","crisis","risk",
     "death","dead","kill","fatal","record","high","low","surge","plunge","plummet","slump","drop","fall","rise","jump","cut",
     "slash","boost","secret","scandal","tunisia","tunisian","tunisians","tunis","brazil","brazilian","ecuador","ecuadorian",
-    "ecuadorean","albania","albanian","tirana","indonesia","indonesian","malaysia","malaysian","israel","israeli","palestine",
+    "ecuadorean","albania","albanian","tirana","indonesia","indonesian","malaysia","malaysian","singapore","singaporean","israel","israeli","palestine",
     "palestinian","west","bank","gaza","iran","iranian","saudi","arabia","yemen","houthi","syria","lebanon","egypt","turkey",
     "turkish","ukraine","ukrainian","russia","russian","china","chinese","taiwan","japan","korea","india","pakistan","australia",
     "australian","canada","canadian","mexico","mexican","britain","british","uk","london","england","france","french","paris",
-    "germany","german","italy","italian","milan","rome","spain","spanish","united","states","american","us","trump","biden"
+    "germany","german","italy","italian","milan","rome","spain","spanish","united","states","american","us","trump","biden",
+    "wildfire","wildfires","fire","fires","blaze","blazes","wind","winds","flame","flames","burn","burns","home","homes","storm","storms","flood","floods"
   ];
+  const EXPORT_COUNTRY_PATTERNS = [
+    ['us', /\b(u\.?s\.?|united states|america|american|california|southern california|texas|florida|new york|washington|pentagon)\b/i],
+    ['uk', /\b(u\.?k\.?|britain|british|england|scotland|wales|london|downing street)\b/i],
+    ['canada', /\b(canada|canadian|ottawa|toronto|quebec|vancouver)\b/i],
+    ['australia', /\b(australia|australian|sydney|melbourne|canberra|queensland|nsw)\b/i],
+    ['indonesia', /\b(indonesia|indonesian|jakarta|sulawesi|sumatra|bali|prabowo)\b/i],
+    ['malaysia', /\b(malaysia|malaysian|kuala lumpur)\b/i],
+    ['singapore', /\b(singapore|singaporean)\b/i],
+    ['france', /\b(france|french|paris|macron)\b/i],
+    ['germany', /\b(germany|german|berlin|munich|leipzig)\b/i],
+    ['russia', /\b(russia|russian|moscow|kremlin|putin)\b/i],
+    ['ukraine', /\b(ukraine|ukrainian|kyiv|zelensky)\b/i],
+    ['israel', /\b(israel|israeli|jerusalem|tel aviv|netanyahu|idf)\b/i],
+    ['palestine', /\b(gaza|palestine|palestinian|west bank|hamas)\b/i],
+    ['iran', /\b(iran|iranian|tehran)\b/i],
+    ['china', /\b(china|chinese|beijing|shanghai)\b/i],
+    ['india', /\b(india|indian|new delhi|mumbai|modi)\b/i],
+    ['brazil', /\b(brazil|brazilian|brasilia|lula|bolsonaro)\b/i],
+    ['japan', /\b(japan|japanese|tokyo)\b/i]
+  ];
+  const detectExportCountries = (txt) => {
+    const out = new Set();
+    const s = String(txt || '');
+    for (const [code, re] of EXPORT_COUNTRY_PATTERNS) {
+      if (re.test(s)) out.add(code);
+    }
+    return out;
+  };
   const BROAD_BEAT_STEMS = new Set(RAW_BROAD_BEAT_WORDS.map(stemWord));
   for (const cl of byId.values()) {
     const cov = cl.coverage || [];
@@ -589,14 +618,25 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     const specHeadStems = new Set([...headStems].filter(s => !BROAD_BEAT_STEMS.has(s)));
     const anchorStems = new Set([...getStems(`${cl.story} ${cl.summary}`), ...domCov]);
     const specAnchorStems = new Set([...anchorStems].filter(s => !BROAD_BEAT_STEMS.has(s)));
+    const clusterCountries = detectExportCountries(`${cl.story || ''} ${cl.summary || ''}`);
 
-    if (cov.length >= 3 && specHeadStems.size >= 1 && specAnchorStems.size >= 3) {
+    if (cov.length >= 3 && (specHeadStems.size >= 1 || clusterCountries.size >= 1)) {
       const filteredCov = cov.filter(art => {
-        const artStems = getStems(`${art.title || ''} ${art.description || ''}`);
+        const artText = `${art.title || ''} ${art.description || ''}`;
+        const artStems = getStems(artText);
         const sharedSpec = [...artStems].filter(s => specAnchorStems.has(s)).length;
+        const sharedSpecHead = [...artStems].filter(s => specHeadStems.has(s)).length;
         const sharedTotal = [...artStems].filter(s => anchorStems.has(s)).length;
-        if (sharedSpec === 0) return false;
-        if (headStems.size >= 3 && anchorStems.size >= 6 && sharedTotal <= 1 && sharedSpec <= 1) return false;
+        if (clusterCountries.size > 0) {
+          const artCountries = detectExportCountries(artText);
+          if (artCountries.size > 0 && ![...artCountries].some(c => clusterCountries.has(c)) && sharedSpecHead < 2) {
+            return false;
+          }
+        }
+        if (specHeadStems.size >= 1 && specAnchorStems.size >= 3) {
+          if (sharedSpec === 0) return false;
+          if (headStems.size >= 3 && anchorStems.size >= 6 && sharedTotal <= 1 && sharedSpec <= 1) return false;
+        }
         return true;
       });
       if (filteredCov.length >= 2 && filteredCov.length !== cov.length) {
@@ -668,6 +708,8 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     officers:'polic', cops:'polic',
     suspects:'suspect', individuals:'suspect', people:'person', residents:'person', civilians:'person',
     cuts:'cut', cutting:'cut', slashes:'cut', reductions:'cut', reduction:'cut',
+    vessel:'tanker', vessels:'tanker', tankers:'tanker', ship:'tanker', ships:'tanker',
+    transport:'carry', transporting:'carry', transports:'carry', carrying:'carry', carries:'carry',
     assistance:'aid', shortages:'crisis', shortage:'crisis', shortfalls:'crisis',
     terminating:'drop', drops:'drop', dropped:'drop',
     stable:'stabil', stabilized:'stabil', stabilizes:'stabil', stability:'stabil',
