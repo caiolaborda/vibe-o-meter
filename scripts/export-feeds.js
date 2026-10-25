@@ -648,7 +648,8 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     'today','told','took','total','toward','turn','under','until','updat','used','very','view','warn',
     'watch','week','weeken','well','were','what','when','where','whether','which','while','wide','widespread',
     'will','with','within','without','work','world','would','year','person','personal','personally',
-    'program','programm','vulner','affect','widen','firest','surrou','fallou','contro','politi','campai','advert','discus','meet','meetin','positi','hold','arriv'
+    'program','programm','vulner','affect','widen','firest','surrou','fallou','contro','politi','campai','advert','discus','meet','meetin','positi','hold','arriv','citi','citie','prompt',
+    'and','for','the','are','was','has','had','not','but','all','new','its','his','her','our','out','who','why','how','may','can','now','yet','per','via','again','fully','confir'
   ]);
   const EVO_SYN = {
     french:'france', british:'britain', spanish:'spain', israeli:'israel', israelis:'israel',
@@ -662,13 +663,14 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     injured:'injur', injuries:'injur', injury:'injur', wounded:'injur',
     shutting:'clos', shuts:'clos', shut:'clos', closures:'clos', closure:'clos', closed:'clos', close:'clos', closes:'clos',
     cancelled:'cancel', cancels:'cancel', canceled:'cancel', cancellations:'cancel', cancellation:'cancel',
-    postpones:'cancel', postponed:'cancel', postpone:'cancel',
+    postpones:'cancel', postponed:'cancel', postpone:'cancel', postponement:'cancel', postpo:'cancel',
     forces:'milit', military:'milit', troops:'milit', army:'milit', soldiers:'milit',
     officers:'polic', cops:'polic',
     suspects:'suspect', individuals:'suspect', people:'person', residents:'person', civilians:'person',
     cuts:'cut', cutting:'cut', slashes:'cut', reductions:'cut', reduction:'cut',
     assistance:'aid', shortages:'crisis', shortage:'crisis', shortfalls:'crisis',
     terminating:'drop', drops:'drop', dropped:'drop',
+    stable:'stabil', stabilized:'stabil', stabilizes:'stabil', stability:'stabil',
     criticism:'critic', critical:'critic', condemns:'critic', condemn:'critic', denounces:'critic', rebuked:'critic',
     elon:'musk', vladimir:'putin', donald:'trump', benjamin:'netanyahu', volodymyr:'zelensky', steve:'witkoff', stephen:'witkoff', brendan:'nugent'
   };
@@ -677,13 +679,16 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     const verbRe = /\b(report|reports|reported|confirm|confirms|confirmed|reaffirm|reaffirms|reaffirmed|detail|details|detailed|highlight|highlights|highlighted|note|notes|noted|add|adds|added|state|states|stated|say|says|said|cover|covers|covered|outline|outlines|outlined|examine|examines|examined|analyze|analyzes|analyzed|share|shares|shared|publish|publishes|published|emphasize|emphasizes)\b(?:\s+that)?\s+/i;
     const m = s.match(verbRe);
     if (m && m.index !== undefined && m.index <= 85) {
-      s = s.slice(m.index + m[0].length).trim();
+      const prefix = s.slice(0, m.index).trim();
+      if (!/\b(minister|ministry|president|chancellor|governor|mayor|senator|general|admiral|secretary|department|pentagon|kremlin|court|judge|police|military|army|idf|authorities|officials|spokesperson|spokesman|agency|commission|council)\b/i.test(prefix)) {
+        s = s.slice(m.index + m[0].length).trim();
+      }
     }
     return s;
   };
   const extractEvoDeltaStems = (text) => {
     const s = stripEvoOutletPrefix(text).toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
-    const tokens = s.split(/\s+/).map(w => EVO_SYN[w] || w).filter(w => w.length >= 3 && !EVO_STOP.has(w));
+    const tokens = s.split(/\s+/).map(w => EVO_SYN[w] || w).filter(w => w.length >= 3 && /^[a-z]/.test(w) && !EVO_STOP.has(w));
     const stems = tokens.map(w => {
       if (EVO_SYN[w]) return EVO_SYN[w];
       const st = w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6);
@@ -725,6 +730,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       const initStep = cl.evolutionHistory[0];
       const baseText = (initStep?.headline || cl.story || '') + ' ' + (initStep?.summary || '');
       const baseStems = new Set(extractEvoDeltaStems(baseText));
+      const headlineStems = new Set([...baseStems, ...extractEvoDeltaStems(cl.story || '')]);
       const baseNums = extractEvoNums(baseText, null);
       const cleanHist = [initStep];
 
@@ -734,17 +740,26 @@ function deduplicateAndSanitizeClusters(rawClusters) {
 
       for (const h of postSteps) {
         const priorHistoryStems = new Set([...baseStems]);
+        const priorHistoryNums = new Set([...baseNums]);
         for (let k = 1; k < cleanHist.length; k++) {
           for (const st of extractEvoDeltaStems(cleanHist[k].note || '')) priorHistoryStems.add(st);
+          for (const nm of extractEvoNums(cleanHist[k].note || '', null)) priorHistoryNums.add(nm);
         }
         const hCoreText = stripKnownEvoRecapClauses(h.note || '', priorHistoryStems);
         const hStems = extractEvoDeltaStems(hCoreText);
         const hNovel = hStems.filter(s => !baseStems.has(s));
+        const hCumulNovel = hStems.filter(s => !priorHistoryStems.has(s));
         const hNums = extractEvoNums(h.note || '', priorHistoryStems);
         const hNovelNums = [...hNums].filter(n => !baseNums.has(n));
+        const hCumulNovelNums = [...hNums].filter(n => !priorHistoryNums.has(n));
         const hMs = new Date(h.timestamp || 0).getTime();
 
         if (h.type === 'clarification' && hNovelNums.length === 0 && hNovel.length <= 1) {
+          continue;
+        }
+        // Unified Cumulative Information-Gain Gate: if a step introduces zero new numbers against prior history
+        // and >=75% of its stems are already present in initStep + prior steps (with <=2 novel stems), skip it
+        if (hCumulNovelNums.length === 0 && hStems.length >= 4 && hCumulNovel.length <= 2 && (hCumulNovel.length / hStems.length) <= 0.25) {
           continue;
         }
 
@@ -756,11 +771,13 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           const hBaseCore = stripKnownEvoRecapClauses(h.note || '', baseStems);
           const hBaseStems = extractEvoDeltaStems(hBaseCore);
           const hBaseNovel = hBaseStems.filter(s => !baseStems.has(s));
+          const hHeadNovel = hBaseStems.filter(s => !headlineStems.has(s));
           const hBaseNums = extractEvoNums(h.note || '', baseStems);
 
           const pCoreText = stripKnownEvoRecapClauses(prev.note || '', baseStems);
           const pStems = extractEvoDeltaStems(pCoreText);
           const pNovel = pStems.filter(s => !baseStems.has(s));
+          const pHeadNovel = pStems.filter(s => !headlineStems.has(s));
           const pNums = extractEvoNums(prev.note || '', baseStems);
           const pMs = new Date(prev.timestamp || 0).getTime();
 
@@ -768,10 +785,12 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           const hasNewDisjointNum = [...hBaseNums].some(n => !pNums.has(n) && !baseNums.has(n));
           const prevHasDisjointNum = [...pNums].some(n => !hBaseNums.has(n) && !baseNums.has(n));
           const sharedNovelStems = hBaseNovel.filter(s => pNovel.includes(s));
+          const sharedHeadNovelStems = hHeadNovel.filter(s => pHeadNovel.includes(s));
           const sharedAllStems = hBaseStems.filter(s => pStems.includes(s));
 
           const hNovelCoverage = hBaseNovel.length > 0 ? (sharedNovelStems.length / hBaseNovel.length) : 0;
           const pNovelCoverage = pNovel.length > 0 ? (sharedNovelStems.length / pNovel.length) : 0;
+          const pHeadNovelCoverage = pHeadNovel.length > 0 ? (sharedHeadNovelStems.length / pHeadNovel.length) : 1;
           const hAllCoverage = hBaseStems.length > 0 ? (sharedAllStems.length / hBaseStems.length) : 0;
           const pAllCoverage = pStems.length > 0 ? (sharedAllStems.length / pStems.length) : 0;
           const closeTime = !isNaN(hMs) && !isNaN(pMs) && Math.abs(hMs - pMs) <= 15 * 60 * 1000;
@@ -780,6 +799,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
             (sharedNovelNums.length > 0 && !hasNewDisjointNum && (sharedNovelStems.length >= 2 || (sharedNovelStems.length >= 1 && hNovelCoverage >= 0.45) || sharedAllStems.length >= 2)) ||
             (!hasNewDisjointNum && sharedNovelStems.length >= 2 && hNovelCoverage >= 0.55) ||
             (!prevHasDisjointNum && sharedNovelStems.length >= 3 && pNovelCoverage >= 0.65) ||
+            (!prevHasDisjointNum && pHeadNovel.length <= 3 && pHeadNovelCoverage >= 0.50 && sharedAllStems.length >= 2 && pAllCoverage >= 0.45) ||
             (!hasNewDisjointNum && sharedAllStems.length >= 3 && hAllCoverage >= 0.60) ||
             (!prevHasDisjointNum && sharedAllStems.length >= 4 && pAllCoverage >= 0.65) ||
             (closeTime && !hasNewDisjointNum && sharedAllStems.length >= 2 && hAllCoverage >= 0.40)
@@ -791,15 +811,21 @@ function deduplicateAndSanitizeClusters(rawClusters) {
 
         if (dupIdx === -1) {
           cleanHist.push(h);
-        } else if (h.type === 'material_shift' && cleanHist[dupIdx].type === 'clarification') {
+        } else {
           const prevStep = cleanHist[dupIdx];
-          const useNewNote = (h.note || '').length >= (prevStep.note || '').length * 0.85;
-          cleanHist.splice(dupIdx, 1);
-          cleanHist.push({
-            ...h,
-            timestamp: h.timestamp || prevStep.timestamp,
-            note: useNewNote ? (h.note || prevStep.note) : prevStep.note
-          });
+          const isUpgradeType = (h.type === 'material_shift' && prevStep.type === 'clarification') || (h.type === prevStep.type);
+          const prevNums = extractEvoNums(prevStep.note || '', baseStems);
+          const hBaseNums = extractEvoNums(h.note || '', baseStems);
+          const losesPrevNum = [...prevNums].some(n => !hBaseNums.has(n) && !baseNums.has(n));
+          if (isUpgradeType && !losesPrevNum && (h.note || '').length > (prevStep.note || '').length) {
+            cleanHist.splice(dupIdx, 1);
+            cleanHist.push({
+              ...h,
+              type: (h.type === 'material_shift' || prevStep.type === 'material_shift') ? 'material_shift' : 'clarification',
+              timestamp: h.timestamp || prevStep.timestamp,
+              note: h.note || prevStep.note
+            });
+          }
         }
       }
 
@@ -1452,7 +1478,7 @@ function exportPublicJsonFeeds(fullPayload) {
   };
 }
 
-module.exports = { exportPublicJsonFeeds };
+module.exports = { exportPublicJsonFeeds, deduplicateAndSanitizeClusters };
 
 if (require.main === module) {
   if (!fs.existsSync(DATA_FILE)) {
