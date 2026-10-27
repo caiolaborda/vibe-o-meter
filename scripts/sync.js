@@ -1333,18 +1333,31 @@ const CAMPAIGN_OR_THEATRE_FRAME_STEMS = new Set(extractCoherenceStems(
   'france french macron paris britain british london starmer burnham china chinese beijing'
 ));
 
+const NON_EPISODIC_GENERIC_HEADLINE_MODIFIERS = new Set(extractCoherenceStems(
+  'hold holds holding held high stakes tight open opens cast casting lead leads head heads face faces ' +
+  'amid after ahead before first final new major pivotal general political tension tensions campaign ' +
+  'plan plans planned renew renewed push pushes pushed show shows deadlock'
+));
+
 function getEpisodeSpecificHeadlineStems(storyText, extraActorStems = null) {
   const stems = extractCoherenceStems(storyText || '');
   return new Set(
     stems.filter(s =>
       !CAMPAIGN_OR_THEATRE_FRAME_STEMS.has(s) &&
-      (!extraActorStems || !extraActorStems.has(s)) &&
-      !/^(hold|held|high|stak|tight|open|cast|lead|head|face|amid|after|ahead|befor|first|final|new|major)$/.test(s)
+      !NON_EPISODIC_GENERIC_HEADLINE_MODIFIERS.has(s) &&
+      (!extraActorStems || !extraActorStems.has(s))
     )
   );
 }
 
 function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0) {
+  // If the anchor cluster IS itself a general Election-Day / Voting / Poll / Tally cluster (and not a narrow pre-election
+  // debate, welfare handout, or endorsement episode), never block incoming voting, turnout, exit-poll, or result dispatches!
+  const isMainElectionVotingAnchor =
+    /\b(heads?\s+to\s+(?:the\s+)?polls?|general\s+election|runoff\s+election|presidential\s+(?:runoff|election)|exit\s+polls?|wins?\s+(?:re-?election|election|runoff))\b/i.test(anchorStory || '') &&
+    !/\b(debate\w*|spar\w*|welfare|subsid\w*|fast-?track\w*|endorse\w*|attack\s+ad\w*)\b/i.test(anchorStory || '');
+  if (isMainElectionVotingAnchor) return false;
+
   const episodeStems = getEpisodeSpecificHeadlineStems(anchorStory);
   if (episodeStems.size === 0) return false;
   const candStems = new Set(extractCoherenceStems(candidateText || ''));
@@ -1355,7 +1368,7 @@ function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText,
   const ageGapHours = (anchorFirstSeenMs > 0 && newestCandidateMs > anchorFirstSeenMs)
     ? (newestCandidateMs - anchorFirstSeenMs) / 3600000
     : 0;
-  const candHasCampaignVotingFrame = /\b(polls?\s+open|cast\s+(?:their\s+)?ballots?|voting\s+(?:begins|underway|procedures|stations)|holds?\s+(?:high-stakes\s+)?(?:presidential\s+)?runoff|head\s+to\s+the\s+polls|tight\s+(?:presidential\s+)?runoff)\b/i.test(candidateText || '');
+  const candHasCampaignVotingFrame = /\b(polls?\s+open|cast\s+(?:their\s+)?ballots?|voting\s+(?:begins|underway|procedures|stations)|holds?\s+(?:high-stakes\s+)?(?:presidential\s+)?runoff|head\s+to\s+the\s+polls|tight\s+(?:presidential\s+)?runoff|exit\s+polls?)\b/i.test(candidateText || '');
   if (ageGapHours >= 24 || candHasCampaignVotingFrame) {
     return true;
   }
@@ -1410,31 +1423,38 @@ function hasDisjointProperSubjectMergeConflict(clA, clB, stemDfMap = null, maxDf
     return true;
   }
 
-  // Headline Phenomenon-Anchor Merge Gate:
-  // Blocks 0-URL merges between two stories in the same country or involving the same national leader (e.g. "Indonesian Wildfire Haze Disrupts Flights" +
-  // "Indonesia Trims Pipeline Gas Exports to Singapore", or "Trump Envoy Calls Putin a Humanitarian" + "Tanker Carrying Russian Diesel En Route to US",
-  // or "Macron Slams Foreign Leaders Over Riot Comments" + "Macron Secures Gulf Diesel Supply Commitments") when their non-geographic, non-leader
-  // headline phenomenon stems have 0 overlap in the headlines AND at least one cluster's headline phenomenon is completely absent from the other's summary.
-  const NON_PHENOMENON_HEADLINE_FRAME_STEMS = new Set([
-    ...CAMPAIGN_OR_THEATRE_FRAME_STEMS,
-    ...extractCoherenceStems(
+  // Headline Phenomenon-Anchor & Single-Entity Predicate Merge Gate:
+  // 1. Blocks 0-URL merges between two stories in the same country or involving the same national leader (e.g. "Indonesian Wildfire Haze Disrupts Flights" +
+  //    "Indonesia Trims Pipeline Gas Exports to Singapore", or "Trump Envoy Calls Putin a Humanitarian" + "Tanker Carrying Russian Diesel En Route to US").
+  // 2. Blocks 0-URL merges that only share a single recurring company/surname/team (e.g. "Anthropic Files for IPO" + "Elvis Presley Estate Sues Anthropic",
+  //    "DOJ Charges James Comey" + "Judge Rules Firing of Maurene Comey Unlawful", "Manchester United Defeated by Bournemouth" + "Manchester United Defeated by Como",
+  //    "PSG Ends Barcelona Winning Streak" + "Real Madrid Defeats Barcelona in El Clásico") when their remaining event/predicate stems are disjoint.
+  // Note: Does NOT strip substantive event nouns like "election", "polls", "vote", "runoff", "strike", "protest" so genuine phases of the same election/crisis merge cleanly.
+  const NON_PHENOMENON_HEADLINE_FRAME_STEMS = new Set(
+    extractCoherenceStems(
       'indonesia indonesian jakarta sulawesi sumatra malaysia malaysian singapore singaporean southeast asia asian ' +
       'prabowo subianto macron emmanuel france french paris gulf australia australian western mp lawmaker senator ' +
       'russia russian moscow putin vladimir trump donald us america american washington uk britain british london ' +
-      'israel israeli netanyahu gaza palestine palestinian ukraine ukrainian zelensky kyiv iran iranian tehran ' +
+      'israel israeli netanyahu eisenkot gaza palestine palestinian ukraine ukrainian zelensky kyiv iran iranian tehran ' +
       'china chinese beijing xi india indian modi japan japanese tokyo canada canadian mexico mexican ' +
-      'germany german berlin italy italian rome spain spanish madrid brazil brazilian lula bolsonaro ' +
-      'president prime minister leader leaders official officials government administration authority authorities ' +
+      'germany german berlin italy italian rome spain spanish madrid brazil brazilian brasilia lula silva bolsonaro jair flavio ' +
+      'president presidential prime minister leader leaders official officials government administration authority authorities ' +
+      'champions league premier cup tournament match game clash win wins winning streak defeat defeats defeated beat beats comeback ' +
       'report reports announce announces order orders say says call calls warn warns urge urges slam slams ' +
-      'secure secures face faces hold holds amid after over under ahead first new major high'
+      'secure secures face faces hold holds head heads amid after over under ahead before first final new major high pivotal general'
     )
-  ]);
+  );
+  const sharedHeadProperSet = new Set(sharedHeadProper);
   const getHeadlinePhenomenonStems = (storyText) => new Set(
-    extractCoherenceStems(storyText || '').filter(s => !NON_PHENOMENON_HEADLINE_FRAME_STEMS.has(s) && !/^\d+$/.test(s))
+    extractCoherenceStems(storyText || '').filter(s =>
+      !NON_PHENOMENON_HEADLINE_FRAME_STEMS.has(s) &&
+      !sharedHeadProperSet.has(s) &&
+      !/^\d+$/.test(s)
+    )
   );
   const phenomA = getHeadlinePhenomenonStems(clA.story || '');
   const phenomB = getHeadlinePhenomenonStems(clB.story || '');
-  if (phenomA.size >= 2 && phenomB.size >= 2) {
+  if (phenomA.size >= 1 && phenomB.size >= 1) {
     const sharedPhenomHead = [...phenomA].filter(s => phenomB.has(s));
     if (sharedPhenomHead.length === 0) {
       const proseStemsA = new Set(extractCoherenceStems(`${clA.story || ''} ${clA.summary || ''}`));

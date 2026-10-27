@@ -584,7 +584,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
   ];
   const EXPORT_COUNTRY_PATTERNS = [
     ['us', /\b(u\.?s\.?|united states|america|american|california|southern california|texas|florida|new york|washington|pentagon)\b/i],
-    ['uk', /\b(u\.?k\.?|britain|british|england|scotland|wales|london|downing street)\b/i],
+    ['uk', /\b(u\.?k\.?|britain|british|england|scotland|wales|london|downing street|westminster|conservatives|tories|labour party|scotland yard)\b/i],
     ['canada', /\b(canada|canadian|ottawa|toronto|quebec|vancouver)\b/i],
     ['australia', /\b(australia|australian|sydney|melbourne|canberra|queensland|nsw)\b/i],
     ['indonesia', /\b(indonesia|indonesian|jakarta|sulawesi|sumatra|bali|prabowo)\b/i],
