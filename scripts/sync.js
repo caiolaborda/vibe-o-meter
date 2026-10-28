@@ -2211,7 +2211,7 @@ Return JSON array in format:
             if (m.link) historicalKeys.add(canonicalUrl(m.link));
             if (m.title) historicalKeys.add(cleanHeadlineTitle(m.title));
           });
-          prevSeenKeys = Array.from(historicalKeys).slice(-140);
+          prevSeenKeys = Array.from(historicalKeys).slice(-500);
 
           if (prevStorySupported && Array.isArray(matchedPrev.evolutionHistory) && matchedPrev.evolutionHistory.length > 0) {
             // Strip any contaminated evolutionHistory entry that shares zero content stems with the cluster's articles OR lineage
@@ -3804,7 +3804,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         ...(mergedGroupLateral.length > 0 ? { lateralConnections: mergedGroupLateral } : {}),
         evolvedFromIds: Array.from(evolvedIds),
         evolutionHistory: hist.length > 20 ? [hist[0], ...hist.slice(-19)] : hist,
-        seenArticleKeys: Array.from(mergedSeenKeys).slice(-120),
+        seenArticleKeys: Array.from(mergedSeenKeys).slice(-500),
         averageSentiment: avgScore,
         sentimentSpread: spreadRange,
         outletCount: dedupedCov.length,

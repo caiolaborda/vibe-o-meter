@@ -470,6 +470,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         absorbedIds.add(secondary.id);
         byId.delete(secondary.id);
         const oldPrimaryId = primary.id;
+        const seenKeysSet = new Set([...(primary.seenArticleKeys || []), ...(secondary.seenArticleKeys || [])]); for (const a of [...(primary.coverage || []), ...(secondary.coverage || [])]) { if (a?.link) seenKeysSet.add(canonicalUrl(a.link)); if (a?.title) seenKeysSet.add(cleanHeadlineTitle(a.title)); } primary.seenArticleKeys = Array.from(seenKeysSet).slice(-500);
         const seenOutlets = new Set((primary.coverage || []).map(a => a.sourceId));
         for (const art of (secondary.coverage || [])) {
           if (art?.sourceId && !seenOutlets.has(art.sourceId)) {
