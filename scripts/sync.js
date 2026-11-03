@@ -411,8 +411,11 @@ function computeFourFactorScore(match) {
   }
 
   const pol = Math.max(-100, Math.min(100, Number(match.polarity) || 0)) / 100;
-  const reach = Math.max(0, Math.min(100, Number(match.reach) || 0)) / 100;
-  const perm = Math.max(0, Math.min(100, Number(match.permanence) || 0)) / 100;
+  const reachRaw = Math.max(0, Math.min(100, Number(match.reach) || 0));
+  const rawPerm = Math.max(0, Math.min(100, Number(match.permanence) || 0));
+  const permRaw = reachRaw < 35 ? Math.min(rawPerm, Math.round(reachRaw * 1.15 + 18)) : rawPerm;
+  const reach = reachRaw / 100;
+  const perm = permRaw / 100;
   const frame = Math.max(-100, Math.min(100, Number(match.framing) || 0)) / 100;
 
   // First-Principles Magnitude Curve:
@@ -2195,6 +2198,9 @@ Return JSON array in format:
                   sourceName: prevArt.sourceName || prevArt.sourceId,
                   title: prevArt.title, description: prevArt.description || '',
                   sentiment: typeof prevArt.sentiment === 'number' ? prevArt.sentiment : 0,
+                  ...(typeof prevArt.eventBase === 'number' ? { eventBase: prevArt.eventBase } : {}),
+                  ...(typeof prevArt.framingMod === 'number' ? { framingMod: prevArt.framingMod } : {}),
+                  ...(Array.isArray(prevArt.factors) && prevArt.factors.length === 4 ? { factors: prevArt.factors } : {}),
                   link: prevArt.link || '',
                   pubDate: prevArt.pubDate || ''
                 });
@@ -2385,6 +2391,9 @@ Return JSON array in format:
             sourceName: m.sourceName,
             title: m.title, description: m.description || '',
             sentiment: m.sentiment,
+            ...(typeof m.eventBase === 'number' ? { eventBase: m.eventBase } : {}),
+            ...(typeof m.framingMod === 'number' ? { framingMod: m.framingMod } : {}),
+            ...(Array.isArray(m.factors) && m.factors.length === 4 ? { factors: m.factors } : {}),
             link: m.link,
             pubDate: m.pubDate
           }))
@@ -2588,6 +2597,9 @@ Return JSON array in format:
         sourceName: art.sourceName,
         title: art.title, description: art.description || '',
         sentiment: art.sentiment,
+        ...(typeof art.eventBase === 'number' ? { eventBase: art.eventBase } : {}),
+        ...(typeof art.framingMod === 'number' ? { framingMod: art.framingMod } : {}),
+        ...(Array.isArray(art.factors) && art.factors.length === 4 ? { factors: art.factors } : {}),
         link: art.link,
         pubDate: art.pubDate
       });
@@ -4643,6 +4655,7 @@ async function main() {
           if (match.description && match.description.length > (cov.description || '').length) cov.description = match.description;
           if (typeof match.eventBase === 'number') cov.eventBase = match.eventBase;
           if (typeof match.framingMod === 'number') cov.framingMod = match.framingMod;
+          if (Array.isArray(match.factors) && match.factors.length === 4) cov.factors = match.factors;
         }
       });
       if (cl.coverage.length >= 4) {

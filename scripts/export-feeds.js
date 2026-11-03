@@ -944,9 +944,21 @@ function exportPublicJsonFeeds(fullPayload) {
         if (!isNaN(t)) timestamps.push(t);
       }
       const sentiment = (match && typeof match.sentiment === 'number') ? match.sentiment : cov.sentiment;
-      const eventBase = (match && typeof match.eventBase === 'number') ? match.eventBase : null;
-      const framingMod = (match && typeof match.framingMod === 'number') ? match.framingMod : null;
-      const factors = (match && Array.isArray(match.factors)) ? match.factors : null;
+      const eventBase = (match && typeof match.eventBase === 'number') ? match.eventBase : (typeof cov.eventBase === 'number' ? cov.eventBase : null);
+      const framingMod = (match && typeof match.framingMod === 'number') ? match.framingMod : (typeof cov.framingMod === 'number' ? cov.framingMod : null);
+      const rawFactors = (match && Array.isArray(match.factors) && match.factors.length === 4)
+        ? match.factors
+        : (Array.isArray(cov.factors) && cov.factors.length === 4 ? cov.factors : null);
+      const factors = rawFactors
+        ? [
+            Math.round(Number(rawFactors[0]) || 0),
+            Math.round(Number(rawFactors[1]) || 0),
+            (Number(rawFactors[1]) || 0) < 35
+              ? Math.min(Math.round(Number(rawFactors[2]) || 0), Math.round((Number(rawFactors[1]) || 0) * 1.15 + 18))
+              : Math.round(Number(rawFactors[2]) || 0),
+            Math.round(Number(rawFactors[3]) || 0)
+          ]
+        : null;
       const explanation = (match && (match.explanation || match.explanationGemini)) || cov.explanation || '';
       const imageUrl = (match && isValidImage(match.imageUrl)) ? match.imageUrl : (isValidImage(cov.imageUrl) ? cov.imageUrl : null);
       const description = (match && match.description) || cov.description || '';
@@ -976,10 +988,45 @@ function exportPublicJsonFeeds(fullPayload) {
     const spread = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : (typeof cl.sentimentSpread === 'number' ? cl.sentimentSpread : 0);
     const eventBases = enrichedCov.map(c => c.eventBase).filter(eb => typeof eb === 'number');
     const avgEventBase = eventBases.length > 0 ? Number((eventBases.reduce((a, b) => a + b, 0) / eventBases.length).toFixed(3)) : avgSent;
-    const validFactors = enrichedCov.map(c => c.factors).filter(f => Array.isArray(f) && f.length === 4);
-    const clusterFactors = validFactors.length > 0
-      ? [0, 1, 2, 3].map(i => Math.round(validFactors.reduce((sum, f) => sum + Number(f[i] || 0), 0) / validFactors.length))
-      : null;
+    const covWithFactorsSorted = enrichedCov
+      .filter(c => Array.isArray(c.factors) && c.factors.length === 4)
+      .slice()
+      .sort((a, b) => (Date.parse(a.pubDate || 0) || 0) - (Date.parse(b.pubDate || 0) || 0));
+    const lastDevMs = cl.lastDevelopedAt ? Date.parse(cl.lastDevelopedAt) : NaN;
+    const clusterFactors = (() => {
+      if (covWithFactorsSorted.length === 0) {
+        if (Array.isArray(cl.factors) && cl.factors.length === 4) return cl.factors.map(n => Math.round(Number(n) || 0));
+        return [Math.round(avgEventBase * 100), 50, 42, 12];
+      }
+      const n = covWithFactorsSorted.length;
+      const recentStartIdx = Math.max(0, Math.floor(n * 0.6));
+      let wSum = 0, polSum = 0, reachSum = 0, permSum = 0, framAbsSum = 0, framSignedSum = 0;
+      covWithFactorsSorted.forEach((c, idx) => {
+        const pMs = c.pubDate ? Date.parse(c.pubDate) : NaN;
+        const isPostDev = !isNaN(lastDevMs) && !isNaN(pMs) && pMs >= (lastDevMs - 2 * 3600000);
+        const w = isPostDev ? 2.5 : (idx >= recentStartIdx ? 2.0 : 1.0);
+        wSum += w;
+        polSum += (Number(c.factors[0]) || 0) * w;
+        reachSum += (Number(c.factors[1]) || 0) * w;
+        permSum += (Number(c.factors[2]) || 0) * w;
+        framAbsSum += Math.abs(Number(c.factors[3]) || 0) * w;
+        framSignedSum += (Number(c.factors[3]) || 0) * w;
+      });
+      const cPol = Math.round(polSum / wSum);
+      const cReach = Math.round(reachSum / wSum);
+      const rawCPerm = Math.round(permSum / wSum);
+      const cPerm = cReach < 35 ? Math.min(rawCPerm, Math.round(cReach * 1.15 + 18)) : rawCPerm;
+      const cFramAbs = Math.round(framAbsSum / wSum);
+      const cFramSign = (framSignedSum / wSum) < -3 ? -1 : 1;
+      return [cPol, cReach, cPerm, cFramAbs * cFramSign];
+    })();
+    enrichedCov.forEach(c => {
+      if (!Array.isArray(c.factors) || c.factors.length < 4) {
+        const eb = typeof c.eventBase === 'number' ? c.eventBase : c.sentiment;
+        const fm = typeof c.framingMod === 'number' ? c.framingMod : 0;
+        c.factors = [Math.round((eb || 0) * 100), clusterFactors[1], clusterFactors[2], Math.round(fm * 100) || clusterFactors[3]];
+      }
+    });
     const bestImg = enrichedCov.find(c => isValidImage(c.imageUrl))?.imageUrl || null;
     const slug = cl.id || String(cl.story || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const outletCount = enrichedCov.length;
