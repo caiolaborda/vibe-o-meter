@@ -964,6 +964,9 @@ function extractCoherenceStems(str) {
     deaths: 'kill', dead: 'kill', fatalities: 'kill', fatality: 'kill', killed: 'kill', killing: 'kill',
     injured: 'injur', injuries: 'injur', wounded: 'injur', cuts: 'cut', cutting: 'cut', slashes: 'cut', reductions: 'cut'
   };
+  const HIGH_SIGNAL_3LETTER = new Set([
+    'aid', 'war', 'ban', 'tax', 'oil', 'gas', 'fda', 'who', 'idf', 'doj', 'fbi', 'ice', 'epa', 'imf', 'gdp', 'ipo', 'ceo', 'jet', 'bus', 'dam', 'hiv'
+  ]);
   const rawStr = String(str || '').replace(/\b(?:([A-Z])\.){2,}/g, (m) => m.replace(/\./g, ''));
   const acronymTokens = (rawStr.match(/\b[A-Z]{2,5}\b/g) || [])
     .map(a => a.toLowerCase())
@@ -982,8 +985,8 @@ function extractCoherenceStems(str) {
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .map(w => demonymMap[w] || w)
-    .filter(w => w.length >= 4 && !stop.has(w))
-    .map(w => w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
+    .filter(w => (w.length >= 4 || HIGH_SIGNAL_3LETTER.has(w)) && !stop.has(w))
+    .map(w => HIGH_SIGNAL_3LETTER.has(w) ? w : w.replace(/(ing|tion|ions|ment|ments|ness|ally|ed|es|s)$/, '').slice(0, 6))
     .filter(w => w.length >= 3 && !stop.has(w))
   ];
 }
@@ -1242,6 +1245,9 @@ function extractEventFactAttributes(itemOrCluster) {
   const bodyText = isCluster
     ? `${itemOrCluster.summary || ''} ${cov.slice(0, 5).map(a => `${a.title || ''}. ${a.description || ''}`).join(' ')}`
     : (itemOrCluster.description || '');
+  const proseBodyText = isCluster
+    ? `${itemOrCluster.summary || ''} ${cov.slice(0, 8).map(a => a.description || '').join(' ')}`
+    : (itemOrCluster.description || '');
   const fullText = `${headline} ${bodyText}`;
 
   const times = [];
@@ -1280,7 +1286,7 @@ function extractEventFactAttributes(itemOrCluster) {
   if (countries.size > 0) locParts.push(`countries=${Array.from(countries).slice(0, 4).join(',')}`);
   const locTag = locParts.join(' | ');
 
-  const { properStems, headProperStems, properDisplay, headProperDisplay } = extractProperSubjectEntities(headline, bodyText);
+  const { properStems, headProperStems, properDisplay, headProperDisplay } = extractProperSubjectEntities(headline, proseBodyText);
   const weatherDesignators = extractNamedWeatherDesignators(fullText);
 
   return {
@@ -1357,7 +1363,7 @@ function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText,
   // If the anchor cluster IS itself a general Election-Day / Voting / Poll / Tally cluster (and not a narrow pre-election
   // debate, welfare handout, or endorsement episode), never block incoming voting, turnout, exit-poll, or result dispatches!
   const isMainElectionVotingAnchor =
-    /\b(heads?\s+to\s+(?:the\s+)?polls?|general\s+election|runoff\s+election|presidential\s+(?:runoff|election)|exit\s+polls?|wins?\s+(?:re-?election|election|runoff))\b/i.test(anchorStory || '') &&
+    /\b(heads?\s+to\s+(?:the\s+)?polls?|general\s+election|runoff\s+election|presidential\s+(?:runoff|election)|parliamentary\s+elections?|knesset\s+(?:election|deadlock)|election\s+(?:confirms?|results?|deadlock)|midterm\s+elections?|exit\s+polls?|wins?\s+(?:re-?election|election|runoff|congress|senate|house|majorit\w*))\b/i.test(anchorStory || '') &&
     !/\b(debate\w*|spar\w*|welfare|subsid\w*|fast-?track\w*|endorse\w*|attack\s+ad\w*)\b/i.test(anchorStory || '');
   if (isMainElectionVotingAnchor) return false;
 

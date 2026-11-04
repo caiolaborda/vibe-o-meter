@@ -219,9 +219,12 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     "russian","ukrainian","ukraine","russia","trump","putin","zelensky","zelenskyy","envoy","israel","israeli","iran"
   ]);
   const stemWord = (w) => w
+    .replace(/^waiv(?:er|ers|ing|ed|es|e)$/, "waiv")
+    .replace(/^(israel|russi|ukrain|iran|syri|leban|palestin|canad|austral|americ|ital|franc|german|brazi|kore|indones|malays)(?:ian|an|a|ese|i|ch)$/, "$1")
     .replace(/([a-z]{3,})ies$/, "$1y")
     .replace(/([a-z]{2,}(?:sh|ch|x|z|ss))es$/, "$1")
     .replace(/([a-z]{3,})s$/, "$1")
+    .replace(/([a-z]{3,}?)(?:ation|ition|tion|ment)$/, "$1")
     .replace(/([a-z]{3,})ing$/, "$1")
     .replace(/([a-z]{3,})ed$/, "$1")
     .replace(/([a-z]{4,})e$/, "$1");
@@ -375,6 +378,14 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     "leak","data","trial","study","result","breakthrough","usher","hope","patient","disruption","caus","critical",
     "software","flaw","vulnerability","force","website","offline","across"
   ]);
+  const NON_PROPER_HEADLINE_WORDS = new Set([
+    ...UMBRELLA_OR_VERB_HEADLINE_WORDS,
+    "win","lose","secur","full","control","majority","majoritie","deadlock","confirm","alleg","fraud","parliamentary",
+    "election","elec","consult","govern","government","form","formation","urg","post","compromis","security","aid","opposition",
+    "target","end","military","test","attack","drone","dron","ballistic","missile","missil","salvo","unidentifi",
+    "projectile","projectil","outbreak","spread","internationally","clinical","two","three","four","five","vaccine","vaccin",
+    "provincial","municipal","local","federal","national","regional","held","hold","vote","voter"
+  ]);
   const getHeadlineProperAnchors = (story) => {
     const words = String(story || "").trim().split(/\s+/);
     const anchors = new Set();
@@ -390,68 +401,111 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     }
     return anchors;
   };
+  const getConfirmedProperAnchors = (cl) => {
+    const story = String(cl?.story || "");
+    const summary = String(cl?.summary || "");
+    const midCapStems = new Set();
+    for (const sent of summary.split(/(?<=[.!?])\s+/)) {
+      const words = sent.trim().split(/\s+/);
+      for (let idx = 1; idx < words.length; idx++) {
+        const clean = words[idx].replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, "");
+        if (clean.length >= 3 && /^[A-Z]/.test(clean)) {
+          const lower = clean.toLowerCase().replace(/^uk$/, "britain").replace(/^us$/, "america");
+          midCapStems.add(stemWord(lower));
+        }
+      }
+    }
+    const anchors = new Set();
+    for (const rawW of story.trim().split(/\s+/)) {
+      const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, "");
+      const isAcronym = /^(?:[A-Z]{2,5})$/.test(clean);
+      if ((clean.length >= 3 || isAcronym) && /^[A-Z]/.test(clean)) {
+        const lower = clean.toLowerCase().replace(/^uk$/, "britain").replace(/^us$/, "america");
+        const stemmed = stemWord(lower);
+        if (
+          !STOP_DEDUPE.has(lower) &&
+          !GENERIC_EVENT_STEMS.has(lower) &&
+          !GENERIC_EVENT_STEMS.has(stemmed) &&
+          !NON_PROPER_HEADLINE_WORDS.has(lower) &&
+          !NON_PROPER_HEADLINE_WORDS.has(stemmed)
+        ) {
+          if (!summary || isAcronym || midCapStems.has(stemmed)) {
+            anchors.add(stemmed);
+          }
+        }
+      }
+    }
+    return anchors;
+  };
+  const computeClusterDedupeMeta = (cl) => {
+    const urls = new Set((cl.coverage || []).map(x => canonicalUrl(x.link)).filter(Boolean));
+    const headStems = getStems(cl.story);
+    const sumStems = getStems(`${cl.story} ${cl.summary}`);
+    const domCov = getDominantCoverageTitleStems(cl);
+    const headWithDom = new Set([...headStems, ...domCov]);
+    const spec = new Set([...getStems(`${cl.story} ${cl.summary}`, GENERIC_EVENT_STEMS), ...[...domCov].filter(s => !GENERIC_EVENT_STEMS.has(s))]);
+    const fullTextStems = getStems(`${cl.story} ${cl.summary} ${(cl.coverage || []).map(c => `${c.title} ${c.description}`).join(" ")}`);
+    const nums = getHeadlineNumbers(cl.story);
+    const proper = getHeadlineProperAnchors(cl.story);
+    const confProper = getConfirmedProperAnchors(cl);
+    const covItems = (cl.coverage || []).map(c => ({
+      titleStems: getStems(c.title),
+      ms: new Date(c.pubDate || 0).getTime()
+    }));
+    return { urls, headStems, sumStems, domCov, headWithDom, spec, fullTextStems, nums, proper, confProper, covItems };
+  };
 
   const activeList = Array.from(byId.values()).sort((a, b) => ((b.coverage?.length || 0) - (a.coverage?.length || 0)) || ((b.version || 1) - (a.version || 1)));
+  const metaMap = new Map();
+  for (const cl of activeList) {
+    metaMap.set(cl.id, computeClusterDedupeMeta(cl));
+  }
   const absorbedIds = new Set();
   for (let i = 0; i < activeList.length; i++) {
     const primary = activeList[i];
     if (absorbedIds.has(primary.id)) continue;
-    const urlsA = new Set((primary.coverage || []).map(x => canonicalUrl(x.link)).filter(Boolean));
-    const headStemsA = getStems(primary.story);
-    const sumStemsA = getStems(`${primary.story} ${primary.summary}`);
-    const domCovA = getDominantCoverageTitleStems(primary);
-    const headWithDomA = new Set([...headStemsA, ...domCovA]);
-    const specA = new Set([...getStems(`${primary.story} ${primary.summary}`, GENERIC_EVENT_STEMS), ...[...domCovA].filter(s => !GENERIC_EVENT_STEMS.has(s))]);
-    const fullTextStemsA = getStems(`${primary.story} ${primary.summary} ${(primary.coverage || []).map(c => `${c.title} ${c.description}`).join(" ")}`);
-    const numsA = getHeadlineNumbers(primary.story);
-    const properA = getHeadlineProperAnchors(primary.story);
+    let mA = metaMap.get(primary.id);
+    const urlsA = mA.urls;
+    const properA = mA.proper;
 
     for (let j = i + 1; j < activeList.length; j++) {
       const secondary = activeList[j];
       if (absorbedIds.has(secondary.id)) continue;
-      const urlsB = new Set((secondary.coverage || []).map(x => canonicalUrl(x.link)).filter(Boolean));
+      const mB = metaMap.get(secondary.id);
       let sharedUrls = 0;
-      for (const u of urlsB) { if (urlsA.has(u)) sharedUrls++; }
-      const minUrls = Math.min(urlsA.size || 1, urlsB.size || 1);
+      for (const u of mB.urls) { if (mA.urls.has(u)) sharedUrls++; }
+      const minUrls = Math.min(mA.urls.size || 1, mB.urls.size || 1);
       const urlRatio = sharedUrls / minUrls;
 
       let shouldMerge = (sharedUrls >= 3) || (sharedUrls >= 2 && urlRatio >= 0.35);
       let isDualFacetOrUmbrellaTwin = false;
       if (!shouldMerge) {
-        const headStemsB = getStems(secondary.story);
-        const sharedHead = countFuzzyOverlap(headStemsA, headStemsB);
-        const headSim = sharedHead / Math.min(headStemsA.size || 1, headStemsB.size || 1);
-        if (headSim >= 0.80 && sharedHead >= 3) {
-          const sumStemsB = getStems(`${secondary.story} ${secondary.summary}`);
-          const sharedSum = countFuzzyOverlap(sumStemsA, sumStemsB);
-          const sumJac = sharedSum / Math.max(1, sumStemsA.size + sumStemsB.size - sharedSum);
-          if (sumJac >= 0.35) shouldMerge = true;
-        }
-        // Law 1A-bis: Dual-Facet (Market/Leak vs. Substantive Release) & Umbrella-vs-Specific Twin Consolidation
-        if (!shouldMerge) {
-          const domCovB = getDominantCoverageTitleStems(secondary);
-          const headWithDomB = new Set([...headStemsB, ...domCovB]);
-          const sharedHeadDom = [...headWithDomA].filter(x => headWithDomB.has(x));
-          if (sharedHeadDom.length >= 2) {
-            const numsB = getHeadlineNumbers(secondary.story);
-            const hasConflictingNums = numsA.size > 0 && numsB.size > 0 && ![...numsA].some(n => numsB.has(n));
+        const sharedHead = countFuzzyOverlap(mA.headStems, mB.headStems);
+        const sharedHeadDom = [...mA.headWithDom].filter(x => mB.headWithDom.has(x));
+        if (sharedHead > 0 || sharedHeadDom.length >= 2) {
+          const headSim = sharedHead / Math.min(mA.headStems.size || 1, mB.headStems.size || 1);
+          const sharedSum = countFuzzyOverlap(mA.sumStems, mB.sumStems);
+          const sumJac = sharedSum / Math.max(1, mA.sumStems.size + mB.sumStems.size - sharedSum);
+          const sumContain = sharedSum / Math.min(mA.sumStems.size || 1, mB.sumStems.size || 1);
+
+          if ((headSim >= 0.80 && sharedHead >= 3 && sumJac >= 0.35) || (headSim >= 0.75 && sharedHead >= 3 && sumJac >= 0.25)) {
+            shouldMerge = true;
+          }
+          // Law 1A-bis: Dual-Facet (Market/Leak vs. Substantive Release) & Umbrella-vs-Specific Twin Consolidation
+          if (!shouldMerge && sharedHeadDom.length >= 2) {
+            const hasConflictingNums = mA.nums.size > 0 && mB.nums.size > 0 && ![...mA.nums].some(n => mB.nums.has(n));
             if (!hasConflictingNums) {
-              const properB = getHeadlineProperAnchors(secondary.story);
-              const fullTextStemsB = getStems(`${secondary.story} ${secondary.summary} ${(secondary.coverage || []).map(c => `${c.title} ${c.description}`).join(" ")}`);
-              const unsharedProperA = [...properA].filter(p => !properB.has(p));
-              const unsharedProperB = [...properB].filter(p => !properA.has(p));
+              const unsharedProperA = [...mA.proper].filter(p => !mB.proper.has(p));
+              const unsharedProperB = [...mB.proper].filter(p => !mA.proper.has(p));
               const hasConflictingProper = unsharedProperA.length > 0 && unsharedProperB.length > 0 &&
-                (!unsharedProperA.every(p => fullTextStemsB.has(p)) || !unsharedProperB.every(p => fullTextStemsA.has(p)));
+                (!unsharedProperA.every(p => mB.fullTextStems.has(p)) || !unsharedProperB.every(p => mA.fullTextStems.has(p)));
               if (!hasConflictingProper) {
-                const specB = new Set([...getStems(`${secondary.story} ${secondary.summary}`, GENERIC_EVENT_STEMS), ...[...domCovB].filter(s => !GENERIC_EVENT_STEMS.has(s))]);
-                const sharedSpec = [...specA].filter(x => specB.has(x));
-                const specContain = sharedSpec.length / Math.min(specA.size || 1, specB.size || 1);
+                const sharedSpec = [...mA.spec].filter(x => mB.spec.has(x));
+                const specContain = sharedSpec.length / Math.min(mA.spec.size || 1, mB.spec.size || 1);
                 let covBridgePairs = 0;
-                const covA = (primary.coverage || []).map(c => getStems(c.title));
-                const covB = (secondary.coverage || []).map(c => getStems(c.title));
-                for (const ca of covA) {
-                  for (const cb of covB) {
-                    const sh = [...ca].filter(x => cb.has(x));
+                for (const ca of mA.covItems) {
+                  for (const cb of mB.covItems) {
+                    const sh = [...ca.titleStems].filter(x => cb.titleStems.has(x));
                     const specSh = sh.filter(x => !GENERIC_EVENT_STEMS.has(x));
                     if (sh.length >= 3 && specSh.length >= 3) covBridgePairs++;
                   }
@@ -459,6 +513,71 @@ function deduplicateAndSanitizeClusters(rawClusters) {
                 if (sharedSpec.length >= 4 && (specContain >= 0.28 || covBridgePairs >= 4) && covBridgePairs >= 3) {
                   shouldMerge = true;
                   isDualFacetOrUmbrellaTwin = true;
+                }
+              }
+            }
+          }
+          // Law 1A-quater: Confirmed-Entity & Bidirectional Full-Text / Embedded-Article Twin Consolidation
+          if (!shouldMerge && sharedHead >= 1 && mA.headStems.size >= 3 && mB.headStems.size >= 3) {
+            const hasConflictingNums = mA.nums.size > 0 && mB.nums.size > 0 && ![...mA.nums].some(n => mB.nums.has(n));
+            const hasElectionScopeMismatch =
+              ((mA.headStems.has("provincial") || mA.headStems.has("federal") || mA.headStems.has("national")) && mB.headStems.has("municipal")) ||
+              ((mB.headStems.has("provincial") || mB.headStems.has("federal") || mB.headStems.has("national")) && mA.headStems.has("municipal"));
+
+            if (!hasConflictingNums && !hasElectionScopeMismatch) {
+              const unsharedConfA = [...mA.confProper].filter(p => !mB.confProper.has(p));
+              const unsharedConfB = [...mB.confProper].filter(p => !mA.confProper.has(p));
+              const hasConflictingConfProper =
+                (unsharedConfA.length > 0 && !unsharedConfA.every(p => mB.fullTextStems.has(p))) ||
+                (unsharedConfB.length > 0 && !unsharedConfB.every(p => mA.fullTextStems.has(p)));
+
+              if (!hasConflictingConfProper) {
+                const headBInSumA = [...mB.headStems].filter(s => mA.sumStems.has(s)).length / mB.headStems.size;
+                const headAInFullB = [...mA.headStems].filter(s => mB.fullTextStems.has(s)).length / mA.headStems.size;
+                const headBInFullA = [...mB.headStems].filter(s => mA.fullTextStems.has(s)).length / mB.headStems.size;
+
+                let anyBridgePairs3 = 0;
+                let sameDayBridgePairs = 0;
+                for (const ca of mA.covItems) {
+                  for (let idxB = 0; idxB < mB.covItems.length; idxB++) {
+                    const cb = mB.covItems[idxB];
+                    const sh = [...ca.titleStems].filter(x => cb.titleStems.has(x));
+                    if (sh.length >= 3) {
+                      anyBridgePairs3++;
+                      const specSh = sh.filter(x => !GENERIC_EVENT_STEMS.has(x));
+                      if (ca.ms > 0 && cb.ms > 0 && Math.abs(ca.ms - cb.ms) <= 24 * 3600 * 1000) {
+                        if ((sh.length >= 4 && specSh.length >= 1) || (sh.length >= 3 && specSh.length >= 2)) {
+                          sameDayBridgePairs++;
+                        }
+                      }
+                    }
+                  }
+                }
+
+                const embeddedMatchesInA = mA.covItems.filter(ca => {
+                  const sh = [...mB.headStems].filter(s => ca.titleStems.has(s)).length;
+                  return sh >= 3 && (sh / mB.headStems.size) >= 0.75;
+                }).length;
+
+                if (
+                  sharedHead >= 3 &&
+                  anyBridgePairs3 >= 1 &&
+                  ((headAInFullB >= 0.65 && headBInFullA >= 0.65) || (Math.max(headAInFullB, headBInFullA) >= 0.85 && Math.min(headAInFullB, headBInFullA) >= 0.55)) &&
+                  (sumJac >= 0.12 || sumContain >= 0.24)
+                ) {
+                  shouldMerge = true;
+                } else if (
+                  sharedHead >= 2 &&
+                  anyBridgePairs3 >= 1 &&
+                  headAInFullB >= 0.70 &&
+                  headBInFullA >= 0.80 &&
+                  (sumJac >= 0.18 || sumContain >= 0.34)
+                ) {
+                  shouldMerge = true;
+                } else if (embeddedMatchesInA >= 1 && headBInSumA >= 0.75 && mB.covItems.length <= 6 && sumContain >= 0.40) {
+                  shouldMerge = true;
+                } else if (sharedHead >= 2 && sameDayBridgePairs >= 2 && mB.covItems.length <= 6 && sumContain >= 0.28) {
+                  shouldMerge = true;
                 }
               }
             }
