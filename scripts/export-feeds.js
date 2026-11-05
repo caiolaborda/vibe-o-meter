@@ -332,6 +332,8 @@ function deduplicateAndSanitizeClusters(rawClusters) {
   ]);
   const stemWord = (w) => w
     .replace(/^waiv(?:er|ers|ing|ed|es|e)$/, "waiv")
+    .replace(/^french$/, "franc")
+    .replace(/^diversions?$/, "divert")
     .replace(/^(israel|russi|ukrain|iran|syri|leban|palestin|canad|austral|americ|ital|franc|german|brazi|kore|indones|malays)(?:ian|an|a|ese|i|ch)$/, "$1")
     .replace(/([a-z]{3,})ies$/, "$1y")
     .replace(/([a-z]{2,}(?:sh|ch|x|z|ss))es$/, "$1")
@@ -499,7 +501,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     "provincial","municipal","local","federal","national","regional","held","hold","vote","voter"
   ]);
   const getHeadlineProperAnchors = (story) => {
-    const words = String(story || "").trim().split(/\s+/);
+    const words = String(story || "").trim().split(/[\s\-–—]+/);
     const anchors = new Set();
     for (const rawW of words) {
       const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, "");
@@ -518,7 +520,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     const summary = String(cl?.summary || "");
     const midCapStems = new Set();
     for (const sent of summary.split(/(?<=[.!?])\s+/)) {
-      const words = sent.trim().split(/\s+/);
+      const words = sent.trim().split(/[\s\-–—]+/);
       for (let idx = 1; idx < words.length; idx++) {
         const clean = words[idx].replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, "");
         if (clean.length >= 3 && /^[A-Z]/.test(clean)) {
@@ -528,7 +530,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       }
     }
     const anchors = new Set();
-    for (const rawW of story.trim().split(/\s+/)) {
+    for (const rawW of story.trim().split(/[\s\-–—]+/)) {
       const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, "");
       const isAcronym = /^(?:[A-Z]{2,5})$/.test(clean);
       if ((clean.length >= 3 || isAcronym) && /^[A-Z]/.test(clean)) {
