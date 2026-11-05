@@ -2124,20 +2124,29 @@ Return JSON array in format:
           }
           if (mergedEvalTokens.size > 0) prevEvaluatedDesyncTokens = Array.from(mergedEvalTokens).slice(-30);
           if (maxEvalCovMs > 0) prevLastEvaluatedCoverageMs = maxEvalCovMs;
-          // Self-heal check: include both new matchingArticles AND matchedPrev.coverage so a single new dispatch
-          // matching an EXISTING_CLUSTER anchor never falsely fails prevStorySupported and drops the cluster's existing outlets!
-          const articleBagStems = new Set();
-          matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => articleBagStems.add(s)));
-          (matchedPrev.coverage || []).forEach(c => extractCoherenceStems(`${c.title || ''}`).forEach(s => articleBagStems.add(s)));
+          // Self-heal check: include new matchingArticles plus non-overwritten matchedPrev.coverage outlets,
+          // while requiring the new matchingArticles themselves to share at least 1 non-geographic specific stem with matchedPrev!
+          const newMatchingStems = new Set();
+          matchingArticles.forEach(m => extractCoherenceStems(`${m.title || ''} ${m.description || ''}`).forEach(s => newMatchingStems.add(s)));
+          const articleBagStems = new Set(newMatchingStems);
+          (matchedPrev.coverage || []).forEach(c => {
+            if (c?.sourceId && !seenOutlets.has(c.sourceId)) {
+              extractCoherenceStems(`${c.title || ''}`).forEach(s => articleBagStems.add(s));
+            }
+          });
           const prevStoryStems = extractCoherenceStems(matchedPrev.story || '');
           const prevSummaryStems = extractCoherenceStems(matchedPrev.summary || '');
           const supportedStoryStems = prevStoryStems.filter(s => articleBagStems.has(s)).length;
           const supportedSummaryStems = prevSummaryStems.filter(s => articleBagStems.has(s)).length;
+          const newSupportedStorySpec = prevStoryStems.filter(s => newMatchingStems.has(s) && !BROAD_THEATRE_ACTOR_STEMS.has(s)).length;
+          const newSupportedAllSpec = [...new Set([...prevStoryStems, ...prevSummaryStems])].filter(s => newMatchingStems.has(s) && !BROAD_THEATRE_ACTOR_STEMS.has(s)).length;
           const prevStorySupported =
-            prevStoryStems.length === 0 ||
-            supportedStoryStems >= 2 ||
-            (supportedStoryStems / prevStoryStems.length) >= 0.35 ||
-            (supportedStoryStems >= 1 && supportedSummaryStems >= 2);
+            (newSupportedStorySpec >= 1 || newSupportedAllSpec >= 2) && (
+              prevStoryStems.length === 0 ||
+              supportedStoryStems >= 2 ||
+              (supportedStoryStems / prevStoryStems.length) >= 0.45 ||
+              (supportedStoryStems >= 2 && supportedSummaryStems >= 2)
+            );
 
           if (!prevStorySupported && matchingArticles.length < 2) {
             return;
@@ -3489,13 +3498,28 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         );
 
         if (hasStaleHeadlineNumber || hasSemanticContradiction) {
-          if (candidateClarStory && candidateClarStory !== c.story && isHeadlineAnchorRecognizable(candidateClarStory)) {
+          const candHasImpossiblePct = /\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})\s*(?:%|percent)\b/i.test(candidateClarStory);
+          if (candidateClarStory && !candHasImpossiblePct && candidateClarStory !== c.story && isHeadlineAnchorRecognizable(candidateClarStory)) {
             updatedClarificationStory = candidateClarStory;
-          } else if (hasStaleHeadlineNumber) {
-            const noteNums = (noteText || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [];
-            const replacementNum = noteNums.find(n => newSummaryNums.has(n) && !oldStoryNums.includes(n));
-            if (replacementNum && oldStoryNums.length === 1) {
-              updatedClarificationStory = c.story.replace(new RegExp(`\\b${oldStoryNums[0]}\\b`), replacementNum);
+          } else if (hasStaleHeadlineNumber && oldStoryNums.length === 1) {
+            const oldNum = oldStoryNums[0];
+            const escapedOldNum = oldNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pctInStoryRe = new RegExp(`\\b${escapedOldNum}\\s*(%|percent)\\b`, 'i');
+            if (pctInStoryRe.test(c.story)) {
+              const sumPctMatch = (newSummary || '').match(/\b(\d{1,2}(?:\.\d+)?)\s*(?:%|percent)\b/i);
+              if (sumPctMatch && sumPctMatch[1] !== oldNum && Number(sumPctMatch[1]) <= 100) {
+                updatedClarificationStory = c.story.replace(new RegExp(`\\b${escapedOldNum}(?=\\s*(?:%|percent)\\b)`, 'i'), sumPctMatch[1]);
+              }
+            } else {
+              const unitInStoryMatch = (c.story || '').match(new RegExp(`\\b${escapedOldNum}\\s+([A-Za-z]{3,})\\b`));
+              const unitWord = unitInStoryMatch ? unitInStoryMatch[1].toLowerCase() : '';
+              if (unitWord && unitWord !== 'percent') {
+                const escapedUnit = unitWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const sameUnitInSum = (newSummary || '').match(new RegExp(`\\b(\\d+(?:,\\d+)*(?:\\.\\d+)?)\\s+${escapedUnit}\\b`, 'i'));
+                if (sameUnitInSum && sameUnitInSum[1] !== oldNum) {
+                  updatedClarificationStory = c.story.replace(new RegExp(`\\b${escapedOldNum}\\b`), sameUnitInSum[1]);
+                }
+              }
             }
           }
         }
@@ -4069,7 +4093,9 @@ Return ONLY a valid JSON array matching this exact schema:
       if (!candidateSum || candidateSum.length < 45) continue;
 
       // Ensure candidateSum did not drop any concrete multi-digit number (>1, non-year) from the headline or existing summary
-      const requiredNums = (`${c.story || ''} ${c.summary || ''} ${c.developmentNote || ''}`.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [])
+      // (Exclude corrupted numbers >100 immediately preceding 'Percent/%' in c.story so a bad headline percentage never blocks summary repair)
+      const sanitizedStoryForNums = String(c.story || '').replace(/\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})\s*(?:%|percent)\b/gi, '');
+      const requiredNums = (`${sanitizedStoryForNums} ${c.summary || ''} ${c.developmentNote || ''}`.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [])
         .filter(n => Number(n.replace(/,/g, '')) > 1 && !/^(19|20)\d{2}$/.test(n));
       const candNums = new Set(candidateSum.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []);
       const droppedHeadlineOrSumNum = requiredNums.some(n => !candNums.has(n));
@@ -4078,6 +4104,19 @@ Return ONLY a valid JSON array matching this exact schema:
         c.summary = candidateSum;
         if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
           c.evolutionHistory[c.evolutionHistory.length - 1].summary = candidateSum;
+        }
+      }
+      // Repair impossible percentage in c.story if summary provides the true percentage (e.g. "1,271 Percent" -> "22 Percent")
+      if (/\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})\s*(?:%|percent)\b/i.test(c.story || '')) {
+        const truePct = (c.summary || '').match(/\b(\d{1,2}(?:\.\d+)?)\s*(?:%|percent)\b/i);
+        if (truePct) {
+          const oldSlug = c.id;
+          c.story = c.story.replace(/\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})(?=\s*(?:%|percent)\b)/i, truePct[1]);
+          const newSlug = String(c.story).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          if (newSlug && newSlug !== oldSlug) {
+            c.evolvedFromIds = Array.from(new Set([...(c.evolvedFromIds || []), oldSlug])).filter(x => x !== newSlug);
+            c.id = newSlug;
+          }
         }
       }
       const rawLoc = entry.primaryLocation;

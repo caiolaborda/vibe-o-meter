@@ -141,6 +141,117 @@ function inferClusterTopic(cluster, sources) {
   return 'world';
 }
 
+function sanitizeClusterHeadlineIntegrity(rawCl, slugify) {
+  if (!rawCl || typeof rawCl !== 'object') return rawCl;
+  const cl = { ...rawCl };
+  let story = String(cl.story || '').trim();
+  let summary = String(cl.summary || '').trim();
+  const covText = (cl.coverage || []).map(a => `${a?.title || ''} ${a?.description || ''}`).join(' ');
+  const fullBody = `${summary} ${covText}`;
+  let changed = false;
+
+  // 1. Repair impossible percentage (> 100% or comma-separated number before Percent/%) in story & evolutionHistory
+  const badPctRe = /\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})\s*(%|percent)\b/i;
+  if (badPctRe.test(story)) {
+    const sumPctMatch = summary.match(/\b(\d{1,2}(?:\.\d+)?)\s*(?:%|percent)\b/i);
+    if (sumPctMatch && Number(sumPctMatch[1]) <= 100) {
+      story = story.replace(/\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})(?=\s*(?:%|percent)\b)/i, sumPctMatch[1]);
+      changed = true;
+      if (Array.isArray(cl.evolutionHistory)) {
+        cl.evolutionHistory = cl.evolutionHistory.map(h => {
+          if (!h || typeof h !== 'object') return h;
+          const nh = { ...h };
+          if (typeof nh.headline === 'string' && badPctRe.test(nh.headline)) {
+            nh.headline = nh.headline.replace(/\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})(?=\s*(?:%|percent)\b)/i, sumPctMatch[1]);
+          }
+          if (typeof nh.beforeStory === 'string' && badPctRe.test(nh.beforeStory)) {
+            nh.beforeStory = nh.beforeStory.replace(/\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})(?=\s*(?:%|percent)\b)/i, sumPctMatch[1]);
+          }
+          return nh;
+        });
+      }
+    }
+  }
+
+  // 2. Repair hallucinated sovereign country in story when 0 mentions exist in summary + coverage
+  const COUNTRY_CHECKS = [
+    { name: 'Canada', re: /\b(canada|canadian|ottawa|toronto|quebec|ontario|montreal|vancouver|alberta)\b/i },
+    { name: 'Australia', re: /\b(australia|australian|sydney|melbourne|canberra|queensland|brisbane|victoria|nsw|perth|albanese)\b/i },
+    { name: 'UK', re: /\b(uk|u\.k\.|britain|british|england|english|scotland|scottish|wales|welsh|london|westminster|downing street|nhs)\b/i }
+  ];
+  for (const chk of COUNTRY_CHECKS) {
+    const leadCountryRe = new RegExp(`^${chk.name}\\b`, 'i');
+    if (leadCountryRe.test(story) && !chk.re.test(fullBody)) {
+      const iso = String(cl.primaryLocation?.countryIso || '').toLowerCase();
+      let replacementCountry = '';
+      if (iso === 'gb' || iso === 'uk' || /\b(britain|british|uk|u\.k\.|england|london)\b/i.test(fullBody)) {
+        replacementCountry = 'UK';
+      } else if (iso === 'us' || /\b(united states|u\.s\.|american|washington)\b/i.test(fullBody)) {
+        replacementCountry = 'US';
+      } else if (iso === 'au' || /\b(australia|australian|sydney|melbourne|canberra)\b/i.test(fullBody)) {
+        replacementCountry = 'Australia';
+      } else if (iso === 'ca' || /\b(canada|canadian|ottawa|toronto)\b/i.test(fullBody)) {
+        replacementCountry = 'Canada';
+      }
+      if (replacementCountry && replacementCountry.toLowerCase() !== chk.name.toLowerCase()) {
+        story = story.replace(leadCountryRe, replacementCountry);
+        changed = true;
+        if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 0) {
+          cl.evolutionHistory = cl.evolutionHistory.map((h, idx) =>
+            idx === 0 && typeof h?.headline === 'string'
+              ? { ...h, headline: h.headline.replace(leadCountryRe, replacementCountry) }
+              : h
+          );
+        }
+      }
+    }
+  }
+
+  // 3. Repair coverage-contradicted / hijacked headlines & summaries
+  if (/^Fatal Car Crash in Hamilton\s*\(Assault\)$/i.test(story) || (cl.id === 'fatal-car-crash-in-hamilton-assault' && /air cadet/i.test(fullBody))) {
+    story = 'Two Arrested After Air Cadet Officer Assaulted in Hamilton';
+    changed = true;
+  } else if (/^Binary Extension on Cursor Compromised in Cyberattack$/i.test(story) && /claude code/i.test(fullBody)) {
+    story = 'Anthropic Claude Code Extension on Cursor Compromised in Cyberattack';
+    changed = true;
+  } else if (/^Rays Stun Brewers to Force World Series Game 5$/i.test(story) && /claim their first-ever World Series title/i.test(summary)) {
+    story = 'Milwaukee Brewers Win First-Ever World Series Title in Game 5';
+    changed = true;
+  } else if (cl.id === 'two-teenagers-killed-in-high-speed-perth-car-crash' && /truck drivers/i.test(covText) && !/teenagers|16-year-old/i.test(covText)) {
+    story = 'Two Truck Drivers Killed in Fiery Western Australia Highway Crash';
+    summary = "Two truck drivers died after a refrigerated van and a container truck collided and burst into flames on the Great Eastern Highway in Western Australia's Wheatbelt west of Perth.";
+    changed = true;
+  } else if (cl.id === 'alberta-banned-dei-in-public-sector-hiring' && /post-secondary/i.test(covText) && !/\b(dei|diversity)\b/i.test(covText)) {
+    story = 'Alberta Bill Compels Political Neutrality for Post-Secondary Institutions';
+    summary = 'The United Conservative government in Alberta tabled legislation to compel post-secondary institutions to remain neutral and bar universities and colleges from issuing official statements on political, social, and ideological issues outside their academic mission.';
+    changed = true;
+  } else if (cl.id === 'malaysia-opposition-coalition-registration-invalidated' && /melaka/i.test(fullBody)) {
+    story = 'Malaysia Melaka State Election Campaign Begins With 79 Candidates';
+    changed = true;
+  }
+
+  if (changed) {
+    const oldId = cl.id || slugify(rawCl.story);
+    const newId = slugify(story);
+    cl.story = story;
+    cl.summary = summary;
+    if (newId && newId !== oldId) {
+      const ev = new Set(Array.isArray(cl.evolvedFromIds) ? cl.evolvedFromIds : []);
+      if (oldId) ev.add(oldId);
+      ev.delete(newId);
+      cl.id = newId;
+      cl.evolvedFromIds = Array.from(ev);
+    }
+    if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 0) {
+      const lastIdx = cl.evolutionHistory.length - 1;
+      cl.evolutionHistory = cl.evolutionHistory.map((h, i) =>
+        i === lastIdx ? { ...h, headline: story, summary } : h
+      );
+    }
+  }
+  return cl;
+}
+
 function deduplicateAndSanitizeClusters(rawClusters) {
   if (!Array.isArray(rawClusters) || rawClusters.length === 0) return [];
   const slugify = (s) => String(s || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -161,10 +272,11 @@ function deduplicateAndSanitizeClusters(rawClusters) {
   };
 
   const byId = new Map();
-  for (const cl of rawClusters) {
-    if (!cl || !Array.isArray(cl.coverage) || cl.coverage.length < 2) continue;
-    const cleanCov = dedupeCovByOutlet(cl.coverage);
+  for (const rawItem of rawClusters) {
+    if (!rawItem || !Array.isArray(rawItem.coverage) || rawItem.coverage.length < 2) continue;
+    const cleanCov = dedupeCovByOutlet(rawItem.coverage);
     if (cleanCov.length < 2) continue;
+    const cl = sanitizeClusterHeadlineIntegrity({ ...rawItem, coverage: cleanCov }, slugify);
     const id = cl.id || slugify(cl.story);
     const existing = byId.get(id);
     if (!existing) {
