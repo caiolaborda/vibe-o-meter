@@ -1,18 +1,18 @@
 {
   "dataset": "vibe-o-meter/outlets",
-  "lastUpdated": "2026-11-10T05:23:34.492Z",
+  "lastUpdated": "2026-11-10T06:00:59.253Z",
   "globalSentiment": -0.121,
   "editorialSummaryDate": "2026-11-10",
   "editorialSummary": "Nothing captures the delicate equilibrium of modern existence quite like [hacking supermarket fridges](https://www.cnbc.com/2026/11/09/europe-fridge-hacks-bomb-threats-cyberattack.html) across Europe while millions of Paraguayans discover their bank accounts have vanished in [Ueno Bank's collapse](https://oglobo.globo.com/economia/noticia/2026/11/09/de-ascensao-meteorica-a-crise-nacional-as-chaves-da-queda-do-ueno-bank-no-paraguai.ghtml) and politicians debate [COP31 climate targets](https://www.euronews.com/video/2026/11/09/turkey-delegates-arrive-in-antalya-as-cop31-climate-talks-begin). Fortunately, medical researchers have finally unveiled a [breakthrough hypertension drug](https://oglobo.globo.com/saude/noticia/2026/11/09/hipertensao-novo-remedio-aprovado-nos-eua-mantem-a-pressao-baixa-ate-dois-anos-depois-da-interrupcao-entenda.ghtml) designed specifically for anyone forced to follow daily world news.",
   "categoryAverages": {
-    "business": -0.066,
     "politics": -0.096,
+    "business": -0.066,
     "entertainment": -0.016,
     "climate": -0.172,
-    "health": -0.108,
-    "other": -0.091,
+    "health": -0.109,
+    "other": -0.09,
     "technology": -0.1,
-    "world": -0.27,
+    "world": -0.269,
     "science": 0.109,
     "lifestyle": 0.006,
     "sports": -0.026,
@@ -120,24 +120,24 @@
       "id": "aljazeera",
       "name": "Al Jazeera",
       "region": "ME",
-      "averageSentiment24h": -0.226,
-      "averageSentimentAllTime": -0.195,
+      "averageSentiment24h": -0.227,
+      "averageSentimentAllTime": -0.196,
       "deltaVsBaseline": -0.031,
-      "articleCount24h": 88,
+      "articleCount24h": 93,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 0,
-        "neutral": 31,
-        "negative": 57
+        "neutral": 32,
+        "negative": 61
       },
       "topicAverages24h": {
+        "world": {
+          "averageSentiment": -0.331,
+          "articleCount": 47
+        },
         "politics": {
           "averageSentiment": -0.127,
           "articleCount": 31
-        },
-        "world": {
-          "averageSentiment": -0.341,
-          "articleCount": 42
         },
         "business": {
           "averageSentiment": -0.213,
@@ -358,20 +358,24 @@
       "id": "euronews",
       "name": "Euronews",
       "region": "EU",
-      "averageSentiment24h": -0.18,
+      "averageSentiment24h": -0.187,
       "averageSentimentAllTime": -0.154,
-      "deltaVsBaseline": -0.026,
+      "deltaVsBaseline": -0.033,
       "articleCount24h": 21,
-      "articleCountArchive": 475,
+      "articleCountArchive": 476,
       "distribution24h": {
         "positive": 0,
         "neutral": 11,
         "negative": 10
       },
       "topicAverages24h": {
+        "politics": {
+          "averageSentiment": -0.065,
+          "articleCount": 3
+        },
         "world": {
-          "averageSentiment": -0.231,
-          "articleCount": 12
+          "averageSentiment": -0.252,
+          "articleCount": 11
         },
         "climate": {
           "averageSentiment": 0.05,
@@ -384,10 +388,6 @@
         "sports": {
           "averageSentiment": -0.115,
           "articleCount": 1
-        },
-        "politics": {
-          "averageSentiment": -0.032,
-          "articleCount": 2
         },
         "business": {
           "averageSentiment": -0.157,
@@ -445,69 +445,24 @@
       }
     },
     {
-      "id": "bbc",
-      "name": "BBC News",
-      "region": "UK",
-      "averageSentiment24h": -0.155,
-      "averageSentimentAllTime": -0.136,
-      "deltaVsBaseline": -0.019,
-      "articleCount24h": 61,
-      "articleCountArchive": 500,
-      "distribution24h": {
-        "positive": 0,
-        "neutral": 34,
-        "negative": 27
-      },
-      "topicAverages24h": {
-        "world": {
-          "averageSentiment": -0.314,
-          "articleCount": 19
-        },
-        "business": {
-          "averageSentiment": -0.155,
-          "articleCount": 9
-        },
-        "politics": {
-          "averageSentiment": -0.095,
-          "articleCount": 10
-        },
-        "other": {
-          "averageSentiment": -0.088,
-          "articleCount": 3
-        },
-        "sports": {
-          "averageSentiment": -0.011,
-          "articleCount": 9
-        },
-        "entertainment": {
-          "averageSentiment": 0.018,
-          "articleCount": 5
-        },
-        "technology": {
-          "averageSentiment": -0.169,
-          "articleCount": 2
-        },
-        "climate": {
-          "averageSentiment": -0.137,
-          "articleCount": 4
-        }
-      }
-    },
-    {
       "id": "dw",
       "name": "DW News",
       "region": "EU",
-      "averageSentiment24h": -0.154,
-      "averageSentimentAllTime": -0.182,
-      "deltaVsBaseline": 0.028,
-      "articleCount24h": 27,
+      "averageSentiment24h": -0.162,
+      "averageSentimentAllTime": -0.183,
+      "deltaVsBaseline": 0.021,
+      "articleCount24h": 28,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 2,
         "neutral": 14,
-        "negative": 11
+        "negative": 12
       },
       "topicAverages24h": {
+        "health": {
+          "averageSentiment": -0.376,
+          "articleCount": 1
+        },
         "technology": {
           "averageSentiment": -0.076,
           "articleCount": 2
@@ -538,6 +493,108 @@
         },
         "other": {
           "averageSentiment": 0,
+          "articleCount": 1
+        }
+      }
+    },
+    {
+      "id": "bbc",
+      "name": "BBC News",
+      "region": "UK",
+      "averageSentiment24h": -0.159,
+      "averageSentimentAllTime": -0.137,
+      "deltaVsBaseline": -0.022,
+      "articleCount24h": 59,
+      "articleCountArchive": 500,
+      "distribution24h": {
+        "positive": 0,
+        "neutral": 32,
+        "negative": 27
+      },
+      "topicAverages24h": {
+        "world": {
+          "averageSentiment": -0.331,
+          "articleCount": 18
+        },
+        "business": {
+          "averageSentiment": -0.155,
+          "articleCount": 9
+        },
+        "politics": {
+          "averageSentiment": -0.095,
+          "articleCount": 10
+        },
+        "other": {
+          "averageSentiment": -0.088,
+          "articleCount": 3
+        },
+        "sports": {
+          "averageSentiment": -0.011,
+          "articleCount": 9
+        },
+        "entertainment": {
+          "averageSentiment": 0.018,
+          "articleCount": 5
+        },
+        "technology": {
+          "averageSentiment": -0.248,
+          "articleCount": 1
+        },
+        "climate": {
+          "averageSentiment": -0.137,
+          "articleCount": 4
+        }
+      }
+    },
+    {
+      "id": "guardian",
+      "name": "The Guardian",
+      "region": "UK",
+      "averageSentiment24h": -0.148,
+      "averageSentimentAllTime": -0.116,
+      "deltaVsBaseline": -0.032,
+      "articleCount24h": 63,
+      "articleCountArchive": 500,
+      "distribution24h": {
+        "positive": 2,
+        "neutral": 32,
+        "negative": 29
+      },
+      "topicAverages24h": {
+        "climate": {
+          "averageSentiment": -0.162,
+          "articleCount": 12
+        },
+        "world": {
+          "averageSentiment": -0.428,
+          "articleCount": 10
+        },
+        "entertainment": {
+          "averageSentiment": 0,
+          "articleCount": 15
+        },
+        "politics": {
+          "averageSentiment": -0.157,
+          "articleCount": 11
+        },
+        "business": {
+          "averageSentiment": -0.175,
+          "articleCount": 8
+        },
+        "other": {
+          "averageSentiment": -0.082,
+          "articleCount": 3
+        },
+        "health": {
+          "averageSentiment": 0.173,
+          "articleCount": 2
+        },
+        "sports": {
+          "averageSentiment": -0.053,
+          "articleCount": 1
+        },
+        "lifestyle": {
+          "averageSentiment": 0.012,
           "articleCount": 1
         }
       }
@@ -578,21 +635,21 @@
       "averageSentiment24h": -0.147,
       "averageSentimentAllTime": -0.122,
       "deltaVsBaseline": -0.025,
-      "articleCount24h": 104,
+      "articleCount24h": 103,
       "articleCountArchive": 500,
       "distribution24h": {
-        "positive": 3,
-        "neutral": 53,
-        "negative": 48
+        "positive": 2,
+        "neutral": 54,
+        "negative": 47
       },
       "topicAverages24h": {
-        "politics": {
-          "averageSentiment": -0.104,
-          "articleCount": 25
-        },
         "world": {
-          "averageSentiment": -0.295,
-          "articleCount": 23
+          "averageSentiment": -0.287,
+          "articleCount": 24
+        },
+        "politics": {
+          "averageSentiment": -0.092,
+          "articleCount": 25
         },
         "health": {
           "averageSentiment": -0.251,
@@ -603,8 +660,8 @@
           "articleCount": 13
         },
         "business": {
-          "averageSentiment": -0.143,
-          "articleCount": 17
+          "averageSentiment": -0.142,
+          "articleCount": 16
         },
         "technology": {
           "averageSentiment": -0.072,
@@ -623,8 +680,8 @@
           "articleCount": 3
         },
         "science": {
-          "averageSentiment": 0.092,
-          "articleCount": 3
+          "averageSentiment": 0.021,
+          "articleCount": 2
         }
       }
     },
@@ -632,9 +689,9 @@
       "id": "ap",
       "name": "Associated Press",
       "region": "GLOBAL",
-      "averageSentiment24h": -0.143,
+      "averageSentiment24h": -0.142,
       "averageSentimentAllTime": -0.164,
-      "deltaVsBaseline": 0.021,
+      "deltaVsBaseline": 0.022,
       "articleCount24h": 22,
       "articleCountArchive": 500,
       "distribution24h": {
@@ -643,6 +700,10 @@
         "negative": 9
       },
       "topicAverages24h": {
+        "business": {
+          "averageSentiment": -0.095,
+          "articleCount": 3
+        },
         "sports": {
           "averageSentiment": 0.015,
           "articleCount": 3
@@ -650,10 +711,6 @@
         "world": {
           "averageSentiment": -0.296,
           "articleCount": 7
-        },
-        "business": {
-          "averageSentiment": -0.108,
-          "articleCount": 3
         },
         "politics": {
           "averageSentiment": -0.069,
@@ -711,6 +768,59 @@
       }
     },
     {
+      "id": "rte",
+      "name": "RTÉ News",
+      "region": "EU",
+      "averageSentiment24h": -0.137,
+      "averageSentimentAllTime": -0.141,
+      "deltaVsBaseline": 0.004,
+      "articleCount24h": 37,
+      "articleCountArchive": 500,
+      "distribution24h": {
+        "positive": 0,
+        "neutral": 22,
+        "negative": 15
+      },
+      "topicAverages24h": {
+        "climate": {
+          "averageSentiment": -0.214,
+          "articleCount": 5
+        },
+        "technology": {
+          "averageSentiment": -0.071,
+          "articleCount": 2
+        },
+        "world": {
+          "averageSentiment": -0.222,
+          "articleCount": 14
+        },
+        "business": {
+          "averageSentiment": -0.112,
+          "articleCount": 2
+        },
+        "entertainment": {
+          "averageSentiment": 0.022,
+          "articleCount": 2
+        },
+        "sports": {
+          "averageSentiment": 0.009,
+          "articleCount": 1
+        },
+        "politics": {
+          "averageSentiment": -0.037,
+          "articleCount": 5
+        },
+        "health": {
+          "averageSentiment": -0.053,
+          "articleCount": 4
+        },
+        "other": {
+          "averageSentiment": -0.094,
+          "articleCount": 2
+        }
+      }
+    },
+    {
       "id": "cnn",
       "name": "CNN",
       "region": "NA",
@@ -759,59 +869,6 @@
         },
         "climate": {
           "averageSentiment": -0.647,
-          "articleCount": 1
-        }
-      }
-    },
-    {
-      "id": "guardian",
-      "name": "The Guardian",
-      "region": "UK",
-      "averageSentiment24h": -0.136,
-      "averageSentimentAllTime": -0.116,
-      "deltaVsBaseline": -0.02,
-      "articleCount24h": 69,
-      "articleCountArchive": 500,
-      "distribution24h": {
-        "positive": 2,
-        "neutral": 38,
-        "negative": 29
-      },
-      "topicAverages24h": {
-        "climate": {
-          "averageSentiment": -0.145,
-          "articleCount": 13
-        },
-        "world": {
-          "averageSentiment": -0.387,
-          "articleCount": 11
-        },
-        "entertainment": {
-          "averageSentiment": 0.001,
-          "articleCount": 17
-        },
-        "politics": {
-          "averageSentiment": -0.153,
-          "articleCount": 12
-        },
-        "business": {
-          "averageSentiment": -0.175,
-          "articleCount": 8
-        },
-        "other": {
-          "averageSentiment": -0.082,
-          "articleCount": 3
-        },
-        "health": {
-          "averageSentiment": 0.091,
-          "articleCount": 3
-        },
-        "sports": {
-          "averageSentiment": -0.053,
-          "articleCount": 1
-        },
-        "lifestyle": {
-          "averageSentiment": 0.012,
           "articleCount": 1
         }
       }
@@ -870,76 +927,23 @@
       }
     },
     {
-      "id": "rte",
-      "name": "RTÉ News",
-      "region": "EU",
-      "averageSentiment24h": -0.126,
-      "averageSentimentAllTime": -0.141,
-      "deltaVsBaseline": 0.015,
-      "articleCount24h": 37,
-      "articleCountArchive": 500,
-      "distribution24h": {
-        "positive": 0,
-        "neutral": 23,
-        "negative": 14
-      },
-      "topicAverages24h": {
-        "climate": {
-          "averageSentiment": -0.173,
-          "articleCount": 4
-        },
-        "technology": {
-          "averageSentiment": -0.071,
-          "articleCount": 2
-        },
-        "world": {
-          "averageSentiment": -0.222,
-          "articleCount": 14
-        },
-        "business": {
-          "averageSentiment": -0.06,
-          "articleCount": 3
-        },
-        "entertainment": {
-          "averageSentiment": 0.022,
-          "articleCount": 2
-        },
-        "sports": {
-          "averageSentiment": 0.009,
-          "articleCount": 1
-        },
-        "politics": {
-          "averageSentiment": -0.037,
-          "articleCount": 5
-        },
-        "health": {
-          "averageSentiment": -0.053,
-          "articleCount": 4
-        },
-        "other": {
-          "averageSentiment": -0.094,
-          "articleCount": 2
-        }
-      }
-    },
-    {
       "id": "ft",
       "name": "Financial Times",
       "region": "UK",
-      "averageSentiment24h": -0.125,
+      "averageSentiment24h": -0.128,
       "averageSentimentAllTime": -0.098,
-      "deltaVsBaseline": -0.027,
+      "deltaVsBaseline": -0.03,
       "articleCount24h": 51,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 1,
-        "neutral": 32,
-        "negative": 18
+        "neutral": 31,
+        "negative": 19
       },
       "topicAverages24h": {
         "business": {
-          "averageSentiment": -0.102,
-          "articleCount": 28
+          "averageSentiment": -0.106,
+          "articleCount": 29
         },
         "world": {
           "averageSentiment": -0.267,
@@ -947,7 +951,7 @@
         },
         "politics": {
           "averageSentiment": -0.08,
-          "articleCount": 13
+          "articleCount": 12
         },
         "health": {
           "averageSentiment": -0.084,
@@ -962,17 +966,17 @@
       "averageSentiment24h": -0.113,
       "averageSentimentAllTime": -0.122,
       "deltaVsBaseline": 0.009,
-      "articleCount24h": 98,
+      "articleCount24h": 96,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 2,
-        "neutral": 65,
-        "negative": 31
+        "neutral": 64,
+        "negative": 30
       },
       "topicAverages24h": {
         "business": {
-          "averageSentiment": -0.068,
-          "articleCount": 37
+          "averageSentiment": -0.07,
+          "articleCount": 36
         },
         "politics": {
           "averageSentiment": -0.128,
@@ -983,8 +987,8 @@
           "articleCount": 22
         },
         "technology": {
-          "averageSentiment": -0.019,
-          "articleCount": 12
+          "averageSentiment": 0.001,
+          "articleCount": 11
         },
         "entertainment": {
           "averageSentiment": -0.054,
@@ -1038,27 +1042,76 @@
       }
     },
     {
+      "id": "japantimes",
+      "name": "The Japan Times",
+      "region": "APAC",
+      "averageSentiment24h": -0.106,
+      "averageSentimentAllTime": -0.094,
+      "deltaVsBaseline": -0.012,
+      "articleCount24h": 50,
+      "articleCountArchive": 500,
+      "distribution24h": {
+        "positive": 0,
+        "neutral": 35,
+        "negative": 15
+      },
+      "topicAverages24h": {
+        "technology": {
+          "averageSentiment": -0.046,
+          "articleCount": 8
+        },
+        "world": {
+          "averageSentiment": -0.207,
+          "articleCount": 10
+        },
+        "climate": {
+          "averageSentiment": -0.145,
+          "articleCount": 4
+        },
+        "politics": {
+          "averageSentiment": -0.131,
+          "articleCount": 12
+        },
+        "business": {
+          "averageSentiment": -0.09,
+          "articleCount": 10
+        },
+        "sports": {
+          "averageSentiment": 0.009,
+          "articleCount": 3
+        },
+        "science": {
+          "averageSentiment": 0.036,
+          "articleCount": 1
+        },
+        "entertainment": {
+          "averageSentiment": 0.046,
+          "articleCount": 2
+        }
+      }
+    },
+    {
       "id": "nyt",
       "name": "The New York Times",
       "region": "NA",
       "averageSentiment24h": -0.103,
       "averageSentimentAllTime": -0.098,
       "deltaVsBaseline": -0.005,
-      "articleCount24h": 59,
+      "articleCount24h": 58,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 1,
-        "neutral": 41,
+        "neutral": 40,
         "negative": 17
       },
       "topicAverages24h": {
+        "politics": {
+          "averageSentiment": -0.113,
+          "articleCount": 25
+        },
         "business": {
           "averageSentiment": -0.098,
           "articleCount": 12
-        },
-        "politics": {
-          "averageSentiment": -0.112,
-          "articleCount": 26
         },
         "entertainment": {
           "averageSentiment": 0.01,
@@ -1094,17 +1147,21 @@
       "id": "scmp",
       "name": "South China Morning Post",
       "region": "APAC",
-      "averageSentiment24h": -0.103,
+      "averageSentiment24h": -0.101,
       "averageSentimentAllTime": -0.106,
-      "deltaVsBaseline": 0.003,
-      "articleCount24h": 63,
+      "deltaVsBaseline": 0.005,
+      "articleCount24h": 65,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 4,
-        "neutral": 30,
+        "neutral": 32,
         "negative": 29
       },
       "topicAverages24h": {
+        "politics": {
+          "averageSentiment": -0.121,
+          "articleCount": 16
+        },
         "climate": {
           "averageSentiment": -0.093,
           "articleCount": 4
@@ -1116,10 +1173,6 @@
         "sports": {
           "averageSentiment": -0.108,
           "articleCount": 1
-        },
-        "politics": {
-          "averageSentiment": -0.132,
-          "articleCount": 14
         },
         "technology": {
           "averageSentiment": -0.076,
@@ -1136,6 +1189,71 @@
         "entertainment": {
           "averageSentiment": 0.001,
           "articleCount": 3
+        }
+      }
+    },
+    {
+      "id": "smh",
+      "name": "Sydney Morning Herald",
+      "region": "APAC",
+      "averageSentiment24h": -0.096,
+      "averageSentimentAllTime": -0.089,
+      "deltaVsBaseline": -0.007,
+      "articleCount24h": 164,
+      "articleCountArchive": 500,
+      "distribution24h": {
+        "positive": 2,
+        "neutral": 110,
+        "negative": 52
+      },
+      "topicAverages24h": {
+        "business": {
+          "averageSentiment": -0.08,
+          "articleCount": 24
+        },
+        "politics": {
+          "averageSentiment": -0.081,
+          "articleCount": 40
+        },
+        "world": {
+          "averageSentiment": -0.228,
+          "articleCount": 36
+        },
+        "technology": {
+          "averageSentiment": -0.083,
+          "articleCount": 7
+        },
+        "sports": {
+          "averageSentiment": -0.039,
+          "articleCount": 22
+        },
+        "entertainment": {
+          "averageSentiment": -0.022,
+          "articleCount": 15
+        },
+        "climate": {
+          "averageSentiment": -0.071,
+          "articleCount": 3
+        },
+        "other": {
+          "averageSentiment": -0.024,
+          "articleCount": 11
+        },
+        "health": {
+          "averageSentiment": -0.062,
+          "articleCount": 3
+        },
+        "education": {
+          "averageSentiment": 0.077,
+          "articleCount": 1
+        },
+        "society": {
+          "averageSentiment": -0.18,
+          "articleCount": 1
+        },
+        "science": {
+          "averageSentiment": 0.182,
+          "articleCount": 1
         }
       }
     },
@@ -1177,141 +1295,23 @@
       }
     },
     {
-      "id": "smh",
-      "name": "Sydney Morning Herald",
-      "region": "APAC",
-      "averageSentiment24h": -0.094,
-      "averageSentimentAllTime": -0.091,
-      "deltaVsBaseline": -0.003,
-      "articleCount24h": 158,
-      "articleCountArchive": 500,
-      "distribution24h": {
-        "positive": 2,
-        "neutral": 108,
-        "negative": 48
-      },
-      "topicAverages24h": {
-        "sports": {
-          "averageSentiment": -0.039,
-          "articleCount": 22
-        },
-        "entertainment": {
-          "averageSentiment": -0.022,
-          "articleCount": 15
-        },
-        "business": {
-          "averageSentiment": -0.077,
-          "articleCount": 22
-        },
-        "politics": {
-          "averageSentiment": -0.075,
-          "articleCount": 36
-        },
-        "world": {
-          "averageSentiment": -0.225,
-          "articleCount": 36
-        },
-        "technology": {
-          "averageSentiment": -0.108,
-          "articleCount": 6
-        },
-        "climate": {
-          "averageSentiment": -0.038,
-          "articleCount": 4
-        },
-        "other": {
-          "averageSentiment": -0.024,
-          "articleCount": 11
-        },
-        "health": {
-          "averageSentiment": -0.062,
-          "articleCount": 3
-        },
-        "education": {
-          "averageSentiment": 0.077,
-          "articleCount": 1
-        },
-        "society": {
-          "averageSentiment": -0.18,
-          "articleCount": 1
-        },
-        "science": {
-          "averageSentiment": 0.182,
-          "articleCount": 1
-        }
-      }
-    },
-    {
-      "id": "thenational",
-      "name": "The National",
-      "region": "ME",
-      "averageSentiment24h": -0.092,
-      "averageSentimentAllTime": -0.06,
-      "deltaVsBaseline": -0.032,
-      "articleCount24h": 64,
-      "articleCountArchive": 500,
-      "distribution24h": {
-        "positive": 5,
-        "neutral": 39,
-        "negative": 20
-      },
-      "topicAverages24h": {
-        "entertainment": {
-          "averageSentiment": 0.064,
-          "articleCount": 5
-        },
-        "world": {
-          "averageSentiment": -0.382,
-          "articleCount": 12
-        },
-        "sports": {
-          "averageSentiment": 0.02,
-          "articleCount": 10
-        },
-        "climate": {
-          "averageSentiment": -0.07,
-          "articleCount": 4
-        },
-        "technology": {
-          "averageSentiment": -0.135,
-          "articleCount": 3
-        },
-        "business": {
-          "averageSentiment": 0.015,
-          "articleCount": 13
-        },
-        "politics": {
-          "averageSentiment": -0.099,
-          "articleCount": 15
-        },
-        "science": {
-          "averageSentiment": 0.116,
-          "articleCount": 1
-        },
-        "other": {
-          "averageSentiment": 0.054,
-          "articleCount": 1
-        }
-      }
-    },
-    {
       "id": "fox",
       "name": "Fox News",
       "region": "NA",
-      "averageSentiment24h": -0.091,
+      "averageSentiment24h": -0.092,
       "averageSentimentAllTime": -0.082,
-      "deltaVsBaseline": -0.009,
-      "articleCount24h": 118,
+      "deltaVsBaseline": -0.01,
+      "articleCount24h": 117,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 0,
-        "neutral": 87,
+        "neutral": 86,
         "negative": 31
       },
       "topicAverages24h": {
         "sports": {
-          "averageSentiment": -0.028,
-          "articleCount": 35
+          "averageSentiment": -0.029,
+          "articleCount": 34
         },
         "world": {
           "averageSentiment": -0.262,
@@ -1348,54 +1348,54 @@
       }
     },
     {
-      "id": "japantimes",
-      "name": "The Japan Times",
-      "region": "APAC",
+      "id": "thenational",
+      "name": "The National",
+      "region": "ME",
       "averageSentiment24h": -0.089,
-      "averageSentimentAllTime": -0.092,
-      "deltaVsBaseline": 0.003,
-      "articleCount24h": 51,
+      "averageSentimentAllTime": -0.06,
+      "deltaVsBaseline": -0.029,
+      "articleCount24h": 65,
       "articleCountArchive": 500,
       "distribution24h": {
-        "positive": 1,
-        "neutral": 37,
-        "negative": 13
+        "positive": 5,
+        "neutral": 40,
+        "negative": 20
       },
       "topicAverages24h": {
-        "climate": {
-          "averageSentiment": -0.145,
-          "articleCount": 4
-        },
-        "politics": {
-          "averageSentiment": -0.119,
+        "world": {
+          "averageSentiment": -0.352,
           "articleCount": 13
         },
-        "world": {
-          "averageSentiment": -0.199,
-          "articleCount": 9
-        },
         "business": {
-          "averageSentiment": -0.062,
-          "articleCount": 11
-        },
-        "technology": {
-          "averageSentiment": -0.023,
-          "articleCount": 7
-        },
-        "sports": {
-          "averageSentiment": 0.009,
-          "articleCount": 3
-        },
-        "science": {
-          "averageSentiment": 0.036,
-          "articleCount": 1
+          "averageSentiment": 0.022,
+          "articleCount": 14
         },
         "entertainment": {
-          "averageSentiment": 0.046,
-          "articleCount": 2
+          "averageSentiment": 0.064,
+          "articleCount": 4
         },
-        "health": {
-          "averageSentiment": 0.081,
+        "sports": {
+          "averageSentiment": 0.02,
+          "articleCount": 10
+        },
+        "climate": {
+          "averageSentiment": -0.07,
+          "articleCount": 4
+        },
+        "technology": {
+          "averageSentiment": -0.135,
+          "articleCount": 3
+        },
+        "politics": {
+          "averageSentiment": -0.099,
+          "articleCount": 15
+        },
+        "science": {
+          "averageSentiment": 0.116,
+          "articleCount": 1
+        },
+        "other": {
+          "averageSentiment": 0.054,
           "articleCount": 1
         }
       }
@@ -1405,8 +1405,8 @@
       "name": "Global News",
       "region": "NA",
       "averageSentiment24h": -0.079,
-      "averageSentimentAllTime": -0.102,
-      "deltaVsBaseline": 0.023,
+      "averageSentimentAllTime": -0.101,
+      "deltaVsBaseline": 0.022,
       "articleCount24h": 62,
       "articleCountArchive": 500,
       "distribution24h": {
@@ -1461,36 +1461,36 @@
       "id": "oglobo",
       "name": "O Globo",
       "region": "LATAM",
-      "averageSentiment24h": -0.073,
-      "averageSentimentAllTime": -0.075,
-      "deltaVsBaseline": 0.002,
-      "articleCount24h": 345,
-      "articleCountArchive": 500,
+      "averageSentiment24h": -0.075,
+      "averageSentimentAllTime": -0.074,
+      "deltaVsBaseline": -0.001,
+      "articleCount24h": 333,
+      "articleCountArchive": 499,
       "distribution24h": {
         "positive": 5,
-        "neutral": 254,
-        "negative": 86
+        "neutral": 243,
+        "negative": 85
       },
       "topicAverages24h": {
         "sports": {
-          "averageSentiment": -0.055,
-          "articleCount": 40
+          "averageSentiment": -0.063,
+          "articleCount": 38
         },
         "politics": {
-          "averageSentiment": -0.07,
-          "articleCount": 78
+          "averageSentiment": -0.067,
+          "articleCount": 77
         },
         "entertainment": {
           "averageSentiment": -0.007,
-          "articleCount": 43
+          "articleCount": 40
         },
         "business": {
           "averageSentiment": -0.031,
           "articleCount": 68
         },
         "other": {
-          "averageSentiment": -0.011,
-          "articleCount": 21
+          "averageSentiment": -0.012,
+          "articleCount": 19
         },
         "science": {
           "averageSentiment": 0.082,
@@ -1501,12 +1501,12 @@
           "articleCount": 15
         },
         "world": {
-          "averageSentiment": -0.276,
-          "articleCount": 44
+          "averageSentiment": -0.283,
+          "articleCount": 43
         },
         "health": {
           "averageSentiment": -0.028,
-          "articleCount": 24
+          "articleCount": 21
         },
         "technology": {
           "averageSentiment": -0.044,
@@ -1526,20 +1526,20 @@
       "id": "cnbc",
       "name": "CNBC News",
       "region": "NA",
-      "averageSentiment24h": -0.061,
-      "averageSentimentAllTime": -0.058,
-      "deltaVsBaseline": -0.003,
-      "articleCount24h": 49,
+      "averageSentiment24h": -0.059,
+      "averageSentimentAllTime": -0.057,
+      "deltaVsBaseline": -0.002,
+      "articleCount24h": 50,
       "articleCountArchive": 500,
       "distribution24h": {
         "positive": 1,
-        "neutral": 34,
+        "neutral": 35,
         "negative": 14
       },
       "topicAverages24h": {
         "business": {
-          "averageSentiment": -0.053,
-          "articleCount": 36
+          "averageSentiment": -0.05,
+          "articleCount": 37
         },
         "politics": {
           "averageSentiment": -0.138,
@@ -1559,9 +1559,9 @@
       "id": "bloomberg",
       "name": "Bloomberg",
       "region": "GLOBAL",
-      "averageSentiment24h": -0.049,
-      "averageSentimentAllTime": -0.061,
-      "deltaVsBaseline": 0.012,
+      "averageSentiment24h": -0.05,
+      "averageSentimentAllTime": -0.06,
+      "deltaVsBaseline": 0.01,
       "articleCount24h": 120,
       "articleCountArchive": 500,
       "distribution24h": {
@@ -1571,7 +1571,7 @@
       },
       "topicAverages24h": {
         "business": {
-          "averageSentiment": -0.036,
+          "averageSentiment": -0.037,
           "articleCount": 108
         },
         "politics": {
@@ -1600,14 +1600,14 @@
       "id": "wsj",
       "name": "Wall Street Journal",
       "region": "NA",
-      "averageSentiment24h": -0.043,
+      "averageSentiment24h": -0.046,
       "averageSentimentAllTime": -0.063,
-      "deltaVsBaseline": 0.02,
-      "articleCount24h": 75,
+      "deltaVsBaseline": 0.017,
+      "articleCount24h": 71,
       "articleCountArchive": 500,
       "distribution24h": {
-        "positive": 2,
-        "neutral": 60,
+        "positive": 1,
+        "neutral": 57,
         "negative": 13
       },
       "topicAverages24h": {
@@ -1616,8 +1616,8 @@
           "articleCount": 2
         },
         "business": {
-          "averageSentiment": -0.026,
-          "articleCount": 53
+          "averageSentiment": -0.029,
+          "articleCount": 49
         },
         "politics": {
           "averageSentiment": -0.082,
