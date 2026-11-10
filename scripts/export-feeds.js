@@ -328,6 +328,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     "subsequent","detail","result","reduce","cut","risk","death","kill","dead","attack","strike","protest","riot",
     "unrest","crisis","warn","order","plan","launch","announc","confirm","reveal","continu","includ","prompt",
     "spark","across","within","between","against","during","before","under","while","help","usher","hope",
+    "visit","tour","trip","journey","travel","meet","host","welcom","arriv","depart","return","begin","start","conclud","deliver","rebuk","call","talk","speak","address","draw","gather","pastoral",
     "russian","ukrainian","ukraine","russia","trump","putin","zelensky","zelenskyy","envoy","israel","israeli","iran"
   ]);
   const stemWord = (w) => w
@@ -364,7 +365,10 @@ function deduplicateAndSanitizeClusters(rawClusters) {
 
   const extractTextCountryIsos = (txt) => {
     const isos = new Set();
-    const lower = String(txt || "").toLowerCase();
+    const lower = String(txt || "")
+      .toLowerCase()
+      .replace(/\bu-s\b/g, "u.s.")
+      .replace(/\bu-k\b/g, "u.k.");
     for (const [countryName, iso] of CLDR_COUNTRY_ISO_MAP.entries()) {
       if (countryName.length >= 4 && lower.includes(countryName)) {
         const escaped = countryName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -372,8 +376,9 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       }
     }
     if (/\b(u\.?k\.?(?!\w)|britain|british|england|scotland|wales|welsh)\b/i.test(lower)) isos.add("gb");
-    if (/\b(u\.?s\.?(?:a\.?)?(?!\w)|america|american)\b/i.test(lower)) isos.add("us");
+    if (/(?<!\b(?:latin|south|central|north)\s+)\b(u\.?s\.?(?:a\.?)?(?!\w)|united states|america|american)\b/i.test(lower)) isos.add("us");
     if (/\b(canad(?:a|ian)|nova scotia|quebec|ontario|alberta)\b/i.test(lower)) isos.add("ca");
+    if (/\b(vatican|holy see)\b/i.test(lower)) isos.add("va");
     return isos;
   };
 
@@ -383,10 +388,12 @@ function deduplicateAndSanitizeClusters(rawClusters) {
   for (const [id, cl] of byId.entries()) {
     if (Array.isArray(cl.evolvedFromIds)) {
       const clUrls = new Set((cl.coverage || []).map(c => canonicalUrl(c.link)).filter(Boolean));
-      const clBaseText = `${cl.story || ""} ${cl.summary || ""} ${cl.evolutionHistory?.[0]?.headline || ""} ${cl.evolutionHistory?.[0]?.summary || ""}`;
+      const clCoreText = `${cl.story || ""} ${cl.summary || ""}`;
+      const clBaseText = `${clCoreText} ${cl.evolutionHistory?.[0]?.headline || ""} ${cl.evolutionHistory?.[0]?.summary || ""}`;
+      const clCoreStems = getStems(clCoreText);
       const clStems = getStems(clBaseText);
       const clHeadIsos = extractTextCountryIsos(cl.story || "");
-      const clAllIsos = extractTextCountryIsos(clBaseText);
+      const clAllIsos = extractTextCountryIsos(clCoreText);
 
       cl.evolvedFromIds = cl.evolvedFromIds.filter(oldId => {
         if (!oldId || oldId === id) return false;
@@ -400,23 +407,29 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         }
         if (sharedUrls >= 1) return true;
 
-        const oldPhrase = oldCl ? `${oldCl.story || ""} ${oldCl.summary || ""}` : String(oldId).replace(/-/g, " ");
-        const oldHeadPhrase = oldCl ? (oldCl.story || "") : String(oldId).replace(/-/g, " ");
+        const normOldSlug = String(oldId).replace(/\bu-s\b/gi, "u.s.").replace(/\bu-k\b/gi, "u.k.").replace(/-/g, " ");
+        const oldHeadPhrase = oldCl ? (oldCl.story || "") : normOldSlug;
         const oldIsos = extractTextCountryIsos(oldHeadPhrase);
         const hasDisjointCountry = clHeadIsos.size > 0 && oldIsos.size > 0 &&
           ![...oldIsos].some(iso => clAllIsos.has(iso) || clHeadIsos.has(iso));
+        const hasDisjointBilateralPartner = oldIsos.size > 0 && clAllIsos.size > 0 &&
+          [...oldIsos].some(iso => !clAllIsos.has(iso)) &&
+          [...clHeadIsos].some(iso => !oldIsos.has(iso));
 
         const oldStems = getStems(oldHeadPhrase);
+        const sharedCoreStems = [...oldStems].filter(s => clCoreStems.has(s));
         const sharedStems = [...oldStems].filter(s => clStems.has(s));
-        const sharedRareStems = sharedStems.filter(s => !GENERIC_EVENT_STEMS.has(s) && (clusterStemDf.get(s) || 0) <= maxRareClusterDf);
+        const sharedRareStems = sharedCoreStems.filter(s => !GENERIC_EVENT_STEMS.has(s) && (clusterStemDf.get(s) || 0) <= maxRareClusterDf);
 
-        if (hasDisjointCountry && sharedRareStems.length === 0) return false;
+        if (hasDisjointCountry || hasDisjointBilateralPartner) return false;
+        if (sharedCoreStems.filter(s => !GENERIC_EVENT_STEMS.has(s)).length === 0) return false;
         if (sharedRareStems.length === 0 && sharedStems.length < 2) return false;
         if (oldCl && sharedRareStems.length === 0) return false;
         return true;
       });
+      if (cl.evolvedFromIds.length === 0) delete cl.evolvedFromIds;
 
-      for (const oldId of cl.evolvedFromIds) {
+      for (const oldId of (cl.evolvedFromIds || [])) {
         if (oldId && oldId !== id && byId.has(oldId)) {
           supersededToSuccessor.set(oldId, id);
         }
@@ -437,6 +450,93 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       succCl.coverage.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
       succCl.outletCount = succCl.coverage.length;
       byId.delete(oldId);
+    }
+  }
+
+  // 2a-bis. Zombie-Cluster Late-Article Re-Homesteading Pass:
+  // If an older cluster (>5 days old) vacuumed up new-phase articles (>120h after its birth and >36h after its last development)
+  // that actually belong to a newer active cluster on the wire (e.g. Gadi Eisenkot government formation, Pope Leo Latin America tour,
+  // Riyadh Aramco tower strike, Cornell Faculty Senate no-confidence vote, New Delhi Diwali smog), transfer those articles to the newer cluster!
+  const getClusterBirthMs = (cl) => {
+    const cands = [];
+    if (cl.firstSeenAt) { const t = Date.parse(cl.firstSeenAt); if (!isNaN(t) && t > 0) cands.push(t); }
+    if (cl.evolutionHistory?.[0]?.timestamp) { const t = Date.parse(cl.evolutionHistory[0].timestamp); if (!isNaN(t) && t > 0) cands.push(t); }
+    for (const a of (cl.coverage || [])) {
+      const t = Date.parse(a?.pubDate || "");
+      if (!isNaN(t) && t > 0) cands.push(t);
+    }
+    return cands.length > 0 ? Math.min(...cands) : 0;
+  };
+  const allActiveForRehome = Array.from(byId.values()).map(cl => {
+    const birthMs = getClusterBirthMs(cl);
+    const lastDevMs = (cl.lastDevelopedAt ? Date.parse(cl.lastDevelopedAt) : 0) || birthMs;
+    const headStems = getStems(cl.story);
+    const specHead = new Set([...headStems].filter(s => !GENERIC_EVENT_STEMS.has(s)));
+    const allStems = getStems(`${cl.story || ""} ${cl.summary || ""}`);
+    const specAll = new Set([...allStems].filter(s => !GENERIC_EVENT_STEMS.has(s)));
+    const isos = extractTextCountryIsos(`${cl.story || ""} ${cl.summary || ""}`);
+    const capWords = String(cl.story || "").trim().split(/[\s\-–—]+/)
+      .map(w => w.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, ""))
+      .filter(w => w.length >= 3 && /^[A-Z]/.test(w))
+      .map(w => stemWord(w.toLowerCase()))
+      .filter(s => !STOP_DEDUPE.has(s) && !GENERIC_EVENT_STEMS.has(s) && !/^(latin|south|north|central|east|west|america|european|asian|african|global|world)$/.test(s));
+    return { cl, birthMs, lastDevMs, headStems, specHead, allStems, specAll, isos, capWords };
+  });
+  for (const oldMeta of allActiveForRehome) {
+    const oldCl = oldMeta.cl;
+    if (!oldMeta.birthMs || !Array.isArray(oldCl.coverage) || oldCl.coverage.length <= 2) continue;
+    const keptCov = [];
+    let modifiedOld = false;
+    for (const art of oldCl.coverage) {
+      const artMs = Date.parse(art?.pubDate || "") || 0;
+      const gapFromBirthH = (artMs > 0 && oldMeta.birthMs > 0) ? (artMs - oldMeta.birthMs) / 3600000 : 0;
+      const gapFromDevH = (artMs > 0 && oldMeta.lastDevMs > 0) ? (artMs - oldMeta.lastDevMs) / 3600000 : 0;
+      if (gapFromBirthH <= 120 || (gapFromBirthH <= 240 && gapFromDevH <= 36)) {
+        keptCov.push(art);
+        continue;
+      }
+      const artTitleStems = getStems(art.title || "");
+      const artAllStems = getStems(`${art.title || ""} ${art.description || ""}`);
+      const oldHeadHits = [...artTitleStems].filter(s => oldMeta.headStems.has(s)).length;
+      const oldSpecHeadHits = [...artTitleStems].filter(s => oldMeta.specHead.has(s)).length;
+
+      let bestNewMeta = null;
+      let bestNewScore = 0;
+      for (const candMeta of allActiveForRehome) {
+        if (candMeta.cl.id === oldCl.id) continue;
+        if (!candMeta.birthMs || candMeta.birthMs < oldMeta.birthMs + 72 * 3600 * 1000) continue;
+        if (Math.abs(artMs - candMeta.birthMs) > 120 * 3600 * 1000) continue;
+        const distinctCap = candMeta.capWords.filter(s => !oldMeta.headStems.has(s));
+        if (distinctCap.length > 0 && !distinctCap.every(s => artAllStems.has(s))) continue;
+        const distinctCandSpecAll = [...candMeta.specAll].filter(s => !oldMeta.headStems.has(s));
+        const matchedDistinctAll = distinctCandSpecAll.filter(s => artAllStems.has(s)).length;
+        if (distinctCandSpecAll.length > 0 && matchedDistinctAll < 1) continue;
+        const shHead = [...artTitleStems].filter(s => candMeta.headStems.has(s)).length;
+        const shSpecHead = [...artTitleStems].filter(s => candMeta.specHead.has(s)).length;
+        const shSpecAll = [...artAllStems].filter(s => candMeta.specAll.has(s)).length;
+        if (shSpecHead >= 1 && shSpecAll >= 2 && (shHead > oldHeadHits || shSpecHead > oldSpecHeadHits || oldSpecHeadHits <= 1 || matchedDistinctAll >= 2)) {
+          const score = (shSpecHead * 12) + (shHead * 6) + (shSpecAll * 3) + (matchedDistinctAll * 8);
+          if (score > bestNewScore) {
+            bestNewScore = score;
+            bestNewMeta = candMeta;
+          }
+        }
+      }
+      if (bestNewMeta && (keptCov.length + (oldCl.coverage.length - keptCov.length - 1)) >= 2) {
+        const targetCl = bestNewMeta.cl;
+        if (!targetCl.coverage.some(a => a.sourceId === art.sourceId)) {
+          targetCl.coverage.push(art);
+          targetCl.coverage.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+          targetCl.outletCount = targetCl.coverage.length;
+        }
+        modifiedOld = true;
+        continue;
+      }
+      keptCov.push(art);
+    }
+    if (modifiedOld && keptCov.length >= 2) {
+      oldCl.coverage = keptCov;
+      oldCl.outletCount = keptCov.length;
     }
   }
 
@@ -490,6 +590,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     "following","after","amid","over","into","from","with","under","launch","advanc","new","first","major",
     "deadly","fatal","record","high","low","warn","order","approv","reject","block","halt","plan","fac","hit",
     "leak","data","trial","study","result","breakthrough","usher","hope","patient","disruption","caus","critical",
+    "visit","tour","trip","journey","travel","meet","host","welcom","arriv","depart","return","begin","start","conclud","deliver","rebuk","call","talk","speak","address","draw","gather","pastoral",
     "software","flaw","vulnerability","force","website","offline","across"
   ]);
   const NON_PROPER_HEADLINE_WORDS = new Set([
@@ -596,7 +697,18 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       if (!shouldMerge) {
         const sharedHead = countFuzzyOverlap(mA.headStems, mB.headStems);
         const sharedHeadDom = [...mA.headWithDom].filter(x => mB.headWithDom.has(x));
-        if (sharedHead > 0 || sharedHeadDom.length >= 2) {
+        const sharedSpec = [...mA.spec].filter(x => mB.spec.has(x));
+        const unsharedConfA = [...mA.confProper].filter(p => !mB.confProper.has(p));
+        const unsharedConfB = [...mB.confProper].filter(p => !mA.confProper.has(p));
+        const hasConflictingConfProper =
+          (unsharedConfA.length > 0 && !unsharedConfA.every(p => mB.fullTextStems.has(p))) ||
+          (unsharedConfB.length > 0 && !unsharedConfB.every(p => mA.fullTextStems.has(p)));
+        if (sharedUrls >= 1 && !hasConflictingConfProper && (sharedHead >= 1 || sharedHeadDom.length >= 2) && sharedSpec.length >= 2) {
+          const sharedSum = countFuzzyOverlap(mA.sumStems, mB.sumStems);
+          const sumContain = sharedSum / Math.min(mA.sumStems.size || 1, mB.sumStems.size || 1);
+          if (sumContain >= 0.22) shouldMerge = true;
+        }
+        if (!shouldMerge && (sharedHead > 0 || sharedHeadDom.length >= 2)) {
           const headSim = sharedHead / Math.min(mA.headStems.size || 1, mB.headStems.size || 1);
           const sharedSum = countFuzzyOverlap(mA.sumStems, mB.sumStems);
           const sumJac = sharedSum / Math.max(1, mA.sumStems.size + mB.sumStems.size - sharedSum);
@@ -611,10 +723,10 @@ function deduplicateAndSanitizeClusters(rawClusters) {
             if (!hasConflictingNums) {
               const unsharedProperA = [...mA.proper].filter(p => !mB.proper.has(p));
               const unsharedProperB = [...mB.proper].filter(p => !mA.proper.has(p));
-              const hasConflictingProper = unsharedProperA.length > 0 && unsharedProperB.length > 0 &&
-                (!unsharedProperA.every(p => mB.fullTextStems.has(p)) || !unsharedProperB.every(p => mA.fullTextStems.has(p)));
+              const hasConflictingProper =
+                (unsharedProperA.length > 0 && !unsharedProperA.every(p => mB.fullTextStems.has(p))) ||
+                (unsharedProperB.length > 0 && !unsharedProperB.every(p => mA.fullTextStems.has(p)));
               if (!hasConflictingProper) {
-                const sharedSpec = [...mA.spec].filter(x => mB.spec.has(x));
                 const specContain = sharedSpec.length / Math.min(mA.spec.size || 1, mB.spec.size || 1);
                 let covBridgePairs = 0;
                 for (const ca of mA.covItems) {
@@ -641,43 +753,58 @@ function deduplicateAndSanitizeClusters(rawClusters) {
             if (!hasConflictingNums && !hasElectionScopeMismatch) {
               const unsharedConfA = [...mA.confProper].filter(p => !mB.confProper.has(p));
               const unsharedConfB = [...mB.confProper].filter(p => !mA.confProper.has(p));
-              const hasConflictingConfProper =
-                (unsharedConfA.length > 0 && !unsharedConfA.every(p => mB.fullTextStems.has(p))) ||
-                (unsharedConfB.length > 0 && !unsharedConfB.every(p => mA.fullTextStems.has(p)));
+              const aConfInFullB = unsharedConfA.length === 0 || unsharedConfA.every(p => mB.fullTextStems.has(p));
+              const bConfInFullA = unsharedConfB.length === 0 || unsharedConfB.every(p => mA.fullTextStems.has(p));
+              const hasConflictingConfProper = !aConfInFullB || !bConfInFullA;
+              const hasMutualUnsharedConfProper = !aConfInFullB && !bConfInFullA;
 
-              if (!hasConflictingConfProper) {
-                const headBInSumA = [...mB.headStems].filter(s => mA.sumStems.has(s)).length / mB.headStems.size;
-                const headAInFullB = [...mA.headStems].filter(s => mB.fullTextStems.has(s)).length / mA.headStems.size;
-                const headBInFullA = [...mB.headStems].filter(s => mA.fullTextStems.has(s)).length / mB.headStems.size;
+              const headBInSumA = [...mB.headStems].filter(s => mA.sumStems.has(s)).length / mB.headStems.size;
+              const headAInFullB = [...mA.headStems].filter(s => mB.fullTextStems.has(s)).length / mA.headStems.size;
+              const headBInFullA = [...mB.headStems].filter(s => mA.fullTextStems.has(s)).length / mB.headStems.size;
 
-                let anyBridgePairs3 = 0;
-                let sameDayBridgePairs = 0;
-                for (const ca of mA.covItems) {
-                  for (let idxB = 0; idxB < mB.covItems.length; idxB++) {
-                    const cb = mB.covItems[idxB];
-                    const sh = [...ca.titleStems].filter(x => cb.titleStems.has(x));
-                    if (sh.length >= 3) {
-                      anyBridgePairs3++;
-                      const specSh = sh.filter(x => !GENERIC_EVENT_STEMS.has(x));
-                      if (ca.ms > 0 && cb.ms > 0 && Math.abs(ca.ms - cb.ms) <= 24 * 3600 * 1000) {
-                        if ((sh.length >= 4 && specSh.length >= 1) || (sh.length >= 3 && specSh.length >= 2)) {
-                          sameDayBridgePairs++;
-                        }
+              let anyBridgePairs3 = 0;
+              let sameDayBridgePairs = 0;
+              for (const ca of mA.covItems) {
+                for (let idxB = 0; idxB < mB.covItems.length; idxB++) {
+                  const cb = mB.covItems[idxB];
+                  const sh = [...ca.titleStems].filter(x => cb.titleStems.has(x));
+                  if (sh.length >= 3) {
+                    anyBridgePairs3++;
+                    const specSh = sh.filter(x => !GENERIC_EVENT_STEMS.has(x));
+                    if (ca.ms > 0 && cb.ms > 0 && Math.abs(ca.ms - cb.ms) <= 24 * 3600 * 1000) {
+                      if ((sh.length >= 4 && specSh.length >= 1) || (sh.length >= 3 && specSh.length >= 2)) {
+                        sameDayBridgePairs++;
                       }
                     }
                   }
                 }
+              }
 
-                const embeddedMatchesInA = mA.covItems.filter(ca => {
-                  const sh = [...mB.headStems].filter(s => ca.titleStems.has(s)).length;
-                  return sh >= 3 && (sh / mB.headStems.size) >= 0.75;
-                }).length;
+              const embeddedMatchesInA = mA.covItems.filter(ca => {
+                const sh = [...mB.headStems].filter(s => ca.titleStems.has(s)).length;
+                return sh >= 3 && (sh / mB.headStems.size) >= 0.75;
+              }).length;
 
+              const isosA = extractTextCountryIsos(`${primary.story || ""} ${primary.summary || ""}`);
+              const isosB = extractTextCountryIsos(`${secondary.story || ""} ${secondary.summary || ""}`);
+              const hasCountryMismatch = isosA.size > 0 && isosB.size > 0 &&
+                (![...isosA].some(c => isosB.has(c)) || ![...isosB].some(c => isosA.has(c)));
+
+              if (!hasConflictingConfProper) {
                 if (
                   sharedHead >= 3 &&
                   anyBridgePairs3 >= 1 &&
-                  ((headAInFullB >= 0.65 && headBInFullA >= 0.65) || (Math.max(headAInFullB, headBInFullA) >= 0.85 && Math.min(headAInFullB, headBInFullA) >= 0.55)) &&
+                  ((headAInFullB >= 0.65 && headBInFullA >= 0.65) || (Math.max(headAInFullB, headBInFullA) >= 0.85 && Math.min(headAInFullB, headBInFullA) >= 0.55) || (Math.max(headAInFullB, headBInFullA) >= 0.55 && sumContain >= 0.28)) &&
                   (sumJac >= 0.12 || sumContain >= 0.24)
+                ) {
+                  shouldMerge = true;
+                } else if (
+                  sharedHead >= 3 &&
+                  sameDayBridgePairs >= 4 &&
+                  anyBridgePairs3 >= 8 &&
+                  Math.max(headAInFullB, headBInFullA) >= 0.70 &&
+                  Math.min(headAInFullB, headBInFullA) >= 0.55 &&
+                  !hasCountryMismatch
                 ) {
                   shouldMerge = true;
                 } else if (
@@ -693,6 +820,22 @@ function deduplicateAndSanitizeClusters(rawClusters) {
                 } else if (sharedHead >= 2 && sameDayBridgePairs >= 2 && mB.covItems.length <= 6 && sumContain >= 0.28) {
                   shouldMerge = true;
                 }
+              } else if (!hasCountryMismatch && (!hasMutualUnsharedConfProper || (isosA.size > 0 && isosB.size > 0 && [...isosA].every(c => isosB.has(c)) && [...isosB].every(c => isosA.has(c))))) {
+                // Sub-region / secondary-role twin recovery (e.g. Najib Razak + AG review, BC North Island Storms,
+                // US-Iran Geneva talks, Paraguay Peña impeachment + Itaipu, Flávio Bolsonaro, Democrats Jeffries/Schumer)
+                const birthA = getClusterBirthMs(primary);
+                const birthB = getClusterBirthMs(secondary);
+                const closeBirth = birthA > 0 && birthB > 0 && Math.abs(birthA - birthB) <= 144 * 3600 * 1000;
+                const sharedRareSpec = [...mA.spec].filter(x => mB.spec.has(x) && !mA.headStems.has(x) && (clusterStemDf.get(x) || 0) <= 5).length;
+                if (closeBirth && sameDayBridgePairs >= 3 && sharedHead >= 2 && sumContain >= 0.25) {
+                  shouldMerge = true;
+                } else if (closeBirth && sharedHead >= 3 && sumContain >= 0.28 && (anyBridgePairs3 >= 1 || Math.min(mA.covItems.length, mB.covItems.length) <= 4)) {
+                  shouldMerge = true;
+                } else if (closeBirth && sharedHead >= 2 && anyBridgePairs3 >= 1 && sumContain >= 0.28 && sharedRareSpec >= 1) {
+                  shouldMerge = true;
+                } else if (closeBirth && sharedHead >= 1 && sameDayBridgePairs >= 1 && mB.covItems.length <= 4 && sumContain >= 0.32 && sharedSpec.length >= 4 && Math.max(headAInFullB, headBInFullA) >= 0.60) {
+                  shouldMerge = true;
+                }
               }
             }
           }
@@ -700,9 +843,23 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       }
 
       if (shouldMerge) {
+        const priBirthMs = getClusterBirthMs(primary);
+        const secBirthMs = getClusterBirthMs(secondary);
+        const getMedianPubMs = (cl, fallbackMs) => {
+          const times = (cl.coverage || []).map(a => Date.parse(a?.pubDate || "") || 0).filter(t => t > 0).sort((a, b) => a - b);
+          if (times.length === 0) return fallbackMs || 0;
+          return times[Math.floor(times.length / 2)];
+        };
+        const priMedMs = getMedianPubMs(primary, priBirthMs);
+        const secMedMs = getMedianPubMs(secondary, secBirthMs);
+        const priLatestMs = Math.max(...(primary.coverage || []).map(a => Date.parse(a?.pubDate || "") || 0), priBirthMs);
+        const secLatestMs = Math.max(...(secondary.coverage || []).map(a => Date.parse(a?.pubDate || "") || 0), secBirthMs);
+
         absorbedIds.add(secondary.id);
         byId.delete(secondary.id);
         const oldPrimaryId = primary.id;
+        const oldPrimaryStory = primary.story;
+        const oldPrimarySummary = primary.summary;
         const seenKeysSet = new Set([...(primary.seenArticleKeys || []), ...(secondary.seenArticleKeys || [])]); for (const a of [...(primary.coverage || []), ...(secondary.coverage || [])]) { if (a?.link) seenKeysSet.add(canonicalUrl(a.link)); if (a?.title) seenKeysSet.add(cleanHeadlineTitle(a.title)); } primary.seenArticleKeys = Array.from(seenKeysSet).slice(-500);
         const seenOutlets = new Set((primary.coverage || []).map(a => a.sourceId));
         for (const art of (secondary.coverage || [])) {
@@ -721,6 +878,133 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           : (primary.averageSentiment || 0);
         const posRatio = mergedScores.length > 0 ? mergedScores.filter(s => s > 0.15).length / mergedScores.length : 0;
         primary.averageSentiment = mergedAvgSent;
+
+        // Preserve chronological evolution history across merged twin clusters when separated by >= 2 hours with distinct headlines
+        const priIsOnsetHeadline = /\b(begins?|starts?|sets?\s+off|embarks?|kicks?\s+off|arrives?\s+in)\b/i.test(primary.story || "") &&
+          !/\b(begins?|starts?|sets?\s+off|embarks?|kicks?\s+off)\b/i.test(secondary.story || "");
+        const secIsNewerPhase = (priIsOnsetHeadline && secMedMs >= priMedMs) ||
+          (secMedMs > 0 && priMedMs > 0 && (secMedMs - priMedMs) >= 12 * 3600 * 1000) ||
+          (secBirthMs > priBirthMs && (secMedMs >= priMedMs - 6 * 3600 * 1000));
+        const spanHours = (priBirthMs > 0 && secBirthMs > 0)
+          ? Math.max(Math.abs(priBirthMs - secBirthMs), Math.abs(priMedMs - secMedMs)) / 3600000
+          : 0;
+        const olderCl = secIsNewerPhase ? primary : ((secBirthMs > 0 && priBirthMs > 0 && secBirthMs < priBirthMs) ? secondary : primary);
+        const newerCl = olderCl === secondary ? primary : secondary;
+        const oldHStems = getStems(olderCl.story);
+        const newHStems = getStems(newerCl.story);
+        const mergeHSim = countFuzzyOverlap(oldHStems, newHStems) / Math.max(1, Math.min(oldHStems.size || 1, newHStems.size || 1));
+
+        if (!Array.isArray(primary.evolutionHistory) || primary.evolutionHistory.length === 0) {
+          primary.evolutionHistory = [{
+            version: 1,
+            type: 'initial',
+            timestamp: new Date(Math.min(priBirthMs || Date.now(), secBirthMs || Date.now())).toISOString(),
+            headline: spanHours >= 2 ? olderCl.story : primary.story,
+            summary: spanHours >= 2 ? (olderCl.summary || primary.summary) : primary.summary,
+            outletCount: olderCl.outletCount || 2,
+            note: 'Initial cluster formation on the wire'
+          }];
+        } else if (spanHours >= 2 && olderCl === secondary && mergeHSim < 0.78) {
+          primary.evolutionHistory[0] = {
+            version: 1,
+            type: 'initial',
+            timestamp: new Date(secBirthMs).toISOString(),
+            headline: secondary.story,
+            summary: secondary.summary || primary.evolutionHistory[0].summary,
+            outletCount: secondary.outletCount || 2,
+            note: 'Initial cluster formation on the wire'
+          };
+        }
+        if (Array.isArray(secondary.evolutionHistory)) {
+          const existingNotes = new Set(primary.evolutionHistory.map(h => String(h?.note || "").toLowerCase().trim()));
+          for (const sh of secondary.evolutionHistory) {
+            if (!sh || sh.type === 'initial') continue;
+            const nk = String(sh.note || "").toLowerCase().trim();
+            if (nk && !existingNotes.has(nk)) {
+              existingNotes.add(nk);
+              primary.evolutionHistory.push({ ...sh });
+            }
+          }
+        }
+        if (!Array.isArray(primary.evolvedFromIds)) primary.evolvedFromIds = [];
+        if (secondary.id && secondary.id !== primary.id && !primary.evolvedFromIds.includes(secondary.id)) {
+          primary.evolvedFromIds.push(secondary.id);
+        }
+        if (Array.isArray(secondary.evolvedFromIds)) {
+          for (const eid of secondary.evolvedFromIds) {
+            if (eid && eid !== primary.id && !primary.evolvedFromIds.includes(eid)) primary.evolvedFromIds.push(eid);
+          }
+        }
+        if (spanHours >= 2 && mergeHSim < 0.78) {
+          // If secondary was the newer phase and had substantial multi-outlet coverage (>= 5 outlets and >= 45% of primary size, or >= 3 outlets when primary was an onset headline), advance primary's headline
+          const secIsConclusionPhase = /\b(concludes?|wraps?\s+up|completes?|ends?\s+visit)\b/i.test(secondary.story || "");
+          const secCovCount = (secondary.coverage || []).length;
+          const priOrigCount = Math.max(2, primary.outletCount - secCovCount);
+          if (newerCl === secondary && ((secCovCount >= 5 && secCovCount >= priOrigCount * 0.45) || (priIsOnsetHeadline && secCovCount >= 3))) {
+            primary.story = secondary.story;
+            const newSlug = slugify(secondary.story);
+            if (newSlug && newSlug !== primary.id) {
+              if (!primary.evolvedFromIds.includes(primary.id)) primary.evolvedFromIds.push(primary.id);
+              byId.delete(primary.id);
+              primary.id = newSlug;
+              byId.set(primary.id, primary);
+            }
+            const firstSent = String(secondary.summary || "").split(/(?<=[.!?])\s+/)[0].trim();
+            if (firstSent && !String(primary.summary || "").toLowerCase().includes(firstSent.slice(0, 28).toLowerCase())) {
+              primary.summary = `${firstSent} ${String(primary.summary || "").trim()}`.trim();
+            }
+          } else if (newerCl === secondary && (secondary.coverage || []).length >= 3 && (secIsConclusionPhase || secMedMs > priMedMs + 4 * 3600 * 1000)) {
+            const firstSent = String(secondary.summary || "").split(/(?<=[.!?])\s+/)[0].trim();
+            if (firstSent && !String(primary.summary || "").toLowerCase().includes(firstSent.slice(0, 28).toLowerCase())) {
+              primary.summary = `${String(primary.summary || "").trim()} ${firstSent}`.trim();
+              const shiftTs = new Date(Math.max(priLatestMs, secLatestMs)).toISOString();
+              const shiftNote = `${secondary.story} — ${firstSent}`;
+              const alreadyHasNote = primary.evolutionHistory.some(h => String(h?.note || "").toLowerCase().includes(firstSent.slice(0, 24).toLowerCase()));
+              if (!alreadyHasNote) {
+                primary.evolutionHistory.push({
+                  version: primary.version || 1,
+                  type: 'clarification',
+                  timestamp: shiftTs,
+                  headline: primary.story,
+                  summary: primary.summary,
+                  beforeStory: primary.story,
+                  beforeSummary: oldPrimarySummary,
+                  outletCount: primary.outletCount,
+                  note: shiftNote
+                });
+                primary.lastDevelopedAt = shiftTs;
+                primary.developmentNote = shiftNote;
+              }
+            }
+          }
+          const targetStory = primary.story;
+          const alreadyHasTargetStep = primary.evolutionHistory.slice(1).some(
+            h => String(h?.headline || "").toLowerCase() === String(targetStory || "").toLowerCase()
+          );
+          if (!alreadyHasTargetStep && String(primary.evolutionHistory[0]?.headline || "").toLowerCase() !== String(targetStory || "").toLowerCase()) {
+            const shiftTs = new Date(Math.max(priBirthMs, secBirthMs, newerCl === secondary ? secLatestMs : priLatestMs)).toISOString();
+            const firstNewSent = String(newerCl.summary || primary.summary || "").split(/(?<=[.!?])\s+/)[0].trim();
+            const shiftNote = newerCl.developmentNote || firstNewSent || `Coverage expanded and shifted to: ${targetStory}`;
+            const nextV = (primary.evolutionHistory.length || 1) + 1;
+            primary.evolutionHistory.push({
+              version: nextV,
+              type: 'material_shift',
+              timestamp: shiftTs,
+              headline: targetStory,
+              summary: primary.summary,
+              beforeStory: olderCl.story || oldPrimaryStory,
+              beforeSummary: olderCl.summary || oldPrimarySummary,
+              outletCount: primary.outletCount,
+              note: shiftNote
+            });
+            primary.version = nextV;
+            primary.lastDevelopedAt = shiftTs;
+            primary.developmentNote = shiftNote;
+          }
+        }
+        // Recompute mA so subsequent twin/phase candidates in the same loop see primary's newly merged coverage and updated headline
+        mA = computeClusterDedupeMeta(primary);
+        metaMap.set(primary.id, mA);
 
         if (isDualFacetOrUmbrellaTwin) {
           const primaryHasNegativeMarketHeadline = /\b(stock|shares)\s+(plummet|plunge|sink|fall|drop|tumble|slump)/i.test(primary.story || '') ||
@@ -793,7 +1077,60 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           byId.delete(oldPrimaryId);
           byId.set(primary.id, primary);
         }
+        mA = computeClusterDedupeMeta(primary);
+        metaMap.set(primary.id, mA);
       }
+    }
+  }
+
+  // 2b-bis. Strict Cross-Cluster Single-Owner URL & Headline Pass:
+  // Ensure no article URL or cleaned article title ever appears inside two active clusters simultaneously.
+  const urlOwners = new Map();
+  const titleOwners = new Map();
+  for (const cl of byId.values()) {
+    const clStems = getStems(`${cl.story || ""} ${cl.summary || ""} ${(cl.evolvedFromIds || []).join(" ").replace(/-/g, " ")}`);
+    const clHeadStems = getStems(cl.story || "");
+    const clIsos = extractTextCountryIsos(`${cl.story || ""} ${cl.summary || ""}`);
+    for (const art of (cl.coverage || [])) {
+      const u = canonicalUrl(art?.link);
+      const t = cleanHeadlineTitle(art?.title);
+      const artStems = getStems(`${art?.title || ""} ${art?.description || ""}`);
+      const artIsos = extractTextCountryIsos(`${art?.title || ""} ${art?.description || ""}`);
+      const countryBonus = (artIsos.size > 0 && clIsos.size > 0)
+        ? ([...artIsos].some(c => clIsos.has(c)) ? 20 : -25)
+        : 0;
+      const fitScore = ([...artStems].filter(s => clHeadStems.has(s)).length * 5) +
+        ([...artStems].filter(s => clStems.has(s)).length * 2) +
+        countryBonus +
+        Math.min(cl.coverage.length, 10) * 0.1;
+      if (u) {
+        const prev = urlOwners.get(u);
+        if (!prev || fitScore > prev.fitScore) urlOwners.set(u, { clId: cl.id, fitScore });
+      }
+      if (t && t.length >= 18) {
+        const prev = titleOwners.get(t);
+        if (!prev || fitScore > prev.fitScore) titleOwners.set(t, { clId: cl.id, fitScore });
+      }
+    }
+  }
+  for (const cl of byId.values()) {
+    if (!Array.isArray(cl.coverage) || cl.coverage.length <= 2) continue;
+    const dedupCov = [];
+    for (const art of cl.coverage) {
+      const u = canonicalUrl(art?.link);
+      const t = cleanHeadlineTitle(art?.title);
+      const uOwner = u ? urlOwners.get(u)?.clId : cl.id;
+      const tOwner = (t && t.length >= 18) ? titleOwners.get(t)?.clId : cl.id;
+      if ((uOwner && uOwner !== cl.id) || (tOwner && tOwner !== cl.id)) {
+        if (dedupCov.length + (cl.coverage.length - cl.coverage.indexOf(art) - 1) >= 2) {
+          continue;
+        }
+      }
+      dedupCov.push(art);
+    }
+    if (dedupCov.length >= 2 && dedupCov.length !== cl.coverage.length) {
+      cl.coverage = dedupCov;
+      cl.outletCount = dedupCov.length;
     }
   }
 
@@ -814,35 +1151,59 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     "turkish","ukraine","ukrainian","russia","russian","china","chinese","taiwan","japan","korea","india","pakistan","australia",
     "australian","canada","canadian","mexico","mexican","britain","british","uk","london","england","france","french","paris",
     "germany","german","italy","italian","milan","rome","spain","spanish","united","states","american","us","trump","biden",
-    "wildfire","wildfires","fire","fires","blaze","blazes","wind","winds","flame","flames","burn","burns","home","homes","storm","storms","flood","floods"
+    "wildfire","wildfires","fire","fires","blaze","blazes","wind","winds","flame","flames","burn","burns","home","homes","storm","storms","flood","floods",
+    "manhattan","midtown","brooklyn","queens","chicago","houston","miami","seattle","boston","edmonton","calgary","montreal","toronto","vancouver",
+    "sydney","melbourne","perth","brisbane","adelaide","auckland","osaka","shanghai","shenzhen","mumbai","bengaluru","lahore","karachi","istanbul"
   ];
-  const EXPORT_COUNTRY_PATTERNS = [
-    ['us', /\b(u\.?s\.?|united states|america|american|california|southern california|texas|florida|new york|washington|pentagon)\b/i],
-    ['uk', /\b(u\.?k\.?|britain|british|england|scotland|wales|london|downing street|westminster|conservatives|tories|labour party|scotland yard)\b/i],
-    ['canada', /\b(canada|canadian|ottawa|toronto|quebec|vancouver)\b/i],
-    ['australia', /\b(australia|australian|sydney|melbourne|canberra|queensland|nsw)\b/i],
-    ['indonesia', /\b(indonesia|indonesian|jakarta|sulawesi|sumatra|bali|prabowo)\b/i],
-    ['malaysia', /\b(malaysia|malaysian|kuala lumpur)\b/i],
-    ['singapore', /\b(singapore|singaporean)\b/i],
-    ['france', /\b(france|french|paris|macron)\b/i],
-    ['germany', /\b(germany|german|berlin|munich|leipzig)\b/i],
-    ['russia', /\b(russia|russian|moscow|kremlin|putin)\b/i],
-    ['ukraine', /\b(ukraine|ukrainian|kyiv|zelensky)\b/i],
-    ['israel', /\b(israel|israeli|jerusalem|tel aviv|netanyahu|idf)\b/i],
-    ['palestine', /\b(gaza|palestine|palestinian|west bank|hamas)\b/i],
-    ['iran', /\b(iran|iranian|tehran)\b/i],
-    ['china', /\b(china|chinese|beijing|shanghai)\b/i],
-    ['india', /\b(india|indian|new delhi|mumbai|modi)\b/i],
-    ['brazil', /\b(brazil|brazilian|brasilia|lula|bolsonaro)\b/i],
-    ['japan', /\b(japan|japanese|tokyo)\b/i]
+  const EXPORT_SUBNATIONAL_TO_ISO = [
+    ['us', /\b(california|southern california|texas|florida|new york|nyc|manhattan|brooklyn|chicago|washington|pentagon)\b/i],
+    ['gb', /\b(england|scotland|wales|london|downing street|westminster|conservatives|tories|labour party|scotland yard)\b/i],
+    ['ca', /\b(ottawa|toronto|quebec|vancouver|edmonton|alberta|ontario|british columbia)\b/i],
+    ['au', /\b(sydney|melbourne|canberra|queensland|nsw|perth|victoria)\b/i],
+    ['id', /\b(jakarta|sulawesi|sumatra|bali|prabowo)\b/i],
+    ['my', /\b(kuala lumpur)\b/i],
+    ['fr', /\b(paris|macron)\b/i],
+    ['de', /\b(berlin|munich|leipzig|frankfurt)\b/i],
+    ['ru', /\b(moscow|kremlin|putin)\b/i],
+    ['ua', /\b(kyiv|zelensky)\b/i],
+    ['il', /\b(jerusalem|tel aviv|netanyahu|idf)\b/i],
+    ['ps', /\b(gaza|west bank|hamas)\b/i],
+    ['ir', /\b(tehran)\b/i],
+    ['cn', /\b(beijing|shanghai)\b/i],
+    ['in', /\b(new delhi|mumbai|modi|rahul gandhi)\b/i],
+    ['tz', /\b(dar es salaam|dodoma|tundu lissu)\b/i],
+    ['ke', /\b(nairobi|mombasa|shakahola)\b/i],
+    ['br', /\b(brasilia|sao paulo|rio de janeiro|lula|bolsonaro)\b/i],
+    ['jp', /\b(tokyo|osaka)\b/i]
   ];
   const detectExportCountries = (txt) => {
-    const out = new Set();
+    const out = extractTextCountryIsos(txt);
     const s = String(txt || '');
-    for (const [code, re] of EXPORT_COUNTRY_PATTERNS) {
-      if (re.test(s)) out.add(code);
+    for (const [iso, re] of EXPORT_SUBNATIONAL_TO_ISO) {
+      if (re.test(s)) out.add(iso);
     }
     return out;
+  };
+  const INCIDENT_MECHANISM_CLASSES = [
+    ['firearm', /\b(shoot\w*|shot\b|gunman|gunmen|gunfire|firearm\w*|sniper\w*)\b/i],
+    ['bladed', /\b(stabb\w+|knif\w+|machete\w*|slash\w+)\b/i],
+    ['vehicular_crash', /\b(car\s+crash\w*|truck\s+crash\w*|highway\s+crash\w*|train\s+crash\w*|train\s+collis\w*|derail\w*|plane\s+crash\w*|helicopt\w*\s+crash\w*|bus\s+crash\w*)\b/i],
+    ['maritime_sinking', /\b(boat\s+sink\w*|boat\s+capsiz\w*|ferry\s+sink\w*|shipwreck\w*|drown\w*)\b/i],
+    ['neglect_starvation', /\b(malnutrit\w*|starvat\w*|dehydrat\w*)\b/i],
+    ['fire_explosion', /\b(wildfire\w*|house\s+fire\w*|building\s+fire\w*|base\s+fire\w*|inferno|arson)\b/i],
+    ['seismic_volcanic', /\b(earthquak\w*|temblor|tsunami\w*|volcan\w*)\b/i]
+  ];
+  const hasDisjointIncidentMechanism = (headA = '', headB = '', textA = '', textB = '') => {
+    if (!headA || !headB) return false;
+    const mechHeadA = INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(headA)).map(([k]) => k);
+    const mechHeadB = INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(headB)).map(([k]) => k);
+    if (mechHeadA.length === 0 || mechHeadB.length === 0) return false;
+    if (mechHeadA.some(k => mechHeadB.includes(k))) return false;
+    const fullA = `${headA} ${textA || ''}`;
+    const fullB = `${headB} ${textB || ''}`;
+    const mechFullA = new Set(INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(fullA)).map(([k]) => k));
+    const mechFullB = new Set(INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(fullB)).map(([k]) => k));
+    return !mechHeadA.some(k => mechFullB.has(k)) && !mechHeadB.some(k => mechFullA.has(k));
   };
   const BROAD_BEAT_STEMS = new Set(RAW_BROAD_BEAT_WORDS.map(stemWord));
   for (const cl of byId.values()) {
@@ -860,12 +1221,22 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         const artStems = getStems(artText);
         const sharedSpec = [...artStems].filter(s => specAnchorStems.has(s)).length;
         const sharedSpecHead = [...artStems].filter(s => specHeadStems.has(s)).length;
+        const sharedHead = [...artStems].filter(s => headStems.has(s)).length;
+        const sharedDomCov = [...artStems].filter(s => domCov.has(s)).length;
         const sharedTotal = [...artStems].filter(s => anchorStems.has(s)).length;
         if (clusterCountries.size > 0) {
           const artCountries = detectExportCountries(artText);
           if (artCountries.size > 0 && ![...artCountries].some(c => clusterCountries.has(c)) && sharedSpecHead < 2) {
             return false;
           }
+        }
+        // Universal Disjoint Incident-Mechanism Guard: strip articles reporting a mutually exclusive physical incident mechanism (e.g. stabbing vs shooting, starvation vs murder, crash vs fire)
+        if (hasDisjointIncidentMechanism(cl.story || '', art.title || '', cl.summary || '', art.description || '') && sharedSpecHead <= 1) {
+          return false;
+        }
+        // Universal Zero-Headline-Anchor Outlier Gate for multi-outlet clusters
+        if (cov.length >= 4 && headStems.size >= 3 && sharedHead === 0 && sharedDomCov === 0 && sharedSpec <= 1) {
+          return false;
         }
         if (specHeadStems.size >= 1 && specAnchorStems.size >= 3) {
           if (sharedSpec === 0) return false;
@@ -879,33 +1250,133 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       }
     }
 
-    if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1 && specAnchorStems.size >= 2) {
-      const allCovStems = getStems((cl.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' '));
-      cl.evolutionHistory = cl.evolutionHistory.filter((h, idx) => {
-        if (idx === 0 || !h || h.type === 'initial') return true;
-        if (h.type === 'clarification' && h.note) {
-          const noteStems = getStems(h.note);
-          const stepStems = getStems(`${h.note || ''} ${h.headline || ''} ${h.summary || ''}`);
-          if (noteStems.size > 0) {
-            const noteInCovOrAnchor = [...noteStems].filter(s => allCovStems.has(s) || anchorStems.has(s)).length;
-            const sharedSpec = Math.max(
-              [...noteStems].filter(s => specAnchorStems.has(s)).length,
-              noteInCovOrAnchor >= 2 ? [...stepStems].filter(s => specAnchorStems.has(s)).length : 0
-            );
-            const sharedTotal = Math.max(
-              [...noteStems].filter(s => anchorStems.has(s)).length,
-              noteInCovOrAnchor >= 2 ? [...stepStems].filter(s => anchorStems.has(s)).length : 0
-            );
-            if (sharedSpec === 0 || noteInCovOrAnchor === 0) return false;
-            if (headStems.size >= 3 && anchorStems.size >= 6 && sharedTotal <= 1 && sharedSpec <= 1) return false;
-          }
-        }
-        return true;
+    // Normalize all evolutionHistory entries (legacy `.story` -> `.headline`, missing `.summary`/`.version`/`.timestamp`)
+    // and strip contaminated steps (including step[0] if merged from an unrelated story like Leipzig Airport inside Eagle's Nest, or Iran Peace Talks inside Ukraine Oleshky Truce)
+    if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 0) {
+      const birthIso = cl.firstSeenAt || (cl.coverage?.[cl.coverage.length - 1]?.pubDate ? new Date(cl.coverage[cl.coverage.length - 1].pubDate).toISOString() : new Date().toISOString());
+      cl.evolutionHistory = cl.evolutionHistory.filter(Boolean).map((h, idx) => {
+        const normHeadline = String(h.headline || h.story || (idx === 0 ? (h.beforeStory || cl.story) : cl.story) || cl.story).trim();
+        const normSummary = String(h.summary || (idx === 0 ? (h.beforeSummary || h.note || cl.summary) : (h.note || cl.summary)) || cl.summary || '').trim();
+        const normTs = h.timestamp || h.at || (idx === 0 ? birthIso : (cl.lastDevelopedAt || birthIso));
+        const normVer = typeof h.version === 'number' && !isNaN(h.version) ? h.version : (idx === 0 ? 1 : (cl.version || 1));
+        return {
+          ...h,
+          version: normVer,
+          type: idx === 0 ? 'initial' : (h.type === 'material_shift' ? 'material_shift' : 'clarification'),
+          timestamp: normTs,
+          headline: normHeadline,
+          summary: normSummary,
+          outletCount: typeof h.outletCount === 'number' ? h.outletCount : (cl.outletCount || 2),
+          note: h.note || (idx === 0 ? 'Initial cluster formation on the wire' : `Updated: ${normHeadline}`)
+        };
       });
+
+      if (cl.evolutionHistory.length > 1 && specAnchorStems.size >= 2) {
+        const allCovStems = getStems((cl.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' '));
+        const filteredHist = [];
+        for (let idx = 0; idx < cl.evolutionHistory.length; idx++) {
+          const h = cl.evolutionHistory[idx];
+          const stepText = `${h.headline || ''} ${h.summary || ''} ${h.note || ''}`;
+          const stepStems = getStems(stepText);
+          const stepHeadStems = getStems(h.headline || '');
+          const stepSpecHits = [...stepStems].filter(s => specAnchorStems.has(s)).length;
+          const stepCountries = detectExportCountries(`${h.headline || ''} ${h.summary || ''}`);
+          const stepHeadCountries = detectExportCountries(h.headline || '');
+          const headCountries = detectExportCountries(cl.story || '');
+          const hasStepCountryConflict = (clusterCountries.size > 0 && stepCountries.size > 0 &&
+            ![...stepCountries].some(c => clusterCountries.has(c)) &&
+            [...stepStems].filter(s => specHeadStems.has(s)).length === 0) ||
+            (stepHeadCountries.size > 0 && ![...stepHeadCountries].some(c => headCountries.has(c)) &&
+             [...stepHeadStems].filter(s => headStems.has(s)).length === 0);
+
+          if (hasStepCountryConflict) continue;
+          if (idx === 0) {
+            if (stepSpecHits === 0 && cl.evolutionHistory.length > 1) {
+              // Step[0] was contaminated from an unrelated cluster (e.g. Leipzig Airport inside Eagle's Nest);
+              // reconstruct true initial step from step[1].beforeStory / beforeSummary if available
+              const nextH = cl.evolutionHistory[1];
+              if (nextH && (nextH.beforeStory || nextH.beforeSummary)) {
+                filteredHist.push({
+                  version: 1,
+                  type: 'initial',
+                  timestamp: h.timestamp || birthIso,
+                  headline: nextH.beforeStory || cl.story,
+                  summary: nextH.beforeSummary || cl.summary,
+                  outletCount: h.outletCount || 2,
+                  note: 'Initial cluster formation on the wire'
+                });
+              }
+              continue;
+            }
+            filteredHist.push(h);
+            continue;
+          }
+          if (h.type === 'clarification' && h.note) {
+            const noteStems = getStems(h.note);
+            if (noteStems.size > 0) {
+              const noteInCovOrAnchor = [...noteStems].filter(s => allCovStems.has(s) || anchorStems.has(s)).length;
+              const sharedSpec = Math.max(
+                [...noteStems].filter(s => specAnchorStems.has(s)).length,
+                noteInCovOrAnchor >= 2 ? stepSpecHits : 0
+              );
+              const sharedTotal = Math.max(
+                [...noteStems].filter(s => anchorStems.has(s)).length,
+                noteInCovOrAnchor >= 2 ? [...stepStems].filter(s => anchorStems.has(s)).length : 0
+              );
+              if (sharedSpec === 0 || noteInCovOrAnchor === 0) continue;
+              if (headStems.size >= 3 && anchorStems.size >= 6 && sharedTotal <= 1 && sharedSpec <= 1) continue;
+            }
+          }
+          filteredHist.push(h);
+        }
+        if (filteredHist.length > 0) {
+          filteredHist[0].type = 'initial';
+          filteredHist[0].version = 1;
+          cl.evolutionHistory = filteredHist;
+        }
+      }
+    }
+
+    // Sanitize evolvedFromIds to strip false/contaminated ancestor slugs from unrelated stories
+    if (Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0) {
+      const allClTextStems = getStems(`${cl.story || ''} ${cl.summary || ''} ${(cl.coverage || []).map(a => a.title || '').join(' ')}`);
+      const clSpecPool = new Set([...allClTextStems].filter(s => !BROAD_BEAT_STEMS.has(s)));
+      cl.evolvedFromIds = cl.evolvedFromIds.filter(oldId => {
+        if (!oldId || oldId === cl.id) return false;
+        const oldText = String(oldId).replace(/-/g, ' ');
+        const oldCountries = detectExportCountries(oldText);
+        if (clusterCountries.size > 0 && oldCountries.size > 0 && ![...oldCountries].some(c => clusterCountries.has(c))) {
+          return false;
+        }
+        const oldStems = getStems(oldText);
+        const oldSpec = [...oldStems].filter(s => !BROAD_BEAT_STEMS.has(s));
+        const sharedSpec = oldSpec.filter(s => clSpecPool.has(s)).length;
+        const sharedInStoryOrSum = [...oldStems].filter(s => anchorStems.has(s)).length;
+        return sharedSpec >= 1 && sharedInStoryOrSum >= 1;
+      });
+      if (cl.evolvedFromIds.length === 0) delete cl.evolvedFromIds;
     }
   }
 
-  // 3. First-Principles Novel-Delta Coverage & Baseline-Echo Deduplication for evolutionHistory
+  // 3. First-Principles Novel-Delta Coverage, Baseline-Echo Deduplication & Stripped-Shift Recovery for evolutionHistory
+  let updatesLogEntries = [];
+  let archiveLookup = new Map();
+  try {
+    const uLogPath = path.join(__dirname, '..', 'data', 'cluster-updates-log.json');
+    if (fs.existsSync(uLogPath)) {
+      const rawLog = JSON.parse(fs.readFileSync(uLogPath, 'utf8'));
+      if (Array.isArray(rawLog)) updatesLogEntries = rawLog;
+    }
+    const archPath = path.join(__dirname, '..', 'data', 'clusters-archive.json');
+    if (fs.existsSync(archPath)) {
+      const rawArch = JSON.parse(fs.readFileSync(archPath, 'utf8'));
+      const list = Array.isArray(rawArch) ? rawArch : (Array.isArray(rawArch?.clusters) ? rawArch.clusters : Object.values(rawArch?.clusters || {}));
+      for (const item of list) {
+        if (item && item.id) archiveLookup.set(item.id, item);
+      }
+    }
+  } catch (_) {}
+
   const EVO_WORD_NUMS = {
     one:'1', two:'2', three:'3', four:'4', five:'5', six:'6', seven:'7', eight:'8', nine:'9', ten:'10',
     eleven:'11', twelve:'12', dozen:'12', thirteen:'13', fourteen:'14', fifteen:'15', sixteen:'16',
@@ -1013,9 +1484,9 @@ function deduplicateAndSanitizeClusters(rawClusters) {
   for (const cl of byId.values()) {
     if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1) {
       const initStep = cl.evolutionHistory[0];
-      const baseText = (initStep?.headline || cl.story || '') + ' ' + (initStep?.summary || '');
+      const baseText = (initStep?.headline || '') + ' ' + (initStep?.summary || '');
       const baseStems = new Set(extractEvoDeltaStems(baseText));
-      const headlineStems = new Set([...baseStems, ...extractEvoDeltaStems(cl.story || '')]);
+      const headlineStems = new Set([...baseStems, ...extractEvoDeltaStems(initStep?.headline || '')]);
       const baseNums = extractEvoNums(baseText, null);
       const cleanHist = [initStep];
 
@@ -1039,12 +1510,26 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         const hCumulNovelNums = [...hNums].filter(n => !priorHistoryNums.has(n));
         const hMs = new Date(h.timestamp || 0).getTime();
 
-        if (h.type === 'clarification' && hNovelNums.length === 0 && hNovel.length <= 1) {
+        const prevKept = cleanHist[cleanHist.length - 1];
+        const prevHeadStems = getStems(prevKept?.headline || initStep?.headline || '');
+        const currHeadStems = getStems(h.headline || '');
+        const headOverlapWithPrev = prevHeadStems.size > 0
+          ? [...currHeadStems].filter(s => prevHeadStems.has(s)).length / Math.max(prevHeadStems.size, currHeadStems.size)
+          : 1;
+        const introducesHeadlineShift = Boolean(
+          h.headline &&
+          prevKept?.headline &&
+          h.headline.toLowerCase().trim() !== prevKept.headline.toLowerCase().trim() &&
+          headOverlapWithPrev < 0.85
+        );
+
+        if (!introducesHeadlineShift && h.type === 'clarification' && hNovelNums.length === 0 && hNovel.length <= 1) {
           continue;
         }
         // Unified Cumulative Information-Gain Gate: if a step introduces zero new numbers against prior history
         // and >=75% of its stems are already present in initStep + prior steps (with <=2 novel stems), skip it
-        if (hCumulNovelNums.length === 0 && hStems.length >= 4 && hCumulNovel.length <= 2 && (hCumulNovel.length / hStems.length) <= 0.25) {
+        // (NEVER strip a step that introduces a genuine headline shift!)
+        if (!introducesHeadlineShift && hCumulNovelNums.length === 0 && hStems.length >= 4 && hCumulNovel.length <= 2 && (hCumulNovel.length / hStems.length) <= 0.25) {
           continue;
         }
 
@@ -1114,28 +1599,180 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         }
       }
 
-      let monoVer = 1;
-      cleanHist[0].version = 1;
-      for (let i = 1; i < cleanHist.length; i++) {
-        if (cleanHist[i].type === 'material_shift') monoVer++;
-        cleanHist[i].version = monoVer;
-      }
-      cl.version = monoVer;
       cl.evolutionHistory = cleanHist;
-      if (cleanHist.length <= 1) {
-        delete cl.developmentNote;
-        delete cl.lastDevelopedAt;
-      } else {
-        const lastStep = cleanHist[cleanHist.length - 1];
-        if (lastStep?.note) cl.developmentNote = lastStep.note;
-        if (lastStep?.timestamp) cl.lastDevelopedAt = lastStep.timestamp;
+    }
+
+    // 3b. Recover stripped shift steps & enforce strict Headline-History Co-Change Invariant:
+    // - If a cluster's `evolutionHistory` has only 1 step (`cleanHist.length === 1`), check if either:
+    //   (a) `cleanHist[0].headline !== cl.story`, OR
+    //   (b) `cl.evolvedFromIds` / `cluster-updates-log.json` / `clusters-archive.json` shows `cl.story` evolved from an earlier headline >= 2h after birth.
+    // - Always guarantee `cl.evolutionHistory[last].headline === cl.story`.
+    const covTimes = (cl.coverage || []).map(a => Date.parse(a?.pubDate || '')).filter(t => !isNaN(t) && t > 0);
+    const earliestCovMs = covTimes.length > 0 ? Math.min(...covTimes) : Date.now();
+    const latestCovMs = covTimes.length > 0 ? Math.max(...covTimes) : earliestCovMs;
+    if (!Array.isArray(cl.evolutionHistory) || cl.evolutionHistory.length === 0) {
+      cl.evolutionHistory = [{
+        version: 1,
+        type: 'initial',
+        timestamp: cl.firstSeenAt || new Date(earliestCovMs).toISOString(),
+        headline: cl.story,
+        summary: cl.summary || '',
+        outletCount: cl.outletCount || 2,
+        note: 'Initial cluster formation on the wire'
+      }];
+    }
+    const humanizeSlug = (slug) => {
+      const ACRONYMS = { us: 'US', uk: 'UK', eu: 'EU', un: 'UN', uae: 'UAE', fbi: 'FBI', doj: 'DOJ', idf: 'IDF', g7: 'G7', f1: 'F1', ai: 'AI', ceo: 'CEO', pm: 'PM', gop: 'GOP', cop31: 'COP31', cbd: 'CBD', uefa: 'UEFA', fifa: 'FIFA' };
+      const LOWER = new Set(['a','an','the','in','on','at','to','for','of','and','or','by','with','from','over','amid','after','into']);
+      return String(slug || '').split('-').filter(Boolean).map((w, idx) => {
+        if (ACRONYMS[w]) return ACRONYMS[w];
+        if (idx > 0 && LOWER.has(w)) return w;
+        return w.charAt(0).toUpperCase() + w.slice(1);
+      }).join(' ');
+    };
+    const sortedCovAsc = [...(cl.coverage || [])].sort((a, b) => (Date.parse(a?.pubDate || '') || 0) - (Date.parse(b?.pubDate || '') || 0));
+    const earliestArt = sortedCovAsc[0];
+    const buildDistinctInitialSummary = (initHead) => {
+      if (earliestArt && earliestArt.description && earliestArt.description.trim().length >= 40 && earliestArt.description.trim() !== String(cl.summary || '').trim()) {
+        return earliestArt.description.trim();
       }
-      if (cl.summarySynthesizedSig && cl.summarySynthesizedSig.startsWith(`${cl.id}|v${cl.version || 1}|`)) {
-        cl.summarySynthesizedSig = `${cl.id}|v${cl.version || 1}|h${cleanHist.length}`;
+      const firstSent = String(cl.summary || '').split(/(?<=[.!?])\s+/)[0].trim();
+      if (firstSent && firstSent.length < String(cl.summary || '').trim().length) {
+        return firstSent;
+      }
+      return `Initial wire dispatches reported on ${initHead}.`;
+    };
+
+    if (cl.evolutionHistory.length === 1) {
+      const h0 = cl.evolutionHistory[0];
+      const h0Ms = Date.parse(h0.timestamp || cl.firstSeenAt || '') || earliestCovMs;
+      const logMatch = [...updatesLogEntries].reverse().find(e =>
+        e && (e.after?.id === cl.id || e.after?.story === cl.story) &&
+        e.before?.story && e.before.story.toLowerCase() !== String(cl.story || '').toLowerCase()
+      );
+      let priorTitle = (h0.headline && h0.headline.toLowerCase() !== String(cl.story || '').toLowerCase())
+        ? h0.headline
+        : (logMatch?.before?.story || null);
+      let priorSummary = (h0.headline && h0.headline.toLowerCase() !== String(cl.story || '').toLowerCase())
+        ? (h0.summary || logMatch?.before?.summary || '')
+        : (logMatch?.before?.summary || '');
+      let priorBirthMs = h0Ms;
+      let shiftNote = logMatch?.note || cl.developmentNote || '';
+      let shiftTs = logMatch?.eventTimestamp || cl.lastDevelopedAt || new Date(latestCovMs).toISOString();
+
+      if (!priorTitle && Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0) {
+        for (const oldId of cl.evolvedFromIds) {
+          const arch = archiveLookup.get(oldId);
+          const logByOld = [...updatesLogEntries].reverse().find(e => e?.before?.id === oldId || (Array.isArray(e?.mergedClusterIds) && e.mergedClusterIds.includes(oldId)));
+          const candTitle = arch?.story || logByOld?.before?.story || humanizeSlug(oldId);
+          if (candTitle && candTitle.toLowerCase() !== String(cl.story || '').toLowerCase()) {
+            const archBirthMs = arch?.firstSeenAt ? Date.parse(arch.firstSeenAt) : h0Ms;
+            const stA = getStems(candTitle);
+            const stB = getStems(cl.story || '');
+            const ov = countFuzzyOverlap(stA, stB) / Math.max(1, Math.min(stA.size || 1, stB.size || 1));
+            if (ov < 0.85) {
+              priorTitle = candTitle;
+              priorSummary = arch?.summary || logByOld?.before?.summary || '';
+              if (archBirthMs > 0 && archBirthMs < priorBirthMs) priorBirthMs = archBirthMs;
+              shiftNote = logByOld?.note || shiftNote;
+              if (logByOld?.eventTimestamp) shiftTs = logByOld.eventTimestamp;
+              break;
+            }
+          }
+        }
+      }
+
+      const spanHours = (latestCovMs - priorBirthMs) / 3600000;
+      if (priorTitle && (spanHours >= 1.5 || Boolean(logMatch) || (Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0))) {
+        const sents = String(cl.summary || '').split(/(?<=[.!?])\s+/).filter(Boolean);
+        const finalNote = shiftNote || sents[sents.length - 1] || sents[0] || `Story updated: ${cl.story}`;
+        const finalShiftTs = new Date(Math.max(Date.parse(shiftTs) || latestCovMs, priorBirthMs + 60000)).toISOString();
+        const distinctInitSum = (priorSummary && priorSummary.trim() !== String(cl.summary || '').trim())
+          ? priorSummary
+          : buildDistinctInitialSummary(priorTitle);
+        cl.evolutionHistory = [
+          {
+            version: 1,
+            type: 'initial',
+            timestamp: new Date(priorBirthMs).toISOString(),
+            headline: priorTitle,
+            summary: distinctInitSum,
+            outletCount: logMatch?.before?.outletCount || h0.outletCount || 2,
+            note: 'Initial cluster formation on the wire'
+          },
+          {
+            version: 2,
+            type: 'material_shift',
+            timestamp: finalShiftTs,
+            headline: cl.story,
+            summary: cl.summary,
+            beforeStory: priorTitle,
+            beforeSummary: distinctInitSum,
+            outletCount: cl.outletCount || (cl.coverage || []).length || 2,
+            note: finalNote
+          }
+        ];
+      } else {
+        cl.evolutionHistory[0].headline = cl.story;
+        cl.evolutionHistory[0].summary = cl.summary || cl.evolutionHistory[0].summary;
       }
     }
-    if ((cl.version || 1) <= 1 && (!Array.isArray(cl.evolutionHistory) || cl.evolutionHistory.length <= 1) && !cl.developmentNote) {
+
+    // Enforce Headline-Shift Co-Change Law across all steps of evolutionHistory:
+    // A step that changes the headline from the preceding step is either promoted to `material_shift` (if substantive shift or final story)
+    // or aligned with the active phase headline (if an intra-phase number/wording clarification).
+    let monoVer = 1;
+    cl.evolutionHistory[0].version = 1;
+    cl.evolutionHistory[0].type = 'initial';
+    for (let i = 1; i < cl.evolutionHistory.length; i++) {
+      const prevH = cl.evolutionHistory[i - 1];
+      const currH = cl.evolutionHistory[i];
+      if (currH.type !== 'material_shift' && currH.headline && prevH.headline && currH.headline !== prevH.headline) {
+        const stPrev = getStems(prevH.headline);
+        const stCurr = getStems(currH.headline);
+        const ov = countFuzzyOverlap(stPrev, stCurr) / Math.max(1, Math.min(stPrev.size || 1, stCurr.size || 1));
+        const shiftsToFinalStory = currH.headline === cl.story && prevH.headline !== cl.story;
+        if (ov < 0.72 || shiftsToFinalStory) {
+          currH.type = 'material_shift';
+        } else {
+          currH.headline = prevH.headline;
+        }
+      }
+      if (currH.type !== 'material_shift' && prevH.headline) {
+        currH.beforeStory = prevH.headline;
+      } else if (currH.type === 'material_shift' && prevH.headline) {
+        currH.beforeStory = prevH.headline;
+      }
+      if (currH.type === 'material_shift') monoVer++;
+      currH.version = monoVer;
+    }
+    const lastHistStep = cl.evolutionHistory[cl.evolutionHistory.length - 1];
+    if (lastHistStep && cl.story && lastHistStep.headline !== cl.story) {
+      if (cl.evolutionHistory.length > 1 && lastHistStep.type !== 'material_shift') {
+        lastHistStep.type = 'material_shift';
+        monoVer++;
+        lastHistStep.version = monoVer;
+      }
+      lastHistStep.headline = cl.story;
+    }
+    if (lastHistStep && cl.summary && lastHistStep.summary !== cl.summary) {
+      lastHistStep.summary = cl.summary;
+    }
+    if (monoVer >= 2 && cl.evolutionHistory[0].summary === cl.summary) {
+      cl.evolutionHistory[0].summary = (cl.evolutionHistory[1]?.beforeSummary && cl.evolutionHistory[1].beforeSummary !== cl.summary)
+        ? cl.evolutionHistory[1].beforeSummary
+        : buildDistinctInitialSummary(cl.evolutionHistory[0].headline || cl.story);
+    }
+    cl.version = monoVer;
+    if (cl.evolutionHistory.length <= 1) {
+      delete cl.developmentNote;
       delete cl.lastDevelopedAt;
+    } else {
+      if (lastHistStep?.note) cl.developmentNote = lastHistStep.note;
+      if (lastHistStep?.timestamp) cl.lastDevelopedAt = lastHistStep.timestamp;
+    }
+    if (cl.summarySynthesizedSig && cl.summarySynthesizedSig.startsWith(`${cl.id}|v`)) {
+      cl.summarySynthesizedSig = `${cl.id}|v${cl.version || 1}|h${cl.evolutionHistory.length}`;
     }
     result.push(cl);
   }
@@ -1317,6 +1954,8 @@ function exportPublicJsonFeeds(fullPayload) {
       summary: cl.summary || '',
       version,
       ...(cl.summarySynthesizedSig ? { summarySynthesizedSig: cl.summarySynthesizedSig } : {}),
+      ...(typeof cl.lastEvaluatedCoverageMs === 'number' ? { lastEvaluatedCoverageMs: cl.lastEvaluatedCoverageMs } : {}),
+      ...(Array.isArray(cl.evaluatedDesyncTokens) && cl.evaluatedDesyncTokens.length > 0 ? { evaluatedDesyncTokens: cl.evaluatedDesyncTokens } : {}),
       ...(cl.primaryLocation ? { primaryLocation: cl.primaryLocation } : {}),
       ...(cl.briefing ? { briefing: cl.briefing } : {}),
       ...(lastDevelopedAt ? { lastDevelopedAt } : {}),
@@ -1522,6 +2161,31 @@ function exportPublicJsonFeeds(fullPayload) {
     console.warn('[Export] Could not write clusters-archive.json:', archWriteErr.message);
   }
 
+  // 1c. Retire dormant / expired clusters from active clusters.json (now safely preserved in clusters-archive.json)
+  const isActiveClusterWindow = (cl) => {
+    const times = (cl.coverage || []).map(a => Date.parse(a?.pubDate || '') || 0).filter(t => t > 0).sort((a, b) => a - b);
+    if (times.length === 0) return false;
+    const newestMs = times[times.length - 1];
+    const birthMs = Math.min(times[0], Date.parse(cl.firstSeenAt || '') || Infinity);
+    const medMs = times[Math.floor(times.length / 2)];
+    const newestAgeH = (nowMs - newestMs) / 3600000;
+    const birthAgeH = (nowMs - birthMs) / 3600000;
+    const medAgeH = (nowMs - medMs) / 3600000;
+    const oc = cl.outletCount || times.length;
+    if (newestAgeH > 168) return false;
+    if (oc <= 3 && newestAgeH > 108) return false;
+    if (birthAgeH > 180 && newestAgeH > 120) return false;
+    if (birthAgeH > 336 && medAgeH > 240) return false;
+    return true;
+  };
+  const activeEnrichedClusters = enrichedClusters.filter(isActiveClusterWindow);
+  const activeRawClusters = rawClusters.filter(isActiveClusterWindow);
+  fullPayload.sharedStoryClusters = activeRawClusters;
+  if (fullPayload.globalStats) fullPayload.globalStats.sharedStoryClusters = activeRawClusters;
+  clustersPayload.count = activeEnrichedClusters.length;
+  clustersPayload.clusters = activeEnrichedClusters;
+  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'clusters.json'), JSON.stringify(clustersPayload, null, 2), 'utf8');
+
   // 2. Build & Export Rescued Constructive News -> public/data/good-news.json
   const cutoff48h = nowMs - 48 * 3600 * 1000;
   const seenGoodUrls = new Set();
@@ -1640,7 +2304,7 @@ function exportPublicJsonFeeds(fullPayload) {
     seenClusters24h.add(s.clusterId);
     return true;
   });
-  const constructiveClusters = enrichedClusters
+  const constructiveClusters = activeEnrichedClusters
     .filter(c => c.averageSentiment >= 0.10)
     .sort((a, b) => (b.significanceScore - a.significanceScore) || (b.averageSentiment - a.averageSentiment));
 
@@ -1758,7 +2422,7 @@ function exportPublicJsonFeeds(fullPayload) {
       clusters: {
         path: 'data/clusters.json',
         description: 'Cross-outlet story clusters (rolling 7-day window across all sentiments) with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, and per-outlet coverage links.',
-        count: enrichedClusters.length
+        count: activeEnrichedClusters.length
       },
       clustersArchive: {
         path: 'data/clusters-archive.json',
@@ -1793,16 +2457,16 @@ function exportPublicJsonFeeds(fullPayload) {
   };
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'index.json'), JSON.stringify(indexManifest, null, 2), 'utf8');
 
-  const active48h = rawClusters.filter(cl => {
+  const active48h = activeRawClusters.filter(cl => {
     const newestMs = Math.max(...(cl.coverage || []).map(c => new Date(c.pubDate).getTime() || 0), 0);
     return newestMs >= cutoff48h;
   });
-  const activeClusters48h = active48h.length >= 12 ? active48h : rawClusters.slice(0, 24);
+  const activeClusters48h = active48h.length >= 12 ? active48h : activeRawClusters.slice(0, 24);
 
   return {
-    enrichedClusters,
+    enrichedClusters: activeEnrichedClusters,
     activeClusters48h,
-    clustersCount: enrichedClusters.length,
+    clustersCount: activeEnrichedClusters.length,
     archivedClustersCount: archivedClustersList.length,
     goodNews24hCount: goodStories24h.length,
     goodNews7dCount: goodStories7d.length,

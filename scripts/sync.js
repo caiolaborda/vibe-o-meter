@@ -1303,18 +1303,61 @@ function extractEventFactAttributes(itemOrCluster) {
   };
 }
 
+const INCIDENT_MECHANISM_CLASSES = [
+  ['firearm', /\b(shoot\w*|shot\b|gunman|gunmen|gunfire|firearm\w*|sniper\w*)\b/i],
+  ['bladed', /\b(stabb\w+|knif\w+|machete\w*|slash\w+)\b/i],
+  ['vehicular_crash', /\b(car\s+crash\w*|truck\s+crash\w*|highway\s+crash\w*|train\s+crash\w*|train\s+collis\w*|derail\w*|plane\s+crash\w*|helicopt\w*\s+crash\w*|bus\s+crash\w*)\b/i],
+  ['maritime_sinking', /\b(boat\s+sink\w*|boat\s+capsiz\w*|ferry\s+sink\w*|shipwreck\w*|drown\w*)\b/i],
+  ['neglect_starvation', /\b(malnutrit\w*|starvat\w*|dehydrat\w*)\b/i],
+  ['fire_explosion', /\b(wildfire\w*|house\s+fire\w*|building\s+fire\w*|base\s+fire\w*|inferno|arson)\b/i],
+  ['seismic_volcanic', /\b(earthquak\w*|temblor|tsunami\w*|volcan\w*)\b/i]
+];
+
+function hasDisjointIncidentMechanism(headA = '', headB = '', textA = '', textB = '') {
+  if (!headA || !headB) return false;
+  const mechHeadA = INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(headA)).map(([k]) => k);
+  const mechHeadB = INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(headB)).map(([k]) => k);
+  if (mechHeadA.length === 0 || mechHeadB.length === 0) return false;
+  if (mechHeadA.some(k => mechHeadB.includes(k))) return false;
+  const fullA = `${headA} ${textA || ''}`;
+  const fullB = `${headB} ${textB || ''}`;
+  const mechFullA = new Set(INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(fullA)).map(([k]) => k));
+  const mechFullB = new Set(INCIDENT_MECHANISM_CLASSES.filter(([, re]) => re.test(fullB)).map(([k]) => k));
+  return !mechHeadA.some(k => mechFullB.has(k)) && !mechHeadB.some(k => mechFullA.has(k));
+}
+
 function hasDisjointSovereignCountryConflict(textA, textB, headA = '', headB = '', stemDfMap = null, maxDf = 8) {
+  if (hasDisjointIncidentMechanism(headA, headB, textA, textB)) {
+    return true;
+  }
   const weatherA = extractNamedWeatherDesignators(`${headA || ''} ${textA || ''}`);
   const weatherB = extractNamedWeatherDesignators(`${headB || ''} ${textB || ''}`);
   if (weatherA.size > 0 && weatherB.size > 0 && ![...weatherA].some(w => weatherB.has(w))) {
     return true;
   }
   const headCountriesA = detectSovereignCountries(headA || textA);
+  const headCountriesB = detectSovereignCountries(headB || textB);
   const allCountriesA = detectSovereignCountries(textA);
   const allCountriesB = detectSovereignCountries(textB);
   // If one side names specific storm designators (e.g. UK Storm Austen/Boelo) and the other is in a disjoint sovereign country (e.g. Australia or Canada) with 0 shared designators
   if ((weatherA.size > 0 || weatherB.size > 0) && allCountriesA.size > 0 && allCountriesB.size > 0 && ![...allCountriesA].some(c => allCountriesB.has(c))) {
     return true;
+  }
+  // Universal Bilateral Partner Country Conflict Law:
+  // If both headlines share one sovereign country (e.g. China) while each explicitly names a disjoint bilateral partner country (e.g. Canada vs US) absent from the other's text
+  if (headCountriesA.size >= 2 && headCountriesB.size >= 2) {
+    const sharedHead = [...headCountriesA].filter(c => headCountriesB.has(c));
+    const unsharedHeadA = [...headCountriesA].filter(c => !headCountriesB.has(c));
+    const unsharedHeadB = [...headCountriesB].filter(c => !headCountriesA.has(c));
+    if (
+      sharedHead.length === 1 &&
+      unsharedHeadA.length >= 1 &&
+      unsharedHeadB.length >= 1 &&
+      !unsharedHeadA.some(c => allCountriesB.has(c)) &&
+      !unsharedHeadB.some(c => allCountriesA.has(c))
+    ) {
+      return true;
+    }
   }
   if (headCountriesA.size === 0 && allCountriesA.size === 0) return false;
   if (allCountriesB.size === 0) return false;
@@ -1360,23 +1403,24 @@ function getEpisodeSpecificHeadlineStems(storyText, extraActorStems = null) {
 }
 
 function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0) {
+  const ageGapHours = (anchorFirstSeenMs > 0 && newestCandidateMs > anchorFirstSeenMs)
+    ? (newestCandidateMs - anchorFirstSeenMs) / 3600000
+    : 0;
   // If the anchor cluster IS itself a general Election-Day / Voting / Poll / Tally cluster (and not a narrow pre-election
-  // debate, welfare handout, or endorsement episode), never block incoming voting, turnout, exit-poll, or result dispatches!
+  // debate, welfare handout, or endorsement episode), allow incoming voting, turnout, exit-poll, or result dispatches within 5 days (120h)
   const isMainElectionVotingAnchor =
     /\b(heads?\s+to\s+(?:the\s+)?polls?|general\s+election|runoff\s+election|presidential\s+(?:runoff|election)|parliamentary\s+elections?|knesset\s+(?:election|deadlock)|election\s+(?:confirms?|results?|deadlock)|midterm\s+elections?|exit\s+polls?|wins?\s+(?:re-?election|election|runoff|congress|senate|house|majorit\w*))\b/i.test(anchorStory || '') &&
     !/\b(debate\w*|spar\w*|welfare|subsid\w*|fast-?track\w*|endorse\w*|attack\s+ad\w*)\b/i.test(anchorStory || '');
-  if (isMainElectionVotingAnchor) return false;
+  if (isMainElectionVotingAnchor && ageGapHours < 120) return false;
 
   const episodeStems = getEpisodeSpecificHeadlineStems(anchorStory);
   if (episodeStems.size === 0) return false;
   const candStems = new Set(extractCoherenceStems(candidateText || ''));
   const sharedEpisode = [...episodeStems].filter(s => candStems.has(s));
-  if (sharedEpisode.length > 0) return false;
-  // Candidate text shares 0 episode-specific headline stems with the anchor!
+  // If the cluster is >5 days (120h) old, sharing only 1 subject/actor stem is not enough to bridge into a new episode
+  if (sharedEpisode.length > 0 && (ageGapHours < 120 || sharedEpisode.length >= 2)) return false;
+  // Candidate text shares 0 episode-specific headline stems with the anchor (or only 1 stem across a >5d gap)!
   // Check if the candidate text is purely matching on campaign/election/theatre frame stems or is separated by >24h from the episode origin:
-  const ageGapHours = (anchorFirstSeenMs > 0 && newestCandidateMs > anchorFirstSeenMs)
-    ? (newestCandidateMs - anchorFirstSeenMs) / 3600000
-    : 0;
   const candHasCampaignVotingFrame = /\b(polls?\s+open|cast\s+(?:their\s+)?ballots?|voting\s+(?:begins|underway|procedures|stations)|holds?\s+(?:high-stakes\s+)?(?:presidential\s+)?runoff|head\s+to\s+the\s+polls|tight\s+(?:presidential\s+)?runoff|exit\s+polls?)\b/i.test(candidateText || '');
   if (ageGapHours >= 24 || candHasCampaignVotingFrame) {
     return true;
@@ -2426,18 +2470,42 @@ Return JSON array in format:
         const newestPrevMs = Math.max(...prev.coverage.map(c => new Date(c.pubDate).getTime() || 0));
         if (newestPrevMs < sevenDaysAgo) return;
 
-        const coveredCount = prev.coverage.filter(c =>
-          (c.link && coveredUrls.has(canonicalUrl(c.link))) ||
-          (c.title && coveredTitles.has(cleanHeadlineTitle(c.title)))
-        ).length;
+        const unclaimedCoverage = prev.coverage.filter(c =>
+          !(c.link && coveredUrls.has(canonicalUrl(c.link))) &&
+          !(c.title && coveredTitles.has(cleanHeadlineTitle(c.title)))
+        );
+        const coveredCount = prev.coverage.length - unclaimedCoverage.length;
         // Only treat a previous cluster as superseded by coveredUrls if >= 60% (and at least 2) of its articles
-        // were absorbed into new clusters; never drop a 2-outlet cluster just because 1 of its articles got pulled into a broad umbrella story!
-        const alreadyCovered = coveredCount >= Math.max(2, Math.ceil(prev.coverage.length * 0.6));
+        // were absorbed into new clusters, OR if fewer than 2 unclaimed articles remain.
+        const alreadyCovered = coveredCount >= Math.max(2, Math.ceil(prev.coverage.length * 0.6)) || unclaimedCoverage.length < 2;
         if (!alreadyCovered) {
+          const uTimes = unclaimedCoverage.map(c => new Date(c.pubDate).getTime() || 0).filter(t => t > 0).sort((a, b) => a - b);
+          const newestUnclaimedMs = uTimes.length > 0 ? uTimes[uTimes.length - 1] : newestPrevMs;
+          const birthMs = Math.min(uTimes[0] || Infinity, Date.parse(prev.firstSeenAt || '') || Infinity);
+          const medMs = uTimes.length > 0 ? uTimes[Math.floor(uTimes.length / 2)] : newestUnclaimedMs;
+          const nowMsCheck = Date.now();
+          const newestAgeH = (nowMsCheck - newestUnclaimedMs) / 3600000;
+          const birthAgeH = (nowMsCheck - birthMs) / 3600000;
+          const medAgeH = (nowMsCheck - medMs) / 3600000;
+          if (
+            newestAgeH > 168 ||
+            (unclaimedCoverage.length <= 3 && newestAgeH > 108) ||
+            (birthAgeH > 180 && newestAgeH > 120) ||
+            (birthAgeH > 336 && medAgeH > 240)
+          ) {
+            return;
+          }
+          const uScores = unclaimedCoverage.map(c => c.sentiment).filter(s => typeof s === 'number');
+          const uAvg = uScores.length > 0 ? Number((uScores.reduce((a, b) => a + b, 0) / uScores.length).toFixed(2)) : (prev.averageSentiment || 0);
+          const uSpread = uScores.length > 1 ? Number((Math.max(...uScores) - Math.min(...uScores)).toFixed(2)) : (prev.sentimentSpread || 0);
           const prevClone = {
             ...prev,
+            coverage: unclaimedCoverage,
+            outletCount: unclaimedCoverage.length,
+            averageSentiment: uAvg,
+            sentimentSpread: uSpread,
             version: typeof prev.version === 'number' ? prev.version : 1,
-            newestMs: newestPrevMs
+            newestMs: newestUnclaimedMs > 0 ? newestUnclaimedMs : newestPrevMs
           };
           // Self-heal any preserved v1 cluster that still has a vague continental umbrella title while >=60% of its articles share a specific location/entity stem
           if (prevClone.version === 1 && /\b(european|asian|african|latin american|middle eastern|global|international|world)\b/i.test(prevClone.story || '')) {
@@ -2531,6 +2599,7 @@ Return JSON array in format:
       const times = cov.map(c => new Date(c.pubDate).getTime()).filter(t => !isNaN(t) && t > 0);
       const minMs = times.length ? Math.min(...times) : 0;
       const maxMs = times.length ? Math.max(...times) : 0;
+      const firstSeenMs = (cl.firstSeenAt ? new Date(cl.firstSeenAt).getTime() : 0) || minMs;
       const clTitleArr = extractCoherenceStems(cl.story || '');
       const clAllStems = new Set(extractCoherenceStems(`${cl.story || ''} ${cl.summary || ''}`));
       // Corpus IDF entity gate: only treat stems appearing in <= ~1.5% of the 48h article corpus (maxTitleStemDf)
@@ -2543,7 +2612,7 @@ Return JSON array in format:
         titleStems: new Set(extractCoherenceStems(peer.title || '')),
         allStems: new Set(extractCoherenceStems(`${peer.title || ''} ${peer.description || ''}`))
       }));
-      return { cl, minMs, maxMs, clTitleArr, clAllStems, clEntityStems, peerStems };
+      return { cl, minMs, maxMs, firstSeenMs, clTitleArr, clAllStems, clEntityStems, peerStems };
     });
     const candidateAttachments = [];
     for (const art of unclustered7d) {
@@ -2554,10 +2623,11 @@ Return JSON array in format:
         if (cov.length < 2 || cm.clTitleArr.length < 2 || cm.clEntityStems.length < 1) continue;
         if (cov.some(c => c.sourceId === art.sourceId)) continue;
         if (cm.minMs > 0 && (art.pubMs < cm.minMs - 72 * 3600 * 1000 || art.pubMs > cm.maxMs + 72 * 3600 * 1000)) continue;
+        const anchorAgeHours = cm.firstSeenMs > 0 ? Math.max(0, (art.pubMs - cm.firstSeenMs) / 3600000) : 0;
         if (!art.titleStems.has(cm.clEntityStems[0])) continue;
         if (hasEpisodicPhaseMismatch(
           cm.cl.story || '',
-          cm.minMs,
+          cm.firstSeenMs || cm.minMs,
           `${art.title || ''} ${art.description || ''}`,
           art.pubMs
         )) continue;
@@ -2582,6 +2652,8 @@ Return JSON array in format:
         const shTitleFromArtAll = cm.clTitleArr.filter(s => art.allStems.has(s));
         if (shTitle.length < 2) continue;
         if ((shTitleFromArtAll.length / cm.clTitleArr.length) < 0.60) continue;
+        // Prevent >5-day-old zombie clusters from vacuuming up new-phase events that only match actor/country stems
+        if (anchorAgeHours > 120 && (shTitle.length < 3 || (shTitle.length / cm.clTitleArr.length) < 0.65)) continue;
         const shAll = [...art.allStems].filter(s => cm.clAllStems.has(s));
         if (shAll.length < 3) continue;
         let peerConfirmations = 0;
@@ -2594,7 +2666,9 @@ Return JSON array in format:
           }
         }
         if (peerConfirmations < 2) continue;
-        const score = (matchedEntitiesInTitle.length * 15) + (shTitle.length * 8) + (shAll.length * 3) + (peerConfirmations * 4);
+        const cappedPeers = Math.min(peerConfirmations, 4);
+        const recencyBonus = anchorAgeHours <= 36 ? 16 : (anchorAgeHours <= 72 ? 8 : (anchorAgeHours <= 120 ? 0 : -24));
+        const score = (matchedEntitiesInTitle.length * 15) + (shTitle.length * 8) + (shAll.length * 3) + (cappedPeers * 4) + recencyBonus;
         if (score > bestScore) {
           bestScore = score;
           bestCl = cm.cl;
@@ -2806,7 +2880,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       for (const wl of seenInArt) tokenHits.set(wl, (tokenHits.get(wl) || 0) + 1);
     }
     const missingShared = [...tokenHits.entries()].filter(([, cnt]) => cnt >= 2).map(([wl]) => wl);
-    if (missingShared.length > 0 && (!hasPostHistSurge || missingShared.length >= 2)) {
+    if (missingShared.length > 0) {
       const matchArts = recentCov.filter(a => {
         const tLow = String(a.title || '').toLowerCase();
         const tStems = new Set(extractCoherenceStems(a.title || ''));
@@ -2884,14 +2958,16 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
         )
       ) {
         const isSeparateEpisodeOrSubject = hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxClusterEntityFreq);
-        includedOrigIndices.add(i);
-        includedOrigIndices.add(j);
         const pairSpecScore = (specificSharedTitle.length * 10) + (sharedTitle.length * 4) + (specificSharedAll.length * 2) - (isSeparateEpisodeOrSubject ? 15 : 0);
         candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll, specificSharedTitle, specificSharedAll, pairSpecScore, isSeparateEpisodeOrSubject });
       }
     }
   }
   candidatePairHints.sort((a, b) => (b.pairSpecScore || 0) - (a.pairSpecScore || 0));
+  for (const p of candidatePairHints.slice(0, 28)) {
+    includedOrigIndices.add(p.origA);
+    includedOrigIndices.add(p.origB);
+  }
 
   // Sort activeOrigIndices so all _pendingUpdate clusters appear FIRST ([0..K-1]) at the top of the prompt
   // to eliminate LLM "lost-in-the-middle" attention dropoff on Job 2 (inPlaceDevelopments)!
@@ -3478,12 +3554,11 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         });
       } else {
         // 'clarification': summary refinement without bumping version.
-        // If the existing headline (`c.story`) contains an explicit number/tally that was superseded in `newSummary`
-        // (or if `dev.story` updated that headline number to match `newSummary`), synchronize `c.story` so the headline never contradicts the summary!
-        clarificationInPlaceCount++;
+        // If the existing headline (`c.story`) contains an explicit number/tally or phase verb that was superseded in `newSummary`,
+        // synchronize `c.story` AND promote the step to `material_shift` so headlines never change silently without a recorded shift!
         let updatedClarificationStory = c.story;
         const candidateClarStory = (dev.story && dev.story.trim()) || '';
-        const oldStoryNums = (c.story || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || [];
+        const oldStoryNums = ((c.story || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []).filter(n => Number(n.replace(/,/g, '')) > 1 && !/^(19|20)\d{2}$/.test(n));
         const newSummaryNums = new Set((newSummary || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []);
         const hasStaleHeadlineNumber = oldStoryNums.some(n => !newSummaryNums.has(n));
         // Also detect semantic status/verb contradictions between existing headline and updated summary
@@ -3510,21 +3585,15 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
               if (sumPctMatch && sumPctMatch[1] !== oldNum && Number(sumPctMatch[1]) <= 100) {
                 updatedClarificationStory = c.story.replace(new RegExp(`\\b${escapedOldNum}(?=\\s*(?:%|percent)\\b)`, 'i'), sumPctMatch[1]);
               }
-            } else {
-              const unitInStoryMatch = (c.story || '').match(new RegExp(`\\b${escapedOldNum}\\s+([A-Za-z]{3,})\\b`));
-              const unitWord = unitInStoryMatch ? unitInStoryMatch[1].toLowerCase() : '';
-              if (unitWord && unitWord !== 'percent') {
-                const escapedUnit = unitWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                const sameUnitInSum = (newSummary || '').match(new RegExp(`\\b(\\d+(?:,\\d+)*(?:\\.\\d+)?)\\s+${escapedUnit}\\b`, 'i'));
-                if (sameUnitInSum && sameUnitInSum[1] !== oldNum) {
-                  updatedClarificationStory = c.story.replace(new RegExp(`\\b${escapedOldNum}\\b`), sameUnitInSum[1]);
-                }
-              }
             }
           }
         }
 
-        if (updatedClarificationStory !== c.story) {
+        const headlineShiftedInClarification = updatedClarificationStory !== c.story;
+        const effectiveType = headlineShiftedInClarification ? 'material_shift' : 'clarification';
+        const effectiveVersion = headlineShiftedInClarification ? (beforeSnapshot.version + 1) : beforeSnapshot.version;
+        if (headlineShiftedInClarification) {
+          materialInPlaceCount++;
           const oldSlug = c.id || slugify(c.story);
           const newSlug = slugify(updatedClarificationStory);
           const evolvedIds = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
@@ -3532,20 +3601,25 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           evolvedIds.delete(newSlug);
           c.id = newSlug;
           c.story = updatedClarificationStory;
+          c.version = effectiveVersion;
+          c.lastDevelopedAt = ts;
+          c.developmentNote = noteText || `Story updated: ${updatedClarificationStory}`;
           if (evolvedIds.size > 0) c.evolvedFromIds = Array.from(evolvedIds);
+        } else {
+          clarificationInPlaceCount++;
         }
 
         c.summary = newSummary;
         const afterSnapshot = {
           id: c.id || slugify(c.story),
-          version: beforeSnapshot.version,
+          version: effectiveVersion,
           story: c.story,
           summary: c.summary,
           outletCount: beforeSnapshot.outletCount
         };
         hist.push({
-          version: beforeSnapshot.version,
-          type: 'clarification',
+          version: effectiveVersion,
+          type: effectiveType,
           timestamp: ts,
           batchConsolidatedAt: new Date().toISOString(),
           headline: c.story,
@@ -3747,18 +3821,27 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const avgScore = scores.length > 0 ? Number((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2)) : 0;
       const spreadRange = scores.length > 1 ? Number((Math.max(...scores) - Math.min(...scores)).toFixed(2)) : 0;
 
-      // A merge is only a chronological material_shift if the newer cluster broke at least 2 hours after the origin
+      // A merge is a chronological material_shift if the newer cluster broke at least 2 hours after the origin
+      // AND either the LLM flagged material_shift OR the merged headline materially evolved (< 70% stem overlap with originAnchor.story)
       const rawMergeType = m.updateType === 'material_shift' || m.isNewDevelopment === true
         ? 'material_shift'
         : (m.updateType === 'clarification' ? 'clarification' : 'none');
-      const mergeType = (rawMergeType === 'material_shift' && chronologicalSpanMs < 2 * 3600000)
+      const candFinalStory = (rawMergeType === 'material_shift')
+        ? ((m.story && m.story.trim()) || latestCluster.story || largestAnchor.story)
+        : (largestAnchor.story || (m.story && m.story.trim()));
+      const originHeadStems = extractCoherenceStems(originAnchor.story || '');
+      const candFinalStems = new Set(extractCoherenceStems(candFinalStory || ''));
+      const mergeHeadOverlap = originHeadStems.length > 0
+        ? originHeadStems.filter(s => candFinalStems.has(s)).length / originHeadStems.length
+        : 1;
+      const mergeType = chronologicalSpanMs < 2 * 3600000
         ? 'clarification'
-        : rawMergeType;
+        : ((rawMergeType === 'material_shift' || mergeHeadOverlap < 0.70) ? 'material_shift' : rawMergeType);
       const isDev = mergeType === 'material_shift';
 
       const anchor = isDev ? originAnchor : largestAnchor;
-      const finalStory = isDev ? ((m.story && m.story.trim()) || latestCluster.story || anchor.story) : (anchor.story || (m.story && m.story.trim()));
-      const finalSlug = isDev ? slugify(finalStory) : (anchor.id || slugify(finalStory));
+      const finalStory = candFinalStory || anchor.story;
+      const finalSlug = slugify(finalStory) || anchor.id;
       const finalSummary = (m.summary && m.summary.trim()) || anchor.summary;
       evolvedIds.delete(finalSlug);
 
@@ -3783,6 +3866,10 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
             outletCount: originAnchor.outletCount || 2,
             note: 'Initial cluster formation on the wire'
           }];
+      // If simultaneous twins (<2h span) merged as clarification, sync initial headline to finalStory so v1 headline === story
+      if (!isDev && hist.length === 1) {
+        hist[0] = { ...hist[0], headline: finalStory, summary: finalSummary };
+      }
       const seenHistNotes = new Set(hist.map(h => (h.note || '').toLowerCase().trim()));
       for (const g of group) {
         if (g === baseHistSource || !Array.isArray(g.evolutionHistory)) continue;
@@ -3983,8 +4070,9 @@ Covering Dispatches (${Math.min(10, covSorted.length)} of ${covSorted.length} ou
 ${covLines}`;
     }).join('\n\n---\n\n');
 
+    const currMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
     const prompt = `You are a senior correspondent, analytical editor, and geographic intelligence editor writing for an intelligent, time-pressed reader (think Matt Levine's Money Stuff, Financial Times Lex, and The Economist's briefings — sharp, insightful, concrete, and written in clear, natural, accessible journalistic English without dense academic jargon).
-Current Date: October 2026.
+Current Date: ${currMonthYear}.
 
 For each of the ${batch.length} news clusters below, synthesize:
 (A) Its definitive top-level "summary" (1–2 crisp, detail-packed sentences, ~35–60 words) from its Covering Dispatches and Recorded Wire Evolution Stages.
@@ -4007,7 +4095,7 @@ STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
    - Readers rely on this summary for the actual concrete details so they immediately know who, where, how much, and by what mechanism.
 2. STRICT NUMERICAL & FACTUAL PRESERVATION (NO RECENCY AMNESIA):
    - NEVER drop any concrete figure, casualty/arrest tally, dollar valuation, troop count, or multi-country/multi-city geographic scope present in the cluster's Headline, Current Draft Summary, Latest Development Note, or earlier Evolution Stages.
-3. TEMPORAL & ROLE HYGIENE (OCTOBER 2026 — NEVER INJECT PRE-CUTOFF TITLES):
+3. TEMPORAL & ROLE HYGIENE (${currMonthYear.toUpperCase()} — NEVER INJECT PRE-CUTOFF TITLES):
    - Only attribute an active political, corporate, or institutional office/title to a person if that exact current title is explicitly stated in the Covering Dispatches below. Because offices, prime ministers, mayors, and ministers change over time, NEVER supply a person's former or pre-training-cutoff role from internal memory, and never refer to sitting 2026 administrations as "incoming".
 4. PLAIN JOURNALISTIC ENGLISH & BANNED CLICHÉS:
    - Keep 100% of the analytical depth, concrete mechanisms, incentives, and historical baselines, but write in clear, natural, everyday journalistic English rather than dense academic or bureaucratic jargon.
