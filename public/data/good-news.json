@@ -1,8 +1,8 @@
 {
   "dataset": "vibe-o-meter/good-news",
-  "lastUpdated": "2026-11-15T13:17:52.377Z",
-  "count24h": 29,
-  "count7d": 200,
+  "lastUpdated": "2026-11-15T13:53:51.969Z",
+  "count24h": 28,
+  "count7d": 201,
   "constructiveClusterCount": 22,
   "top5DailyAntidote": [
     {
@@ -75,15 +75,15 @@
       "region": "LATAM",
       "link": "https://oglobo.globo.com/saude/noticia/2026/11/14/por-que-o-coracao-nunca-desenvolve-cancer-novo-estudo-explica.ghtml",
       "pubDate": "Sat, 14 Nov 2026 13:38:05 -0000",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.594
+      "antidoteRank": 0.593
     },
     {
       "title": "SpaceX Makes History With Successful Rocket Catch in Texas",
       "description": "The Starship spacecraft returned from orbit to the same spot where it lifted off, marking a key milestone in SpaceX’s vision of building fully reusable rockets.",
       "sentiment": 0.567,
-      "significanceScore": 0.585,
+      "significanceScore": 0.587,
       "factors": [
         55,
         75,
@@ -92,7 +92,7 @@
       ],
       "clusterId": "spacex-successfully-catches-starship-upper-stage-at-texas-launchpad",
       "clusterStory": "SpaceX Successfully Catches Starship Upper Stage at Texas Launchpad",
-      "outletCount": 24,
+      "outletCount": 25,
       "explanation": "SpaceX successfully catches a returning orbital rocket with mechanical arms, marking a major aerospace milestone. [Event Base: +0.45 | Editorial Framing: +0.12]",
       "category": "science",
       "imageUrl": "https://static01.nyt.com/images/2026/11/14/multimedia/14starship-header-01-vgzq/14starship-header-01-vgzq-mediumSquareAt3X.jpg",
@@ -103,7 +103,7 @@
       "pubDate": "Sun, 15 Nov 2026 00:36:32 +0000",
       "isPast24h": true,
       "isPast48h": true,
-      "antidoteRank": 0.585
+      "antidoteRank": 0.587
     },
     {
       "title": "Ocean that once covered Flinders Ranges preserved Earth's earliest life",
@@ -137,6 +137,10 @@
       "summary": "NASA's Voyager 1 spacecraft, launched in 1977, continued hurtling through interstellar space toward a milestone distance of one light-day from Earth. Despite its extreme distance, the historic probe continues to relay vital scientific telemetry data back to NASA scientists on a daily basis.",
       "version": 1,
       "summarySynthesizedSig": "nasa-s-voyager-1-nudges-milestone-distance-of-one-light-day|v1|h1",
+      "lastEvaluatedCoverageMs": 1794669294000,
+      "evaluatedDesyncTokens": [
+        "record"
+      ],
       "primaryLocation": {
         "name": "Jet Propulsion Laboratory, Pasadena",
         "region": "California, United States",
@@ -337,7 +341,7 @@
         }
       ],
       "topic": "science",
-      "imageUrl": "https://images.euronews.com/articles/stories/09/99/30/79/1200x675_cmsv2_cfe05e8e-a267-5b3b-8e89-a831a17adafc-9993079.jpg",
+      "imageUrl": "https://s2-oglobo.glbimg.com/-QubWjhczl-yPpjpgkPYWuR7HmQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/1/B/Scgkm8QwOpAQSg5NZmAw/afp-20261114-d7h72w2-v1-midres-usspacespacex.jpg",
       "averageSentiment": 0.32,
       "eventBase": 0.257,
       "significanceScore": 0.57,
@@ -348,10 +352,31 @@
         31
       ],
       "sentimentSpread": 0.68,
-      "outletCount": 24,
+      "outletCount": 25,
       "firstSeenAt": "2026-11-11T17:00:00.000Z",
-      "latestUpdateAt": "2026-11-15T10:05:49.000Z",
+      "latestUpdateAt": "2026-11-15T13:24:49.000Z",
       "coverage": [
+        {
+          "sourceId": "oglobo",
+          "sourceName": "O Globo",
+          "region": "LATAM",
+          "title": "SpaceX Starship returns to base for the first time after a day in orbit; watch",
+          "description": "SpaceX successfully recovered its Starship spacecraft using mechanical launch tower arms, marking a significant step toward full reusability.",
+          "sentiment": 0.32,
+          "eventBase": 0.25,
+          "framingMod": 0.07,
+          "factors": [
+            35,
+            70,
+            50,
+            40
+          ],
+          "explanation": "Reports on a successful aerospace engineering milestone, reflecting a genuine advancement in reusability technology. [Event Base: +0.25 | Editorial Framing: +0.07]",
+          "category": "science",
+          "imageUrl": "https://s2-oglobo.glbimg.com/-QubWjhczl-yPpjpgkPYWuR7HmQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/1/B/Scgkm8QwOpAQSg5NZmAw/afp-20261114-d7h72w2-v1-midres-usspacespacex.jpg",
+          "link": "https://oglobo.globo.com/mundo/epoca/noticia/2026/11/15/espaconave-starship-da-spacex-retorna-a-base-pela-primeira-vez-apos-um-dia-em-orbita-assista.ghtml",
+          "pubDate": "Sun, 15 Nov 2026 13:24:49 -0000"
+        },
         {
           "sourceId": "euronews",
           "sourceName": "Euronews",
@@ -2928,13 +2953,6 @@
           "note": "Nigeria successfully concludes 21-day Ebola contact monitoring with zero secondary transmissions."
         }
       ],
-      "lateralConnections": [
-        {
-          "clusterId": "congo-ebola-outbreak-spreads-internationally",
-          "headline": "Congo Ebola Outbreak Spreads Internationally",
-          "howItConnects": "Cluster S75 represents the direct downstream resolution of the regional Ebola outbreak emergency detailed in S9."
-        }
-      ],
       "topic": "health",
       "imageUrl": "http://images.euronews.com/articles/stories/09/99/16/46/640x360_cmsv2_1514d89d-d9d0-58cb-a3b3-0288a8772e21-9991646.jpg?1794578479",
       "averageSentiment": 0.1,
@@ -3976,33 +3994,10 @@
       "isPast48h": true
     },
     {
-      "title": "Why does the heart never develop cancer? New study explains",
-      "description": "Italian researchers at the University of Trieste have discovered why heart cells remain largely protected against cancer, solving a long-standing medical puzzle.",
-      "sentiment": 0.544,
-      "significanceScore": 0.594,
-      "factors": [
-        60,
-        75,
-        65,
-        25
-      ],
-      "outletCount": 1,
-      "explanation": "A verified scientific breakthrough discovering biological mechanisms protecting the human heart from cancer development. [Event Base: +0.49 | Editorial Framing: +0.06]",
-      "category": "science",
-      "imageUrl": "https://s2-oglobo.glbimg.com/bK5oXOd9X4eVSR1bjSy7Dh_sAQI=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/B/c/0n4U0vRnSyIYVFnOvo9g/ali-hajiluyi-mhfjnz-d8t4-unsplash.jpg",
-      "sourceId": "oglobo",
-      "sourceName": "O Globo",
-      "region": "LATAM",
-      "link": "https://oglobo.globo.com/saude/noticia/2026/11/14/por-que-o-coracao-nunca-desenvolve-cancer-novo-estudo-explica.ghtml",
-      "pubDate": "Sat, 14 Nov 2026 13:38:05 -0000",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
       "title": "SpaceX Makes History With Successful Rocket Catch in Texas",
       "description": "The Starship spacecraft returned from orbit to the same spot where it lifted off, marking a key milestone in SpaceX’s vision of building fully reusable rockets.",
       "sentiment": 0.567,
-      "significanceScore": 0.585,
+      "significanceScore": 0.587,
       "factors": [
         55,
         75,
@@ -4011,7 +4006,7 @@
       ],
       "clusterId": "spacex-successfully-catches-starship-upper-stage-at-texas-launchpad",
       "clusterStory": "SpaceX Successfully Catches Starship Upper Stage at Texas Launchpad",
-      "outletCount": 24,
+      "outletCount": 25,
       "explanation": "SpaceX successfully catches a returning orbital rocket with mechanical arms, marking a major aerospace milestone. [Event Base: +0.45 | Editorial Framing: +0.12]",
       "category": "science",
       "imageUrl": "https://static01.nyt.com/images/2026/11/14/multimedia/14starship-header-01-vgzq/14starship-header-01-vgzq-mediumSquareAt3X.jpg",
@@ -4114,29 +4109,6 @@
       "region": "NA",
       "link": "https://www.cbc.ca/news/science/marine-biodiversity-cop31-9.7419543?cmp=rss",
       "pubDate": "Sun, 15 Nov 2026 04:00:00 EST",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
-      "title": "David Cameron Sees Hope in Alzheimer’s Research",
-      "description": "On Bloomberg This Weekend, former UK Prime Minister David Cameron discusses the personal toll of losing his mother to Alzheimer’s and the accelerating search for better diagnostics, treatments and ultimately a cure. Cameron tells hosts David Gura and Christina Ruffini about promising drug research, the potential of blood tests to transform diagnosis and why governments should move faster to support clinical trials and expand access to new trea...",
-      "sentiment": 0.282,
-      "significanceScore": 0.332,
-      "factors": [
-        35,
-        60,
-        55,
-        20
-      ],
-      "outletCount": 1,
-      "explanation": "Former UK leader David Cameron discusses the accelerating pace of Alzheimer’s research and diagnostic advancements. [Event Base: +0.24 | Editorial Framing: +0.04]",
-      "category": "health",
-      "imageUrl": "https://assets.bwbx.io/images/users/iqjWHBFdfxIU/i.vtwLy3gJeY/v3/500x-1.webp",
-      "sourceId": "bloomberg",
-      "sourceName": "Bloomberg",
-      "region": "GLOBAL",
-      "link": "https://www.bloomberg.com/news/videos/2026-11-14/david-cameron-sees-hope-in-alzheimer-s-research-video",
-      "pubDate": "Sat, 14 Nov 2026 13:48:34 GMT",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -4486,6 +4458,29 @@
       "isPast48h": true
     },
     {
+      "title": "How DBT, a lifesaving therapy by the late Dr. Marsha Linehan, treats borderline personality disorder and more - CNN",
+      "description": "How DBT, a lifesaving therapy by the late Dr. Marsha Linehan, treats borderline personality disorder and more CNN",
+      "sentiment": 0.159,
+      "significanceScore": 0.159,
+      "factors": [
+        35,
+        45,
+        30,
+        40
+      ],
+      "outletCount": 1,
+      "explanation": "The article profiles a therapeutic breakthrough for mental health, framing it as a life-saving advancement. [Event Base: +0.12 | Editorial Framing: +0.04]",
+      "category": "health",
+      "imageUrl": null,
+      "sourceId": "cnn",
+      "sourceName": "CNN",
+      "region": "NA",
+      "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNNW9TWEpxeWZFOUhtMVRDSzBmN2I1U3hmSGwzRXRqV0Z2WmtFQy1MMzJwX0todHdjSm4wd2h2bDdTTWZtN2p3UGFhNW9Jc19qUHlUN2U1b25ZNWhtLUtSYUVqdUxSdFFfbFVsSTdsUTZYbmZtbzFxemNaSWhpaXFvNmhSMzc0cHQzVTRTLVpRa0lKSUVJ?oc=5",
+      "pubDate": "Sun, 15 Nov 2026 11:30:16 GMT",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
       "title": "Return of the wild oyster: conservationists bring shellfish back from local extinction off Scottish coast",
       "description": "Scientists succeed in breeding wild oysters in Dornoch Firth, near Inverness, from where they disappeared more than 100 years ago The baby oysters, with their rough cream-coloured shells and ragged edges, are about the size of a 50 pence piece. But off the north-east coast of Scotland, they are proof of a breakthrough in marine conservation. For the first time in the UK, scientists have succeeded in breeding wild oysters at a site where they h...",
       "sentiment": 0.155,
@@ -4787,14 +4782,14 @@
       "region": "LATAM",
       "link": "https://oglobo.globo.com/saude/noticia/2026/11/14/por-que-o-coracao-nunca-desenvolve-cancer-novo-estudo-explica.ghtml",
       "pubDate": "Sat, 14 Nov 2026 13:38:05 -0000",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
       "title": "SpaceX Makes History With Successful Rocket Catch in Texas",
       "description": "The Starship spacecraft returned from orbit to the same spot where it lifted off, marking a key milestone in SpaceX’s vision of building fully reusable rockets.",
       "sentiment": 0.567,
-      "significanceScore": 0.585,
+      "significanceScore": 0.587,
       "factors": [
         55,
         75,
@@ -4803,7 +4798,7 @@
       ],
       "clusterId": "spacex-successfully-catches-starship-upper-stage-at-texas-launchpad",
       "clusterStory": "SpaceX Successfully Catches Starship Upper Stage at Texas Launchpad",
-      "outletCount": 24,
+      "outletCount": 25,
       "explanation": "SpaceX successfully catches a returning orbital rocket with mechanical arms, marking a major aerospace milestone. [Event Base: +0.45 | Editorial Framing: +0.12]",
       "category": "science",
       "imageUrl": "https://static01.nyt.com/images/2026/11/14/multimedia/14starship-header-01-vgzq/14starship-header-01-vgzq-mediumSquareAt3X.jpg",
@@ -5953,7 +5948,7 @@
       "region": "GLOBAL",
       "link": "https://www.bloomberg.com/news/videos/2026-11-14/david-cameron-sees-hope-in-alzheimer-s-research-video",
       "pubDate": "Sat, 14 Nov 2026 13:48:34 GMT",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
@@ -7844,7 +7839,7 @@
       "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxQaHBWVGNXcW1VWElRUU1zTGRhUl9uZkc3ZGFMdTBKUTNReF93eTZRb0tXNklsRzdNMTMxVDM2WUc3NDgyUTF2RmdQTkdRNTV1S29yY0N6S25UcS1MaXcyaHpiWDRGSmFaQnY3TWY4Uy1vQkxWVVRzallNMFZ6eVUyVDF6NmlhX3lpOUVyMmsyeUxYYmd3SGs1M0wwWmhlVTVIRFpvNC1nUloyVzFLX2NSeTdmblZ0bDFOb0N3akVGR0ZPWDUx?oc=5",
       "pubDate": "Fri, 13 Nov 2026 13:52:00 GMT",
       "isPast24h": false,
-      "isPast48h": true
+      "isPast48h": false
     },
     {
       "title": "Elon Musk's SpaceX aborts booster recovery due to technical issues",
@@ -8696,6 +8691,29 @@
       "pubDate": "Fri, 13 Nov 2026 05:00:00 -0500",
       "isPast24h": false,
       "isPast48h": false
+    },
+    {
+      "title": "How DBT, a lifesaving therapy by the late Dr. Marsha Linehan, treats borderline personality disorder and more - CNN",
+      "description": "How DBT, a lifesaving therapy by the late Dr. Marsha Linehan, treats borderline personality disorder and more CNN",
+      "sentiment": 0.159,
+      "significanceScore": 0.159,
+      "factors": [
+        35,
+        45,
+        30,
+        40
+      ],
+      "outletCount": 1,
+      "explanation": "The article profiles a therapeutic breakthrough for mental health, framing it as a life-saving advancement. [Event Base: +0.12 | Editorial Framing: +0.04]",
+      "category": "health",
+      "imageUrl": null,
+      "sourceId": "cnn",
+      "sourceName": "CNN",
+      "region": "NA",
+      "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxNNW9TWEpxeWZFOUhtMVRDSzBmN2I1U3hmSGwzRXRqV0Z2WmtFQy1MMzJwX0todHdjSm4wd2h2bDdTTWZtN2p3UGFhNW9Jc19qUHlUN2U1b25ZNWhtLUtSYUVqdUxSdFFfbFVsSTdsUTZYbmZtbzFxemNaSWhpaXFvNmhSMzc0cHQzVTRTLVpRa0lKSUVJ?oc=5",
+      "pubDate": "Sun, 15 Nov 2026 11:30:16 GMT",
+      "isPast24h": true,
+      "isPast48h": true
     },
     {
       "title": "New way of detecting date-rape drug found in Switzerland",
