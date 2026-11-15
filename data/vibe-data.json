@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-15T03:24:27.312Z",
+  "lastUpdated": "2026-11-15T03:56:47.081Z",
   "lastClusteredAt": "2026-11-15T02:01:12.681Z",
   "analyzerUsed": "Gemini (gemini-3.5-flash-lite)",
   "editorialSummaryDate": "2026-11-15",
@@ -226505,7 +226505,7 @@
           "description": "A former aide to James Comey at the F.B.I. said the government had engaged in a “harassment campaign” in its efforts to secure witness testimony.",
           "link": "https://www.nytimes.com/2026/11/14/nyregion/key-witness-in-comey-case-attests-to-justice-depts-aggressive-tactics.html",
           "imageUrl": "https://static01.nyt.com/images/2026/11/14/multimedia/14dc-comey-topart-01-tkcf/14dc-comey-topart-01-tkcf-mediumSquareAt3X.jpg",
-          "pubDate": "Sat, 14 Nov 2026 21:40:32 +0000",
+          "pubDate": "Sat, 14 Nov 2026 21:40:33 +0000",
           "sentiment": -0.242,
           "eventBase": -0.174,
           "framingMod": -0.068,
@@ -244775,7 +244775,8 @@
           "category": "politics",
           "explanation": "Reports a local mayoral election outcome, reflecting a standard political transition. [Event Base: +0.02 | Editorial Framing: +0.01]"
         }
-      ]
+      ],
+      "error": "Status code 503"
     },
     "fox": {
       "name": "Fox News",
@@ -244786,6 +244787,25 @@
         "negative": 119
       },
       "articles": [
+        {
+          "sourceId": "fox",
+          "title": "Florida stuns Kentucky 21-14 as Gators pull off yet another upset win in up-and-down season",
+          "description": "Florida Gators pulled off their third upset of a ranked opponent this season, stunning No. 11 Kentucky 21-14 with a gutsy two-point conversion.",
+          "link": "https://www.foxnews.com/outkick-sports/florida-stuns-kentucky-21-14-gators-pull-off-yet-another-upset-win-up-down-season",
+          "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/11/931/523/florida-kentucky-2.png?ve=1&tl=1",
+          "pubDate": "Sat, 14 Nov 2026 22:33:26 -0500",
+          "sentiment": 0.01,
+          "eventBase": 0.008,
+          "framingMod": 0.002,
+          "factors": [
+            14,
+            15,
+            10,
+            35
+          ],
+          "category": "sports",
+          "explanation": "Routine sports upset victory scored with mild positive polarity and celebratory journalistic framing. [Event Base: +0.01 | Editorial Framing: +0.00]"
+        },
         {
           "sourceId": "fox",
           "title": "Federal judge blocks Trump's renovations of DC golf course hours before its closure",
@@ -254265,25 +254285,6 @@
           ],
           "category": "politics",
           "explanation": "An opinion piece debating the merits of corporate DEI rollbacks and their impact on Black communities and institutions. [Event Base: -0.10 | Editorial Framing: +0.02]"
-        },
-        {
-          "sourceId": "fox",
-          "title": "PATRICK K O’DONNELL: Revolution’s epic test showed strength of our Greatest Generation",
-          "description": "Benedict Arnold's 350-mile Quebec expedition through Maine wilderness pushed Continental Army riflemen to the brink of starvation and despair.",
-          "link": "https://www.foxnews.com/opinion/patrick-k-odonnell-revolutions-epic-test-showed-strength-greatest-generation",
-          "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/11/931/523/death-of-general-montgomery.jpg?ve=1&tl=1",
-          "pubDate": "Wed, 11 Nov 2026 05:00:22 -0500",
-          "sentiment": 0.032,
-          "eventBase": 0.025,
-          "framingMod": 0.007,
-          "factors": [
-            15,
-            30,
-            20,
-            20
-          ],
-          "category": "politics",
-          "explanation": "An historical opinion piece reflecting on the severe endurance tests faced by soldiers during the Revolutionary War. [Event Base: +0.03 | Editorial Framing: +0.01]"
         }
       ]
     },
@@ -300282,7 +300283,8 @@
           "category": "business",
           "explanation": "The report covers the corporate restructuring of a major healthcare entity, reflecting the instability inherent in breaking up a large organization. [Event Base: -0.06 | Editorial Framing: -0.02]"
         }
-      ]
+      ],
+      "error": "Status code 503"
     },
     "cbc": {
       "name": "CBC News",
@@ -341658,11 +341660,71 @@
       "name": "O Globo",
       "averageSentiment": -0.082,
       "distribution": {
-        "positive": 12,
+        "positive": 11,
         "neutral": 357,
-        "negative": 131
+        "negative": 132
       },
       "articles": [
+        {
+          "sourceId": "oglobo",
+          "title": "Today's Horoscope: see the forecast for your sign on November 15th",
+          "originalTitle": "Horóscopo de hoje: veja previsão para seu signo no dia 15/11",
+          "description": "Daily astrological horoscopes and sign forecasts for Aries, Taurus, and other signs, offering reflective guidance.",
+          "link": "https://oglobo.globo.com/cultura/horoscopo/noticia/2026/11/15/horoscopo-de-hoje-veja-previsao-para-seu-signo-no-dia-1511.ghtml",
+          "imageUrl": "https://s2-oglobo.glbimg.com/ui_mEcjwtG7gZZPQH3m7acoEoc0=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2023/D/G/BkLNGiRRuAHxamXrF63w/horoscopoescorpiao.jpg",
+          "pubDate": "Sun, 15 Nov 2026 03:15:03 -0000",
+          "sentiment": 0,
+          "eventBase": 0,
+          "framingMod": 0,
+          "factors": [
+            2,
+            5,
+            2,
+            10
+          ],
+          "category": "other",
+          "explanation": "Daily horoscope publication featuring routine lifestyle content with negligible real-world impact and neutral-to-upbeat framing. [Event Base: +0.00 | Editorial Framing: +0.00]"
+        },
+        {
+          "sourceId": "oglobo",
+          "title": "Fiscal adjustment would be Lula's best legacy for the poor",
+          "originalTitle": "Ajuste fiscal seria o melhor legado de Lula para os pobres",
+          "description": "An analytical critique arguing that current government fiscal adjustment packages are insufficient to guarantee long-term economic stability and debt targets.",
+          "link": "https://oglobo.globo.com/opiniao/editorial/coluna/2026/11/ajuste-fiscal-seria-o-melhor-legado-de-lula-para-os-pobres.ghtml",
+          "imageUrl": "https://s2-oglobo.glbimg.com/jj10yiPB4ziCbICbAtaDv0zamJ8=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/A/z/kd2l07QBytDMsnJiMWUA/116843063-pa-brasilia-06-11-2026-luiz-inacio-lula-da-silva-alexandre-silveira-geraldo-alckmin-re.jpg",
+          "pubDate": "Sun, 15 Nov 2026 03:10:00 -0000",
+          "sentiment": -0.264,
+          "eventBase": -0.151,
+          "framingMod": -0.113,
+          "factors": [
+            -20,
+            60,
+            40,
+            -25
+          ],
+          "category": "politics",
+          "explanation": "Opinion dispatch addressing structural economic policy shortcomings and fiscal uncertainty with critical framing. [Event Base: -0.15 | Editorial Framing: -0.11]"
+        },
+        {
+          "sourceId": "oglobo",
+          "title": "It is reckless to hold a new public civil service competition without administrative reform",
+          "originalTitle": "É temerário realizar novo concurso público sem reforma administrativa",
+          "description": "An editorial warning against expanding federal payrolls through new civil service exams before implementing structural administrative reforms.",
+          "link": "https://oglobo.globo.com/opiniao/editorial/coluna/2026/11/e-temerario-realizar-novo-concurso-publico-sem-reforma-administrativa.ghtml",
+          "imageUrl": "https://s2-oglobo.glbimg.com/XbRyOU5IAhLbZ7ObfLaGli3DTY8=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/S/r/QiXKmVRm6u0ayWL7XGeQ/getimagecontent.jpg",
+          "pubDate": "Sun, 15 Nov 2026 03:09:00 -0000",
+          "sentiment": -0.265,
+          "eventBase": -0.13,
+          "framingMod": -0.135,
+          "factors": [
+            -18,
+            55,
+            35,
+            -30
+          ],
+          "category": "politics",
+          "explanation": "Critical policy editorial examining public sector expansion and administrative reform risks. [Event Base: -0.13 | Editorial Framing: -0.14]"
+        },
         {
           "sourceId": "oglobo",
           "title": "Who decides what is news?",
@@ -351600,66 +351662,6 @@
           ],
           "category": "politics",
           "explanation": "São Paulo's mayor questions the vice-mayor's investigative targets regarding alleged event irregularities, reflecting local political friction. [Event Base: -0.07 | Editorial Framing: -0.02]"
-        },
-        {
-          "sourceId": "oglobo",
-          "title": "Corazul cancels cruises for coming weeks and postpones Buenavista's return to November 30",
-          "originalTitle": "Corazul cancela cruzeiros das próximas semanas e adia retorno do Buenavista para 30 de novembro",
-          "description": "Corazul Cruceros has canceled upcoming voyages aboard the Buenavista ship and delayed its commercial return to November 30 while undergoing adjustments in Santos following operational issues.",
-          "link": "https://oglobo.globo.com/boa-viagem/noticia/2026/11/12/corazul-cancela-cruzeiros-das-proximas-semanas-e-adia-retorno-do-buenavista-para-30-de-novembro.ghtml",
-          "imageUrl": "https://s2-oglobo.glbimg.com/Q87PtDNZ8m3ooJwV6ZrBKR67kKM=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/V/s/W5u24TQ36pPMUHwE3ssA/20261031-152228.jpg",
-          "pubDate": "Thu, 12 Nov 2026 21:33:45 -0000",
-          "sentiment": -0.121,
-          "eventBase": -0.076,
-          "framingMod": -0.045,
-          "factors": [
-            -25,
-            20,
-            15,
-            -10
-          ],
-          "category": "business",
-          "explanation": "A cruise line cancels upcoming voyages and delays a ship's return due to operational issues from its maiden voyage. [Event Base: -0.08 | Editorial Framing: -0.04]"
-        },
-        {
-          "sourceId": "oglobo",
-          "title": "STF strips immunity from men who misappropriate women's property in domestic violence cases",
-          "originalTitle": "STF derruba imunidade de homens que se apropriam de bens de mulheres em casos de violência doméstica",
-          "description": "The Supreme Federal Court unanimously decided to eliminate criminal code provisions that previously exempted family members from punishment for theft or property appropriation in contexts of domestic violence against women.",
-          "link": "https://oglobo.globo.com/brasil/noticia/2026/11/12/stf-derruba-imunidade-de-homens-que-se-apropriam-de-bens-de-mulheres-em-casos-de-violencia-domestica.ghtml",
-          "imageUrl": "https://s2-oglobo.glbimg.com/VKCTu-2Xoemh76el0bB5d01EXf0=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/Q/T/RVeBn7SfqBYg3HnSrbiA/bre-0370.jpg",
-          "pubDate": "Thu, 12 Nov 2026 21:28:06 -0000",
-          "sentiment": 0.208,
-          "eventBase": 0.197,
-          "framingMod": 0.011,
-          "factors": [
-            25,
-            70,
-            75,
-            5
-          ],
-          "category": "politics",
-          "explanation": "Brazil's Supreme Court unanimously rules to end legal immunity for domestic abusers committing property crimes against family members. [Event Base: +0.20 | Editorial Framing: +0.01]"
-        },
-        {
-          "sourceId": "oglobo",
-          "title": "Video shows moment building collapses in Brooklyn, USA; accident leaves at least eight dead",
-          "originalTitle": "Vídeo mostra momento em que edifício desaba no Brooklyn, EUA; acidente deixa ao menos oito mortos",
-          "description": "Security camera footage captured a residential building collapsing in Brooklyn, New York, resulting in eight deaths, including two children, and numerous injuries.",
-          "link": "https://oglobo.globo.com/mundo/epoca/noticia/2026/11/12/video-mostra-momento-em-que-edificio-desaba-no-brooklyn-nos-eua-acidente-deixa-ao-menos-oito-mortos.ghtml",
-          "imageUrl": "https://s2-oglobo.glbimg.com/betvcc7ntW-_GOZALd6b4q5KxsU=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2026/C/i/4iMFWkSQiqIBiUQSH6AQ/ny-building-collapse-5.jpg",
-          "pubDate": "Thu, 12 Nov 2026 21:26:57 -0000",
-          "sentiment": -0.589,
-          "eventBase": -0.409,
-          "framingMod": -0.18,
-          "factors": [
-            -75,
-            30,
-            50,
-            -40
-          ],
-          "category": "world",
-          "explanation": "A residential building collapse in Brooklyn results in multiple fatalities and injuries, capturing a severe local tragedy. [Event Base: -0.41 | Editorial Framing: -0.18]"
         }
       ]
     },
@@ -361679,10 +361681,48 @@
       "averageSentiment": -0.132,
       "distribution": {
         "positive": 12,
-        "neutral": 283,
-        "negative": 205
+        "neutral": 282,
+        "negative": 206
       },
       "articles": [
+        {
+          "sourceId": "bbc",
+          "title": "Judge temporarily blocks Trump from closing Washington DC golf course for renovation",
+          "description": "It is the latest development in a months-long challenge to the president's plans for East Potomac Golf Links.",
+          "link": "https://www.bbc.co.uk/news/articles/c6j9mn7l14y0o?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/4be0/live/054b94d0-e09e-11f1-a701-fddedf244c16.jpg",
+          "pubDate": "Sun, 15 Nov 2026 03:21:04 GMT",
+          "sentiment": -0.036,
+          "eventBase": -0.044,
+          "framingMod": 0.008,
+          "factors": [
+            -10,
+            25,
+            30,
+            5
+          ],
+          "category": "politics",
+          "explanation": "Judicial intervention temporarily halting a municipal development plan, calibrated consistently with prior anchor factors. [Event Base: -0.04 | Editorial Framing: +0.01]"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "Pope Leo speaks of community 'suffering' on visit to remote Andes town",
+          "description": "Santa Cruz de Succhabamba is part of the Diocese of Chiclayo, where the pope served as bishop from 2015 to 2023.",
+          "link": "https://www.bbc.co.uk/news/articles/cr4gnz0lv2vlo?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/80df/live/ea970890-e09d-11f1-a298-b1f4784d44cc.jpg",
+          "pubDate": "Sun, 15 Nov 2026 02:49:45 GMT",
+          "sentiment": -0.239,
+          "eventBase": -0.171,
+          "framingMod": -0.068,
+          "factors": [
+            -30,
+            40,
+            20,
+            -15
+          ],
+          "category": "world",
+          "explanation": "Papal pastoral visit highlighting regional community suffering and violence, maintaining consistency with prior anchor metrics. [Event Base: -0.17 | Editorial Framing: -0.07]"
+        },
         {
           "sourceId": "bbc",
           "title": "Hannah Fry feels 'unbelievably lucky' after cervical cancer treatment",
@@ -361929,6 +361969,25 @@
           ],
           "category": "politics",
           "explanation": "A UK ethics watchdog chief steps down following historical sexual misconduct allegations. [Event Base: -0.14 | Editorial Framing: -0.02]"
+        },
+        {
+          "sourceId": "bbc",
+          "title": "'One of the greatest wins' - Wales stun All Blacks to go from no-hopers to heroes",
+          "description": "Wales end a 73-year hoodoo against New Zealand with a win hailed as their greatest of all time.",
+          "link": "https://www.bbc.co.uk/sport/rugby-union/articles/cmkg57rz2re9o?at_medium=RSS&at_campaign=rss",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/5668/live/7585ebc0-e05c-11f1-9e26-b3b65586122f.jpg",
+          "pubDate": "Sat, 14 Nov 2026 19:33:46 GMT",
+          "sentiment": 0.044,
+          "eventBase": 0.034,
+          "framingMod": 0.01,
+          "factors": [
+            20,
+            35,
+            15,
+            65
+          ],
+          "category": "sports",
+          "explanation": "Historic sports victory celebrated enthusiastically by media framing while maintaining modest real-world scope. [Event Base: +0.03 | Editorial Framing: +0.01]"
         },
         {
           "sourceId": "bbc",
@@ -371125,63 +371184,6 @@
           ],
           "category": "entertainment",
           "explanation": "BBC reviews British newspaper front pages heavily covering Russell Brand's criminal conviction for rape and assault. [Event Base: -0.20 | Editorial Framing: -0.07]"
-        },
-        {
-          "sourceId": "bbc",
-          "title": "U2 on Dolly Parton's final duet; and the 'grudge match' behind their new album",
-          "description": "The rock group discuss Parton's final recording before her death, and why they refuse to be censored on stage.",
-          "link": "https://www.bbc.co.uk/news/articles/cwyvrzle4g98o?at_medium=RSS&at_campaign=rss",
-          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/59ff/live/10ee2560-d936-11f1-8bce-2396c9c50357.png",
-          "pubDate": "Fri, 06 Nov 2026 00:50:24 GMT",
-          "sentiment": 0.005,
-          "eventBase": 0.004,
-          "framingMod": 0.001,
-          "factors": [
-            5,
-            25,
-            15,
-            10
-          ],
-          "category": "entertainment",
-          "explanation": "Covers a band's artistic reflections on music collaborations and creative independence with standard cultural interview framing. [Event Base: +0.00 | Editorial Framing: +0.00]"
-        },
-        {
-          "sourceId": "bbc",
-          "title": "Tempted by snacks before bed? Here's why - and what you can do about it",
-          "description": "There are biological reasons why you may reach for sweet treats before bed, but you can change the habit.",
-          "link": "https://www.bbc.co.uk/news/articles/cq2e9v3030gyo?at_medium=RSS&at_campaign=rss",
-          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/fc48/live/b35f36c0-d2f8-11f1-8d86-83eebc838351.png",
-          "pubDate": "Fri, 06 Nov 2026 00:42:05 GMT",
-          "sentiment": 0.004,
-          "eventBase": 0.003,
-          "framingMod": 0.001,
-          "factors": [
-            5,
-            20,
-            10,
-            10
-          ],
-          "category": "health",
-          "explanation": "Provides consumer health and biological explanations for evening snacking habits with accessible wellness advice. [Event Base: +0.00 | Editorial Framing: +0.00]"
-        },
-        {
-          "sourceId": "bbc",
-          "title": "Andrew received up to £2,000 per month from sub-letting, watchdog reports",
-          "description": "The income went to the former prince rather than his landlord the Crown Estate.",
-          "link": "https://www.bbc.co.uk/news/articles/c6m2d7vpd0meo?at_medium=RSS&at_campaign=rss",
-          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/63b8/live/57b68600-01a4-11f1-a8b8-bdd2c5f9bcad.jpg",
-          "pubDate": "Fri, 06 Nov 2026 00:39:18 GMT",
-          "sentiment": -0.112,
-          "eventBase": -0.13,
-          "framingMod": 0.018,
-          "factors": [
-            -25,
-            35,
-            20,
-            10
-          ],
-          "category": "world",
-          "explanation": "Reports watchdog findings regarding unauthorized rental income received by a former royal figure, carrying moderate institutional reach. [Event Base: -0.13 | Editorial Framing: +0.02]"
         }
       ]
     },
@@ -459210,6 +459212,25 @@
       "articles": [
         {
           "sourceId": "rte",
+          "title": "Flight chaos in US continues after nationwide shutdown",
+          "description": "US air travel is not expected to return to normal schedules until later today, the head of the FAA said, as the aviation system gradually recovers from a nationwide flight shutdown that officials blamed on routine maintenance gone awry.",
+          "link": "https://www.rte.ie/news/us/2026/1115/1599251-us-flight-chaos-continues-after-nationwide-faa-shutdown/",
+          "imageUrl": "https://www.rte.ie/images/002557b1-800.jpg",
+          "pubDate": "Sun, 15 Nov 2026 03:37:06 +0000",
+          "sentiment": -0.488,
+          "eventBase": -0.285,
+          "framingMod": -0.203,
+          "factors": [
+            -35,
+            75,
+            35,
+            -45
+          ],
+          "category": "business",
+          "explanation": "Nationwide aviation shutdown causing widespread travel chaos and recovery delays, framed with high alarmist rhetoric. [Event Base: -0.28 | Editorial Framing: -0.20]"
+        },
+        {
+          "sourceId": "rte",
           "title": "SpaceX pulls off first-ever spaceship 'catch'",
           "description": "Elon Musk's SpaceX pulled off the first-ever \"catch\" of a spaceship, a technical feat that shows the feasibility of fully reusable rockets and brings affordable spaceflight one step closer to reality.",
           "link": "https://www.rte.ie/news/world/2026/1115/1599250-spacex-us-world/",
@@ -468688,25 +468709,6 @@
           ],
           "category": "politics",
           "explanation": "A live interactive election results map provides routine, neutral real-time data tracking for a major civic event. [Event Base: +0.00 | Editorial Framing: +0.00]"
-        },
-        {
-          "sourceId": "rte",
-          "title": "Students blockade dozens of schools in France",
-          "description": "Students have blockaded dozens of secondary schools across France to maintain pressure on the government over education reforms as trade unions prepared for a nationwide strike later this week.",
-          "link": "https://www.rte.ie/news/world/2026/1103/1597789-france-protests/",
-          "imageUrl": "https://www.rte.ie/images/0025466a-800.jpg",
-          "pubDate": "Tue, 03 Nov 2026 11:50:50 +0000",
-          "sentiment": -0.213,
-          "eventBase": -0.145,
-          "framingMod": -0.068,
-          "factors": [
-            -30,
-            30,
-            25,
-            -15
-          ],
-          "category": "politics",
-          "explanation": "The report covers student blockades as a form of protest against government reforms, highlighting societal unrest. [Event Base: -0.14 | Editorial Framing: -0.07]"
         }
       ]
     },
@@ -468715,10 +468717,28 @@
       "averageSentiment": -0.119,
       "distribution": {
         "positive": 7,
-        "neutral": 313,
-        "negative": 180
+        "neutral": 312,
+        "negative": 181
       },
       "articles": [
+        {
+          "sourceId": "abcau",
+          "title": "Central coast man in critical condition after 'blue sky' lightning strike",
+          "description": "A Central Coast man in his 20s is in Royal North Shore Hospital after he was struck by lightning while swimming during sunny weather yesterday.",
+          "link": "https://www.abc.net.au/news/2026-11-15/ettalong-lightning-strike-man-in-critical-condition/107387304",
+          "pubDate": "Sun, 15 Nov 2026 03:31:47 +0000",
+          "sentiment": -0.224,
+          "eventBase": -0.089,
+          "framingMod": -0.135,
+          "factors": [
+            -40,
+            15,
+            15,
+            -30
+          ],
+          "category": "health",
+          "explanation": "Isolated severe lightning strike injury maintaining consistent trauma severity scoring with the prior anchor. [Event Base: -0.09 | Editorial Framing: -0.14]"
+        },
         {
           "sourceId": "abcau",
           "title": "Liberals announce plans for teen prison bootcamp for young offenders",
@@ -477705,36 +477725,94 @@
           ],
           "category": "other",
           "explanation": "An animal welfare campaigner receives a council compliance notice after a neighbor complains about rescue cats. [Event Base: -0.00 | Editorial Framing: -0.04]"
-        },
-        {
-          "sourceId": "abcau",
-          "title": "81-year-old sci-fi writer becomes oldest-ever winner of $95k Booker Prize",
-          "description": "M John Harrison has won the Booker Prize for The End of Everything, which the judges described as \"the politics of now seen through the lens of the future\".",
-          "link": "https://www.abc.net.au/news/2026-11-10/booker-prize-2026-m-john-harrison-the-end-of-everything/107342508",
-          "pubDate": "Mon, 09 Nov 2026 21:53:51 +0000",
-          "sentiment": 0.134,
-          "eventBase": 0.105,
-          "framingMod": 0.029,
-          "factors": [
-            35,
-            30,
-            35,
-            25
-          ],
-          "category": "entertainment",
-          "explanation": "A literary award win for an octogenarian author is a notable cultural achievement carrying positive recognition. [Event Base: +0.10 | Editorial Framing: +0.03]"
         }
       ]
     },
     "smh": {
       "name": "Sydney Morning Herald",
-      "averageSentiment": -0.088,
+      "averageSentiment": -0.089,
       "distribution": {
         "positive": 7,
-        "neutral": 363,
-        "negative": 130
+        "neutral": 362,
+        "negative": 131
       },
       "articles": [
+        {
+          "sourceId": "smh",
+          "title": "Wall Street’s wild Nvidia ride delivers big paydays and even bigger bruises",
+          "description": "Investors are doubling down on speculative wagers that have delivered both spectacular gains and crushing losses this year.",
+          "link": "https://www.smh.com.au/business/markets/wall-street-s-wild-nvidia-ride-delivers-big-paydays-and-even-bigger-bruises-20261115-p61e8o.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
+          "imageUrl": "https://static.ffx.io/images/$zoom_0.5295%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_0%2C$y_95/t_crop_custom/q_86%2Cf_auto/f31f06e7d53ec6b16983ab4786dc1e0c332f494b",
+          "pubDate": "Sun, 15 Nov 2026 14:50:21 +1100",
+          "sentiment": -0.013,
+          "eventBase": -0.02,
+          "framingMod": 0.007,
+          "factors": [
+            -5,
+            30,
+            10,
+            12
+          ],
+          "category": "business",
+          "explanation": "Financial market volatility around major stock movements with mixed gains and losses, matching the prior anchor. [Event Base: -0.02 | Editorial Framing: +0.01]"
+        },
+        {
+          "sourceId": "smh",
+          "title": "Victorian election campaign launch LIVE updates: Ben Carroll and Jess Wilson kick off Labor and Liberal campaigns ahead of 28 November",
+          "description": "Welcome to our rolling live coverage of the campaign launches for the Victorian state election, now under two weeks away.",
+          "link": "https://www.smh.com.au/politics/victoria/victorian-election-campaign-launch-live-updates-ben-carroll-and-jess-wilson-kick-off-labor-and-liberal-campaigns-ahead-of-28-november-20261115-p61dqs.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
+          "imageUrl": "https://static.ffx.io/images/$zoom_0.7696%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_139%2C$y_57/t_crop_custom/q_86%2Cf_auto/efd75a7a7a6a4ed9c5f1bf3a4a740b64e3dee0c453cd6574457d6d816fa489f1",
+          "pubDate": "Sun, 15 Nov 2026 14:34:27 +1100",
+          "sentiment": -0.038,
+          "eventBase": -0.046,
+          "framingMod": 0.008,
+          "factors": [
+            -10,
+            30,
+            20,
+            5
+          ],
+          "category": "politics",
+          "explanation": "Profiles routine electoral campaign launches ahead of state elections in Victoria. [Event Base: -0.05 | Editorial Framing: +0.01]"
+        },
+        {
+          "sourceId": "smh",
+          "title": "Hungary finds $30 million cash, some buried in forests, in bribery probe",
+          "description": "It took eight hours to count the cash that was discovered as part of an anti-graft drive led by Hungary’s new government.",
+          "link": "https://www.smh.com.au/world/europe/hungary-finds-30-million-cash-some-buried-in-forests-in-bribery-probe-20261115-p61e7e.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
+          "imageUrl": "https://static.ffx.io/images/$zoom_0.769%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_0%2C$y_0/t_crop_custom/q_86%2Cf_auto/d6525b86ef3d11ea81f5050692436ed4ce4f803b",
+          "pubDate": "Sun, 15 Nov 2026 14:29:05 +1100",
+          "sentiment": -0.467,
+          "eventBase": -0.377,
+          "framingMod": -0.09,
+          "factors": [
+            -50,
+            58,
+            45,
+            -20
+          ],
+          "category": "world",
+          "explanation": "Major anti-graft cash seizure uncovering significant illicit funds, maintaining consistency with the established prior anchor. [Event Base: -0.38 | Editorial Framing: -0.09]"
+        },
+        {
+          "sourceId": "smh",
+          "title": "Man struck by lightning while swimming at Central Coast beach",
+          "description": "The man was swimming at Umina Beach when he was struck by lightning on Saturday afternoon.",
+          "link": "https://www.smh.com.au/national/nsw/man-struck-by-lightning-while-swimming-at-central-coast-beach-20261114-p61e6c.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
+          "imageUrl": "https://static.ffx.io/images/$zoom_0.6537%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_0%2C$y_110/t_crop_custom/q_86%2Cf_auto/367a6335f584d690d57f8ef20e00745a9325469e",
+          "pubDate": "Sun, 15 Nov 2026 14:28:15 +1100",
+          "sentiment": -0.202,
+          "eventBase": -0.089,
+          "framingMod": -0.113,
+          "factors": [
+            -40,
+            15,
+            15,
+            -25
+          ],
+          "category": "world",
+          "explanation": "A swimmer suffers critical injuries after being struck by a lightning bolt at a coastal beach. [Event Base: -0.09 | Editorial Framing: -0.11]"
+        },
         {
           "sourceId": "smh",
           "title": "Many of their songs mourn the things we have lost. Performing live, they created something transcendent",
@@ -478152,25 +478230,6 @@
           ],
           "category": "sports",
           "explanation": "Players from both teams rallied around Piper Dunlop after she was stretchered off following a head clash during a rugby match. [Event Base: -0.04 | Editorial Framing: +0.01]"
-        },
-        {
-          "sourceId": "smh",
-          "title": "Victorian election campaign launch LIVE updates: Ben Carroll and Jess Wilson kick off Labor and Liberal campaigns ahead of 28 November",
-          "description": "Welcome to our rolling live coverage of the campaign launches for the Victorian state election, now under two weeks away.",
-          "link": "https://www.smh.com.au/politics/victoria/victorian-election-campaign-launch-live-updates-ben-carroll-and-jess-wilson-kick-off-labor-and-liberal-campaigns-ahead-of-28-november-20261115-p61dqs.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-          "imageUrl": "https://static.ffx.io/images/$zoom_0.7696%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_139%2C$y_57/t_crop_custom/q_86%2Cf_auto/efd75a7a7a6a4ed9c5f1bf3a4a740b64e3dee0c453cd6574457d6d816fa489f1",
-          "pubDate": "Sun, 15 Nov 2026 11:11:41 +1100",
-          "sentiment": -0.038,
-          "eventBase": -0.046,
-          "framingMod": 0.008,
-          "factors": [
-            -10,
-            30,
-            20,
-            5
-          ],
-          "category": "politics",
-          "explanation": "Profiles routine electoral campaign launches ahead of state elections in Victoria. [Event Base: -0.05 | Editorial Framing: +0.01]"
         },
         {
           "sourceId": "smh",
@@ -479235,25 +479294,6 @@
           ],
           "category": "sports",
           "explanation": "Cricket figures engage in public war-of-words following criticism published in a memoir. [Event Base: -0.02 | Editorial Framing: +0.01]"
-        },
-        {
-          "sourceId": "smh",
-          "title": "Man struck by lightning while swimming at Central Coast beach",
-          "description": "The man was swimming at Umina Beach when he was struck by lightning on Saturday afternoon.",
-          "link": "https://www.smh.com.au/national/nsw/man-struck-by-lightning-while-swimming-at-central-coast-beach-20261114-p61e6c.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-          "imageUrl": "https://static.ffx.io/images/$zoom_0.6537%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_0%2C$y_110/t_crop_custom/q_86%2Cf_auto/367a6335f584d690d57f8ef20e00745a9325469e",
-          "pubDate": "Sat, 14 Nov 2026 20:15:53 +1100",
-          "sentiment": -0.202,
-          "eventBase": -0.089,
-          "framingMod": -0.113,
-          "factors": [
-            -40,
-            15,
-            15,
-            -25
-          ],
-          "category": "world",
-          "explanation": "A swimmer suffers critical injuries after being struck by a lightning bolt at a coastal beach. [Event Base: -0.09 | Editorial Framing: -0.11]"
         },
         {
           "sourceId": "smh",
@@ -487196,44 +487236,6 @@
           ],
           "category": "business",
           "explanation": "Reports widespread retail store closures under receivership as an embattled department store attempts restructuring. [Event Base: -0.22 | Editorial Framing: -0.07]"
-        },
-        {
-          "sourceId": "smh",
-          "title": "‘Very unlikely’: Expert doubts mower rollover in pilot’s murder trial",
-          "description": "A biomechanics professor told a jury Frances Crawford could not have been on the ride-on mower when her head struck a wall at her Queensland home.",
-          "link": "https://www.smh.com.au/national/queensland/husband-accused-of-staging-mower-death-enjoyed-being-single-during-separation-20261111-p61d63.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-          "imageUrl": "https://static.ffx.io/images/$zoom_0.503%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_787%2C$y_0/t_crop_custom/q_86%2Cf_auto/ffd8d5750576af7b528e40e04e206deb8c402915",
-          "pubDate": "Wed, 11 Nov 2026 17:46:51 +1100",
-          "sentiment": -0.039,
-          "eventBase": -0.039,
-          "framingMod": 0,
-          "factors": [
-            -15,
-            15,
-            25,
-            0
-          ],
-          "category": "politics",
-          "explanation": "Covers expert witness testimony challenging physical scenarios presented in a criminal murder trial. [Event Base: -0.04 | Editorial Framing: +0.00]"
-        },
-        {
-          "sourceId": "smh",
-          "title": "Shock reshuffle at Australian Women’s Weekly as top editor departs",
-          "description": "Sophie Tedmanson has left the magazine after three years – and her role may no longer exist.",
-          "link": "https://www.smh.com.au/cbd/shock-reshuffle-at-australian-women-s-weekly-as-top-editor-departs-20261111-p61da7.html?ref=rss&utm_medium=rss&utm_source=rss_feed",
-          "imageUrl": "https://static.ffx.io/images/$zoom_0.3562%2C$multiply_0.7554%2C$ratio_1.777778%2C$width_1059%2C$x_307%2C$y_226/t_crop_custom/q_86%2Cf_auto/c48ed1a71e575a31ccc5d0ad53ecfd4f378632cb",
-          "pubDate": "Wed, 11 Nov 2026 17:26:30 +1100",
-          "sentiment": -0.074,
-          "eventBase": -0.006,
-          "framingMod": -0.068,
-          "factors": [
-            -5,
-            10,
-            10,
-            -15
-          ],
-          "category": "entertainment",
-          "explanation": "A publication leadership departure represents routine media industry restructuring. [Event Base: -0.01 | Editorial Framing: -0.07]"
         }
       ]
     },
@@ -513021,13 +513023,49 @@
     },
     "aljazeera": {
       "name": "Al Jazeera",
-      "averageSentiment": -0.206,
+      "averageSentiment": -0.205,
       "distribution": {
         "positive": 7,
-        "neutral": 208,
-        "negative": 285
+        "neutral": 209,
+        "negative": 284
       },
       "articles": [
+        {
+          "sourceId": "aljazeera",
+          "title": "Monkey attacks woman inside residential complex in India",
+          "description": "A woman was attacked and repeatedly bitten by a monkey at a residential apartment complex in India’s Gujarat state.",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/11/15/monkey-attacks-woman-inside-residential-complex-in-india?traffic_source=rss",
+          "pubDate": "Sun, 15 Nov 2026 03:39:39 +0000",
+          "sentiment": -0.267,
+          "eventBase": -0.109,
+          "framingMod": -0.158,
+          "factors": [
+            -32,
+            25,
+            10,
+            -35
+          ],
+          "category": "world",
+          "explanation": "Localized animal attack incident causing injury and community alarm, consistent with the prior anchor. [Event Base: -0.11 | Editorial Framing: -0.16]"
+        },
+        {
+          "sourceId": "aljazeera",
+          "title": "Italian artist reimagines Madonna paintings to expose Gaza’s pain",
+          "description": "Italian artist Eduardo Castaldo has unveiled an artwork titled ‘Holy Mothers of Gaza’ inside Naples’ Pappacoda Chapel.",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/11/15/aje-onl-nf_italian-artist-rips-madonna-painting-to-reveal-gaza-141126?traffic_source=rss",
+          "pubDate": "Sun, 15 Nov 2026 03:30:29 +0000",
+          "sentiment": -0.053,
+          "eventBase": -0.07,
+          "framingMod": 0.017,
+          "factors": [
+            -15,
+            30,
+            20,
+            10
+          ],
+          "category": "entertainment",
+          "explanation": "Artistic exhibition reflecting wartime suffering in Gaza, combining cultural commentary with somber topical context. [Event Base: -0.07 | Editorial Framing: +0.02]"
+        },
         {
           "sourceId": "aljazeera",
           "title": "Saudi-led coalition intercepts two missiles, two drones in Riyadh",
@@ -521999,42 +522037,6 @@
           ],
           "category": "politics",
           "explanation": "The analysis questions the efficacy of military-political task forces, highlighting the risk of conflict expansion. [Event Base: -0.16 | Editorial Framing: -0.04]"
-        },
-        {
-          "sourceId": "aljazeera",
-          "title": "Senegal human rights group demands government action after deadly sinking",
-          "description": "Thousands ⁠of people have ⁠died in recent years attempting to reach Spain’s Canary Islands from West Africa.",
-          "link": "https://www.aljazeera.com/news/2026/11/9/senegal-human-rights-group-demands-government-action-after-deadly-sinking?traffic_source=rss",
-          "pubDate": "Mon, 09 Nov 2026 15:30:09 +0000",
-          "sentiment": -0.253,
-          "eventBase": -0.185,
-          "framingMod": -0.068,
-          "factors": [
-            -40,
-            30,
-            20,
-            -15
-          ],
-          "category": "world",
-          "explanation": "Reports on a humanitarian demand following a maritime tragedy, highlighting the risks of migration. [Event Base: -0.18 | Editorial Framing: -0.07]"
-        },
-        {
-          "sourceId": "aljazeera",
-          "title": "IRGC strikes three tankers near Hormuz over ‘US links’",
-          "description": "An oil tanker caught fire near the Strait of Hormuz after Iran’s IRGC said it had struck three tankers on Sunday,",
-          "link": "https://www.aljazeera.com/video/newsfeed/2026/11/9/irgc-strikes-three-tankers-near-hormuz-over-us?traffic_source=rss",
-          "pubDate": "Mon, 09 Nov 2026 15:10:20 +0000",
-          "sentiment": -0.486,
-          "eventBase": -0.351,
-          "framingMod": -0.135,
-          "factors": [
-            -45,
-            65,
-            40,
-            -30
-          ],
-          "category": "world",
-          "explanation": "Iran's Islamic Revolutionary Guard Corps striking tankers near the Strait of Hormuz escalates regional maritime conflict. [Event Base: -0.35 | Editorial Framing: -0.14]"
         }
       ]
     },
@@ -550091,7 +550093,8 @@
           "category": "world",
           "explanation": "Cyprus leaders agree to open new border crossings and resume future talks, marking a modest diplomatic advance. [Event Base: +0.10 | Editorial Framing: +0.02]"
         }
-      ]
+      ],
+      "error": "Status code 503"
     },
     "ap": {
       "name": "Associated Press",
@@ -559119,7 +559122,8 @@
           "category": "world",
           "explanation": "The arrest of a retired detective in a fatal road rage shooting represents a severe violent crime and subsequent law enforcement action. [Event Base: -0.40 | Editorial Framing: -0.11]"
         }
-      ]
+      ],
+      "error": "Status code 503"
     },
     "newscientist": {
       "name": "New Scientist",
@@ -609649,6 +609653,52 @@
         "japantimes": -0.099,
         "cna": -0.131,
         "aljazeera": -0.204,
+        "thenational": -0.082,
+        "africanews": -0.165,
+        "reuters": -0.122,
+        "ap": -0.146,
+        "newscientist": 0.054,
+        "arstechnica": -0.065
+      }
+    },
+    {
+      "timestamp": "2026-11-15T03:56:47.081Z",
+      "analyzer": "Gemini (gemini-3.5-flash-lite)",
+      "averages": {
+        "nyt": -0.114,
+        "cnn": -0.126,
+        "fox": -0.083,
+        "npr": -0.103,
+        "pbs": -0.123,
+        "cnbc": -0.067,
+        "bloomberg": -0.063,
+        "wsj": -0.077,
+        "cbc": -0.117,
+        "globalnews": -0.096,
+        "batimes": -0.08,
+        "mexiconews": -0.02,
+        "mercopress": -0.102,
+        "agenciabrasil": -0.036,
+        "oglobo": -0.082,
+        "latercera": -0.211,
+        "bbc": -0.132,
+        "guardian": -0.137,
+        "skynews": -0.207,
+        "ft": -0.094,
+        "dw": -0.178,
+        "nzz": -0.198,
+        "france24": -0.196,
+        "euronews": -0.133,
+        "lemonde": -0.172,
+        "elpais": -0.142,
+        "repubblica": -0.186,
+        "rte": -0.126,
+        "abcau": -0.119,
+        "smh": -0.089,
+        "scmp": -0.107,
+        "japantimes": -0.099,
+        "cna": -0.131,
+        "aljazeera": -0.205,
         "thenational": -0.082,
         "africanews": -0.165,
         "reuters": -0.122,
