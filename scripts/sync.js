@@ -2765,10 +2765,63 @@ Return JSON array in format:
       }
       delete c.newestMs;
       delete c._pendingUpdate;
+      delete c._decisionTriage;
     });
     return consolidatedClusters;
   }
   return previousClusters;
+}
+
+// Fast, zero-output-token closed-set evaluator via Google Gemini Decisions API (gemini-decision-1)
+async function callGeminiDecisionsApi(apiKeyOrTiers, inputText, questions) {
+  if (!inputText || !questions || Object.keys(questions).length === 0) return null;
+  const activeTiers = getOrderedKeyTiers(apiKeyOrTiers);
+  if (activeTiers.length === 0) return null;
+
+  const https = require('https');
+  const payloadStr = JSON.stringify({
+    model: 'gemini-decision-1',
+    input: inputText,
+    questions
+  });
+
+  for (const keyObj of activeTiers) {
+    try {
+      const res = await new Promise((resolve, reject) => {
+        const req = https.request({
+          hostname: 'generativelanguage.googleapis.com',
+          path: '/v1beta/decisions',
+          method: 'POST',
+          headers: {
+            'x-goog-api-key': keyObj.key,
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payloadStr)
+          },
+          timeout: 15000
+        }, (resp) => {
+          let raw = '';
+          resp.on('data', chunk => { raw += chunk; });
+          resp.on('end', () => {
+            try {
+              resolve({ status: resp.statusCode, data: JSON.parse(raw) });
+            } catch (e) {
+              resolve({ status: resp.statusCode, data: null });
+            }
+          });
+        });
+        req.on('timeout', () => { req.destroy(new Error('Decisions API timeout')); });
+        req.on('error', reject);
+        req.write(payloadStr);
+        req.end();
+      });
+      if (res.status === 200 && res.data && res.data.answers) {
+        return res.data.answers;
+      }
+    } catch (err) {
+      // Fall through to next key tier or graceful fallback
+    }
+  }
+  return null;
 }
 
 function appendClusterUpdateAuditLog(entries) {
@@ -2964,6 +3017,159 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     }
   }
   candidatePairHints.sort((a, b) => (b.pairSpecScore || 0) - (a.pairSpecScore || 0));
+
+  // Unbatched 1-Cluster-Per-Call Gemini Decisions API (gemini-decision-1) Pre-Triage & Outlier Pruning Pass:
+  // Evaluates each _pendingUpdate cluster in 100% isolated context (zero cross-story anchoring bleed, zero output tokens)
+  // to (1) strip off-topic/opinion/explainer outlier dispatches, (2) drop 'none' syndication echoes before generative decoding,
+  // and (3) lock calibrated 'clarification' vs 'material_shift' probabilities.
+  const pendingOrigList = [];
+  for (let i = 0; i < meta.length; i++) {
+    const cl = meta[i].c;
+    if (cl._pendingUpdate && !cl._pendingUpdate.isInitialGrounding && Array.isArray(cl._pendingUpdate.addedHeadlines) && cl._pendingUpdate.addedHeadlines.length > 0) {
+      pendingOrigList.push(i);
+    }
+  }
+  if (pendingOrigList.length > 0) {
+    let prunedOutliersCount = 0;
+    let skippedEchoClustersCount = 0;
+    let lockedClarificationsCount = 0;
+    let verifiedShiftsCount = 0;
+    const CONCURRENCY = 3;
+    for (let b = 0; b < pendingOrigList.length; b += CONCURRENCY) {
+      const slice = pendingOrigList.slice(b, b + CONCURRENCY);
+      await Promise.all(slice.map(async (origIdx) => {
+        const cl = clusters[origIdx];
+        const added = cl._pendingUpdate?.addedHeadlines || [];
+        if (added.length === 0) return;
+        const priorNotes = (cl.evolutionHistory || [])
+          .slice(1)
+          .map(h => `[v${h.version || '?'} ${h.type || 'shift'}: "${h.headline}" — ${h.note}]`)
+          .join(' ; ');
+        const isolatedInput = [
+          `Existing Cluster Headline: "${cl.story || ''}"`,
+          `Existing Cluster Summary: "${cl.summary || ''}"`,
+          ...(priorNotes ? [`Prior Recorded Evolution Stages: ${priorNotes}`] : []),
+          `Candidate New Dispatches:`,
+          ...added.slice(0, 6).map((line, dIdx) => `[D${dIdx}] ${line}`)
+        ].join('\n');
+        const questions = {
+          update_type: {
+            type: 'choice',
+            instructions: 'Classify the net real-world chronological impact of the Candidate New Dispatches on the Existing Cluster after subtracting facts already in the Existing Cluster Summary.',
+            criteria: {
+              none: 'Pure syndication echo repeating facts already in the Existing Cluster Summary or Prior Recorded Evolution Stages.',
+              clarification: 'Adds in-phase factual details, figures, quotes, deliberations, or localized sub-incidents without crossing into a new real-world event phase or requiring a new headline.',
+              material_shift: 'Crosses an irreversible State Envelope (new sovereign border, formal legal/executive enactment, decisive verdict/vote outcome, or major phase transition) that invalidates the Existing Cluster Headline.'
+            }
+          }
+        };
+        added.slice(0, 6).forEach((_, dIdx) => {
+          questions[`d_${dIdx}_direct`] = {
+            type: 'noul',
+            instructions: `Does Candidate New Dispatch [D${dIdx}] report directly on the specific real-world incident or story arc of the Existing Cluster, rather than being an unrelated incident, a different country/company story, or a general historical/opinion explainer?`
+          };
+        });
+        const answers = await callGeminiDecisionsApi(apiKey, isolatedInput, questions);
+        if (!answers) return;
+
+        // 1. Prune verified off-topic / opinion / explainer outlier dispatches (P < 0.20, conf >= 0.80)
+        const survivingHeadlines = [];
+        for (let dIdx = 0; dIdx < added.length; dIdx++) {
+          const ans = answers[`d_${dIdx}_direct`];
+          if (ans && typeof ans.noul === 'number' && ans.noul < 0.20 && (ans.confidence || 0) >= 0.80) {
+            prunedOutliersCount++;
+            const rawLine = added[dIdx];
+            if (Array.isArray(cl.coverage) && cl.coverage.length > 2) {
+              const filteredCov = cl.coverage.filter(a => !(a.title && rawLine.includes(a.title)));
+              if (filteredCov.length >= 2) {
+                cl.coverage = filteredCov;
+                cl.outletCount = filteredCov.length;
+              }
+            }
+          } else {
+            survivingHeadlines.push(added[dIdx]);
+          }
+        }
+        cl._pendingUpdate.addedHeadlines = survivingHeadlines;
+        if (survivingHeadlines.length === 0) {
+          cl._pendingUpdate._acceptedOrEvaluated = true;
+          includedOrigIndices.delete(origIdx);
+          skippedEchoClustersCount++;
+          return;
+        }
+
+        // 2. Apply calibrated update_type triage
+        const uAns = answers.update_type;
+        if (uAns && uAns.choice && uAns.probabilities) {
+          const pNone = uAns.probabilities.none || 0;
+          const pClar = uAns.probabilities.clarification || 0;
+          const pShift = uAns.probabilities.material_shift || 0;
+          if (uAns.choice === 'none' && pNone >= 0.76 && pShift < 0.12) {
+            cl._pendingUpdate._acceptedOrEvaluated = true;
+            cl._pendingUpdate.addedHeadlines = [];
+            includedOrigIndices.delete(origIdx);
+            skippedEchoClustersCount++;
+          } else {
+            cl._decisionTriage = {
+              choice: uAns.choice,
+              pNone,
+              pClar,
+              pShift,
+              confidence: uAns.confidence || 0
+            };
+            if (uAns.choice === 'clarification' && pClar >= 0.70 && pShift < 0.22) {
+              lockedClarificationsCount++;
+            } else if (uAns.choice === 'material_shift' && pShift >= 0.75) {
+              verifiedShiftsCount++;
+            }
+          }
+        }
+      }));
+    }
+    if (prunedOutliersCount > 0 || skippedEchoClustersCount > 0 || lockedClarificationsCount > 0 || verifiedShiftsCount > 0) {
+      console.log(`[Decisions-1] Unbatched 1-Cluster Pre-Triage: pruned ${prunedOutliersCount} outlier dispatches, skipped ${skippedEchoClustersCount} syndication echoes, locked ${lockedClarificationsCount} clarifications, verified ${verifiedShiftsCount} material shifts.`);
+    }
+  }
+
+  // Unbatched 1-Pair-Per-Call Gemini Decisions API Verification on Top Candidate Merge Pairs:
+  const topPairsForDecision = candidatePairHints.slice(0, 12).filter(p => !p.isSeparateEpisodeOrSubject);
+  if (topPairsForDecision.length > 0) {
+    let vetoedPairsCount = 0;
+    let verifiedMergePairsCount = 0;
+    const PAIR_CONCURRENCY = 3;
+    for (let b = 0; b < topPairsForDecision.length; b += PAIR_CONCURRENCY) {
+      const slice = topPairsForDecision.slice(b, b + PAIR_CONCURRENCY);
+      await Promise.all(slice.map(async (p) => {
+        const clA = clusters[p.origA];
+        const clB = clusters[p.origB];
+        if (!clA || !clB) return;
+        const pairInput = [
+          `Cluster A: "${clA.story}" — ${clA.summary || ''}`,
+          `Cluster B: "${clB.story}" — ${clB.summary || ''}`
+        ].join('\n');
+        const ans = await callGeminiDecisionsApi(apiKey, pairInput, {
+          same_incident_merge: {
+            type: 'noul',
+            instructions: 'Should Cluster A and Cluster B be merged into a single incident cluster? Answer YES only if they report on the exact same discrete real-world event, same policy decision, or consecutive stages of the exact same physical incident; answer NO if they are separate actions by different sovereign countries, separate matches, or distinct events in the same broader region.'
+          }
+        });
+        const mAns = ans?.same_incident_merge;
+        if (mAns && typeof mAns.noul === 'number') {
+          if (mAns.noul < 0.22 && (mAns.confidence || 0) >= 0.78) {
+            p.isSeparateEpisodeOrSubject = true;
+            vetoedPairsCount++;
+          } else if (mAns.noul >= 0.82) {
+            p.verifiedSameIncidentProb = Math.round(mAns.noul * 100);
+            verifiedMergePairsCount++;
+          }
+        }
+      }));
+    }
+    if (vetoedPairsCount > 0 || verifiedMergePairsCount > 0) {
+      console.log(`[Decisions-1] Unbatched Pair Triage: vetoed ${vetoedPairsCount} false-merge pairs, verified ${verifiedMergePairsCount} same-incident merges.`);
+    }
+  }
+
   for (const p of candidatePairHints.slice(0, 28)) {
     includedOrigIndices.add(p.origA);
     includedOrigIndices.add(p.origB);
@@ -3024,7 +3230,14 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       if (c._pendingUpdate.isInitialGrounding) {
         line += `\n    [CANDIDATE IN-PLACE UPDATE (INITIAL GROUNDING — outlier was stripped or title is too broad; set updateType="material_shift" to replace "story" and "summary" so they name the exact city/country/actor shared ONLY by these surviving headlines): ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
       } else {
-        line += `\n    [CANDIDATE IN-PLACE UPDATE: +${c._pendingUpdate.addedHeadlines.length} new dispatches -> ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
+        const triageHint = c._decisionTriage
+          ? (c._decisionTriage.choice === 'clarification' && c._decisionTriage.pClar >= 0.70 && c._decisionTriage.pShift < 0.22
+              ? ` [DECISION-1 CALIBRATED VERDICT: "clarification" (${Math.round(c._decisionTriage.pClar * 100)}%) — refine summary & developmentNote without changing headline]`
+              : (c._decisionTriage.choice === 'material_shift' && c._decisionTriage.pShift >= 0.75
+                  ? ` [DECISION-1 CALIBRATED VERDICT: "material_shift" (${Math.round(c._decisionTriage.pShift * 100)}%)]`
+                  : ''))
+          : '';
+        line += `\n    [CANDIDATE IN-PLACE UPDATE:${triageHint} +${c._pendingUpdate.addedHeadlines.length} new dispatches -> ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
       }
     }
     return line;
@@ -3045,7 +3258,9 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
         const pB = origToPromptIdx.get(p.origB);
         const tag = p.isSeparateEpisodeOrSubject
           ? ' [SEPARATE EPISODES / SUBJECTS — evaluate ONLY for JOB 3 lateralConnections, DO NOT merge in Job 1]'
-          : '';
+          : (p.verifiedSameIncidentProb
+              ? ` [DECISION-1 VERIFIED SAME-INCIDENT MERGE (P=${p.verifiedSameIncidentProb}%)]`
+              : '');
         return `- Compare [${pA}] "${clusters[p.origA].story}" <-> [${pB}] "${clusters[p.origB].story}" (shared stems: ${p.sharedAll.slice(0, 6).join(', ')})${tag}`;
       }).join('\n')
     : '';
@@ -3304,10 +3519,18 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         .replace(/\s+(?:following|after|amid|in the wake of)\s+(?:the\s+)?(?:weekend|days|weeks|earlier|initial|widespread|ongoing)\s+[^.;]+$/i, '')
         .trim();
 
-      // Programmatic Commitment Gate: if noteText only describes weighing/pushing/considering a measure without enacting/crossing borders, downgrade to clarification
+      // Programmatic Commitment & Decisions-1 Calibrated Phase Lock Gate:
+      // 1. If noteText only describes weighing/pushing/considering a measure without enacting/crossing borders, downgrade to clarification.
+      // 2. If unbatched Decisions-1 pre-triage verified this update is an in-phase clarification (pClar >= 0.70, pShift < 0.22), lock to clarification.
       const isPreludeOnly = /\b(weigh(?:s|ed|ing)?|push(?:es|ed|ing)?\s+for|consider(?:s|ed|ing)?|mull(?:s|ed|ing)?|debate(?:s|d)?|propose(?:s|d)?)\b/i.test(noteText) &&
         !/\b(spread|expand|cross|enact|impos|arrest|indict|charg|releas|struck|launch|clear)\w*/i.test(noteText);
-      const uType = (dev.updateType === 'material_shift' && !isPreludeOnly) ? 'material_shift' : 'clarification';
+      const lockedByDecision1Clarification = Boolean(
+        c._decisionTriage &&
+        c._decisionTriage.choice === 'clarification' &&
+        (c._decisionTriage.pClar || 0) >= 0.70 &&
+        (c._decisionTriage.pShift || 0) < 0.22
+      );
+      const uType = (dev.updateType === 'material_shift' && !isPreludeOnly && !lockedByDecision1Clarification) ? 'material_shift' : 'clarification';
       const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
 
       // Skip routine restatements ("Re-emphasizes...", "Reaffirms...") that add no new factual detail
