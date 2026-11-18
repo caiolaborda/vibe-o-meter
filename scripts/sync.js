@@ -1185,7 +1185,7 @@ function extractProperSubjectEntities(headline = '', bodyText = '') {
   // 2. Mid-sentence capitalized words in prose (summary/descriptions) — guaranteed proper nouns by English orthography,
   // plus sentence-initial words that carry possessive "'s", are followed by another capitalized proper noun/title, or match the headline's opening subject word.
   const firstHeadWordClean = String(headline || '').trim().split(/\s+/)[0]?.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '').toLowerCase() || '';
-  const sentences = String(bodyText || '').split(/(?<=[.!?])\s+/);
+  const sentences = String(bodyText || '').split(/(?<!\b(?:U\.S|U\.K|U\.N|E\.U|U\.A\.E|St|Mt|Mr|Ms|Mrs|Dr|Prof|Gen|Col|Maj|Capt|Lt|Sgt|Sen|Rep|Gov|Pres|Min|Amb|Jr|Sr|Inc|Ltd|Co|Corp|vs|v|No|Fig|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|[A-Z]))(?<=[.!?])\s+(?=[A-Z0-9"“‘])/g);
   for (const sent of sentences) {
     const allWords = sent.trim().split(/\s+/);
     for (let wi = 0; wi < allWords.length; wi++) {
@@ -3488,11 +3488,16 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         return candStems.some(s => originAnchorStems.has(s));
       };
 
-      if (uType === 'material_shift') {
+      const normHeadSync = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+      const seenPriorHeadlines = new Set((hist || []).map(h => normHeadSync(h?.headline || h?.story)).filter(Boolean));
+      const rawCandStoryCheck = (dev.story && dev.story.trim()) || c.story;
+      const candStoryCheck = isHeadlineAnchorRecognizable(rawCandStoryCheck) ? rawCandStoryCheck : c.story;
+      const isUnchangedOrRevertedHeadline = normHeadSync(candStoryCheck) === normHeadSync(c.story) || seenPriorHeadlines.has(normHeadSync(candStoryCheck));
+
+      if (uType === 'material_shift' && !isUnchangedOrRevertedHeadline) {
         materialInPlaceCount++;
         const oldSlug = c.id || slugify(c.story);
-        const rawCandStory = (dev.story && dev.story.trim()) || c.story;
-        const newStory = isHeadlineAnchorRecognizable(rawCandStory) ? rawCandStory : c.story;
+        const newStory = candStoryCheck;
         const newSlug = slugify(newStory);
         const evolvedIds = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
         if (oldSlug && oldSlug !== newSlug) evolvedIds.add(oldSlug);

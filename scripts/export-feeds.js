@@ -230,6 +230,32 @@ function sanitizeClusterHeadlineIntegrity(rawCl, slugify) {
     changed = true;
   }
 
+  // 4. Sync upfront vs. milestone deal valuation (e.g. "$2.2 Billion" in headline vs "valued at up to $3.3 billion" in summary)
+  summary = summary.replace(/for \d+\.\d+\.\d+ (?:billion|million) upfront \((in a transaction valued at up to \$\d+(?:\.\d+)?\s*(?:billion|million))\)/i, '$1');
+  const headMoneyMatch = story.match(/\$(\d+(?:\.\d+)?)\s*(billion|million)\b/i);
+  if (headMoneyMatch) {
+    const headAmt = headMoneyMatch[1];
+    const headUnit = headMoneyMatch[2].toLowerCase();
+    const sumHasHeadAmt = new RegExp(`\\$${headAmt.replace('.', '\\.')}\\s*(?:${headUnit}|bn|m)\\b`, 'i').test(summary);
+    if (!sumHasHeadAmt && new RegExp(`\\$${headAmt.replace('.', '\\.')}`, 'i').test(covText)) {
+      const upToRe = /(in a transaction valued at up to \$(\d+(?:\.\d+)?)\s*(?:billion|million))/i;
+      if (upToRe.test(summary)) {
+        summary = summary.replace(upToRe, (m) => `for $${headAmt} ${headUnit} upfront (${m})`);
+        changed = true;
+      }
+    }
+  }
+
+  // 5. Sync "After N Years" in headline with "closed since YYYY" in summary
+  const afterYearsMatch = story.match(/\bAfter\s+(\d{1,3})\s+Years\b/i);
+  if (afterYearsMatch) {
+    const yrs = afterYearsMatch[1];
+    if (!new RegExp(`\\b${yrs}\\s+years\\b`, 'i').test(summary) && /\bclosed since \d{4}\b/i.test(summary)) {
+      summary = summary.replace(/\bclosed since (\d{4})\b/i, `closed for ${yrs} years since $1`);
+      changed = true;
+    }
+  }
+
   if (changed) {
     const oldId = cl.id || slugify(rawCl.story);
     const newId = slugify(story);
@@ -255,6 +281,9 @@ function sanitizeClusterHeadlineIntegrity(rawCl, slugify) {
 function deduplicateAndSanitizeClusters(rawClusters) {
   if (!Array.isArray(rawClusters) || rawClusters.length === 0) return [];
   const slugify = (s) => String(s || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const ABBREV_SAFE_SENTENCE_SPLIT_RE = /(?<!\b(?:U\.S|U\.K|U\.N|E\.U|U\.A\.E|St|Mt|Mr|Ms|Mrs|Dr|Prof|Gen|Col|Maj|Capt|Lt|Sgt|Sen|Rep|Gov|Pres|Min|Amb|Jr|Sr|Inc|Ltd|Co|Corp|vs|v|No|Fig|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|[A-Z]))(?<=[.!?])\s+(?=[A-Z0-9"“‘])/g;
+  const splitSentencesSafe = (text) => String(text || '').trim().split(ABBREV_SAFE_SENTENCE_SPLIT_RE).map(s => s.trim()).filter(Boolean);
+  const normHeadStr = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
   // 1. Deduplicate clusters sharing the exact same ID (e.g. if a git merge spliced two arrays)
   //    and always deduplicate each cluster's coverage array by sourceId (keeping the newest dispatch per outlet)
@@ -620,7 +649,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     const story = String(cl?.story || "");
     const summary = String(cl?.summary || "");
     const midCapStems = new Set();
-    for (const sent of summary.split(/(?<=[.!?])\s+/)) {
+    for (const sent of splitSentencesSafe(summary)) {
       const words = sent.trim().split(/[\s\-–—]+/);
       for (let idx = 1; idx < words.length; idx++) {
         const clean = words[idx].replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, "").replace(/'s$/i, "");
@@ -949,12 +978,12 @@ function deduplicateAndSanitizeClusters(rawClusters) {
               primary.id = newSlug;
               byId.set(primary.id, primary);
             }
-            const firstSent = String(secondary.summary || "").split(/(?<=[.!?])\s+/)[0].trim();
+            const firstSent = (splitSentencesSafe(secondary.summary || "")[0] || "").trim();
             if (firstSent && !String(primary.summary || "").toLowerCase().includes(firstSent.slice(0, 28).toLowerCase())) {
               primary.summary = `${firstSent} ${String(primary.summary || "").trim()}`.trim();
             }
           } else if (newerCl === secondary && (secondary.coverage || []).length >= 3 && (secIsConclusionPhase || secMedMs > priMedMs + 4 * 3600 * 1000)) {
-            const firstSent = String(secondary.summary || "").split(/(?<=[.!?])\s+/)[0].trim();
+            const firstSent = (splitSentencesSafe(secondary.summary || "")[0] || "").trim();
             if (firstSent && !String(primary.summary || "").toLowerCase().includes(firstSent.slice(0, 28).toLowerCase())) {
               primary.summary = `${String(primary.summary || "").trim()} ${firstSent}`.trim();
               const shiftTs = new Date(Math.max(priLatestMs, secLatestMs)).toISOString();
@@ -983,7 +1012,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           );
           if (!alreadyHasTargetStep && String(primary.evolutionHistory[0]?.headline || "").toLowerCase() !== String(targetStory || "").toLowerCase()) {
             const shiftTs = new Date(Math.max(priBirthMs, secBirthMs, newerCl === secondary ? secLatestMs : priLatestMs)).toISOString();
-            const firstNewSent = String(newerCl.summary || primary.summary || "").split(/(?<=[.!?])\s+/)[0].trim();
+            const firstNewSent = (splitSentencesSafe(newerCl.summary || primary.summary || "")[0] || "").trim();
             const shiftNote = newerCl.developmentNote || firstNewSent || `Coverage expanded and shifted to: ${targetStory}`;
             const nextV = (primary.evolutionHistory.length || 1) + 1;
             primary.evolutionHistory.push({
@@ -1483,6 +1512,57 @@ function deduplicateAndSanitizeClusters(rawClusters) {
   const result = [];
   for (const cl of byId.values()) {
     if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1) {
+      // Pre-step A: Repair or drop truncated stub notes (< 15 chars, e.g. "U.S.")
+      const preRepaired = [];
+      for (let i = 0; i < cl.evolutionHistory.length; i++) {
+        const h = { ...cl.evolutionHistory[i] };
+        const noteStr = String(h.note || '').trim();
+        if (i > 0 && (noteStr.length < 15 || /^(?:U\.S\.|U\.K\.|U\.N\.|E\.U\.)$/i.test(noteStr))) {
+          const sents = splitSentencesSafe(h.summary || '');
+          const candSent = sents[0] || '';
+          const prevSum = preRepaired[preRepaired.length - 1]?.summary || '';
+          if (candSent.length >= 20 && candSent !== (splitSentencesSafe(prevSum)[0] || '')) {
+            h.note = candSent;
+          } else {
+            continue;
+          }
+        }
+        preRepaired.push(h);
+      }
+      if (preRepaired.length > 0) {
+        // Pre-step B: If any step [1..N] has an earlier valid timestamp than step [0], sort all steps chronologically
+        const initMs = Date.parse(preRepaired[0].timestamp || '');
+        const hasEarlierPostStep = preRepaired.slice(1).some(h => {
+          const ms = Date.parse(h?.timestamp || '');
+          return !isNaN(ms) && !isNaN(initMs) && ms < initMs - 60000;
+        });
+        if (hasEarlierPostStep) {
+          for (const h of preRepaired) {
+            if (h.type === 'initial' && (!h.note || h.note === 'Initial cluster formation on the wire')) {
+              const sents = splitSentencesSafe(h.summary || '');
+              h._recoveredNote = sents[0] || `Coverage shifted: ${h.headline || cl.story}`;
+            }
+          }
+          preRepaired.sort((a, b) => (Date.parse(a?.timestamp || '') || 0) - (Date.parse(b?.timestamp || '') || 0));
+          preRepaired[0].type = 'initial';
+          preRepaired[0].version = 1;
+          preRepaired[0].note = 'Initial cluster formation on the wire';
+          for (let i = 1; i < preRepaired.length; i++) {
+            if (preRepaired[i].type === 'initial') {
+              preRepaired[i].type = 'material_shift';
+              if (preRepaired[i]._recoveredNote) {
+                preRepaired[i].note = preRepaired[i]._recoveredNote;
+              }
+            }
+            delete preRepaired[i]._recoveredNote;
+          }
+          delete preRepaired[0]._recoveredNote;
+        }
+        cl.evolutionHistory = preRepaired;
+      }
+    }
+
+    if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1) {
       const initStep = cl.evolutionHistory[0];
       const baseText = (initStep?.headline || '') + ' ' + (initStep?.summary || '');
       const baseStems = new Set(extractEvoDeltaStems(baseText));
@@ -1588,18 +1668,18 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           const hBaseNums = extractEvoNums(h.note || '', baseStems);
           const losesPrevNum = [...prevNums].some(n => !hBaseNums.has(n) && !baseNums.has(n));
           if (isUpgradeType && !losesPrevNum && (h.note || '').length > (prevStep.note || '').length) {
-            cleanHist.splice(dupIdx, 1);
-            cleanHist.push({
+            cleanHist[dupIdx] = {
               ...h,
               type: (h.type === 'material_shift' || prevStep.type === 'material_shift') ? 'material_shift' : 'clarification',
-              timestamp: h.timestamp || prevStep.timestamp,
+              timestamp: prevStep.timestamp || h.timestamp,
               note: h.note || prevStep.note
-            });
+            };
           }
         }
       }
 
-      cl.evolutionHistory = cleanHist;
+      const sortedTail = cleanHist.slice(1).sort((a, b) => (Date.parse(a?.timestamp || '') || 0) - (Date.parse(b?.timestamp || '') || 0));
+      cl.evolutionHistory = [cleanHist[0], ...sortedTail];
     }
 
     // 3b. Recover stripped shift steps & enforce strict Headline-History Co-Change Invariant:
@@ -1636,7 +1716,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       if (earliestArt && earliestArt.description && earliestArt.description.trim().length >= 40 && earliestArt.description.trim() !== String(cl.summary || '').trim()) {
         return earliestArt.description.trim();
       }
-      const firstSent = String(cl.summary || '').split(/(?<=[.!?])\s+/)[0].trim();
+      const firstSent = (splitSentencesSafe(cl.summary || '')[0] || '').trim();
       if (firstSent && firstSent.length < String(cl.summary || '').trim().length) {
         return firstSent;
       }
@@ -1684,7 +1764,7 @@ function deduplicateAndSanitizeClusters(rawClusters) {
 
       const spanHours = (latestCovMs - priorBirthMs) / 3600000;
       if (priorTitle && (spanHours >= 1.5 || Boolean(logMatch) || (Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0))) {
-        const sents = String(cl.summary || '').split(/(?<=[.!?])\s+/).filter(Boolean);
+        const sents = splitSentencesSafe(cl.summary || '');
         const finalNote = shiftNote || sents[sents.length - 1] || sents[0] || `Story updated: ${cl.story}`;
         const finalShiftTs = new Date(Math.max(Date.parse(shiftTs) || latestCovMs, priorBirthMs + 60000)).toISOString();
         const distinctInitSum = (priorSummary && priorSummary.trim() !== String(cl.summary || '').trim())
@@ -1718,12 +1798,43 @@ function deduplicateAndSanitizeClusters(rawClusters) {
       }
     }
 
-    // Enforce Headline-Shift Co-Change Law across all steps of evolutionHistory:
-    // A step that changes the headline from the preceding step is either promoted to `material_shift` (if substantive shift or final story)
-    // or aligned with the active phase headline (if an intra-phase number/wording clarification).
-    let monoVer = 1;
-    cl.evolutionHistory[0].version = 1;
-    cl.evolutionHistory[0].type = 'initial';
+    // Enforce Headline-Shift Co-Change Law, Premature Conclusion Removal & No Ping-Pong Reversions across all steps:
+    if (cl.evolutionHistory.length > 2) {
+      const getSimpleStems = (s) => new Set(normHeadStr(s).split(/\s+/).filter(w => w.length >= 4 && !/^(after|amid|over|with|from|into|that|this)$/.test(w)));
+      const finalStoryStems = getSimpleStems(cl.story || '');
+      if (finalStoryStems.size >= 3) {
+        cl.evolutionHistory = cl.evolutionHistory.filter((h, idx, arr) => {
+          if (idx === 0 || idx === arr.length - 1) return true;
+          const hStems = getSimpleStems(h.headline || '');
+          if (hStems.size < 3) return true;
+          let sharedWithFinal = 0;
+          for (const st of hStems) if (finalStoryStems.has(st)) sharedWithFinal++;
+          if ((sharedWithFinal / Math.min(hStems.size, finalStoryStems.size)) < 0.80) return true;
+          const laterSteps = arr.slice(idx + 1);
+          const hasInterveningDistinctPhase = laterSteps.some(later => {
+            const lStems = getSimpleStems(later.headline || '');
+            let sh = 0;
+            for (const st of lStems) if (finalStoryStems.has(st)) sh++;
+            return lStems.size >= 3 && (sh / Math.min(lStems.size, finalStoryStems.size)) < 0.70;
+          });
+          const hasLaterFinalMatch = laterSteps.some(later => {
+            const lStems = getSimpleStems(later.headline || '');
+            let sh = 0;
+            for (const st of lStems) if (finalStoryStems.has(st)) sh++;
+            return lStems.size >= 3 && (sh / Math.min(lStems.size, finalStoryStems.size)) >= 0.80;
+          });
+          return !(hasInterveningDistinctPhase && hasLaterFinalMatch);
+        });
+      }
+    }
+
+    if (cl.evolutionHistory.length >= 2 && normHeadStr(cl.evolutionHistory[0].headline) === normHeadStr(cl.evolutionHistory[1].headline)) {
+      const bStory = cl.evolutionHistory[1].beforeStory;
+      if (bStory && normHeadStr(bStory) !== normHeadStr(cl.evolutionHistory[1].headline)) {
+        cl.evolutionHistory[0].headline = bStory;
+      }
+    }
+
     for (let i = 1; i < cl.evolutionHistory.length; i++) {
       const prevH = cl.evolutionHistory[i - 1];
       const currH = cl.evolutionHistory[i];
@@ -1738,25 +1849,78 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           currH.headline = prevH.headline;
         }
       }
-      if (currH.type !== 'material_shift' && prevH.headline) {
-        currH.beforeStory = prevH.headline;
-      } else if (currH.type === 'material_shift' && prevH.headline) {
-        currH.beforeStory = prevH.headline;
-      }
-      if (currH.type === 'material_shift') monoVer++;
-      currH.version = monoVer;
     }
+
+    // Smooth single-step A -> B -> A detours
+    for (let i = 1; i < cl.evolutionHistory.length - 1; i++) {
+      const prevNorm = normHeadStr(cl.evolutionHistory[i - 1].headline);
+      const currNorm = normHeadStr(cl.evolutionHistory[i].headline);
+      const nextNorm = normHeadStr(cl.evolutionHistory[i + 1].headline);
+      if (currNorm !== prevNorm && nextNorm === prevNorm) {
+        cl.evolutionHistory[i].headline = cl.evolutionHistory[i - 1].headline;
+        cl.evolutionHistory[i].type = 'clarification';
+      }
+    }
+
+    // Prevent ping-pong reversion to already-superseded headlines & demote same-headline material_shifts
+    const seenPhaseHeadlines = new Set([normHeadStr(cl.evolutionHistory[0].headline)]);
+    for (let i = 1; i < cl.evolutionHistory.length; i++) {
+      const prevH = cl.evolutionHistory[i - 1];
+      const currH = cl.evolutionHistory[i];
+      const prevNorm = normHeadStr(prevH.headline);
+      let currNorm = normHeadStr(currH.headline);
+      if (currNorm !== prevNorm && seenPhaseHeadlines.has(currNorm)) {
+        currH.headline = prevH.headline;
+        currH.type = 'clarification';
+        currNorm = prevNorm;
+      }
+      if (currH.type === 'material_shift' && currNorm === prevNorm) {
+        currH.type = 'clarification';
+      } else if (currH.type !== 'material_shift' && currNorm !== prevNorm) {
+        currH.type = 'material_shift';
+      }
+      currH.beforeStory = prevH.headline;
+      seenPhaseHeadlines.add(currNorm);
+    }
+
     const lastHistStep = cl.evolutionHistory[cl.evolutionHistory.length - 1];
-    if (lastHistStep && cl.story && lastHistStep.headline !== cl.story) {
-      if (cl.evolutionHistory.length > 1 && lastHistStep.type !== 'material_shift') {
-        lastHistStep.type = 'material_shift';
-        monoVer++;
-        lastHistStep.version = monoVer;
+    if (lastHistStep && cl.story && normHeadStr(lastHistStep.headline) !== normHeadStr(cl.story)) {
+      const storyNorm = normHeadStr(cl.story);
+      if (seenPhaseHeadlines.has(storyNorm)) {
+        for (let k = 1; k < cl.evolutionHistory.length - 1; k++) {
+          if (normHeadStr(cl.evolutionHistory[k].headline) === storyNorm) {
+            cl.evolutionHistory[k].headline = cl.evolutionHistory[k - 1].headline;
+            cl.evolutionHistory[k].type = 'clarification';
+          }
+        }
       }
       lastHistStep.headline = cl.story;
     }
+
+    let monoVer = 1;
+    cl.evolutionHistory[0].version = 1;
+    cl.evolutionHistory[0].type = 'initial';
+    for (let i = 1; i < cl.evolutionHistory.length; i++) {
+      const prevNorm = normHeadStr(cl.evolutionHistory[i - 1].headline);
+      const currNorm = normHeadStr(cl.evolutionHistory[i].headline);
+      if (currNorm === prevNorm) {
+        cl.evolutionHistory[i].type = 'clarification';
+      } else {
+        cl.evolutionHistory[i].type = 'material_shift';
+      }
+      cl.evolutionHistory[i].beforeStory = cl.evolutionHistory[i - 1].headline;
+      if (cl.evolutionHistory[i].type === 'material_shift') monoVer++;
+      cl.evolutionHistory[i].version = monoVer;
+    }
     if (lastHistStep && cl.summary && lastHistStep.summary !== cl.summary) {
       lastHistStep.summary = cl.summary;
+    }
+    if (cl.firstSeenAt && cl.evolutionHistory[0]?.timestamp) {
+      const initTsMs = Date.parse(cl.evolutionHistory[0].timestamp);
+      const firstSeenMs = Date.parse(cl.firstSeenAt);
+      if (!isNaN(initTsMs) && (isNaN(firstSeenMs) || initTsMs < firstSeenMs)) {
+        cl.firstSeenAt = new Date(initTsMs).toISOString();
+      }
     }
     if (monoVer >= 2 && cl.evolutionHistory[0].summary === cl.summary) {
       cl.evolutionHistory[0].summary = (cl.evolutionHistory[1]?.beforeSummary && cl.evolutionHistory[1].beforeSummary !== cl.summary)
@@ -2111,9 +2275,9 @@ function exportPublicJsonFeeds(fullPayload) {
       ...(cl.briefing ? { briefing: cl.briefing } : {}),
       ...(cl.lastDevelopedAt ? { lastDevelopedAt: cl.lastDevelopedAt } : {}),
       ...(cl.developmentNote ? { developmentNote: cl.developmentNote } : {}),
-      ...(cl.evolvedFromIds ? { evolvedFromIds: cl.evolvedFromIds } : {}),
-      ...(cl.evolutionHistory ? { evolutionHistory: cl.evolutionHistory } : {}),
-      ...(cl.lateralConnections ? { lateralConnections: cl.lateralConnections } : {}),
+      ...(cl.evolvedFromIds ? { evolvedFromIds: [...cl.evolvedFromIds] } : {}),
+      ...(cl.evolutionHistory ? { evolutionHistory: cl.evolutionHistory.map(h => ({ ...h })) } : {}),
+      ...(cl.lateralConnections ? { lateralConnections: cl.lateralConnections.map(lc => ({ ...lc })) } : {}),
       topic: cl.topic || 'world',
       imageUrl: cl.imageUrl || null,
       averageSentiment: cl.averageSentiment,
