@@ -25,6 +25,9 @@ jobs:
   deploy:
     name: Deploy UI to GitHub Pages
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository (always latest main HEAD so queued runs never overwrite newer sync data)
         uses: actions/checkout@v4

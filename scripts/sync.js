@@ -309,6 +309,9 @@ function tryRepairJsonArray(text) {
   let clean = text.trim();
   // Strip illegal leading positive signs from numbers like ": +0.25"
   clean = clean.replace(/:\s*\+(\d)/g, ': $1');
+  // Strip stray markdown quote/bullet prefixes (e.g. `> "Robert..."`) inside JSON arrays & trailing commas
+  clean = clean.replace(/(?<=\[|,)\s*[>*•]\s*(?=["{\[-])/g, ' ');
+  clean = clean.replace(/,(\s*[\]}])/g, '$1');
   if (!clean.startsWith('[')) return clean;
   if (clean.endsWith(']')) return clean;
   if (clean.endsWith('}')) return clean + ']';
@@ -3784,22 +3787,39 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const hist = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
       const noteStems = extractCoherenceStems(noteText);
 
-      // Deterministic Baseline-Subtraction Guard: if >= 60% of the substantive stems in `noteText` (excluding outlet names)
-      // were ALREADY present in the cluster's existing story + summary + prior evolution notes (and no new numbers are introduced),
-      // reject the update as a syndication echo!
+      // Deterministic Baseline-Subtraction & Outlet-Confirmation Guard:
+      // Canonicalize newsroom synonyms ("draft"<->"provisional", "pact"<->"agreement"<->"deal", "sealed"<->"reached")
+      // so syndication echoes and multi-agency confirmations of already-recorded milestones never pass as material shifts!
+      const canonPhaseStem = (s) => String(s || '')
+        .replace(/^(draft|provisional|tentative|preliminar\w*)$/, 'provis')
+        .replace(/^(pacts?|deals?|accords?|agreements?)$/, 'deal')
+        .replace(/^(seals?|sealed|reach\w*|clinch\w*|finaliz\w*)$/, 'reach')
+        .replace(/^(youth|students?)$/, 'student')
+        .replace(/^(agricultur\w*|farms?|food)$/, 'food')
+        .replace(/^(bids?|candidac\w*)$/, 'bid');
       const priorBaselineText = `${c.story || ''} ${c.summary || ''} ${(hist || []).map(h => h?.note || '').join(' ')}`;
-      const priorBaselineStems = new Set(extractCoherenceStems(priorBaselineText));
+      const priorBaselineStems = new Set(extractCoherenceStems(priorBaselineText).map(canonPhaseStem));
       const priorBaselineNums = new Set(priorBaselineText.match(/\b\d+(?:[.,]\d+)?\b/g) || []);
       const noteNums = (noteText.match(/\b\d+(?:[.,]\d+)?\b/g) || []).filter(n => !priorBaselineNums.has(n));
       const outletNameStems = new Set(extractCoherenceStems(NEWS_SOURCES.map(s => s.name).join(' ')));
-      const substantiveNoteStems = noteStems.filter(s => !outletNameStems.has(s));
+      const substantiveNoteStems = noteStems.filter(s => !outletNameStems.has(s) && !/^(confirm\w*|report\w*|reaffirm\w*|detail\w*|highlight\w*|note\w*|address\w*)$/.test(s)).map(canonPhaseStem);
+      const hasOutletConfirmationPrefix = (() => {
+        const mLead = noteText.match(/\b(confirms?|confirmed|reports?|reported|reaffirms?|reaffirmed|notes?|noted|highlights?|highlighted|details?|detailed|echoes|echoed|covers?|covered)\b(?:\s+that)?\s+/i);
+        if (!mLead || mLead.index === undefined || mLead.index > 85) return false;
+        const leadPrefix = noteText.slice(0, mLead.index).toLowerCase();
+        return NEWS_SOURCES.some(s => leadPrefix.includes(s.name.toLowerCase())) || /\b(outlets?|newsrooms?|agencies|media|press)\b/i.test(leadPrefix);
+      })();
+      let effectiveUType = uType;
       if (substantiveNoteStems.length >= 1) {
         const alreadyInBaseline = substantiveNoteStems.filter(s => priorBaselineStems.has(s)).length;
         const novelStemCount = substantiveNoteStems.length - alreadyInBaseline;
         const overlapRatio = alreadyInBaseline / substantiveNoteStems.length;
-        const maxAllowedOverlap = uType === 'clarification' ? 0.60 : 0.72;
+        if (effectiveUType === 'material_shift' && hasOutletConfirmationPrefix && noteNums.length === 0 && overlapRatio >= 0.55) {
+          effectiveUType = 'clarification';
+        }
+        const maxAllowedOverlap = effectiveUType === 'clarification' ? 0.62 : 0.70;
         if ((noteNums.length === 0 && novelStemCount < 2) || (noteNums.length === 0 && overlapRatio >= maxAllowedOverlap)) {
-          console.log(`[Clusters] Suppressed syndication echo on "${c.story}": "${noteText}" (${alreadyInBaseline}/${substantiveNoteStems.length} stems already in baseline)`);
+          console.log(`[Clusters] Suppressed syndication echo on "${c.story}": "${noteText}" (${alreadyInBaseline}/${substantiveNoteStems.length} canonical stems already in baseline)`);
           if (c._pendingUpdate) c._pendingUpdate._acceptedOrEvaluated = true;
           continue;
         }
@@ -3878,7 +3898,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const candStoryCheck = isHeadlineAnchorRecognizable(rawCandStoryCheck) ? rawCandStoryCheck : c.story;
       const isUnchangedOrRevertedHeadline = normHeadSync(candStoryCheck) === normHeadSync(c.story) || seenPriorHeadlines.has(normHeadSync(candStoryCheck));
 
-      if (uType === 'material_shift' && !isUnchangedOrRevertedHeadline) {
+      if (effectiveUType === 'material_shift' && !isUnchangedOrRevertedHeadline) {
         materialInPlaceCount++;
         const oldSlug = c.id || slugify(c.story);
         const newStory = candStoryCheck;
@@ -4231,9 +4251,18 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const mergeHeadOverlap = originHeadStems.length > 0
         ? originHeadStems.filter(s => candFinalStems.has(s)).length / originHeadStems.length
         : 1;
-      const mergeType = chronologicalSpanMs < 2 * 3600000
+      const mergeNoteStr = String(m.developmentNote || '').trim();
+      const mergeNoteLead = mergeNoteStr.match(/\b(confirms?|confirmed|reports?|reported|reaffirms?|reaffirmed|notes?|noted|highlights?|highlighted|details?|detailed|echoes|echoed|covers?|covered)\b(?:\s+that)?\s+/i);
+      const isOutletConfirmMerge = Boolean(
+        mergeNoteLead &&
+        mergeNoteLead.index !== undefined &&
+        mergeNoteLead.index <= 85 &&
+        (NEWS_SOURCES.some(s => mergeNoteStr.slice(0, mergeNoteLead.index).toLowerCase().includes(s.name.toLowerCase())) ||
+         /\b(outlets?|newsrooms?|agencies|media|press)\b/i.test(mergeNoteStr.slice(0, mergeNoteLead.index)))
+      );
+      const mergeType = chronologicalSpanMs < 2 * 3600000 || (isOutletConfirmMerge && mergeHeadOverlap >= 0.50)
         ? 'clarification'
-        : ((rawMergeType === 'material_shift' || mergeHeadOverlap < 0.70) ? 'material_shift' : rawMergeType);
+        : (rawMergeType === 'material_shift' ? 'material_shift' : (rawMergeType === 'clarification' ? 'clarification' : (mergeHeadOverlap < 0.70 ? 'material_shift' : rawMergeType)));
       const isDev = mergeType === 'material_shift';
 
       const anchor = isDev ? originAnchor : largestAnchor;

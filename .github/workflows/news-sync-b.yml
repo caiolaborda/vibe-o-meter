@@ -12,6 +12,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: 'news-relay-slot-b'
+  cancel-in-progress: true
+
 jobs:
   pulse-1:
     name: Sync Pulse 1 (T+0m)

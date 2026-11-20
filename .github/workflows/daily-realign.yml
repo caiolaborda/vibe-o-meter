@@ -49,6 +49,17 @@ jobs:
             echo "No archive changes to commit."
           else
             git commit -m "chore(archive): daily cross-archive evolution & lateral graph realignment"
-            git pull --rebase origin main || true
-            git push origin HEAD:main
+            for i in 1 2 3; do
+              if git pull --rebase -X theirs origin main; then
+                git push origin HEAD:main && break
+              else
+                git rebase --abort || true
+                git fetch origin main
+                git reset --soft origin/main
+                git add data/vibe-data.json data/clusters-archive.json public/data/
+                git commit -m "chore(archive): daily cross-archive evolution & lateral graph realignment" || true
+                git push origin HEAD:main && break
+              fi
+              sleep 3
+            done
           fi
