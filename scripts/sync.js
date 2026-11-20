@@ -1236,9 +1236,112 @@ function formatShortUtcDate(msOrIso) {
   return `${months[d.getUTCMonth()]} ${d.getUTCDate()} ${hh}:${mm}Z`;
 }
 
+const SYNC_UNIVERSAL_DOMAINS = new Set([
+  'conflict', 'governance', 'economy', 'law',
+  'technology', 'science', 'health', 'climate',
+  'infrastructure', 'society', 'culture', 'sport'
+]);
+const SYNC_VALID_TEMPORAL_KINDS = new Set(['point_event', 'developing_arc', 'announcement', 'upcoming']);
+const SYNC_EVENT_TIME_PRECISION_RANK = { exact_time: 5, part_of_day: 4, weekend: 3, span: 3, day: 2 };
+
+function normalizeClusterEventTime(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const startDate = String(raw.startDate || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return null;
+  const rawEnd = raw.endDate ? String(raw.endDate).trim() : '';
+  const endDate = (/^\d{4}-\d{2}-\d{2}$/.test(rawEnd) && rawEnd > startDate) ? rawEnd : null;
+  const timeOfDay = raw.timeOfDay ? String(raw.timeOfDay).trim().slice(0, 48) : null;
+  let precision = String(raw.precision || '').trim();
+  if (!SYNC_EVENT_TIME_PRECISION_RANK[precision]) {
+    if (endDate) precision = 'span';
+    else if (timeOfDay && /\d{1,2}:\d{2}/.test(timeOfDay)) precision = 'exact_time';
+    else if (timeOfDay) precision = 'part_of_day';
+    else precision = 'day';
+  }
+  const label = raw.label ? String(raw.label).trim().slice(0, 64) : startDate;
+  return {
+    startDate,
+    endDate,
+    timeOfDay,
+    precision,
+    label,
+    sourceBacked: Boolean(raw.sourceBacked),
+    clarifiedAt: raw.clarifiedAt ? String(raw.clarifiedAt) : null
+  };
+}
+
+function mergeClusterEventTime(prevRaw, nextRaw, options = {}) {
+  const prev = normalizeClusterEventTime(prevRaw);
+  const next = normalizeClusterEventTime(nextRaw);
+  if (!prev || !prev.sourceBacked) {
+    return (next && next.sourceBacked) ? next : (prev || null);
+  }
+  if (!next || !next.sourceBacked) {
+    return prev;
+  }
+  if (options.clarified === true) {
+    return {
+      ...next,
+      clarifiedAt: options.nowIso || new Date().toISOString()
+    };
+  }
+  if (
+    next.startDate === prev.startDate &&
+    (SYNC_EVENT_TIME_PRECISION_RANK[next.precision] || 0) > (SYNC_EVENT_TIME_PRECISION_RANK[prev.precision] || 0)
+  ) {
+    return {
+      ...next,
+      clarifiedAt: prev.clarifiedAt || null
+    };
+  }
+  return prev;
+}
+
+function applyClusterEventTimeFields(targetObj, mergedEventTime) {
+  if (!targetObj || !mergedEventTime) return;
+  targetObj.eventTime = mergedEventTime;
+  targetObj.eventDate = mergedEventTime.startDate;
+  if (mergedEventTime.endDate) targetObj.eventEndDate = mergedEventTime.endDate;
+  else delete targetObj.eventEndDate;
+  if (mergedEventTime.sourceBacked && mergedEventTime.label) targetObj.eventTimeLabel = mergedEventTime.label;
+}
+
+function sanitizeSyncDomains(rawDomains) {
+  if (!Array.isArray(rawDomains)) return null;
+  const out = [];
+  for (const d of rawDomains) {
+    const clean = String(d || '').trim().toLowerCase();
+    if (clean && SYNC_UNIVERSAL_DOMAINS.has(clean) && !out.includes(clean)) out.push(clean);
+    if (out.length >= 3) break;
+  }
+  return out.length > 0 ? out : null;
+}
+
+function sanitizeSyncConcepts(rawConcepts) {
+  if (!Array.isArray(rawConcepts)) return null;
+  const out = [];
+  for (const c of rawConcepts) {
+    const clean = String(c || '').trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '');
+    if (clean && !out.includes(clean)) out.push(clean);
+    if (out.length >= 4) break;
+  }
+  return out.length > 0 ? out : null;
+}
+
+function sanitizeSyncEntities(rawEntities) {
+  if (!Array.isArray(rawEntities)) return null;
+  const out = [];
+  for (const e of rawEntities) {
+    const clean = String(e || '').trim().slice(0, 60);
+    if (clean && !out.includes(clean)) out.push(clean);
+    if (out.length >= 4) break;
+  }
+  return out.length > 0 ? out : null;
+}
+
 // Extract structured Event Fact Attributes (Timing Window, Sovereign/Pinpoint Geography, Proper-Noun Subjects, Weather Designators)
 function extractEventFactAttributes(itemOrCluster) {
-  if (!itemOrCluster) return { timeTag: '', locTag: '', countries: new Set(), properStems: new Set(), headProperStems: new Set(), weatherDesignators: new Set(), minMs: 0, maxMs: 0 };
+  if (!itemOrCluster) return { timeTag: '', eventTag: '', locTag: '', countries: new Set(), properStems: new Set(), headProperStems: new Set(), weatherDesignators: new Set(), minMs: 0, maxMs: 0 };
   const isCluster = Array.isArray(itemOrCluster.coverage) || Boolean(itemOrCluster.story);
   const headline = isCluster ? (itemOrCluster.story || '') : (itemOrCluster.title || '');
   const cov = isCluster ? (itemOrCluster.coverage || []) : [];
@@ -1273,6 +1376,7 @@ function extractEventFactAttributes(itemOrCluster) {
   const timeTag = isCluster
     ? (minMs > 0 ? `${formatShortUtcDate(minMs)} -> ${formatShortUtcDate(maxMs)}` : '')
     : (maxMs > 0 ? formatShortUtcDate(maxMs) : '');
+  const eventTag = itemOrCluster.eventTime?.label || itemOrCluster.eventTimeLabel || itemOrCluster.eventDate || '';
 
   const countries = detectSovereignCountries(fullText);
   const pl = itemOrCluster.primaryLocation;
@@ -1291,6 +1395,7 @@ function extractEventFactAttributes(itemOrCluster) {
 
   return {
     timeTag,
+    eventTag,
     locTag,
     countries,
     headCountries: detectSovereignCountries(headline),
@@ -1749,6 +1854,7 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
     if (c.isClusterAnchor) {
       const f = extractEventFactAttributes(c.anchorCluster || c);
       const metaParts = [
+        f.eventTag ? `event: ${f.eventTag}` : '',
         f.timeTag ? `time: ${f.timeTag}` : '',
         f.locTag ? `geo: ${f.locTag}` : '',
         f.properDisplay.length ? `subjects: ${f.properDisplay.slice(0, 5).join(', ')}` : ''
@@ -1770,8 +1876,9 @@ Identify distinct real-world events, developments, or discoveries that are cover
 
 Rules:
 - Group dispatches strictly by the exact same underlying real-world event, specific incident, single court ruling, single economic data release, game result, or discovery.
-- FACT-ATTRIBUTE GROUNDING (TIME, GEOGRAPHY, NAMED SUBJECTS & EPISODE PHASE): Each item includes extracted factual metadata ([pub/time | geo | subjects]). Treat these facts as hard constraints:
-  • NEVER group parallel weather systems, storms, sports games, aviation incidents, crimes, or market stories occurring in different countries/continents or involving different named subjects (e.g. NEVER combine UK "Storm Austen/Boelo" with Australian storms or Canadian "Subtropical Storm Josephine"; NEVER combine two different Premier League or NBA matches).
+- FACT-ATTRIBUTE GROUNDING (TIME, GEOGRAPHY, NAMED SUBJECTS & EPISODE PHASE): Each item includes extracted factual metadata ([pub/time/event | geo | subjects]). Treat these facts as hard constraints:
+  • NEVER group parallel weather systems, storms, sports games, aviation incidents, crimes, or market stories occurring in different countries/continents or involving different named subjects (e.g. NEVER combine UK "Storm Austen/Boelo" with Australian storms or Canadian "Subtropical Storm Josephine"; NEVER combine two different Premier League, UEFA Nations League, or NBA matches such as "England defeats Spain" with "France vs. Italy").
+  • NEVER group separate chronological occurrences happening days or weekends apart in the same city or war theater (e.g. NEVER combine Paris riots from the weekend of Nov 14–15 with a distinct later wave on Nov 21–22, and NEVER combine separate overnight drone strikes days apart into an unrelated day's strike — check [event: ...] and explicit source timing cues against [pub: ...]).
   • NEVER attach general Election-Day voting dispatches ("polls open", "voters cast ballots", "tight runoff") to an older campaign-episode cluster from days earlier (such as a prior TV debate "Lula and Bolsonaro Spar in Debate" or a policy announcement "Lula Fast-Tracks Welfare Payments") — form or match the dedicated Election-Day voting cluster instead.
 - NEVER group articles by a broad theme, commodity, industry, or beat (for example, NEVER create thematic buckets like "Climate Change Assessments", "Global Gold Mining", "Midterm Campaign Trails", "Healthcare Costs", or "AI Industry Trends"). If two articles are feature stories or reports about different places/companies on a similar theme, DO NOT group them.
 - Match dispatches by their primary headline subject; use the short description snippet only to disambiguate who or where an oblique headline refers to, never to match multi-story digest roundups ("...and more top headlines") or sportsbook promo codes.
@@ -1782,6 +1889,12 @@ Rules:
 - SPECIFIC LOCATION/ACTOR IN HEADLINE: Always name the specific city, country, or actor shared by the articles in "story" (e.g. "Milan Riots Prompt Italian Troop Deployment", NEVER a vague continental umbrella like "European Protests Over Living Costs" when the articles are in Milan/Italy, and NEVER bleed facts from another country's cluster into "summary").
 - Provide a concise, detail-packed 1-2 sentence editorial summary (~35-55 words) weaving the event's core arc with the concrete specifics from the dispatches (exact named institutions/agencies/companies, people/roles/ages, specific venues/streets/cities, concrete figures/tallies, and causal mechanisms). NEVER include meta-coverage filler ("Outlets highlight...", "Reports examine...", "Media coverage focuses on...").
 - TEMPORAL & ROLE HYGIENE (NEVER INJECT PRE-CUTOFF TITLES): Only attribute an active political, corporate, or institutional office/title to a person if that exact current title is explicitly stated in the dispatches below. Because offices, prime ministers, mayors, and ministers change over time, NEVER supply a person's former or pre-training-cutoff role from internal memory when the dispatches omit a title or use a newer title.
+- STRUCTURED TAXONOMY & EVENT TIMING METADATA:
+  • "domains": 1 to 3 slugs chosen strictly from ["conflict", "governance", "economy", "law", "technology", "science", "health", "climate", "infrastructure", "society", "culture", "sport"].
+  • "concepts": 1 to 4 concise lowercase hyphenated tags (e.g. ["semiconductors", "export-controls", "antitrust"] or ["football", "nations-league"]).
+  • "entities": 1 to 4 exact proper names of key people, organizations, or venues in the cluster.
+  • "temporalKind": one of "point_event" (match, crash, ruling, single strike), "developing_arc" (multi-day crisis/negotiation), "announcement" (study/report/policy release), or "upcoming" (scheduled event).
+  • "eventTime": null UNLESS the dispatches explicitly state when the underlying real-world event occurred relative to [pub: ...] (e.g. "at 12:15am morning of Monday 13th", "late Tuesday night", "over the weekend"). ONLY when explicitly source-backed, set { "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" | null, "timeOfDay": "00:15 local" | "late night" | "weekend" | null, "precision": "exact_time" | "part_of_day" | "weekend" | "span" | "day", "label": "Mon Nov 13, 00:15 local" | "Weekend of Nov 14–15", "sourceBacked": true }.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
 Dispatches:
@@ -1792,6 +1905,11 @@ Return JSON array in format:
   {
     "story": "Topic Title",
     "summary": "1-2 sentence detail-packed summary with exact named actors, institutions, venues, figures, and mechanisms (no meta-coverage filler).",
+    "domains": ["technology", "economy"],
+    "concepts": ["semiconductors", "export-controls"],
+    "entities": ["Nvidia", "US House"],
+    "temporalKind": "announcement",
+    "eventTime": null,
     "primaryLocation": { "name": "Specific Venue/City, City/Region", "region": "State/Province, Country", "countryIso": "2-letter lowercase ISO code (e.g. 'us', 'gb', 'fr', 'ua', 'cn')", "lat": 51.5074, "lon": -0.1278, "zoom": 10 },
     "ids": [0, 4, 12]
   }
@@ -2154,6 +2272,11 @@ Return JSON array in format:
         let prevSummarySynthesizedSig = null;
         let prevPrimaryLocation = null;
         let prevBriefing = null;
+        let prevDomains = sanitizeSyncDomains(cl.domains);
+        let prevConcepts = sanitizeSyncConcepts(cl.concepts);
+        let prevEntities = sanitizeSyncEntities(cl.entities);
+        let prevTemporalKind = SYNC_VALID_TEMPORAL_KINDS.has(cl.temporalKind) ? cl.temporalKind : null;
+        let prevEventTime = normalizeClusterEventTime(cl.eventTime);
         let pendingUpdate = null;
 
         if (matchedPrev) {
@@ -2214,6 +2337,13 @@ Return JSON array in format:
           prevSummarySynthesizedSig = prevStorySupported ? (matchedPrev.summarySynthesizedSig || null) : null;
           prevPrimaryLocation = prevStorySupported ? (matchedPrev.primaryLocation || null) : null;
           prevBriefing = prevStorySupported ? (matchedPrev.briefing || null) : null;
+          if (prevStorySupported) {
+            prevDomains = sanitizeSyncDomains(matchedPrev.domains) || prevDomains;
+            prevConcepts = sanitizeSyncConcepts(matchedPrev.concepts) || prevConcepts;
+            prevEntities = sanitizeSyncEntities(matchedPrev.entities) || prevEntities;
+            prevTemporalKind = (SYNC_VALID_TEMPORAL_KINDS.has(matchedPrev.temporalKind) ? matchedPrev.temporalKind : null) || prevTemporalKind;
+            prevEventTime = mergeClusterEventTime(matchedPrev.eventTime, prevEventTime);
+          }
 
           const mergedLat = [];
           const seenLatIds = new Set();
@@ -2423,6 +2553,16 @@ Return JSON array in format:
           ...(prevLateralConnections ? { lateralConnections: prevLateralConnections } : {}),
           ...(prevSummarySynthesizedSig ? { summarySynthesizedSig: prevSummarySynthesizedSig } : {}),
           ...(prevBriefing ? { briefing: prevBriefing } : {}),
+          ...(prevDomains ? { domains: prevDomains } : {}),
+          ...(prevConcepts ? { concepts: prevConcepts } : {}),
+          ...(prevEntities ? { entities: prevEntities } : {}),
+          ...(prevTemporalKind ? { temporalKind: prevTemporalKind } : {}),
+          ...(prevEventTime ? {
+            eventTime: prevEventTime,
+            eventDate: prevEventTime.startDate,
+            ...(prevEventTime.endDate ? { eventEndDate: prevEventTime.endDate } : {}),
+            ...(prevEventTime.sourceBacked && prevEventTime.label ? { eventTimeLabel: prevEventTime.label } : {})
+          } : {}),
           ...((prevPrimaryLocation || (cl.primaryLocation && typeof cl.primaryLocation.lat === 'number' && typeof cl.primaryLocation.lon === 'number' && cl.primaryLocation.name ? {
             name: String(cl.primaryLocation.name).trim(),
             region: String(cl.primaryLocation.region || '').trim(),
@@ -3207,6 +3347,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     }
     const f = extractEventFactAttributes(c);
     const factBanner = [
+      f.eventTag ? `event: ${f.eventTag}` : '',
       f.timeTag ? `time: ${f.timeTag}` : '',
       f.locTag ? `geo: ${f.locTag}` : '',
       f.properDisplay.length ? `subjects: ${f.properDisplay.join(', ')}` : ''
@@ -3282,8 +3423,8 @@ Before classifying ANY update in Job 2, distinguish between WHEN AN ARTICLE WAS 
   • DIGEST / MARKET-WRAP BUNDLING: If a candidate dispatch is a broader market wrap or digest that mentions the cluster's topic alongside unrelated market indices or other companies' earnings (e.g. "notes Wall Street climb and forthcoming earnings alongside..."), ignore the unrelated digest items completely ("none").
 
 When evaluating what remains AFTER subtracting the existing summary baseline, distinguish between THREE states:
-1. "none" (Same-Event Syndication / Static Background Color — Omit):
-   - The new dispatches report on the EXACT SAME breaking event, court ruling, indictment, or announcement already in the cluster's headline/summary without any new subsequent chronological event occurring afterward — even if the new headlines use different synonyms (e.g. "charged by DOJ in cannabis conspiracy" vs "indicted on federal counts for marijuana distribution", or "blocks anti-trans prison policy" vs "upholds pause on transgender prison policy") or include static background/biographical/date details of that same initial event (e.g. mentioning a person's age like "82-year-old", party affiliation, exact date like "December 11" vs "early December", or co-defendants in the same indictment). If nothing new happened in time after the initial break, it is "none" — omit completely!
+1. "none" (Same-Event Syndication / Static Background Color / Post-Match Stat Notes — Omit):
+   - The new dispatches report on the EXACT SAME breaking event, court ruling, indictment, sports result, or announcement already in the cluster's headline/summary without any new subsequent chronological event occurring afterward — even if the new headlines use different synonyms (e.g. "charged by DOJ in cannabis conspiracy" vs "indicted on federal counts for marijuana distribution", or "blocks anti-trans prison policy" vs "upholds pause on transgender prison policy") or include static background/biographical/date details of that same initial event (e.g. mentioning a person's age like "82-year-old", party affiliation, exact date like "December 11" vs "early December", or co-defendants in the same indictment), OR add post-match sports statistics, goal-scorer trivia, box scores, pundit recap quotes, or league-table notes to a completed match/point event. If nothing new happened in time after the initial break/final whistle, it is "none" — omit completely!
 
 2. "clarification" (In-Phase Factual Delta — Sharpening Facts, Proposals, or Sub-Events Within the Existing Envelope):
    - The new dispatches add genuinely new factual precision, granularity, pre-decision deliberations, or localized sub-incidents NOT YET in the existing summary, WITHOUT executing an irreversible boundary crossing of the State Envelope:
@@ -3321,7 +3462,7 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
   • Example of FORBIDDEN merge #1: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
   • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate diplomatic or economic fallout ("Saudi Arabia Postpones Investor Conference" or "Egypt Pledges Support to Saudi Arabia") are DISTINCT EVENTS with different actors and severities. NEVER merge an economic/diplomatic reaction cluster into a casualty/strike cluster — link them via "lateralConnections" (Job 3) instead!
   • Example of FORBIDDEN merge #3 (Parallel Domestic / Corporate Releases Across Different Countries or Entities): NEVER merge two clusters that report parallel domestic economic indicators (e.g. "UK Inflation Rises to 3.5%" + "Canada Inflation Rises to 3.1%" + "Japan Core Inflation Surges to 2.1%"), budgets, court rulings, elections, or corporate earnings in DIFFERENT countries or for DIFFERENT companies/central banks — those are separate national/corporate releases and belong ONLY in "lateralConnections" (Job 3), NEVER in "merges"!
-  • Example of FORBIDDEN merge #4 (Parallel Weather Systems, Sports Games, Aviation/Crime Incidents, or Market/Company Stories With Different Subjects or Locations): NEVER merge two clusters about different named storms or weather systems in different countries/oceans (e.g. UK "Storm Austen and Storm Boelo" vs "Severe Weather in Australia" vs Canadian "Subtropical Storm Josephine"), different sports matches in the same league (e.g. "Aston Villa Defeats Man City" vs "Tottenham Defeats Chelsea", or "Knicks" vs "76ers"), unrelated aviation/drone incidents ("Tel Aviv Flight Diverted" vs "Drone Explodes in Lithuania"), or a broad market wrap ("Global Stocks Tumble") with a single company's funding round ("OpenAI Nears $30B Funding"). NEVER stitch two separate events together using "Simultaneously," "Concurrently," or "Meanwhile,"!
+  • Example of FORBIDDEN merge #4 (Parallel Weather Systems, Sports Games, Aviation/Crime Incidents, Separate Temporal Occurrences, or Market Stories): NEVER merge two clusters about different named storms or weather systems in different countries/oceans (e.g. UK "Storm Austen and Storm Boelo" vs "Severe Weather in Australia" vs Canadian "Subtropical Storm Josephine"), different sports matches in the same league/tournament (e.g. "England Defeats Spain" vs "France vs. Italy", "Aston Villa Defeats Man City" vs "Tottenham Defeats Chelsea", or "Knicks" vs "76ers"), distinct chronological occurrences in the same city/theater (e.g. Paris riots from Weekend A vs. a separate wave of protests on Weekend B, or separate overnight drone strikes days apart — check each cluster's [event: ...] anchor), unrelated aviation/drone incidents ("Tel Aviv Flight Diverted" vs "Drone Explodes in Lithuania"), or a broad market wrap ("Global Stocks Tumble") with a single company's funding round ("OpenAI Nears $30B Funding"). NEVER stitch two separate events together using "Simultaneously," "Concurrently," or "Meanwhile,"!
   • Example of FORBIDDEN merge #5 (Earlier Campaign Episode vs. Election-Day Voting): NEVER merge an earlier campaign-trail episode from days prior (such as "Lula and Bolsonaro Spar in Debate" or "Lula Fast-Tracks Welfare Payments") with the general Election-Day voting cluster ("Brazil Holds High-Stakes Presidential Runoff Election") — keep each milestone separate and link them in "lateralConnections" (Job 3)!
   • Example of VALID merge #1: Two clusters reporting the exact same physical event under slightly different regional labels (e.g. "Deadly Floods Strike Eastern Spain" + "Deadly Flash Flooding Strikes Catalonia", or "Houthi Attack Kills 53 in Yemen" + "Houthi Missile Strikes on Aden") MUST be merged in "merges"!
   • Example of VALID merge #2 (Same-Decision Policy Action + Leader Defense): If one cluster reports a specific government policy decision, waiver, or order (e.g. "U.S. Cuts Russia Sanctions and Rifts With Ukraine") and another cluster in the same window reports the leader's public remarks defending, announcing, or explaining that EXACT SAME decision (e.g. "Trump Defends Russia Sanctions Waiver"), they are the SAME specific policy event and MUST be merged in "merges" (never left separate in "lateralConnections")!
@@ -3345,7 +3486,7 @@ Identify pairs of DISTINCT clusters that share a political campaign, country bac
 Clusters:
 ${lines}${pairHintBlock}
 
-Return ONLY valid JSON in this exact field order (use "merges": [] if no two clusters are the exact same incident):
+Return ONLY valid JSON in this exact field order (use "merges": [] if no two clusters are the exact same incident; omit "eventTime" unless new dispatches explicitly clarify, correct, or refine the sub-day occurrence time of the original event):
 {
   "merges": [
     {
@@ -3355,7 +3496,9 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
       "updateType": "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
-      "summary": "1-2 sentence detail-packed cumulative synthesis weaving the integrated chronological journey with exact named institutions/actors, specific venues/cities, concrete figures, and mechanisms (zero meta-coverage filler)."
+      "summary": "1-2 sentence detail-packed cumulative synthesis weaving the integrated chronological journey with exact named institutions/actors, specific venues/cities, concrete figures, and mechanisms (zero meta-coverage filler).",
+      "eventTime": null,
+      "eventTimeClarified": false
     }
   ],
   "inPlaceDevelopments": [
@@ -3365,7 +3508,9 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
       "updateType": "none" | "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title (required for material_shift; for clarification, keep existing story UNLESS an explicit number/tally in the existing headline is now superseded by the updated summary)",
-      "summary": "1-2 sentence detail-packed cumulative synthesis weaving the integrated chronological journey with exact named institutions/actors, specific venues/cities, concrete figures, and mechanisms (zero meta-coverage filler)."
+      "summary": "1-2 sentence detail-packed cumulative synthesis weaving the integrated chronological journey with exact named institutions/actors, specific venues/cities, concrete figures, and mechanisms (zero meta-coverage filler).",
+      "eventTime": null,
+      "eventTimeClarified": false
     }
   ],
   "lateralConnections": [
@@ -3474,6 +3619,22 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         if (sharedUrlsCount === 0 && hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxSpecificMergeClusterDf)) {
           console.warn(`[Clusters] Rejected disjoint proper-subject / geographic / episodic merge between [${idxs[0]}] "${clA.story}" and [${idxs[1]}] "${clB.story}"`);
           return false;
+        }
+        if (
+          sharedUrlsCount === 0 &&
+          clA.temporalKind === 'point_event' &&
+          clB.temporalKind === 'point_event' &&
+          clA.eventTime?.sourceBacked &&
+          clB.eventTime?.sourceBacked &&
+          clA.eventTime?.startDate &&
+          clB.eventTime?.startDate
+        ) {
+          const dA = Date.parse(`${clA.eventTime.startDate}T12:00:00Z`);
+          const dB = Date.parse(`${clB.eventTime.startDate}T12:00:00Z`);
+          if (Number.isFinite(dA) && Number.isFinite(dB) && Math.abs(dA - dB) >= 2 * 86400000) {
+            console.warn(`[Clusters] Rejected disjoint point-event occurrence merge between [${idxs[0]}] "${clA.story}" (${clA.eventTime.startDate}) and [${idxs[1]}] "${clB.story}" (${clB.eventTime.startDate})`);
+            return false;
+          }
         }
         const hasParallelStitchAdv = /\b(simultaneously|concurrently|meanwhile|in a separate\s+(?:incident|development|match|game|event)|separately,)\b/i.test(`${m.summary || ''} ${m.developmentNote || ''}`);
         if (sharedUrlsCount === 0 && hasParallelStitchAdv) {
@@ -3870,6 +4031,14 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           addedHeadlines: c._pendingUpdate?.addedHeadlines || []
         });
       }
+
+      const mergedEvTime = mergeClusterEventTime(c.eventTime, dev.eventTime, {
+        clarified: Boolean(dev.eventTimeClarified),
+        nowIso: ts
+      });
+      if (mergedEvTime) {
+        applyClusterEventTimeFields(c, mergedEvTime);
+      }
     }
 
     // Attach lateral connections between distinct interacting clusters without collapsing them
@@ -4150,6 +4319,19 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         });
       }
 
+      const mergedDomains = sanitizeSyncDomains(originAnchor.domains) || sanitizeSyncDomains(largestAnchor.domains) || group.map(g => sanitizeSyncDomains(g.domains)).find(Boolean) || null;
+      const mergedConcepts = sanitizeSyncConcepts(originAnchor.concepts) || sanitizeSyncConcepts(largestAnchor.concepts) || group.map(g => sanitizeSyncConcepts(g.concepts)).find(Boolean) || null;
+      const mergedEntities = sanitizeSyncEntities(originAnchor.entities) || sanitizeSyncEntities(largestAnchor.entities) || group.map(g => sanitizeSyncEntities(g.entities)).find(Boolean) || null;
+      const mergedTemporalKind = (SYNC_VALID_TEMPORAL_KINDS.has(originAnchor.temporalKind) && originAnchor.temporalKind) ||
+        (SYNC_VALID_TEMPORAL_KINDS.has(largestAnchor.temporalKind) && largestAnchor.temporalKind) ||
+        group.map(g => (SYNC_VALID_TEMPORAL_KINDS.has(g.temporalKind) ? g.temporalKind : null)).find(Boolean) ||
+        null;
+      const baseEventTime = originAnchor.eventTime || largestAnchor.eventTime || group.map(g => g.eventTime).find(Boolean) || null;
+      const mergedEventTime = mergeClusterEventTime(baseEventTime, m.eventTime, {
+        clarified: Boolean(m.eventTimeClarified),
+        nowIso: ts
+      });
+
       const mergedClusterObj = {
         ...anchor,
         id: finalSlug,
@@ -4158,6 +4340,10 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         version: nextVersion,
         ...(nextDevelopedAt ? { lastDevelopedAt: nextDevelopedAt } : {}),
         ...(nextDevNote ? { developmentNote: nextDevNote } : {}),
+        ...(mergedDomains ? { domains: mergedDomains } : {}),
+        ...(mergedConcepts ? { concepts: mergedConcepts } : {}),
+        ...(mergedEntities ? { entities: mergedEntities } : {}),
+        ...(mergedTemporalKind ? { temporalKind: mergedTemporalKind } : {}),
         ...(mergedGroupLateral.length > 0 ? { lateralConnections: mergedGroupLateral } : {}),
         evolvedFromIds: Array.from(evolvedIds),
         evolutionHistory: hist.length > 20 ? [hist[0], ...hist.slice(-19)] : hist,
@@ -4168,6 +4354,9 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         newestMs: maxNewestMs || Date.now(),
         coverage: dedupedCov
       };
+      if (mergedEventTime) {
+        applyClusterEventTimeFields(mergedClusterObj, mergedEventTime);
+      }
       delete mergedClusterObj.summarySynthesizedSig;
       result.push(mergedClusterObj);
     }
