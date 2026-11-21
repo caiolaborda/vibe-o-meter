@@ -1,8 +1,8 @@
 {
   "dataset": "vibe-o-meter/good-news",
-  "lastUpdated": "2026-11-21T10:39:32.958Z",
+  "lastUpdated": "2026-11-21T11:18:07.089Z",
   "count24h": 44,
-  "count7d": 221,
+  "count7d": 222,
   "constructiveClusterCount": 20,
   "top5DailyAntidote": [
     {
@@ -59,7 +59,7 @@
       "title": "Anthropic mathematician claims AI-assisted proof of the Riemann hypothesis",
       "description": "The Riemann hypothesis is one of the most difficult problems in mathematics, having stood for 167 years. It may have just been settled with the help of AI",
       "sentiment": 0.706,
-      "significanceScore": 0.808,
+      "significanceScore": 0.78,
       "factors": [
         70,
         75,
@@ -68,7 +68,7 @@
       ],
       "clusterId": "anthropic-researcher-claims-ai-assisted-proof-of-riemann-hypothesis",
       "clusterStory": "Anthropic Researcher Claims AI-Assisted Proof of Riemann Hypothesis",
-      "outletCount": 6,
+      "outletCount": 8,
       "explanation": "A verified computational milestone claiming an AI-assisted proof of a 167-year-old mathematical problem represents a major structural advance in scientific knowledge. [Event Base: +0.60 | Editorial Framing: +0.10]",
       "category": "science",
       "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/11/SEI_321419544.jpg",
@@ -79,7 +79,7 @@
       "pubDate": "Fri, 20 Nov 2026 15:20:01 +0000",
       "isPast24h": true,
       "isPast48h": true,
-      "antidoteRank": 0.808
+      "antidoteRank": 0.78
     },
     {
       "title": "Vaccine shows good results against multiple food allergies; understand",
@@ -129,7 +129,7 @@
       "pubDate": "Thu, 19 Nov 2026 22:38:35 GMT",
       "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.64
+      "antidoteRank": 0.639
     }
   ],
   "constructiveClusters": [
@@ -386,32 +386,54 @@
       ],
       "temporalKind": "point_event",
       "eventDate": "2026-11-20",
+      "eventEndDate": "2026-11-21",
       "eventTime": {
         "startDate": "2026-11-20",
-        "endDate": null,
+        "endDate": "2026-11-21",
         "timeOfDay": null,
-        "precision": "day",
-        "label": "Nov 20, 2026",
+        "precision": "span",
+        "label": "November 20-21, 2026",
         "sourceBacked": true,
         "clarifiedAt": null
       },
-      "eventTimeLabel": "Nov 20, 2026",
+      "eventTimeLabel": "November 20-21, 2026",
       "topic": "science",
-      "imageUrl": "https://www.japantimes.co.jp/japantimes/uploads/images/2026/11/21/575307.jpg",
-      "averageSentiment": 0.58,
-      "eventBase": 0.498,
-      "significanceScore": 0.774,
+      "imageUrl": "https://static.dw.com/image/79429800_6.jpg",
+      "averageSentiment": 0.56,
+      "eventBase": 0.476,
+      "significanceScore": 0.785,
       "factors": [
-        56,
-        82,
+        54,
+        83,
         77,
-        33
+        32
       ],
       "sentimentSpread": 0.22,
-      "outletCount": 6,
+      "outletCount": 8,
       "firstSeenAt": "2026-11-20T15:20:01.000Z",
-      "latestUpdateAt": "2026-11-21T07:46:00.000Z",
+      "latestUpdateAt": "2026-11-21T10:29:00.000Z",
       "coverage": [
+        {
+          "sourceId": "dw",
+          "sourceName": "DW News",
+          "region": "EU",
+          "title": "Anthropic researcher uses AI to solve math's greatest riddle",
+          "description": "The proposed breakthrough could reshape mathematical research, but still needs independent verification. It's the latest in a string of cases where AI has outpaced humans in solving famous maths problems.",
+          "sentiment": 0.495,
+          "eventBase": 0.432,
+          "framingMod": 0.063,
+          "factors": [
+            50,
+            85,
+            75,
+            25
+          ],
+          "explanation": "An artificial intelligence researcher's reported solution to a major mathematical problem marks a potentially groundbreaking intellectual milestone. [Event Base: +0.43 | Editorial Framing: +0.06]",
+          "category": "science",
+          "imageUrl": "https://static.dw.com/image/79429800_6.jpg",
+          "link": "https://www.dw.com/en/anthropic-researcher-uses-ai-to-solve-math-s-greatest-riddle/a-80008428?maca=en-rss-en-all-1573-rdf",
+          "pubDate": "2026-11-21T10:29:00.000Z"
+        },
         {
           "sourceId": "japantimes",
           "sourceName": "The Japan Times",
@@ -474,6 +496,27 @@
           "imageUrl": "https://static01.nyt.com/images/2026/11/20/multimedia/20SCI-AI-RIEMANN-01-jtkm/20SCI-AI-RIEMANN-01-jtkm-mediumSquareAt3X.jpg",
           "link": "https://www.nytimes.com/2026/11/20/science/anthropic-ai-math-riemann-hypothesis.html",
           "pubDate": "Sat, 21 Nov 2026 00:33:39 +0000"
+        },
+        {
+          "sourceId": "bbc",
+          "sourceName": "BBC News",
+          "region": "UK",
+          "title": "In a year of AI solving maths problems, Anthropic may have just solved the biggest",
+          "description": "A mathematician at Anthropic says he used an AI to prove the famed Riemann hypothesis, though verification will take some time.",
+          "sentiment": 0.474,
+          "eventBase": 0.387,
+          "framingMod": 0.087,
+          "factors": [
+            45,
+            85,
+            75,
+            35
+          ],
+          "explanation": "Reports on a researcher claiming artificial intelligence was used to solve a legendary mathematical problem, pending formal peer verification. [Event Base: +0.39 | Editorial Framing: +0.09]",
+          "category": "science",
+          "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/78a0/live/a0688a80-e531-11f1-99b6-a35a62fa4264.jpg",
+          "link": "https://www.bbc.co.uk/news/articles/c6pqr2g7w059o?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Fri, 20 Nov 2026 23:08:57 GMT"
         },
         {
           "sourceId": "newscientist",
@@ -3542,7 +3585,7 @@
       "title": "Anthropic mathematician claims AI-assisted proof of the Riemann hypothesis",
       "description": "The Riemann hypothesis is one of the most difficult problems in mathematics, having stood for 167 years. It may have just been settled with the help of AI",
       "sentiment": 0.706,
-      "significanceScore": 0.808,
+      "significanceScore": 0.78,
       "factors": [
         70,
         75,
@@ -3551,7 +3594,7 @@
       ],
       "clusterId": "anthropic-researcher-claims-ai-assisted-proof-of-riemann-hypothesis",
       "clusterStory": "Anthropic Researcher Claims AI-Assisted Proof of Riemann Hypothesis",
-      "outletCount": 6,
+      "outletCount": 8,
       "explanation": "A verified computational milestone claiming an AI-assisted proof of a 167-year-old mathematical problem represents a major structural advance in scientific knowledge. [Event Base: +0.60 | Editorial Framing: +0.10]",
       "category": "science",
       "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/11/SEI_321419544.jpg",
@@ -3629,29 +3672,6 @@
       "region": "GLOBAL",
       "link": "https://www.newscientist.com/article/2599897-quantum-effect-could-reverse-gravity-and-violate-einsteins-theory-of-relativity/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
       "pubDate": "Fri, 20 Nov 2026 22:00:00 +0000",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
-      "title": "In a year of AI solving maths problems, Anthropic may have just solved the biggest",
-      "description": "A mathematician at Anthropic says he used an AI to prove the famed Riemann hypothesis, though verification will take some time.",
-      "sentiment": 0.474,
-      "significanceScore": 0.524,
-      "factors": [
-        45,
-        85,
-        75,
-        35
-      ],
-      "outletCount": 1,
-      "explanation": "Reports on a researcher claiming artificial intelligence was used to solve a legendary mathematical problem, pending formal peer verification. [Event Base: +0.39 | Editorial Framing: +0.09]",
-      "category": "science",
-      "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/78a0/live/a0688a80-e531-11f1-99b6-a35a62fa4264.jpg",
-      "sourceId": "bbc",
-      "sourceName": "BBC News",
-      "region": "UK",
-      "link": "https://www.bbc.co.uk/news/articles/c6pqr2g7w059o?at_medium=RSS&at_campaign=rss",
-      "pubDate": "Fri, 20 Nov 2026 23:08:57 GMT",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -3771,29 +3791,6 @@
       "region": "EU",
       "link": "https://www.dw.com/en/has-the-parthenon-puzzle-been-solved-the-long-quest-to-reassemble-lost-eastern-pediment/a-79982098?maca=en-rss-en-all-1573-rdf",
       "pubDate": "2026-11-20T20:03:00.000Z",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
-      "title": "Vietnam scraps death sentence for drug trafficking",
-      "description": "Vietnam abolished the death penalty for drug trafficking and several other crimes on Friday, leaving execution available as a punishment for only four offences. Communist Vietnam uses lethal injection as its execution method after retiring its firing squads in 2013, but has never made public the number of people it has put to death. Amnesty International estimates more than 1,200 people were on death row in the country at the end of 2023. In S...",
-      "sentiment": 0.316,
-      "significanceScore": 0.366,
-      "factors": [
-        35,
-        75,
-        70,
-        15
-      ],
-      "outletCount": 1,
-      "explanation": "A major nation abolishes capital punishment for drug trafficking, marking a significant legal reform. [Event Base: +0.28 | Editorial Framing: +0.04]",
-      "category": "world",
-      "imageUrl": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2026/11/20/0e62114d-7866-4a4f-b5fc-ca8f1d91e05e_49bf28a2.jpg?itok=51BO7h2Q&v=1795173192",
-      "sourceId": "scmp",
-      "sourceName": "South China Morning Post",
-      "region": "APAC",
-      "link": "https://www.scmp.com/news/asia/southeast-asia/article/3375257/vietnam-scraps-death-sentence-drug-trafficking",
-      "pubDate": "Fri, 20 Nov 2026 11:13:26 +0000",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -4488,6 +4485,29 @@
       "isPast48h": true
     },
     {
+      "title": "Thomas Piketty: 'The UN's framework convention on tax cooperation has the potential to change the world'",
+      "description": "United Nations negotiations for a framework convention on international tax cooperation resume in Nairobi on November 30. The talks could reshape the world, the economist writes in his column.",
+      "sentiment": 0.178,
+      "significanceScore": 0.178,
+      "factors": [
+        20,
+        70,
+        50,
+        25
+      ],
+      "outletCount": 1,
+      "explanation": "The economist's perspective highlights a potential structural advancement in international tax cooperation, though it remains in the negotiation phase. [Event Base: +0.14 | Editorial Framing: +0.04]",
+      "category": "politics",
+      "imageUrl": "https://img.lemde.fr/2026/11/20/197/0/5568/2784/644/322/60/0/783fdde_upload-1-qh21g31rztuh-000-648j6xm.jpg",
+      "sourceId": "lemonde",
+      "sourceName": "Le Monde",
+      "region": "EU",
+      "link": "https://www.lemonde.fr/en/opinion/article/2026/11/21/thomas-piketty-the-un-s-framework-convention-on-tax-cooperation-has-the-potential-to-change-the-world_6786002_23.html",
+      "pubDate": "Sat, 21 Nov 2026 11:01:04 +0100",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
       "title": "Builders bet on €620bn defence infrastructure boom in Europe",
       "description": "Construction companies target military projects to develop bases, airports and bridges in bid to offset weak residential market",
       "sentiment": 0.172,
@@ -4507,6 +4527,29 @@
       "region": "UK",
       "link": "https://www.ft.com/content/b647fcba-e5e6-4ca2-8417-8c9146eac39e?syn-25a6b1a6=1",
       "pubDate": "Sat, 21 Nov 2026 05:00:07 GMT",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
+      "title": "Milei government approves US$50-billion Argentina LNG export project",
+      "description": "Project led by state energy giant YPF will exploit Vaca Muerta shale gas, with exports of 12 million tonnes of liquefied natural gas annually planned. Leer más",
+      "sentiment": 0.169,
+      "significanceScore": 0.169,
+      "factors": [
+        30,
+        50,
+        60,
+        15
+      ],
+      "outletCount": 1,
+      "explanation": "The approval of a major LNG project marks a concrete structural development for Argentina's energy sector and economic infrastructure. [Event Base: +0.14 | Editorial Framing: +0.03]",
+      "category": "business",
+      "imageUrl": "https://fotos.perfil.com/2026/11/21/trim/540/304/headquarters-of-state-energy-firm-ypf-2367302.jpg",
+      "sourceId": "batimes",
+      "sourceName": "Buenos Aires Times",
+      "region": "LATAM",
+      "link": "https://www.batimes.com.ar/news/economy/milei-government-approves-us50-billion-argentina-lng-export-project.phtml",
+      "pubDate": "Sat, 21 Nov 2026 11:01:08 GMT",
       "isPast24h": true,
       "isPast48h": true
     }
@@ -4564,7 +4607,7 @@
       "title": "Anthropic mathematician claims AI-assisted proof of the Riemann hypothesis",
       "description": "The Riemann hypothesis is one of the most difficult problems in mathematics, having stood for 167 years. It may have just been settled with the help of AI",
       "sentiment": 0.706,
-      "significanceScore": 0.808,
+      "significanceScore": 0.78,
       "factors": [
         70,
         75,
@@ -4573,7 +4616,7 @@
       ],
       "clusterId": "anthropic-researcher-claims-ai-assisted-proof-of-riemann-hypothesis",
       "clusterStory": "Anthropic Researcher Claims AI-Assisted Proof of Riemann Hypothesis",
-      "outletCount": 6,
+      "outletCount": 8,
       "explanation": "A verified computational milestone claiming an AI-assisted proof of a 167-year-old mathematical problem represents a major structural advance in scientific knowledge. [Event Base: +0.60 | Editorial Framing: +0.10]",
       "category": "science",
       "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/11/SEI_321419544.jpg",
@@ -4864,29 +4907,6 @@
       "region": "GLOBAL",
       "link": "https://www.newscientist.com/article/2599897-quantum-effect-could-reverse-gravity-and-violate-einsteins-theory-of-relativity/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
       "pubDate": "Fri, 20 Nov 2026 22:00:00 +0000",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
-      "title": "In a year of AI solving maths problems, Anthropic may have just solved the biggest",
-      "description": "A mathematician at Anthropic says he used an AI to prove the famed Riemann hypothesis, though verification will take some time.",
-      "sentiment": 0.474,
-      "significanceScore": 0.524,
-      "factors": [
-        45,
-        85,
-        75,
-        35
-      ],
-      "outletCount": 1,
-      "explanation": "Reports on a researcher claiming artificial intelligence was used to solve a legendary mathematical problem, pending formal peer verification. [Event Base: +0.39 | Editorial Framing: +0.09]",
-      "category": "science",
-      "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/78a0/live/a0688a80-e531-11f1-99b6-a35a62fa4264.jpg",
-      "sourceId": "bbc",
-      "sourceName": "BBC News",
-      "region": "UK",
-      "link": "https://www.bbc.co.uk/news/articles/c6pqr2g7w059o?at_medium=RSS&at_campaign=rss",
-      "pubDate": "Fri, 20 Nov 2026 23:08:57 GMT",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -5637,7 +5657,7 @@
       "region": "APAC",
       "link": "https://www.scmp.com/news/asia/southeast-asia/article/3375257/vietnam-scraps-death-sentence-drug-trafficking",
       "pubDate": "Fri, 20 Nov 2026 11:13:26 +0000",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
@@ -7093,7 +7113,7 @@
       "link": "https://www.scmp.com/tech/big-tech/article/3375093/alibabas-ai-bet-paying-cloud-services-drive-10-revenue-jump",
       "pubDate": "Thu, 19 Nov 2026 11:00:22 +0000",
       "isPast24h": false,
-      "isPast48h": true
+      "isPast48h": false
     },
     {
       "title": "Huge extinct orca may have eaten other whales",
@@ -8611,7 +8631,7 @@
       "link": "https://www.bbc.co.uk/news/articles/c6742m39xgzxo?at_medium=RSS&at_campaign=rss",
       "pubDate": "Thu, 19 Nov 2026 10:48:04 GMT",
       "isPast24h": false,
-      "isPast48h": true
+      "isPast48h": false
     },
     {
       "title": "‘It’s an architect’s dream’: five beautiful eco buildings around the world",
@@ -8658,6 +8678,29 @@
       "pubDate": "Sat, 14 Nov 2026 17:25:51 GMT",
       "isPast24h": false,
       "isPast48h": false
+    },
+    {
+      "title": "Thomas Piketty: 'The UN's framework convention on tax cooperation has the potential to change the world'",
+      "description": "United Nations negotiations for a framework convention on international tax cooperation resume in Nairobi on November 30. The talks could reshape the world, the economist writes in his column.",
+      "sentiment": 0.178,
+      "significanceScore": 0.178,
+      "factors": [
+        20,
+        70,
+        50,
+        25
+      ],
+      "outletCount": 1,
+      "explanation": "The economist's perspective highlights a potential structural advancement in international tax cooperation, though it remains in the negotiation phase. [Event Base: +0.14 | Editorial Framing: +0.04]",
+      "category": "politics",
+      "imageUrl": "https://img.lemde.fr/2026/11/20/197/0/5568/2784/644/322/60/0/783fdde_upload-1-qh21g31rztuh-000-648j6xm.jpg",
+      "sourceId": "lemonde",
+      "sourceName": "Le Monde",
+      "region": "EU",
+      "link": "https://www.lemonde.fr/en/opinion/article/2026/11/21/thomas-piketty-the-un-s-framework-convention-on-tax-cooperation-has-the-potential-to-change-the-world_6786002_23.html",
+      "pubDate": "Sat, 21 Nov 2026 11:01:04 +0100",
+      "isPast24h": true,
+      "isPast48h": true
     },
     {
       "title": "Anthropic closes first day of public trading at $1.3tn valuation after largest-ever IPO",
@@ -8864,6 +8907,29 @@
       "link": "https://globalnews.ca/news/12157672/anthropic-ai-ipo-wall-street/",
       "pubDate": "Thu, 19 Nov 2026 13:30:41 +0000",
       "isPast24h": false,
+      "isPast48h": true
+    },
+    {
+      "title": "Milei government approves US$50-billion Argentina LNG export project",
+      "description": "Project led by state energy giant YPF will exploit Vaca Muerta shale gas, with exports of 12 million tonnes of liquefied natural gas annually planned. Leer más",
+      "sentiment": 0.169,
+      "significanceScore": 0.169,
+      "factors": [
+        30,
+        50,
+        60,
+        15
+      ],
+      "outletCount": 1,
+      "explanation": "The approval of a major LNG project marks a concrete structural development for Argentina's energy sector and economic infrastructure. [Event Base: +0.14 | Editorial Framing: +0.03]",
+      "category": "business",
+      "imageUrl": "https://fotos.perfil.com/2026/11/21/trim/540/304/headquarters-of-state-energy-firm-ypf-2367302.jpg",
+      "sourceId": "batimes",
+      "sourceName": "Buenos Aires Times",
+      "region": "LATAM",
+      "link": "https://www.batimes.com.ar/news/economy/milei-government-approves-us50-billion-argentina-lng-export-project.phtml",
+      "pubDate": "Sat, 21 Nov 2026 11:01:08 GMT",
+      "isPast24h": true,
       "isPast48h": true
     },
     {
@@ -9255,7 +9321,7 @@
       "link": "https://www.ft.com/content/5f8b63e0-aaf7-48d4-8695-c8195043c537?syn-25a6b1a6=1",
       "pubDate": "Thu, 19 Nov 2026 10:46:35 GMT",
       "isPast24h": false,
-      "isPast48h": true
+      "isPast48h": false
     },
     {
       "title": "Anthropic's $1.5 trillion debut rewrites venture capital's playbook - Reuters",
