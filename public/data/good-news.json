@@ -1,8 +1,8 @@
 {
   "dataset": "vibe-o-meter/good-news",
-  "lastUpdated": "2026-11-21T21:34:31.535Z",
-  "count24h": 25,
-  "count7d": 216,
+  "lastUpdated": "2026-11-21T22:06:34.457Z",
+  "count24h": 23,
+  "count7d": 210,
   "constructiveClusterCount": 20,
   "top5DailyAntidote": [
     {
@@ -129,7 +129,7 @@
       "pubDate": "Thu, 19 Nov 2026 22:38:35 GMT",
       "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.625
+      "antidoteRank": 0.624
     }
   ],
   "constructiveClusters": [
@@ -2099,21 +2099,22 @@
       ],
       "temporalKind": "point_event",
       "eventDate": "2026-11-20",
+      "eventEndDate": "2026-11-21",
       "eventTime": {
         "startDate": "2026-11-20",
-        "endDate": null,
+        "endDate": "2026-11-21",
         "timeOfDay": null,
-        "precision": "day",
-        "label": "Nov 20, 2026",
+        "precision": "span",
+        "label": "November 20-21, 2026",
         "sourceBacked": true,
         "clarifiedAt": null
       },
-      "eventTimeLabel": "Nov 20, 2026",
+      "eventTimeLabel": "November 20-21, 2026",
       "topic": "business",
-      "imageUrl": "https://static01.nyt.com/images/2026/11/20/multimedia/20BIZ-ROUNDUP-fqct/20BIZ-ROUNDUP-fqct-mediumSquareAt3X.jpg",
+      "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/5265x3524+0+0/resize/5265x3524!/quality/85/format/webp/?url=https%3A%2F%2Fnpr-production-npr.s3.us-east-1.amazonaws.com%2Fbrightspot%2F67%2Fa1%2F2a7c9b0b4b1783ffed73a002a6ad%2Fgettyimages-2283306424.jpg",
       "averageSentiment": 0.14,
-      "eventBase": 0.126,
-      "significanceScore": 0.365,
+      "eventBase": 0.128,
+      "significanceScore": 0.378,
       "factors": [
         18,
         75,
@@ -2121,10 +2122,31 @@
         6
       ],
       "sentimentSpread": 0.09,
-      "outletCount": 8,
+      "outletCount": 9,
       "firstSeenAt": "2026-11-20T20:48:14.000Z",
-      "latestUpdateAt": "2026-11-21T03:23:04.000Z",
+      "latestUpdateAt": "2026-11-21T20:37:35.000Z",
       "coverage": [
+        {
+          "sourceId": "npr",
+          "sourceName": "NPR News",
+          "region": "NA",
+          "title": "Bayer reaches Roundup settlement that could cost the company billions",
+          "description": "The money will go to thousands of people who have been or will be diagnosed with non-Hodgkin lymphoma – a blood cancer linked to the herbicide.",
+          "sentiment": 0.158,
+          "eventBase": 0.146,
+          "framingMod": 0.012,
+          "factors": [
+            20,
+            75,
+            55,
+            5
+          ],
+          "explanation": "A massive legal settlement provides compensation to thousands of cancer victims, offering substantial financial remediation on a national scale. [Event Base: +0.15 | Editorial Framing: +0.01]",
+          "category": "health",
+          "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/5265x3524+0+0/resize/5265x3524!/quality/85/format/webp/?url=https%3A%2F%2Fnpr-production-npr.s3.us-east-1.amazonaws.com%2Fbrightspot%2F67%2Fa1%2F2a7c9b0b4b1783ffed73a002a6ad%2Fgettyimages-2283306424.jpg",
+          "link": "https://www.npr.org/2026/11/21/nx-s1-6049684/roundup-bayer-hodgkins-settlement",
+          "pubDate": "Sat, 21 Nov 2026 15:37:35 -0500"
+        },
         {
           "sourceId": "nyt",
           "sourceName": "The New York Times",
@@ -2354,13 +2376,6 @@
           "beforeSummary": "Novo Nordisk reported stronger-than-third-quarter financial results as global demand for its newly launched oral Wegovy pill blew past estimates, sending company shares jumping 6% and prompting management to hike its full-year guidance. The milestone accelerates the Danish drugmaker's commercial battle against Eli Lilly, with CEO Mike Doustdar expressing optimism for the forthcoming launch of the obesity drug CagriSema.",
           "outletCount": 5,
           "note": "Novo Nordisk begins selling first oral GLP-1 Wegovy weight-loss pills in Australia."
-        }
-      ],
-      "lateralConnections": [
-        {
-          "clusterId": "eli-lilly-reports-retatrutide-trial-results-and-secures-china-glp-1-approval",
-          "headline": "Eli Lilly Reports Retatrutide Trial Results and Secures China GLP-1 Approval",
-          "howItConnects": "Novo Nordisk and Eli Lilly are competing directly in the commercial rollout and international approvals of rival oral GLP-1 weight-loss medications."
         }
       ],
       "topic": "health",
@@ -3676,29 +3691,6 @@
       "isPast48h": true
     },
     {
-      "title": "Quantum effect could reverse gravity and violate Einstein’s theory of relativity",
-      "description": "Two mathematical investigations devised a way to possibly make gravity produce repulsion between objects, breaking away from a long-standing understanding of this force",
-      "sentiment": 0.479,
-      "significanceScore": 0.529,
-      "factors": [
-        45,
-        85,
-        80,
-        35
-      ],
-      "outletCount": 1,
-      "explanation": "Theoretical mathematical breakthroughs proposing fundamental revisions to gravitational physics expand universal scientific knowledge. [Event Base: +0.39 | Editorial Framing: +0.09]",
-      "category": "science",
-      "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/11/SEI_321280192.jpg",
-      "sourceId": "newscientist",
-      "sourceName": "New Scientist",
-      "region": "GLOBAL",
-      "link": "https://www.newscientist.com/article/2599897-quantum-effect-could-reverse-gravity-and-violate-einsteins-theory-of-relativity/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
-      "pubDate": "Fri, 20 Nov 2026 22:00:00 +0000",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
       "title": "A real '3 Body Problem': Astronomers discover a nearby 'weirdo' triple-star system",
       "description": "An international team of astronomers led by the University of Montreal has found a nearby triple-star system, much like the one in the Netflix show 3 Body Problem. But this one seems to be… a little odd.",
       "sentiment": 0.467,
@@ -3750,7 +3742,7 @@
       "title": "Bayer’s $7.25bn settlement over cancer cases approved by US judge",
       "description": "Ruling will help German chemicals group contain legal bills after years of court battles",
       "sentiment": 0.169,
-      "significanceScore": 0.404,
+      "significanceScore": 0.415,
       "factors": [
         20,
         75,
@@ -3759,10 +3751,10 @@
       ],
       "clusterId": "bayer-7-25-billion-roundup-settlement-approval",
       "clusterStory": "Bayer $7.25 Billion Roundup Settlement Approval",
-      "outletCount": 8,
+      "outletCount": 9,
       "explanation": "A massive multi-billion dollar legal settlement resolves long-standing cancer litigation for a major pharmaceutical company. [Event Base: +0.15 | Editorial Framing: +0.02]",
       "category": "business",
-      "imageUrl": "https://static01.nyt.com/images/2026/11/20/multimedia/20BIZ-ROUNDUP-fqct/20BIZ-ROUNDUP-fqct-mediumSquareAt3X.jpg",
+      "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/5265x3524+0+0/resize/5265x3524!/quality/85/format/webp/?url=https%3A%2F%2Fnpr-production-npr.s3.us-east-1.amazonaws.com%2Fbrightspot%2F67%2Fa1%2F2a7c9b0b4b1783ffed73a002a6ad%2Fgettyimages-2283306424.jpg",
       "sourceId": "ft",
       "sourceName": "Financial Times",
       "region": "UK",
@@ -4023,29 +4015,6 @@
       "region": "EU",
       "link": "https://www.lemonde.fr/en/international/article/2026/11/21/after-lengthy-negotiations-the-uk-and-the-eu-move-closer-together_6786100_4.html",
       "pubDate": "Sat, 21 Nov 2026 13:21:23 +0100",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
-      "title": "MLK's handwritten draft of iconic speech on display for the first time",
-      "description": "The only known handwritten draft of The Reverend Martin Luther King Jr.'s 'I Have a Dream' speech is on display in his hometown. The iconic phrase, however, never made it on the page.",
-      "sentiment": 0.188,
-      "significanceScore": 0.188,
-      "factors": [
-        35,
-        40,
-        50,
-        30
-      ],
-      "outletCount": 1,
-      "explanation": "The public exhibition of a historic civil rights manuscript offers a meaningful cultural milestone. [Event Base: +0.15 | Editorial Framing: +0.04]",
-      "category": "science",
-      "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/4500x3001+0+0/resize/4500x3001!/quality/85/format/webp/?url=https%3A%2F%2Fnpr-production-npr.s3.us-east-1.amazonaws.com%2Fbrightspot%2Fb3%2F33%2F92970e6b49c98705abbfd291cc49%2Flwa-2971.JPG",
-      "sourceId": "npr",
-      "sourceName": "NPR News",
-      "region": "NA",
-      "link": "https://www.npr.org/2026/11/20/nx-s1-6039337/mlk-i-have-a-dream-speech-draft-public-display",
-      "pubDate": "Fri, 20 Nov 2026 16:38:05 -0500",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -4451,31 +4420,6 @@
       "isPast48h": true
     },
     {
-      "title": "Roche Secures First U.S. Approval for New Breast-Cancer Pill",
-      "description": "Comprehensive up-to-date news coverage, aggregated from sources all over the world by Google News.",
-      "sentiment": 0.261,
-      "significanceScore": 0.546,
-      "factors": [
-        45,
-        50,
-        60,
-        10
-      ],
-      "clusterId": "eli-lilly-reports-retatrutide-trial-results-and-secures-china-glp-1-approval",
-      "clusterStory": "Eli Lilly Reports Retatrutide Trial Results and Secures China GLP-1 Approval",
-      "outletCount": 8,
-      "explanation": "The regulatory approval of a new medical treatment is a verified, constructive advancement in public health. [Event Base: +0.24 | Editorial Framing: +0.02]",
-      "category": "health",
-      "imageUrl": "https://globalnews.ca/wp-content/uploads/2026/11/Eli-Lilly-e1795036312374.jpg?quality=65&strip=all&w=720&h=480&crop=1",
-      "sourceId": "wsj",
-      "sourceName": "Wall Street Journal",
-      "region": "NA",
-      "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxPSHVLYW8zRHhLTktXQklOMkxoODNIdlBleDYyRmVoZUZSd1hXU1d6SW96bkRuT2lRM0dzek1fNkZ5X3NxVEItX1BUa090ZklZX18wUHUxSU5oRUk1V3JoZl9qZWt3Qkl4bGFkc2F5SVhMZTlTMWRTTS1wR3BHMnA1T3ZDQUxNZkQwWGRjNmJLWkhqNFczdThoNkFRd1BDMXJ2RnNqLQ?oc=5",
-      "pubDate": "Thu, 19 Nov 2026 06:39:27 GMT",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
       "title": "Scientists witness 'cosmic crime' as giant star devours its neighbour",
       "description": "It is common for stars to eat each other, but they have never been directly caught in the act. Until now.",
       "sentiment": 0.495,
@@ -4518,7 +4462,7 @@
       "region": "GLOBAL",
       "link": "https://www.newscientist.com/article/2599897-quantum-effect-could-reverse-gravity-and-violate-einsteins-theory-of-relativity/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
       "pubDate": "Fri, 20 Nov 2026 22:00:00 +0000",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
@@ -4919,6 +4863,31 @@
       "isPast48h": false
     },
     {
+      "title": "Bayer’s $7.25bn settlement over cancer cases approved by US judge",
+      "description": "Ruling will help German chemicals group contain legal bills after years of court battles",
+      "sentiment": 0.169,
+      "significanceScore": 0.415,
+      "factors": [
+        20,
+        75,
+        55,
+        10
+      ],
+      "clusterId": "bayer-7-25-billion-roundup-settlement-approval",
+      "clusterStory": "Bayer $7.25 Billion Roundup Settlement Approval",
+      "outletCount": 9,
+      "explanation": "A massive multi-billion dollar legal settlement resolves long-standing cancer litigation for a major pharmaceutical company. [Event Base: +0.15 | Editorial Framing: +0.02]",
+      "category": "business",
+      "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/5265x3524+0+0/resize/5265x3524!/quality/85/format/webp/?url=https%3A%2F%2Fnpr-production-npr.s3.us-east-1.amazonaws.com%2Fbrightspot%2F67%2Fa1%2F2a7c9b0b4b1783ffed73a002a6ad%2Fgettyimages-2283306424.jpg",
+      "sourceId": "ft",
+      "sourceName": "Financial Times",
+      "region": "UK",
+      "link": "https://www.ft.com/content/e7d36416-9eb7-4479-a217-d593545499df?syn-25a6b1a6=1",
+      "pubDate": "Fri, 20 Nov 2026 23:16:28 GMT",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
       "title": "‘Felt like nothing happened’: Hongkonger lauds incision-free kidney cancer therapy",
       "description": "Hongkonger Li Sing-yan has recalled how he “felt like nothing happened” on the day he became one of Asia’s first two kidney cancer patients to receive an incision-free procedure that left him with no wounds or pain, enabling him to eat normal meals by that evening. The cutting-edge technique, called histotripsy, uses focused sound waves to break apart tumours without surgical incisions. The non-invasive medical procedure has already been used ...",
       "sentiment": 0.408,
@@ -4940,31 +4909,6 @@
       "pubDate": "Wed, 18 Nov 2026 12:00:10 +0000",
       "isPast24h": false,
       "isPast48h": false
-    },
-    {
-      "title": "Bayer’s $7.25bn settlement over cancer cases approved by US judge",
-      "description": "Ruling will help German chemicals group contain legal bills after years of court battles",
-      "sentiment": 0.169,
-      "significanceScore": 0.404,
-      "factors": [
-        20,
-        75,
-        55,
-        10
-      ],
-      "clusterId": "bayer-7-25-billion-roundup-settlement-approval",
-      "clusterStory": "Bayer $7.25 Billion Roundup Settlement Approval",
-      "outletCount": 8,
-      "explanation": "A massive multi-billion dollar legal settlement resolves long-standing cancer litigation for a major pharmaceutical company. [Event Base: +0.15 | Editorial Framing: +0.02]",
-      "category": "business",
-      "imageUrl": "https://static01.nyt.com/images/2026/11/20/multimedia/20BIZ-ROUNDUP-fqct/20BIZ-ROUNDUP-fqct-mediumSquareAt3X.jpg",
-      "sourceId": "ft",
-      "sourceName": "Financial Times",
-      "region": "UK",
-      "link": "https://www.ft.com/content/e7d36416-9eb7-4479-a217-d593545499df?syn-25a6b1a6=1",
-      "pubDate": "Fri, 20 Nov 2026 23:16:28 GMT",
-      "isPast24h": true,
-      "isPast48h": true
     },
     {
       "title": "Sellas Life Sciences Stock Triples After Cancer Vaccine Data",
@@ -5920,29 +5864,6 @@
       "isPast48h": false
     },
     {
-      "title": "SpaceX's Starship returns from orbit and is captured by launch pad arms in a dramatic first",
-      "description": "It was the grand finale that Elon Musk and his team hoped for — the first-ever capture of a Starship flying back from space. But with the first-stage booster exploding shortly after Friday's liftoff from Texas, the company fell short of its desired double catch.",
-      "sentiment": 0.305,
-      "significanceScore": 0.305,
-      "factors": [
-        35,
-        65,
-        50,
-        30
-      ],
-      "outletCount": 1,
-      "explanation": "SpaceX achieves a historic first-ever catch of a returning Starship rocket booster using launch pad arms. [Event Base: +0.24 | Editorial Framing: +0.06]",
-      "category": "science",
-      "imageUrl": "https://d3i6fh83elv35t.cloudfront.net/static/2026/11/2026-11-14T212916Z_181005512_RC2XNOANPI19_RTRMADP_3_SPACE-SPACEX-STARSHIP-1024x683.jpg",
-      "sourceId": "pbs",
-      "sourceName": "PBS NewsHour",
-      "region": "NA",
-      "link": "https://www.pbs.org/newshour/science/spacexs-starship-returns-from-orbit-and-is-captured-by-launch-pad-arms-in-a-dramatic-first",
-      "pubDate": "Sat, 14 Nov 2026 16:56:15 -0500",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
       "title": "China commits to low-carbon electrification and help for others to improve",
       "description": "Exclusive: Countries at Cop31 are being urged to commit to deriving 35% of their energy from electricity by 2035 Cop31 live – latest updates China is pushing for rapid electrification of its economy using low-carbon energy and will help other countries do the same, a senior member of the Chinese delegation at the Cop31 UN climate summit has said. Wang Yi, a professor of energy and environment policy at the Chinese Academy of Sciences and a sen...",
       "sentiment": 0.254,
@@ -5985,75 +5906,6 @@
       "region": "LATAM",
       "link": "https://oglobo.globo.com/economia/noticia/2026/11/19/lula-decreto-fim-da-escala-6x1.ghtml",
       "pubDate": "Thu, 19 Nov 2026 13:35:04 -0000",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "SpaceX successfully catches Starship and makes history",
-      "description": "The company's spacecraft returned to its Texas launchpad in dramatic fashion — by carefully lowering itself until two metal arms attached to the launch tower could secure it.",
-      "sentiment": 0.295,
-      "significanceScore": 0.295,
-      "factors": [
-        35,
-        65,
-        50,
-        25
-      ],
-      "outletCount": 1,
-      "explanation": "SpaceX's successful catch of the Starship booster represents a verified engineering milestone with moderate positive technological advancement. [Event Base: +0.24 | Editorial Framing: +0.05]",
-      "category": "science",
-      "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/8068x5379+0+0/resize/8068x5379!/quality/85/format/webp/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2F1a%2F90%2Fff5836a94be4aff14474cce4144c%2Fstarship.jpg",
-      "sourceId": "npr",
-      "sourceName": "NPR News",
-      "region": "NA",
-      "link": "https://www.npr.org/2026/11/14/g-s1-153786/spacex-successfully-catches-starship-and-makes-history",
-      "pubDate": "Sat, 14 Nov 2026 16:42:41 -0500",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "'Can you believe it?': SpaceX catches part of its Starship rocket on return to Earth",
-      "description": "SpaceX has performed the historic catch using mechanical arms nicknamed \"chopsticks\".",
-      "sentiment": 0.295,
-      "significanceScore": 0.295,
-      "factors": [
-        35,
-        65,
-        50,
-        25
-      ],
-      "outletCount": 1,
-      "explanation": "SpaceX successfully executes a historic rocket catch using mechanical arms on Earth's return. [Event Base: +0.24 | Editorial Framing: +0.05]",
-      "category": "science",
-      "imageUrl": "https://ichef.bbci.co.uk/ace/standard/240/cpsprodpb/aeb5/live/e1baf430-e074-11f1-a701-fddedf244c16.jpg",
-      "sourceId": "bbc",
-      "sourceName": "BBC News",
-      "region": "UK",
-      "link": "https://www.bbc.co.uk/news/videos/cwlym2gy3y3eo?at_medium=RSS&at_campaign=rss",
-      "pubDate": "Sat, 14 Nov 2026 22:09:40 GMT",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "SpaceX completes first-ever spaceship capture",
-      "description": "The successful recovery of SpaceX's Starship marks a breakthrough in founder Elon Musk's goal of developing a fully reusable rocket system.",
-      "sentiment": 0.295,
-      "significanceScore": 0.295,
-      "factors": [
-        35,
-        65,
-        50,
-        25
-      ],
-      "outletCount": 1,
-      "explanation": "The successful capture of a reusable rocket system is a significant technological milestone. [Event Base: +0.24 | Editorial Framing: +0.05]",
-      "category": "technology",
-      "imageUrl": "https://static.dw.com/image/79951713_6.jpg",
-      "sourceId": "dw",
-      "sourceName": "DW News",
-      "region": "EU",
-      "link": "https://www.dw.com/en/spacex-completes-first-ever-spaceship-capture/a-79950275?maca=en-rss-en-all-1573-rdf",
-      "pubDate": "2026-11-14T21:35:00.000Z",
       "isPast24h": false,
       "isPast48h": false
     },
@@ -6541,29 +6393,6 @@
       "isPast48h": false
     },
     {
-      "title": "SpaceX carries out first-ever spaceship capture",
-      "description": "The successful recovery of the SpaceX Starship marks the first recovery of a spaceship.",
-      "sentiment": 0.274,
-      "significanceScore": 0.274,
-      "factors": [
-        35,
-        65,
-        50,
-        15
-      ],
-      "outletCount": 1,
-      "explanation": "A concise wire report covers the successful technological recovery of a spacecraft with standard informational framing. [Event Base: +0.24 | Editorial Framing: +0.03]",
-      "category": "science",
-      "imageUrl": "https://static.dw.com/image/79950273_6.jpg",
-      "sourceId": "dw",
-      "sourceName": "DW News",
-      "region": "EU",
-      "link": "https://www.dw.com/en/spacex-carries-out-first-ever-spaceship-capture/a-79950275?maca=en-rss-en-all-1573-rdf",
-      "pubDate": "2026-11-14T21:35:00.000Z",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
       "title": "UK to explore even closer ties with EU after agreeing deal, says Burnham",
       "description": "The UK-EU deal agreed on Friday covers British food exports, emissions trading and a youth experience scheme.",
       "sentiment": 0.221,
@@ -6727,6 +6556,29 @@
       "isPast48h": true
     },
     {
+      "title": "Roche Secures First U.S. Approval for New Breast-Cancer Pill",
+      "description": "Comprehensive up-to-date news coverage, aggregated from sources all over the world by Google News.",
+      "sentiment": 0.261,
+      "significanceScore": 0.261,
+      "factors": [
+        45,
+        50,
+        60,
+        10
+      ],
+      "outletCount": 1,
+      "explanation": "The regulatory approval of a new medical treatment is a verified, constructive advancement in public health. [Event Base: +0.24 | Editorial Framing: +0.02]",
+      "category": "health",
+      "imageUrl": null,
+      "sourceId": "wsj",
+      "sourceName": "Wall Street Journal",
+      "region": "NA",
+      "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxPSHVLYW8zRHhLTktXQklOMkxoODNIdlBleDYyRmVoZUZSd1hXU1d6SW96bkRuT2lRM0dzek1fNkZ5X3NxVEItX1BUa090ZklZX18wUHUxSU5oRUk1V3JoZl9qZWt3Qkl4bGFkc2F5SVhMZTlTMWRTTS1wR3BHMnA1T3ZDQUxNZkQwWGRjNmJLWkhqNFczdThoNkFRd1BDMXJ2RnNqLQ?oc=5",
+      "pubDate": "Thu, 19 Nov 2026 06:39:27 GMT",
+      "isPast24h": false,
+      "isPast48h": false
+    },
+    {
       "title": "'Killer robots': Countries pave the way for a global agreement on autonomous weapons, but the US and Russia oppose rules",
       "description": "UN member states have agreed to begin the process of creating a global regulatory framework for autonomous weapons, despite opposition from the U.S. and Russia regarding specific rules.",
       "sentiment": 0.211,
@@ -6769,29 +6621,6 @@
       "region": "GLOBAL",
       "link": "https://www.newscientist.com/article/2599254-we-now-know-how-radiation-destroys-electronics-devices/?utm_campaign=RSS|NSNS&utm_content=home&utm_medium=RSS&utm_source=NSNS",
       "pubDate": "Tue, 17 Nov 2026 19:00:00 +0000",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "MND Tutor | Teen inventor",
-      "description": "A Chiapas teenager who developed a solar water heater using recycled materials at age 8 has won presidential backing for her invention. Learn more about it with MND Tutor. The post MND Tutor | Teen inventor appeared first on Mexico News Daily",
-      "sentiment": 0.253,
-      "significanceScore": 0.253,
-      "factors": [
-        45,
-        35,
-        55,
-        40
-      ],
-      "outletCount": 1,
-      "explanation": "A young inventor receives presidential backing for her recycled solar water heater, marking a constructive innovation milestone. [Event Base: +0.20 | Editorial Framing: +0.06]",
-      "category": "science",
-      "imageUrl": "https://mexiconewsdaily.com/wp-content/uploads/2026/07/850x567-px-2.jpg",
-      "sourceId": "mexiconews",
-      "sourceName": "Mexico News Daily",
-      "region": "LATAM",
-      "link": "https://mexiconewsdaily.com/mnd-tutor/sheinbaum-chiapas-teen-solar-water-heater/",
-      "pubDate": "Sat, 14 Nov 2026 22:00:36 +0000",
       "isPast24h": false,
       "isPast48h": false
     },
@@ -7850,7 +7679,7 @@
       "region": "NA",
       "link": "https://www.npr.org/2026/11/20/nx-s1-6039337/mlk-i-have-a-dream-speech-draft-public-display",
       "pubDate": "Fri, 20 Nov 2026 16:38:05 -0500",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
@@ -8219,7 +8048,7 @@
       "link": "https://www.theguardian.com/technology/2026/nov/19/anthropic-public-trading-ipo",
       "pubDate": "Thu, 19 Nov 2026 22:09:18 GMT",
       "isPast24h": false,
-      "isPast48h": true
+      "isPast48h": false
     },
     {
       "title": "Measures that have allowed Mexico to reduce its femicide rate",
