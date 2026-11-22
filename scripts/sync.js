@@ -904,6 +904,10 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
   };
 }
 
+function stripDiacritics(str) {
+  return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 function extractCoherenceStems(str) {
   const stop = new Set([
     'about','accord','according','across','after','against','alread','already','also','although','amid','amidst',
@@ -944,13 +948,13 @@ function extractCoherenceStems(str) {
     shutting: 'clos', shuts: 'clos', shut: 'clos', closures: 'clos', closure: 'clos',
     cancelled: 'cancel', cancels: 'cancel', canceled: 'cancel', cancellations: 'cancel',
     postpones: 'cancel', postponed: 'cancel', forces: 'milit', military: 'milit', troops: 'milit',
-    deaths: 'kill', dead: 'kill', fatalities: 'kill', fatality: 'kill', killed: 'kill', killing: 'kill',
+    death: 'kill', deaths: 'kill', dead: 'kill', fatalities: 'kill', fatality: 'kill', killed: 'kill', killing: 'kill',
     injured: 'injur', injuries: 'injur', wounded: 'injur', cuts: 'cut', cutting: 'cut', slashes: 'cut', reductions: 'cut'
   };
   const HIGH_SIGNAL_3LETTER = new Set([
     'aid', 'war', 'ban', 'tax', 'oil', 'gas', 'fda', 'who', 'idf', 'doj', 'fbi', 'ice', 'epa', 'imf', 'gdp', 'ipo', 'ceo', 'jet', 'bus', 'dam', 'hiv'
   ]);
-  const rawStr = String(str || '').replace(/\b(?:([A-Z])\.){2,}/g, (m) => m.replace(/\./g, ''));
+  const rawStr = stripDiacritics(str).replace(/\b(?:([A-Z])\.){2,}/g, (m) => m.replace(/\./g, ''));
   const acronymTokens = (rawStr.match(/\b[A-Z]{2,5}\b/g) || [])
     .map(a => a.toLowerCase())
     .filter(a => !stop.has(a) && !/^q[1-4]$/.test(a))
@@ -1136,7 +1140,7 @@ function extractProperSubjectEntities(headline = '', bodyText = '') {
   const midSentenceConfirmedStems = new Set();
 
   const addEntity = (rawWord, isHead = false) => {
-    const clean = String(rawWord || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
+    const clean = stripDiacritics(rawWord).replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
     if (clean.length < 3) return;
     const stems = extractCoherenceStems(clean);
     const validStems = stems.filter(s => !COMMON_HEADLINE_NON_ENTITY_STEMS.has(s) && !/^\d+$/.test(s));
@@ -1167,18 +1171,18 @@ function extractProperSubjectEntities(headline = '', bodyText = '') {
 
   // 2. Mid-sentence capitalized words in prose (summary/descriptions) — guaranteed proper nouns by English orthography,
   // plus sentence-initial words that carry possessive "'s", are followed by another capitalized proper noun/title, or match the headline's opening subject word.
-  const firstHeadWordClean = String(headline || '').trim().split(/\s+/)[0]?.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '').toLowerCase() || '';
+  const firstHeadWordClean = stripDiacritics(String(headline || '').trim().split(/\s+/)[0] || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '').toLowerCase() || '';
   const sentences = String(bodyText || '').split(/(?<!\b(?:U\.S|U\.K|U\.N|E\.U|U\.A\.E|St|Mt|Mr|Ms|Mrs|Dr|Prof|Gen|Col|Maj|Capt|Lt|Sgt|Sen|Rep|Gov|Pres|Min|Amb|Jr|Sr|Inc|Ltd|Co|Corp|vs|v|No|Fig|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec|[A-Z]))(?<=[.!?])\s+(?=[A-Z0-9"“‘])/g);
   for (const sent of sentences) {
     const allWords = sent.trim().split(/\s+/);
     for (let wi = 0; wi < allWords.length; wi++) {
       const rawW = allWords[wi];
       const hasPossessive = /'s$/i.test(rawW);
-      const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
+      const clean = stripDiacritics(rawW).replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
       if (clean.length < 3 || !/^[A-Z][A-Za-z0-9-]+$/.test(clean)) continue;
       if (wi === 0) {
-        const nextClean = (allWords[1] || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
-        const thirdClean = (allWords[2] || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
+        const nextClean = stripDiacritics(allWords[1] || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
+        const thirdClean = stripDiacritics(allWords[2] || '').replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
         const nextIsCap = nextClean.length >= 2 && /^[A-Z]/.test(nextClean);
         const coordNextIsCap = /^(and|&|vs\.?|or)$/i.test(allWords[1] || '') && thirdClean.length >= 2 && /^[A-Z]/.test(thirdClean);
         const matchesHeadSubject = clean.toLowerCase() === firstHeadWordClean;
@@ -1195,7 +1199,7 @@ function extractProperSubjectEntities(headline = '', bodyText = '') {
   const headWords = String(headline || '').trim().split(/\s+/);
   for (const rawW of headWords) {
     const hasPossessive = /'s$/i.test(rawW);
-    const clean = rawW.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
+    const clean = stripDiacritics(rawW).replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '').replace(/'s$/i, '');
     const isAcronymOrNumTeam = /^(?:[A-Z]{2,5}|\d+ers)$/.test(clean);
     if ((clean.length >= 3 && /^[A-Z]/.test(clean)) || isAcronymOrNumTeam) {
       const wStems = extractCoherenceStems(clean).filter(s => !COMMON_HEADLINE_NON_ENTITY_STEMS.has(s) && !/^\d+$/.test(s));
@@ -1490,7 +1494,7 @@ function getEpisodeSpecificHeadlineStems(storyText, extraActorStems = null) {
   );
 }
 
-function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0) {
+function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0, anchorCluster = null) {
   const ageGapHours = (anchorFirstSeenMs > 0 && newestCandidateMs > anchorFirstSeenMs)
     ? (newestCandidateMs - anchorFirstSeenMs) / 3600000
     : 0;
@@ -1501,15 +1505,60 @@ function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText,
     !/\b(debate\w*|spar\w*|welfare|subsid\w*|fast-?track\w*|endorse\w*|attack\s+ad\w*)\b/i.test(anchorStory || '');
   if (isMainElectionVotingAnchor && ageGapHours < 120) return false;
 
+  const candHasCampaignVotingFrame = /\b(polls?\s+open|cast\s+(?:their\s+)?ballots?|voting\s+(?:begins|underway|procedures|stations)|holds?\s+(?:high-stakes\s+)?(?:presidential\s+)?runoff|head\s+to\s+the\s+polls|tight\s+(?:presidential\s+)?runoff|exit\s+polls?)\b/i.test(candidateText || '');
+
   const episodeStems = getEpisodeSpecificHeadlineStems(anchorStory);
   if (episodeStems.size === 0) return false;
   const candStems = new Set(extractCoherenceStems(candidateText || ''));
   const sharedEpisode = [...episodeStems].filter(s => candStems.has(s));
   // If the cluster is >5 days (120h) old, sharing only 1 subject/actor stem is not enough to bridge into a new episode
   if (sharedEpisode.length > 0 && (ageGapHours < 120 || sharedEpisode.length >= 2)) return false;
+
+  // Longitudinal Active-Phase Bridge:
+  // When a multi-version cluster has actively developed recently (<72h from newest coverage or lastDevelopedAt)
+  // — e.g. a multi-week storm arc whose current v4 phase is centered on Tupanciretã — its headline may focus on the
+  // institutional response ("Brazil Federal Government Declares Calamity Over Southern Storms") while the active episode's
+  // specific proper-noun epicenter/subjects live in primaryLocation, developmentNote, summary, and recent coverage.
+  if (!candHasCampaignVotingFrame && anchorCluster && typeof anchorCluster === 'object') {
+    const covTimes = (anchorCluster.coverage || [])
+      .map(a => a?.pubDate ? Date.parse(a.pubDate) : 0)
+      .filter(t => !isNaN(t) && t > 0);
+    const lastDevMs = anchorCluster.lastDevelopedAt ? (Date.parse(anchorCluster.lastDevelopedAt) || 0) : 0;
+    const latestActiveMs = Math.max(lastDevMs, ...covTimes, 0);
+    const activeGapHours = (latestActiveMs > 0 && newestCandidateMs > 0)
+      ? Math.abs(newestCandidateMs - latestActiveMs) / 3600000
+      : Infinity;
+    if (activeGapHours < 72) {
+      const recentCutoff = latestActiveMs - 72 * 3600000;
+      const recentCovTitles = (anchorCluster.coverage || [])
+        .filter(a => {
+          const t = a?.pubDate ? Date.parse(a.pubDate) : 0;
+          return t >= recentCutoff;
+        })
+        .slice(0, 4)
+        .map(a => a.title || '')
+        .join('. ');
+      const activePhaseProse = [
+        anchorCluster.developmentNote || '',
+        anchorCluster.primaryLocation?.name || '',
+        anchorCluster.summary || '',
+        recentCovTitles
+      ].filter(Boolean).join('. ');
+      const activePhaseStems = getEpisodeSpecificHeadlineStems(activePhaseProse);
+      const sharedActiveEpisode = [...activePhaseStems].filter(s => candStems.has(s));
+      const { properStems: ancProper } = extractProperSubjectEntities(anchorStory || '', activePhaseProse);
+      const { properStems: candProper } = extractProperSubjectEntities(candidateText || '', candidateText || '');
+      const sharedActiveProper = [...ancProper].filter(s =>
+        candProper.has(s) && !CAMPAIGN_OR_THEATRE_FRAME_STEMS.has(s)
+      );
+      if (sharedActiveProper.length >= 1 && sharedActiveEpisode.length >= 2 && (sharedEpisode.length >= 1 || sharedActiveProper.length >= 2)) {
+        return false;
+      }
+    }
+  }
+
   // Candidate text shares 0 episode-specific headline stems with the anchor (or only 1 stem across a >5d gap)!
   // Check if the candidate text is purely matching on campaign/election/theatre frame stems or is separated by >24h from the episode origin:
-  const candHasCampaignVotingFrame = /\b(polls?\s+open|cast\s+(?:their\s+)?ballots?|voting\s+(?:begins|underway|procedures|stations)|holds?\s+(?:high-stakes\s+)?(?:presidential\s+)?runoff|head\s+to\s+the\s+polls|tight\s+(?:presidential\s+)?runoff|exit\s+polls?)\b/i.test(candidateText || '');
   if (ageGapHours >= 24 || candHasCampaignVotingFrame) {
     return true;
   }
@@ -1558,8 +1607,8 @@ function hasDisjointProperSubjectMergeConflict(clA, clB, stemDfMap = null, maxDf
 
   // Also check episodic phase mismatch between the two clusters (e.g. Oct 19 Debate or Oct 20 Welfare vs Oct 25 Election-Day Voting)
   if (
-    hasEpisodicPhaseMismatch(clA.story || '', factsA.minMs, `${clB.story || ''} ${clB.summary || ''}`, factsB.maxMs) ||
-    hasEpisodicPhaseMismatch(clB.story || '', factsB.minMs, `${clA.story || ''} ${clA.summary || ''}`, factsA.maxMs)
+    hasEpisodicPhaseMismatch(clA.story || '', factsA.minMs, `${clB.story || ''} ${clB.summary || ''}`, factsB.maxMs, clA) ||
+    hasEpisodicPhaseMismatch(clB.story || '', factsB.minMs, `${clA.story || ''} ${clA.summary || ''}`, factsA.maxMs, clB)
   ) {
     return true;
   }
@@ -1777,7 +1826,7 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
       const anc = activeClusterAnchors[cIdx];
       if (anc.outletPubMs.has(a.sourceId) && a.pubMs <= (anc.outletPubMs.get(a.sourceId) || 0) + 2 * 3600 * 1000) continue;
       const ancFirstMs = anc.anchorCluster?.firstSeenAt ? Date.parse(anc.anchorCluster.firstSeenAt) : 0;
-      if (hasEpisodicPhaseMismatch(anc.anchorStory || '', ancFirstMs, `${a.title || ''} ${a.description || ''}`, a.pubMs)) continue;
+      if (hasEpisodicPhaseMismatch(anc.anchorStory || '', ancFirstMs, `${a.title || ''} ${a.description || ''}`, a.pubMs, anc.anchorCluster)) continue;
       if (hasDisjointSovereignCountryConflict(
         `${anc.anchorStory || ''} ${anc.description || ''}`,
         `${a.title || ''} ${a.description || ''}`,
@@ -2012,7 +2061,8 @@ Return JSON array in format:
           directAnchorInIds.anchorCluster.story || '',
           directAnchorInIds.anchorCluster.firstSeenAt ? Date.parse(directAnchorInIds.anchorCluster.firstSeenAt) : 0,
           `${art.title || ''} ${art.description || ''}`,
-          art.pubMs || (art.pubDate ? Date.parse(art.pubDate) : 0)
+          art.pubMs || (art.pubDate ? Date.parse(art.pubDate) : 0),
+          directAnchorInIds.anchorCluster
         )) {
           console.warn(`[Clusters] Dropped episodic phase-mismatch article from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
           return false;
@@ -2139,7 +2189,8 @@ Return JSON array in format:
               ancCluster.story || '',
               ancCluster.firstSeenAt ? Date.parse(ancCluster.firstSeenAt) : 0,
               `${cl.story || ''} ${matchingArticles.map(m => `${m.title || ''} ${m.description || ''}`).join(' ')}`,
-              newestMatchArtMs
+              newestMatchArtMs,
+              ancCluster
             );
             if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor || isEpisodicMismatchAnchor) {
               console.warn(`[Clusters] Detached theatre/single-entity/episodic-mismatch anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor}, episodicMismatch=${isEpisodicMismatchAnchor})`);
@@ -2749,7 +2800,8 @@ Return JSON array in format:
           cm.cl.story || '',
           cm.firstSeenMs || cm.minMs,
           `${art.title || ''} ${art.description || ''}`,
-          art.pubMs
+          art.pubMs,
+          cm.cl
         )) continue;
         if (hasDisjointSovereignCountryConflict(
           `${cm.cl.story || ''} ${cm.cl.summary || ''}`,
@@ -3714,7 +3766,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         c.story || '',
         cFacts.minMs,
         `${noteText} ${(c._pendingUpdate?.addedHeadlines || []).join(' ')}`,
-        c._pendingUpdate?.newestAddedMs || 0
+        c._pendingUpdate?.newestAddedMs || 0,
+        c
       )) {
         console.warn(`[Clusters] Rejected episodic phase-mismatch update on cluster [${idx}] "${c.story}": "${noteText}"`);
         continue;
