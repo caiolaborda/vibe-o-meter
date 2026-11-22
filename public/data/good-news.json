@@ -1,8 +1,8 @@
 {
   "dataset": "vibe-o-meter/good-news",
-  "lastUpdated": "2026-11-22T09:57:32.535Z",
-  "count24h": 22,
-  "count7d": 196,
+  "lastUpdated": "2026-11-22T10:29:54.958Z",
+  "count24h": 21,
+  "count7d": 193,
   "constructiveClusterCount": 19,
   "top5DailyAntidote": [
     {
@@ -29,7 +29,7 @@
       "pubDate": "Fri, 20 Nov 2026 20:07:32 -0500",
       "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.873
+      "antidoteRank": 0.872
     },
     {
       "title": "The likely solution to the Riemann hypothesis by AI marks a turning point for mathematics",
@@ -103,13 +103,13 @@
       "pubDate": "Sat, 21 Nov 2026 07:30:00 -0000",
       "isPast24h": false,
       "isPast48h": true,
-      "antidoteRank": 0.673
+      "antidoteRank": 0.671
     },
     {
       "title": "BepiColombo probe enters Mercury's orbit after eight-year journey through the Solar System",
       "description": "The joint European-Japanese BepiColombo mission has successfully entered orbit around Mercury after an eight-year journey, marking a significant achievement in planetary science.",
       "sentiment": 0.544,
-      "significanceScore": 0.62,
+      "significanceScore": 0.659,
       "factors": [
         55,
         90,
@@ -118,7 +118,7 @@
       ],
       "clusterId": "bepicolombo-arrives-at-mercury",
       "clusterStory": "BepiColombo Arrives at Mercury",
-      "outletCount": 3,
+      "outletCount": 4,
       "explanation": "The successful orbital insertion of a spacecraft around Mercury is a major, permanent milestone in space exploration. [Event Base: +0.49 | Editorial Framing: +0.05]",
       "category": "science",
       "imageUrl": "https://s2-oglobo.glbimg.com/1NzGMHNY6hIaInXyM31DPyn4pXQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2025/m/U/dVNHKUSUaPtOTPVSxSuw/mercury-s-shadowy-north-pole-revealed-by-m-cam-1-article.jpg",
@@ -129,7 +129,7 @@
       "pubDate": "Sun, 22 Nov 2026 09:20:28 -0000",
       "isPast24h": true,
       "isPast48h": true,
-      "antidoteRank": 0.62
+      "antidoteRank": 0.659
     }
   ],
   "constructiveClusters": [
@@ -1093,22 +1093,69 @@
           "note": "Initial cluster formation on the wire"
         }
       ],
-      "topic": "science",
-      "imageUrl": "https://www.newscientist.com/wp-content/uploads/2026/11/SEI_321265627.jpg",
-      "averageSentiment": 0.46,
-      "eventBase": 0.385,
-      "significanceScore": 0.579,
-      "factors": [
-        45,
-        85,
-        73,
-        29
+      "domains": [
+        "science",
+        "technology"
       ],
-      "sentimentSpread": 0.06,
-      "outletCount": 3,
+      "concepts": [
+        "space-exploration",
+        "mercury",
+        "spacecraft"
+      ],
+      "entities": [
+        "BepiColombo",
+        "ESA",
+        "JAXA"
+      ],
+      "temporalKind": "point_event",
+      "eventDate": "2026-11-20",
+      "eventTime": {
+        "startDate": "2026-11-20",
+        "endDate": null,
+        "timeOfDay": null,
+        "precision": "day",
+        "label": "Nov 20, 2026",
+        "sourceBacked": true,
+        "clarifiedAt": null
+      },
+      "eventTimeLabel": "Nov 20, 2026",
+      "topic": "science",
+      "imageUrl": "https://s2-oglobo.glbimg.com/1NzGMHNY6hIaInXyM31DPyn4pXQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2025/m/U/dVNHKUSUaPtOTPVSxSuw/mercury-s-shadowy-north-pole-revealed-by-m-cam-1-article.jpg",
+      "averageSentiment": 0.48,
+      "eventBase": 0.411,
+      "significanceScore": 0.63,
+      "factors": [
+        48,
+        87,
+        76,
+        24
+      ],
+      "sentimentSpread": 0.12,
+      "outletCount": 4,
       "firstSeenAt": "2026-11-20T00:01:15.000Z",
-      "latestUpdateAt": "2026-11-20T08:00:00.000Z",
+      "latestUpdateAt": "2026-11-22T09:20:28.000Z",
       "coverage": [
+        {
+          "sourceId": "oglobo",
+          "sourceName": "O Globo",
+          "region": "LATAM",
+          "title": "BepiColombo probe enters Mercury's orbit after eight-year journey through the Solar System",
+          "description": "The joint European-Japanese BepiColombo mission has successfully entered orbit around Mercury after an eight-year journey, marking a significant achievement in planetary science.",
+          "sentiment": 0.544,
+          "eventBase": 0.492,
+          "framingMod": 0.052,
+          "factors": [
+            55,
+            90,
+            80,
+            20
+          ],
+          "explanation": "The successful orbital insertion of a spacecraft around Mercury is a major, permanent milestone in space exploration. [Event Base: +0.49 | Editorial Framing: +0.05]",
+          "category": "science",
+          "imageUrl": "https://s2-oglobo.glbimg.com/1NzGMHNY6hIaInXyM31DPyn4pXQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2025/m/U/dVNHKUSUaPtOTPVSxSuw/mercury-s-shadowy-north-pole-revealed-by-m-cam-1-article.jpg",
+          "link": "https://oglobo.globo.com/mundo/epoca/noticia/2026/11/22/sonda-bepicolombo-entra-na-orbita-de-mercurio-apos-oito-anos-de-viagem-pelo-sistema-solar.ghtml",
+          "pubDate": "Sun, 22 Nov 2026 09:20:28 -0000"
+        },
         {
           "sourceId": "newscientist",
           "sourceName": "New Scientist",
@@ -3573,7 +3620,7 @@
       "title": "BepiColombo probe enters Mercury's orbit after eight-year journey through the Solar System",
       "description": "The joint European-Japanese BepiColombo mission has successfully entered orbit around Mercury after an eight-year journey, marking a significant achievement in planetary science.",
       "sentiment": 0.544,
-      "significanceScore": 0.62,
+      "significanceScore": 0.659,
       "factors": [
         55,
         90,
@@ -3582,7 +3629,7 @@
       ],
       "clusterId": "bepicolombo-arrives-at-mercury",
       "clusterStory": "BepiColombo Arrives at Mercury",
-      "outletCount": 3,
+      "outletCount": 4,
       "explanation": "The successful orbital insertion of a spacecraft around Mercury is a major, permanent milestone in space exploration. [Event Base: +0.49 | Editorial Framing: +0.05]",
       "category": "science",
       "imageUrl": "https://s2-oglobo.glbimg.com/1NzGMHNY6hIaInXyM31DPyn4pXQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2025/m/U/dVNHKUSUaPtOTPVSxSuw/mercury-s-shadowy-north-pole-revealed-by-m-cam-1-article.jpg",
@@ -3591,6 +3638,29 @@
       "region": "LATAM",
       "link": "https://oglobo.globo.com/mundo/epoca/noticia/2026/11/22/sonda-bepicolombo-entra-na-orbita-de-mercurio-apos-oito-anos-de-viagem-pelo-sistema-solar.ghtml",
       "pubDate": "Sun, 22 Nov 2026 09:20:28 -0000",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
+      "title": "China’s Sanxingdui silk discovery suggests ancient writing may have existed on perishable cloth",
+      "description": "In the world of archaeology, especially when it comes to ancient societies, organic materials can often lead to breakthroughs, making them particularly valuable artefacts. In Sanxingdui, home to the ancient Shu people (c. 1046–316 BC), the recent discovery of silk residues adhering to 101 artefacts – including bronze, ivory, jade and gold – suggests that silk had already become a valuable commodity. The authors of a recent study published by C...",
+      "sentiment": 0.505,
+      "significanceScore": 0.555,
+      "factors": [
+        55,
+        70,
+        75,
+        25
+      ],
+      "outletCount": 1,
+      "explanation": "The discovery of ancient silk residues at Sanxingdui suggests perishable cloth may have borne early writing systems. [Event Base: +0.45 | Editorial Framing: +0.06]",
+      "category": "science",
+      "imageUrl": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2026/11/22/bcf8046f-10f7-47ef-9c29-bd18a2858b9f_3bcdc641.jpg?itok=C-N7_wuz&v=1795331131",
+      "sourceId": "scmp",
+      "sourceName": "South China Morning Post",
+      "region": "APAC",
+      "link": "https://www.scmp.com/news/people-culture/trending-china/article/3375365/chinas-sanxingdui-silk-discovery-suggests-ancient-writing-may-have-existed-perishable-cloth",
+      "pubDate": "Sun, 22 Nov 2026 10:00:10 +0000",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -3831,29 +3901,6 @@
       "isPast48h": true
     },
     {
-      "title": "Japan: Autonomous air taxi completes passenger flight without a pilot",
-      "description": "A pilotless electric flying taxi has carried a passenger during a demonstration, on Friday 20 November 2026, in Japan's Yamanashi Prefecture. The Chinese-built aircraft took off vertically and flew autonomously, offering a glimpse of a possible future for urban transport.",
-      "sentiment": 0.219,
-      "significanceScore": 0.219,
-      "factors": [
-        35,
-        50,
-        60,
-        25
-      ],
-      "outletCount": 1,
-      "explanation": "An autonomous flying taxi successfully completing a pilotless passenger flight represents a tangible milestone in urban transport innovation. [Event Base: +0.17 | Editorial Framing: +0.04]",
-      "category": "technology",
-      "imageUrl": null,
-      "sourceId": "euronews",
-      "sourceName": "Euronews",
-      "region": "EU",
-      "link": "https://www.euronews.com/video/2026/11/21/japan-autonomous-air-taxi-completes-passenger-flight-without-a-pilot",
-      "pubDate": "Sat, 21 Nov 2026 11:20:25 +0100",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
       "title": "Wreck of the first warship built in Australia is found 128 years later",
       "description": "Marine archaeologists have discovered the wreckage of the Spitfire, Australia's first domestically constructed warship, off the coast of Queensland nearly 130 years after it sank.",
       "sentiment": 0.21,
@@ -3942,29 +3989,6 @@
       "region": "LATAM",
       "link": "https://agenciabrasil.ebc.com.br/educacao/noticia/2026-11/dossie-mapeia-desafios-do-ensino-de-matematica-e-sugere-solucoes",
       "pubDate": "Sat, 21 Nov 2026 10:50:00 -0300",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
-      "title": "Thomas Piketty: 'The UN's framework convention on tax cooperation has the potential to change the world'",
-      "description": "United Nations negotiations for a framework convention on international tax cooperation resume in Nairobi on November 30. The talks could reshape the world, the economist writes in his column.",
-      "sentiment": 0.178,
-      "significanceScore": 0.178,
-      "factors": [
-        20,
-        70,
-        50,
-        25
-      ],
-      "outletCount": 1,
-      "explanation": "The economist's perspective highlights a potential structural advancement in international tax cooperation, though it remains in the negotiation phase. [Event Base: +0.14 | Editorial Framing: +0.04]",
-      "category": "politics",
-      "imageUrl": "https://img.lemde.fr/2026/11/20/197/0/5568/2784/644/322/60/0/783fdde_upload-1-qh21g31rztuh-000-648j6xm.jpg",
-      "sourceId": "lemonde",
-      "sourceName": "Le Monde",
-      "region": "EU",
-      "link": "https://www.lemonde.fr/en/opinion/article/2026/11/21/thomas-piketty-the-un-s-framework-convention-on-tax-cooperation-has-the-potential-to-change-the-world_6786002_23.html",
-      "pubDate": "Sat, 21 Nov 2026 11:01:04 +0100",
       "isPast24h": true,
       "isPast48h": true
     },
@@ -4182,6 +4206,31 @@
       "isPast48h": true
     },
     {
+      "title": "BepiColombo probe enters Mercury's orbit after eight-year journey through the Solar System",
+      "description": "The joint European-Japanese BepiColombo mission has successfully entered orbit around Mercury after an eight-year journey, marking a significant achievement in planetary science.",
+      "sentiment": 0.544,
+      "significanceScore": 0.659,
+      "factors": [
+        55,
+        90,
+        80,
+        20
+      ],
+      "clusterId": "bepicolombo-arrives-at-mercury",
+      "clusterStory": "BepiColombo Arrives at Mercury",
+      "outletCount": 4,
+      "explanation": "The successful orbital insertion of a spacecraft around Mercury is a major, permanent milestone in space exploration. [Event Base: +0.49 | Editorial Framing: +0.05]",
+      "category": "science",
+      "imageUrl": "https://s2-oglobo.glbimg.com/1NzGMHNY6hIaInXyM31DPyn4pXQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2025/m/U/dVNHKUSUaPtOTPVSxSuw/mercury-s-shadowy-north-pole-revealed-by-m-cam-1-article.jpg",
+      "sourceId": "oglobo",
+      "sourceName": "O Globo",
+      "region": "LATAM",
+      "link": "https://oglobo.globo.com/mundo/epoca/noticia/2026/11/22/sonda-bepicolombo-entra-na-orbita-de-mercurio-apos-oito-anos-de-viagem-pelo-sistema-solar.ghtml",
+      "pubDate": "Sun, 22 Nov 2026 09:20:28 -0000",
+      "isPast24h": true,
+      "isPast48h": true
+    },
+    {
       "title": "After 49 Years, Voyager 1 Is a Mind-Blowing One Light-Day From Earth",
       "description": "Launched in 1977, the hardy spacecraft is still sending messages back home from a staggering distance in interstellar space.",
       "sentiment": 0.453,
@@ -4207,31 +4256,6 @@
       "isPast48h": false
     },
     {
-      "title": "BepiColombo probe enters Mercury's orbit after eight-year journey through the Solar System",
-      "description": "The joint European-Japanese BepiColombo mission has successfully entered orbit around Mercury after an eight-year journey, marking a significant achievement in planetary science.",
-      "sentiment": 0.544,
-      "significanceScore": 0.62,
-      "factors": [
-        55,
-        90,
-        80,
-        20
-      ],
-      "clusterId": "bepicolombo-arrives-at-mercury",
-      "clusterStory": "BepiColombo Arrives at Mercury",
-      "outletCount": 3,
-      "explanation": "The successful orbital insertion of a spacecraft around Mercury is a major, permanent milestone in space exploration. [Event Base: +0.49 | Editorial Framing: +0.05]",
-      "category": "science",
-      "imageUrl": "https://s2-oglobo.glbimg.com/1NzGMHNY6hIaInXyM31DPyn4pXQ=/i.s3.glbimg.com/v1/AUTH_da025474c0c44edd99332dddb09cabe8/internal_photos/bs/2025/m/U/dVNHKUSUaPtOTPVSxSuw/mercury-s-shadowy-north-pole-revealed-by-m-cam-1-article.jpg",
-      "sourceId": "oglobo",
-      "sourceName": "O Globo",
-      "region": "LATAM",
-      "link": "https://oglobo.globo.com/mundo/epoca/noticia/2026/11/22/sonda-bepicolombo-entra-na-orbita-de-mercurio-apos-oito-anos-de-viagem-pelo-sistema-solar.ghtml",
-      "pubDate": "Sun, 22 Nov 2026 09:20:28 -0000",
-      "isPast24h": true,
-      "isPast48h": true
-    },
-    {
       "title": "Himalaya-sized ancient 'supermountains' found beneath Antarctica's ice sheet",
       "description": "The discovery offers a window into the continent's geological past and of how life on Earth has evolved.",
       "sentiment": 0.54,
@@ -4255,29 +4279,6 @@
       "isPast48h": true
     },
     {
-      "title": "Watch: SpaceX catches Starship in midair on return to launch tower",
-      "description": "SpaceX's Starship spacecraft was successfully caught by giant mechanical arms at its Texas launch tower after a 22-hour journey, marking the first successful midair capture of a Starship returning from space.",
-      "sentiment": 0.525,
-      "significanceScore": 0.575,
-      "factors": [
-        55,
-        75,
-        65,
-        35
-      ],
-      "outletCount": 1,
-      "explanation": "Reports a major aerospace engineering milestone as SpaceX successfully catches a returning Starship booster in midair. [Event Base: +0.44 | Editorial Framing: +0.08]",
-      "category": "science",
-      "imageUrl": "https://images.euronews.com/articles/stories/09/99/30/79/1200x675_cmsv2_cfe05e8e-a267-5b3b-8e89-a831a17adafc-9993079.jpg",
-      "sourceId": "euronews",
-      "sourceName": "Euronews",
-      "region": "EU",
-      "link": "https://www.euronews.com/video/2026/11/15/watch-spacex-catches-starship-in-midair-on-return-to-launch-tower",
-      "pubDate": "Sun, 15 Nov 2026 11:05:49 +0100",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
       "title": "Barkly cracks 98% rare earths recovery in Top End breakthrough",
       "description": "Barkly Rare Earths has achieved 98% magnet rare earths extraction in fresh NT testwork, opening a potentially simpler and cheaper processing route for its namesake project.",
       "sentiment": 0.524,
@@ -4299,6 +4300,29 @@
       "pubDate": "Fri, 20 Nov 2026 14:03:40 +1100",
       "isPast24h": false,
       "isPast48h": false
+    },
+    {
+      "title": "China’s Sanxingdui silk discovery suggests ancient writing may have existed on perishable cloth",
+      "description": "In the world of archaeology, especially when it comes to ancient societies, organic materials can often lead to breakthroughs, making them particularly valuable artefacts. In Sanxingdui, home to the ancient Shu people (c. 1046–316 BC), the recent discovery of silk residues adhering to 101 artefacts – including bronze, ivory, jade and gold – suggests that silk had already become a valuable commodity. The authors of a recent study published by C...",
+      "sentiment": 0.505,
+      "significanceScore": 0.555,
+      "factors": [
+        55,
+        70,
+        75,
+        25
+      ],
+      "outletCount": 1,
+      "explanation": "The discovery of ancient silk residues at Sanxingdui suggests perishable cloth may have borne early writing systems. [Event Base: +0.45 | Editorial Framing: +0.06]",
+      "category": "science",
+      "imageUrl": "https://cdn.i-scmp.com/sites/default/files/styles/1280x720/public/d8/images/canvas/2026/11/22/bcf8046f-10f7-47ef-9c29-bd18a2858b9f_3bcdc641.jpg?itok=C-N7_wuz&v=1795331131",
+      "sourceId": "scmp",
+      "sourceName": "South China Morning Post",
+      "region": "APAC",
+      "link": "https://www.scmp.com/news/people-culture/trending-china/article/3375365/chinas-sanxingdui-silk-discovery-suggests-ancient-writing-may-have-existed-perishable-cloth",
+      "pubDate": "Sun, 22 Nov 2026 10:00:10 +0000",
+      "isPast24h": true,
+      "isPast48h": true
     },
     {
       "title": "Scientists witness 'cosmic crime' as giant star devours its neighbour",
@@ -5254,29 +5278,6 @@
       "region": "UK",
       "link": "https://www.theguardian.com/uk-news/2026/nov/18/social-media-ban-once-in-a-generation-study",
       "pubDate": "Wed, 18 Nov 2026 07:00:36 GMT",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "The Reward for Black Women’s Work in Georgia: Leaders Who Look Like Them",
-      "description": "Diligent ground-level efforts by Black women helped make Democrats competitive again in Georgia. Now they’ll hold seven of the top eight elected leadership roles in the state.",
-      "sentiment": 0.302,
-      "significanceScore": 0.352,
-      "factors": [
-        35,
-        60,
-        55,
-        30
-      ],
-      "outletCount": 1,
-      "explanation": "Highlights political advancement and leadership representation achieved by Black women organizing grassroots political campaigns in Georgia. [Event Base: +0.24 | Editorial Framing: +0.06]",
-      "category": "politics",
-      "imageUrl": "https://static01.nyt.com/images/2026/11/15/multimedia/15nat-black-women-tfqj/15nat-black-women-tfqj-mediumSquareAt3X.jpg",
-      "sourceId": "nyt",
-      "sourceName": "The New York Times",
-      "region": "NA",
-      "link": "https://www.nytimes.com/2026/11/15/us/black-women-georgia-leaders.html",
-      "pubDate": "Sun, 15 Nov 2026 10:00:54 +0000",
       "isPast24h": false,
       "isPast48h": false
     },
@@ -6730,7 +6731,7 @@
       "region": "EU",
       "link": "https://www.euronews.com/video/2026/11/21/japan-autonomous-air-taxi-completes-passenger-flight-without-a-pilot",
       "pubDate": "Sat, 21 Nov 2026 11:20:25 +0100",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
@@ -6776,29 +6777,6 @@
       "region": "UK",
       "link": "https://www.ft.com/content/3c2197fc-9618-4838-91e6-522ce1a96a22?syn-25a6b1a6=1",
       "pubDate": "Sun, 15 Nov 2026 17:47:43 GMT",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "New Mexico wanted free childcare for all. This is what's worked — and what hasn't",
-      "description": "A year ago in November, New Mexico became the first state to offer free childcare to every eligible family, regardless of income.",
-      "sentiment": 0.213,
-      "significanceScore": 0.213,
-      "factors": [
-        42,
-        40,
-        55,
-        12
-      ],
-      "outletCount": 1,
-      "explanation": "Examines the outcomes and lessons from New Mexico's pioneering universal free childcare program after one year of implementation. [Event Base: +0.19 | Editorial Framing: +0.02]",
-      "category": "politics",
-      "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/7440x4962+0+0/resize/7440x4962!/quality/85/format/webp/?url=https%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Fbe%2Fe0%2F3d5979dc4a7ca8677703331dfaec%2Funiversalchildcare-npr-10-30-2026-177.jpg",
-      "sourceId": "npr",
-      "sourceName": "NPR News",
-      "region": "NA",
-      "link": "https://www.npr.org/2026/11/15/nx-s1-6040194/new-mexico-free-universal-childcare-families",
-      "pubDate": "Sun, 15 Nov 2026 05:00:00 -0500",
       "isPast24h": false,
       "isPast48h": false
     },
@@ -7213,29 +7191,6 @@
       "region": "APAC",
       "link": "https://www.scmp.com/tech/article/3374568/chinas-moonshot-ai-puts-kimi-models-race-science-discoveries",
       "pubDate": "Mon, 16 Nov 2026 07:30:08 +0000",
-      "isPast24h": false,
-      "isPast48h": false
-    },
-    {
-      "title": "Midterm voters ended the long-running GOP dominance in state legislatures",
-      "description": "In several states, Democrats took control of legislatures that had been divided and they weakened GOP dominance in others. Issues on the agenda: More access to health care, new limits on school vouchers.",
-      "sentiment": 0.192,
-      "significanceScore": 0.192,
-      "factors": [
-        35,
-        50,
-        60,
-        10
-      ],
-      "outletCount": 1,
-      "explanation": "Analyzes midterm election results where voters shifted control of several state legislatures away from long-standing GOP dominance. [Event Base: +0.17 | Editorial Framing: +0.02]",
-      "category": "politics",
-      "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/4032x3024+0+0/resize/4032x3024!/quality/85/format/webp/?url=https%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Fcb%2F9a%2Fbd6787154ee2b81abbbf783d0aec%2Fimg-6611.jpg",
-      "sourceId": "npr",
-      "sourceName": "NPR News",
-      "region": "NA",
-      "link": "https://www.npr.org/2026/11/15/nx-s1-6039175/midterms-legislatures-states-democrats-gop",
-      "pubDate": "Sun, 15 Nov 2026 05:00:00 -0500",
       "isPast24h": false,
       "isPast48h": false
     },
@@ -7673,7 +7628,7 @@
       "region": "EU",
       "link": "https://www.lemonde.fr/en/opinion/article/2026/11/21/thomas-piketty-the-un-s-framework-convention-on-tax-cooperation-has-the-potential-to-change-the-world_6786002_23.html",
       "pubDate": "Sat, 21 Nov 2026 11:01:04 +0100",
-      "isPast24h": true,
+      "isPast24h": false,
       "isPast48h": true
     },
     {
