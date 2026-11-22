@@ -13,6 +13,7 @@ const Sentiment = require('sentiment');
 const vader = require('vader-sentiment');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { generateDailyBriefing } = require('./briefing');
+const { NEWS_SOURCES, SOURCE_REGION_MAP, OUTLET_SUFFIX_REGEX } = require('./sources-registry');
 require('dotenv').config();
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -33,62 +34,13 @@ const parser = new Parser({
       ['media:content', 'mediaContent', { keepArray: true }],
       ['media:thumbnail', 'mediaThumbnail', { keepArray: true }],
       ['media:description', 'mediaDescription'],
+      ['media:group', 'mediaGroup'],
       ['itunes:summary', 'itunesSummary'],
       ['summary', 'atomSummary']
     ]
   }
 });
 const sentimentAnalyzer = new Sentiment();
-
-const NEWS_SOURCES = [
-  // North America (US & Canada)
-  { id: 'nyt', name: 'The New York Times', feedUrl: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml' },
-  { id: 'cnn', name: 'CNN', feedUrl: 'https://news.google.com/rss/search?q=site:cnn.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'fox', name: 'Fox News', feedUrl: 'https://feeds.foxnews.com/foxnews/latest' },
-  { id: 'npr', name: 'NPR News', feedUrl: 'https://feeds.npr.org/1001/rss.xml' },
-  { id: 'pbs', name: 'PBS NewsHour', feedUrl: 'https://www.pbs.org/newshour/feeds/rss/headlines' },
-  { id: 'cnbc', name: 'CNBC News', feedUrl: 'https://www.cnbc.com/id/100003114/device/rss/rss.html' },
-  { id: 'bloomberg', name: 'Bloomberg', feedUrl: 'https://feeds.bloomberg.com/markets/news.rss' },
-  { id: 'wsj', name: 'Wall Street Journal', feedUrl: 'https://news.google.com/rss/search?q=site:wsj.com+when:1d&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'cbc', name: 'CBC News', feedUrl: 'https://www.cbc.ca/webfeed/rss/rss-topstories' },
-  { id: 'globalnews', name: 'Global News', feedUrl: 'https://globalnews.ca/feed/' },
-  // Latin America (English & Curated Native Broadsheets)
-  { id: 'batimes', name: 'Buenos Aires Times', feedUrl: 'https://www.batimes.com.ar/feed' },
-  { id: 'mexiconews', name: 'Mexico News Daily', feedUrl: 'https://mexiconewsdaily.com/feed/' },
-  { id: 'mercopress', name: 'MercoPress', feedUrl: 'https://en.mercopress.com/rss/' },
-  { id: 'agenciabrasil', name: 'Agência Brasil', feedUrl: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml', lang: 'pt' },
-  { id: 'oglobo', name: 'O Globo', feedUrl: 'https://oglobo.globo.com/rss/oglobo/', lang: 'pt' },
-  { id: 'latercera', name: 'La Tercera', feedUrl: 'https://www.latercera.com/arc/outboundfeeds/rss/category/mundo/?outputType=xml', lang: 'es' },
-  // United Kingdom
-  { id: 'bbc', name: 'BBC News', feedUrl: 'https://feeds.bbci.co.uk/news/rss.xml' },
-  { id: 'guardian', name: 'The Guardian', feedUrl: 'https://www.theguardian.com/uk/rss' },
-  { id: 'skynews', name: 'Sky News', feedUrl: 'https://feeds.skynews.com/feeds/rss/home.xml' },
-  { id: 'ft', name: 'Financial Times', feedUrl: 'https://www.ft.com/world?format=rss' },
-  // Europe
-  { id: 'dw', name: 'DW News', feedUrl: 'https://rss.dw.com/rdf/rss-en-all' },
-  { id: 'nzz', name: 'Neue Zürcher Zeitung', feedUrl: 'https://www.nzz.ch/international.rss', lang: 'de' },
-  { id: 'france24', name: 'France 24', feedUrl: 'https://www.france24.com/en/rss' },
-  { id: 'euronews', name: 'Euronews', feedUrl: 'https://www.euronews.com/rss?level=theme&name=news' },
-  { id: 'lemonde', name: 'Le Monde', feedUrl: 'https://www.lemonde.fr/en/rss/une.xml' },
-  { id: 'elpais', name: 'El País', feedUrl: 'https://feeds.elpais.com/mrss-s/pages/ep/site/english.elpais.com/portada' },
-  { id: 'repubblica', name: 'La Repubblica', feedUrl: 'https://www.repubblica.it/rss/esteri/rss2.0.xml', lang: 'it' },
-  { id: 'rte', name: 'RTÉ News', feedUrl: 'https://www.rte.ie/feeds/rss/?index=/news/&limit=30' },
-  // Asia-Pacific
-  { id: 'abcau', name: 'ABC News Australia', feedUrl: 'https://www.abc.net.au/news/feed/51120/rss.xml' },
-  { id: 'smh', name: 'Sydney Morning Herald', feedUrl: 'https://www.smh.com.au/rss/feed.xml' },
-  { id: 'scmp', name: 'South China Morning Post', feedUrl: 'https://www.scmp.com/rss/91/feed' },
-  { id: 'japantimes', name: 'The Japan Times', feedUrl: 'https://www.japantimes.co.jp/feed/' },
-  { id: 'cna', name: 'CNA', feedUrl: 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6511' },
-  // Middle East & Africa
-  { id: 'aljazeera', name: 'Al Jazeera', feedUrl: 'https://www.aljazeera.com/xml/rss/all.xml' },
-  { id: 'thenational', name: 'The National', feedUrl: 'https://www.thenationalnews.com/arc/outboundfeeds/rss/?outputType=xml' },
-  { id: 'africanews', name: 'Africanews', feedUrl: 'https://www.africanews.com/feed/rss' },
-  // Global Agencies & Science/Tech
-  { id: 'reuters', name: 'Reuters', feedUrl: 'https://news.google.com/rss/search?q=site:reuters.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'ap', name: 'Associated Press', feedUrl: 'https://news.google.com/rss/search?q=site:apnews.com&hl=en-US&gl=US&ceid=US:en' },
-  { id: 'newscientist', name: 'New Scientist', feedUrl: 'https://www.newscientist.com/feed/home/' },
-  { id: 'arstechnica', name: 'Ars Technica', feedUrl: 'https://feeds.arstechnica.com/arstechnica/index' }
-];
 
 const NATIVE_LANG_SOURCES = new Map(NEWS_SOURCES.filter(s => s.lang && s.lang !== 'en').map(s => [s.id, s.lang]));
 
@@ -122,7 +74,7 @@ function cleanHeadlineTitle(title) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|pbs|pbs newshour|cnbc|sky news|spiegel|dw|france 24|politico|wsj|wall street journal|financial times|ft|euronews|cbc|global news|abc news|sydney morning herald|smh|scmp|south china morning post|the japan times|japan times|cna|channel newsasia|the national|africanews|agencia brasil|agência brasil|le monde|el pais|el país|rte|rté|buenos aires times|mexico news daily|mercopress|new scientist|ars technica).*$/i, '')
+    .replace(OUTLET_SUFFIX_REGEX, '')
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
     .replace(/[\u2018\u2019\u201C\u201D"']/g, '')
     .replace(/[\u2013\u2014-]/g, ' ')
@@ -156,15 +108,17 @@ function needsCleanEditorialSummary(desc, title) {
   return false;
 }
 
-// Extract richest lead paragraph from multiple RSS/Atom summary tags
+// Extract richest lead paragraph from multiple RSS/Atom/MRSS summary tags
 function extractBestDescription(item) {
-  // Prefer concise editorial lead summaries (contentSnippet / description / atomSummary) before full-article contentEncoded
+  const mgDesc = item?.mediaGroup?.['media:description']?.[0];
+  // Prefer concise editorial lead summaries (contentSnippet / description / atomSummary / mediaGroup) before full-article contentEncoded
   const leadCandidates = [
     item.contentSnippet,
     item.description,
     item.atomSummary,
     item.summary,
     item.mediaDescription,
+    typeof mgDesc === 'string' ? mgDesc : null,
     item.itunesSummary,
     item.contentEncoded,
     item.content
@@ -184,7 +138,7 @@ function extractBestDescription(item) {
   return '';
 }
 
-// Extract highest-quality editorial image URL from RSS media tags
+// Extract highest-quality editorial image URL from RSS & Yahoo MRSS (<media:group>) tags
 function isRealEditorialImageUrl(url) {
   if (!url || typeof url !== 'string' || !url.startsWith('http')) return false;
   const u = url.toLowerCase();
@@ -209,10 +163,18 @@ function extractImageUrl(item) {
   if (item.enclosure && isRealEditorialImageUrl(item.enclosure.url) && (!item.enclosure.type || item.enclosure.type.startsWith('image/') || /\.(jpe?g|png|webp|gif)(\?|$)/i.test(item.enclosure.url))) {
     return item.enclosure.url;
   }
-  // 2. Media Content (handle single object or array, pick largest/highest resolution)
+  // 2. Media Content & Yahoo MRSS <media:group><media:content> (pick largest/highest resolution)
+  const mediaList = [];
   if (item.mediaContent) {
-    const list = Array.isArray(item.mediaContent) ? item.mediaContent : [item.mediaContent];
-    const valid = list.filter(m => m && isRealEditorialImageUrl(m.$?.url || m.url));
+    mediaList.push(...(Array.isArray(item.mediaContent) ? item.mediaContent : [item.mediaContent]));
+  }
+  if (item.mediaGroup) {
+    const mg = item.mediaGroup;
+    if (mg['media:content']) mediaList.push(...(Array.isArray(mg['media:content']) ? mg['media:content'] : [mg['media:content']]));
+    if (mg['media:thumbnail']) mediaList.push(...(Array.isArray(mg['media:thumbnail']) ? mg['media:thumbnail'] : [mg['media:thumbnail']]));
+  }
+  if (mediaList.length > 0) {
+    const valid = mediaList.filter(m => m && isRealEditorialImageUrl(m.$?.url || m.url));
     if (valid.length > 0) {
       const best = valid.sort((a, b) => {
         const wa = parseInt(a.$?.width || a.width || 0);
@@ -245,6 +207,38 @@ function extractImageUrl(item) {
     }
   }
   return null;
+}
+
+const FLUFF_URL_PATH_REGEX = /\/(sports?|esportes?|deportes?|futebol|football|cricket|rugby|tennis|golf|f1|nba|nfl|mlb|nhl|premier-league|champions-league|horoscopo|horoscope|astrology|ela|celebridades|famosos|celebrity|showbiz|bollywood|entertainment|entretenimento|espectaculos|lifestyle|life-and-style|fashion|moda|food|recipes|gastronomia|crosswords?|puzzles?|games|quizzes)\//i;
+const FLUFF_CATEGORY_REGEX = /^(sports?|esportes?|deportes?|football|futebol|cricket|rugby|tennis|entertainment|entretenimento|espectáculos|espectaculos|celebrity|showbiz|lifestyle|fashion|horoscope|horóscopo|food|games|puzzles)$/i;
+const FLUFF_TITLE_REGEX = /^(horóscopo|horoscope|cartoon for\s+|crossword|wordle|sudoku)\b|\b(promo code|sportsbook|fanatics|betr|underdog|draftkings|fanduel|news quiz of the week)\b/i;
+
+function isNonNewsFluffItem(item, source) {
+  const title = sanitizeText(item?.title || '');
+  if (!title || FLUFF_TITLE_REGEX.test(title)) return true;
+  if (!source?.excludeFluff) return false;
+  const link = String(item?.link || '');
+  if (link && FLUFF_URL_PATH_REGEX.test(link)) return true;
+  if (Array.isArray(item?.categories) && item.categories.length > 0) {
+    const catStrings = item.categories
+      .map(c => (typeof c === 'string' ? c : (c?._ || c?.$?.term || '')))
+      .map(s => String(s).trim())
+      .filter(Boolean);
+    if (catStrings.length > 0 && catStrings.every(c => FLUFF_CATEGORY_REGEX.test(c))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function clampPubDateIso(rawDate, nowMs = Date.now()) {
+  const fallback = new Date(nowMs).toISOString();
+  if (!rawDate) return fallback;
+  const parsed = Date.parse(rawDate);
+  if (isNaN(parsed)) return fallback;
+  // Clamp future-dated scheduled posts (e.g. Fox op-eds stamped +66h ahead) to current sync time
+  if (parsed > nowMs + 5 * 60 * 1000) return fallback;
+  return rawDate;
 }
 
 function readCache() {
@@ -796,16 +790,7 @@ Return ONLY valid JSON array.`;
   return { results, modelUsed: modelName };
 }
 
-// Structural region mapping of the 39 news sources (feed metadata only — zero topic hardcoding)
-const SOURCE_REGION_MAP = {
-  nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', pbs: 'NA', cnbc: 'NA', bloomberg: 'NA', wsj: 'NA', cbc: 'NA', globalnews: 'NA',
-  batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', oglobo: 'LATAM', latercera: 'LATAM',
-  bbc: 'UK', guardian: 'UK', skynews: 'UK', ft: 'UK',
-  dw: 'EU', nzz: 'EU', france24: 'EU', euronews: 'EU', lemonde: 'EU', elpais: 'EU', repubblica: 'EU', rte: 'EU',
-  abcau: 'APAC', smh: 'APAC', scmp: 'APAC', japantimes: 'APAC', cna: 'APAC',
-  aljazeera: 'MEA', thenational: 'MEA', africanews: 'MEA',
-  reuters: 'WIRE', ap: 'WIRE', newscientist: 'SCI', arstechnica: 'SCI'
-};
+// SOURCE_REGION_MAP is imported from ./sources-registry (60 active newsrooms + legacy IDs)
 
 // Pure grammatical/function words only (zero hardcoded topic keywords)
 const BURST_GRAMMAR_STOPWORDS = new Set([
@@ -1885,7 +1870,7 @@ Rules:
   • NEVER attach general Election-Day voting dispatches ("polls open", "voters cast ballots", "tight runoff") to an older campaign-episode cluster from days earlier (such as a prior TV debate "Lula and Bolsonaro Spar in Debate" or a policy announcement "Lula Fast-Tracks Welfare Payments") — form or match the dedicated Election-Day voting cluster instead.
 - NEVER group articles by a broad theme, commodity, industry, or beat (for example, NEVER create thematic buckets like "Climate Change Assessments", "Global Gold Mining", "Midterm Campaign Trails", "Healthcare Costs", or "AI Industry Trends"). If two articles are feature stories or reports about different places/companies on a similar theme, DO NOT group them.
 - Match dispatches by their primary headline subject; use the short description snippet only to disambiguate who or where an oblique headline refers to, never to match multi-story digest roundups ("...and more top headlines") or sportsbook promo codes.
-- Scan the entire list across all regions (NA, LATAM, UK, EU, APAC, MEA) thoroughly and output all genuine event clusters (whether 35 or 95 clusters), including regional stories covered by 2+ outlets and new outlets matching an EXISTING_CLUSTER.
+- Scan the entire list across all regions (NA, LATAM, UK, EU, ME, AF, SA, APAC) thoroughly and output all genuine event clusters (whether 35 or 95 clusters), including regional stories covered by 2+ outlets and new outlets matching an EXISTING_CLUSTER.
 - If an EXISTING_CLUSTER item is matched by 1 or more new outlet dispatches on that exact same specific event, include the EXISTING_CLUSTER index AND the new outlet index(es) together in "ids", and keep the EXISTING_CLUSTER's concise neutral title unless a major phase shift occurred.
 - If a single outlet published multiple updates on the exact same event, include ONLY the single most comprehensive/definitive headline ID for that outlet in "ids" (maximum 1 ID per outlet per cluster).
 - Provide a concise neutral story title (3-6 words, e.g. "Brazil Amazon Deforestation Hits Record Low", "Ancient Shipwreck Found Off Turkey", "Oregon Elementary School Shooting").
@@ -4836,22 +4821,58 @@ async function main() {
   const fetchedBySource = {};
   const unanalyzedArticles = [];
 
-  // 1. Fetch RSS Feeds
+  // 1. Fetch RSS Feeds (supports single feedUrl or multi-section curated feedUrls composites)
+  const syncFetchNowMs = Date.now();
   for (const source of NEWS_SOURCES) {
     try {
-      console.log(`[RSS] Fetching ${source.name}...`);
-      const feed = await parser.parseURL(source.feedUrl);
-      const items = (feed.items || [])
-        .filter(item => !/^cartoon for\s+/i.test(sanitizeText(item.title)))
-        .slice(0, 25)
-        .map(item => ({
-          sourceId: source.id,
-          title: sanitizeText(item.title),
-          description: extractBestDescription(item),
-          link: item.link || '',
-          imageUrl: extractImageUrl(item),
-          pubDate: item.pubDate || item.isoDate || new Date().toISOString()
-        }));
+      const urlsToFetch = Array.isArray(source.feedUrls) && source.feedUrls.length > 0
+        ? source.feedUrls
+        : [source.feedUrl];
+      console.log(`[RSS] Fetching ${source.name}${urlsToFetch.length > 1 ? ` (${urlsToFetch.length} sections)` : ''}...`);
+      const settled = await Promise.allSettled(urlsToFetch.map(u => parser.parseURL(u)));
+      const fulfilledFeeds = settled.filter(r => r.status === 'fulfilled' && r.value);
+      if (fulfilledFeeds.length === 0) {
+        const firstErr = settled.find(r => r.status === 'rejected')?.reason;
+        throw new Error(firstErr?.message || 'All RSS endpoints failed');
+      }
+
+      const rawCombined = [];
+      for (const fRes of fulfilledFeeds) {
+        for (const it of (fRes.value.items || [])) {
+          if (!isNonNewsFluffItem(it, source)) {
+            rawCombined.push(it);
+          }
+        }
+      }
+
+      // Sort newest-first across multi-section feeds before deduplicating and slicing top 25
+      rawCombined.sort((a, b) => {
+        const ta = Date.parse(clampPubDateIso(a.pubDate || a.isoDate, syncFetchNowMs)) || 0;
+        const tb = Date.parse(clampPubDateIso(b.pubDate || b.isoDate, syncFetchNowMs)) || 0;
+        return tb - ta;
+      });
+
+      const preSeenUrls = new Set();
+      const preSeenTitles = new Set();
+      const dedupedRaw = [];
+      for (const it of rawCombined) {
+        const cu = canonicalUrl(it.link || '');
+        const ct = cleanHeadlineTitle(sanitizeText(it.title));
+        if ((cu && preSeenUrls.has(cu)) || (ct && preSeenTitles.has(ct))) continue;
+        if (cu) preSeenUrls.add(cu);
+        if (ct) preSeenTitles.add(ct);
+        dedupedRaw.push(it);
+        if (dedupedRaw.length >= 25) break;
+      }
+
+      const items = dedupedRaw.map(item => ({
+        sourceId: source.id,
+        title: sanitizeText(item.title),
+        description: extractBestDescription(item),
+        link: item.link || '',
+        imageUrl: extractImageUrl(item),
+        pubDate: clampPubDateIso(item.pubDate || item.isoDate, syncFetchNowMs)
+      }));
 
       const sourceArticles = [];
       const seenBatchUrls = new Set();

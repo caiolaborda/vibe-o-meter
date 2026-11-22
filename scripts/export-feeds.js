@@ -1,18 +1,60 @@
 const fs = require('fs');
 const path = require('path');
+const {
+  NEWS_SOURCES,
+  ACTIVE_SOURCE_IDS,
+  OUTLET_META_MAP,
+  OUTLET_REGION_MAP,
+  REGION_ROSTER_COUNTS,
+  OUTLET_SUFFIX_REGEX
+} = require('./sources-registry');
 
 const DATA_FILE = path.join(__dirname, '..', 'data', 'vibe-data.json');
 const PUBLIC_DATA_DIR = path.join(__dirname, '..', 'public', 'data');
 
-const OUTLET_REGION_MAP = {
-  bbc: 'UK', guardian: 'UK', skynews: 'UK', ft: 'UK', independent: 'UK', telegraph: 'UK',
-  nyt: 'NA', cnn: 'NA', fox: 'NA', npr: 'NA', cnbc: 'NA', wsj: 'NA', cbc: 'NA', globalnews: 'NA', latimes: 'NA', wapo: 'NA', nbc: 'NA', pbs: 'NA', ars: 'NA', globeandmail: 'NA',
-  oglobo: 'LATAM', batimes: 'LATAM', mexiconews: 'LATAM', mercopress: 'LATAM', agenciabrasil: 'LATAM', latercera: 'LATAM',
-  dw: 'EU', nzz: 'EU', france24: 'EU', euronews: 'EU', politicoeu: 'EU', lemonde: 'EU', elpais: 'EU', repubblica: 'EU', rte: 'EU', irishtimes: 'EU', swissinfo: 'EU',
-  aljazeera: 'ME', thenational: 'ME', africanews: 'ME',
-  scmp: 'APAC', abcau: 'APAC', smh: 'APAC', japantimes: 'APAC', CNA: 'APAC', cna: 'APAC', koreaherald: 'APAC',
-  reuters: 'GLOBAL', ap: 'GLOBAL', bloomberg: 'GLOBAL', newscientist: 'GLOBAL', arstechnica: 'GLOBAL', nature: 'GLOBAL', UN: 'GLOBAL'
-};
+const CANONICAL_REGION_ORDER = ['NA', 'LATAM', 'UK', 'EU', 'ME', 'AF', 'SA', 'APAC', 'GLOBAL'];
+
+function computeRegionsCovered(coverageList) {
+  if (!Array.isArray(coverageList) || coverageList.length === 0) return [];
+  const seen = new Set();
+  for (const c of coverageList) {
+    if (!c) continue;
+    const reg = OUTLET_REGION_MAP[c.sourceId] || c.region || 'GLOBAL';
+    seen.add(reg);
+  }
+  const ordered = CANONICAL_REGION_ORDER.filter(r => seen.has(r));
+  for (const r of seen) {
+    if (!ordered.includes(r)) ordered.push(r);
+  }
+  return ordered;
+}
+
+function computeRhetoricMetrics(articles) {
+  const withFactors = (articles || []).filter(a => Array.isArray(a.factors) && a.factors.length >= 4 && typeof a.factors[3] === 'number');
+  if (withFactors.length === 0) return null;
+  const n = withFactors.length;
+  let sumSigned = 0;
+  let sumAbs = 0;
+  let wireNeutral = 0;
+  let alarmist = 0;
+  let hype = 0;
+  for (const a of withFactors) {
+    const f = Number(a.factors[3]) || 0;
+    sumSigned += f;
+    sumAbs += Math.abs(f);
+    if (Math.abs(f) <= 15) wireNeutral++;
+    if (f <= -25) alarmist++;
+    if (f >= 25) hype++;
+  }
+  return {
+    spinIntensity: Number((sumAbs / n).toFixed(1)),
+    meanFraming: Number((sumSigned / n).toFixed(1)),
+    wireNeutralPct: Math.round((wireNeutral / n) * 100),
+    alarmistPct: Math.round((alarmist / n) * 100),
+    hypePct: Math.round((hype / n) * 100),
+    sampleCount: n
+  };
+}
 
 function canonicalUrl(url) {
   if (!url) return '';
@@ -32,7 +74,7 @@ function cleanHeadlineTitle(title) {
   if (!title) return '';
   return String(title)
     .replace(/<[^>]*>/g, '')
-    .replace(/\s*[-–—|]\s*(reuters|bbc|cnn|fox news|the guardian|ap news|associated press|bloomberg|nyt|new york times|al jazeera|npr|cnbc|sky news|spiegel|dw|france 24|politico|wsj).*$/i, '')
+    .replace(OUTLET_SUFFIX_REGEX, '')
     .replace(/[^\p{L}\p{N}\s]/gu, '')
     .replace(/\s+/g, ' ')
     .trim()
@@ -2096,6 +2138,8 @@ function exportPublicJsonFeeds(fullPayload) {
       });
     }
 
+    const regionsCovered = computeRegionsCovered(enrichedCov);
+
     // Persist enriched fields back onto raw cluster in memory so data.json / summary.json also benefit
     cl.id = slug;
     cl.topic = topic;
@@ -2106,6 +2150,7 @@ function exportPublicJsonFeeds(fullPayload) {
     if (clusterFactors) cl.factors = clusterFactors;
     cl.sentimentSpread = spread;
     cl.outletCount = outletCount;
+    cl.regionsCovered = regionsCovered;
     if (computedFirstSeenAt) cl.firstSeenAt = computedFirstSeenAt;
     if (computedLatestUpdateAt) cl.latestUpdateAt = computedLatestUpdateAt;
     if (bestImg) cl.imageUrl = bestImg;
@@ -2143,6 +2188,7 @@ function exportPublicJsonFeeds(fullPayload) {
       ...(clusterFactors ? { factors: clusterFactors } : {}),
       sentimentSpread: spread,
       outletCount,
+      regionsCovered,
       firstSeenAt: computedFirstSeenAt,
       latestUpdateAt: computedLatestUpdateAt,
       coverage: enrichedCov
@@ -2176,10 +2222,12 @@ function exportPublicJsonFeeds(fullPayload) {
         const weight = (f[1] * 0.45) + (f[2] * 0.45) + (Math.abs(f[0]) * 0.25);
         rawScoopPool.push({
           sourceId: srcId,
-          sourceName: srcObj.name || srcId,
+          sourceName: srcObj.name || OUTLET_META_MAP[srcId]?.name || srcId,
+          region: OUTLET_REGION_MAP[srcId] || 'GLOBAL',
           title: art.title,
           description: (art.description || '').slice(0, 180),
           link: art.link,
+          ...(isValidImage(art.imageUrl) ? { imageUrl: art.imageUrl } : {}),
           pubDate: art.pubDate,
           category: cat,
           eventBase: eb,
@@ -2215,6 +2263,11 @@ function exportPublicJsonFeeds(fullPayload) {
       const list = Array.isArray(rawArch) ? rawArch : (Array.isArray(rawArch?.clusters) ? rawArch.clusters : []);
       for (const item of list) {
         if (item && item.id && Array.isArray(item.coverage) && item.coverage.length >= 2) {
+          item.coverage = item.coverage.map(c => ({
+            ...c,
+            region: OUTLET_REGION_MAP[c.sourceId] || c.region || 'GLOBAL'
+          }));
+          item.regionsCovered = computeRegionsCovered(item.coverage);
           archiveMap.set(item.id, item);
         }
       }
@@ -2301,12 +2354,13 @@ function exportPublicJsonFeeds(fullPayload) {
       significanceScore: cl.significanceScore,
       sentimentSpread: cl.sentimentSpread,
       outletCount: cl.outletCount,
+      regionsCovered: cl.regionsCovered || computeRegionsCovered(cl.coverage),
       firstSeenAt: cl.firstSeenAt,
       latestUpdateAt: cl.latestUpdateAt,
       coverage: (cl.coverage || []).map(c => ({
         sourceId: c.sourceId,
         sourceName: c.sourceName,
-        region: c.region,
+        region: OUTLET_REGION_MAP[c.sourceId] || c.region || 'GLOBAL',
         title: c.title,
         sentiment: c.sentiment,
         category: c.category,
@@ -2521,8 +2575,22 @@ function exportPublicJsonFeeds(fullPayload) {
   };
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'good-news.json'), JSON.stringify(goodNewsPayload, null, 2), 'utf8');
 
-  // 3. Build & Export Outlets Leaderboard & Topic Matrix -> public/data/outlets.json
-  const outletsList = Object.entries(sources).map(([id, src]) => {
+  // 3. Build & Export 60-Outlet Leaderboard, Rhetoric Stats & Topic Matrix -> public/data/outlets.json
+  const activeOutletOrder = NEWS_SOURCES.map(s => s.id);
+  for (const id of Object.keys(sources)) {
+    if (ACTIVE_SOURCE_IDS.has(id) && !activeOutletOrder.includes(id)) activeOutletOrder.push(id);
+  }
+
+  const outletsList = activeOutletOrder.map(id => {
+    const src = sources[id] || { name: OUTLET_META_MAP[id]?.name || id, articles: [] };
+    const meta = OUTLET_META_MAP[id] || {
+      id,
+      name: src.name || id,
+      region: OUTLET_REGION_MAP[id] || 'GLOBAL',
+      countryCode: 'un',
+      initials: id.slice(0, 3).toUpperCase(),
+      color: '#334155'
+    };
     const allArts = (src.articles || []).filter(a => typeof a.sentiment === 'number');
     const arts24h = allArts.filter(a => {
       const t = a.pubDate ? new Date(a.pubDate).getTime() : 0;
@@ -2557,16 +2625,25 @@ function exportPublicJsonFeeds(fullPayload) {
       };
     });
 
+    const rhetoricAll = computeRhetoricMetrics(allArts);
+    const rhetoric24h = computeRhetoricMetrics(arts24h);
+
     return {
       id,
-      name: src.name || id,
-      region: OUTLET_REGION_MAP[id] || 'GLOBAL',
+      name: meta.name || src.name || id,
+      region: meta.region || OUTLET_REGION_MAP[id] || 'GLOBAL',
+      countryCode: meta.countryCode || 'un',
+      initials: meta.initials || id.slice(0, 3).toUpperCase(),
+      color: meta.color || '#334155',
+      ...(meta.lang ? { lang: meta.lang } : {}),
       averageSentiment24h: avg24h,
       averageSentimentAllTime: avgAllTime,
       deltaVsBaseline: (avg24h !== null && avgAllTime !== null) ? Number((avg24h - avgAllTime).toFixed(3)) : null,
       articleCount24h: arts24h.length,
       articleCountArchive: allArts.length,
       distribution24h: { positive: pos24, neutral: neu24, negative: neg24 },
+      ...(rhetoricAll ? { rhetoric: rhetoricAll } : {}),
+      ...(rhetoric24h ? { rhetoric24h } : {}),
       topicAverages24h
     };
   });
@@ -2581,6 +2658,7 @@ function exportPublicJsonFeeds(fullPayload) {
     editorialSummary: fullPayload.editorialSummary || '',
     categoryAverages: fullPayload.globalStats?.categoryAverages || {},
     outletCount: outletsList.length,
+    regionRosterCounts: { ...REGION_ROSTER_COUNTS },
     outlets: outletsList
   };
   fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'outlets.json'), JSON.stringify(outletsPayload, null, 2), 'utf8');
@@ -2601,7 +2679,7 @@ function exportPublicJsonFeeds(fullPayload) {
     endpoints: {
       clusters: {
         path: 'data/clusters.json',
-        description: 'Cross-outlet story clusters (rolling 7-day window across all sentiments) with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, and per-outlet coverage links.',
+        description: 'Cross-outlet story clusters (rolling 7-day window across all sentiments) with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, regionsCovered, and per-outlet coverage links.',
         count: activeEnrichedClusters.length
       },
       clustersArchive: {
@@ -2617,7 +2695,7 @@ function exportPublicJsonFeeds(fullPayload) {
       },
       outlets: {
         path: 'data/outlets.json',
-        description: '40-outlet global newsroom sentiment leaderboard, regional groupings, historical baselines, and topic × outlet sentiment matrix.',
+        description: `${outletsList.length}-outlet global newsroom sentiment & rhetoric leaderboard, 9-region roster counts, visual brand metadata, historical baselines, and topic × outlet sentiment matrix.`,
         outletCount: outletsList.length
       },
       timeseries: {
@@ -2631,7 +2709,7 @@ function exportPublicJsonFeeds(fullPayload) {
       },
       fullArchive: {
         path: 'data/data.json',
-        description: 'Complete multi-day archive of all analyzed articles across all 40 global newsrooms.'
+        description: `Complete multi-day archive of all analyzed articles across all ${outletsList.length} global newsrooms.`
       }
     }
   };
@@ -2654,7 +2732,13 @@ function exportPublicJsonFeeds(fullPayload) {
   };
 }
 
-module.exports = { exportPublicJsonFeeds, deduplicateAndSanitizeClusters };
+module.exports = {
+  exportPublicJsonFeeds,
+  deduplicateAndSanitizeClusters,
+  OUTLET_REGION_MAP,
+  OUTLET_META_MAP,
+  REGION_ROSTER_COUNTS
+};
 
 if (require.main === module) {
   if (!fs.existsSync(DATA_FILE)) {

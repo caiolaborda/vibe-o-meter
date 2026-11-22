@@ -41,31 +41,36 @@ let state = {
 
 let resolvedSources = {};
 
-// News Source Metadata with Origin Region, Country Codes and Visual Colors
+// News Source Metadata with Origin Region, Country Codes and Visual Colors (60 Active + Legacy Archive IDs)
 const SOURCE_META = {
-  // North America (US & Canada)
+  // North America (9)
   nyt: { name: 'The New York Times', initials: 'NYT', color: '#1e293b', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
   cnn: { name: 'CNN', initials: 'CNN', color: '#cc0000', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
   fox: { name: 'Fox News', initials: 'FOX', color: '#003366', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
   npr: { name: 'NPR', initials: 'NPR', color: '#3c78d8', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
   pbs: { name: 'PBS NewsHour', initials: 'PBS', color: '#1d4ed8', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
   cnbc: { name: 'CNBC', initials: 'CNB', color: '#0077b6', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
-  bloomberg: { name: 'Bloomberg', initials: 'BBG', color: '#4338ca', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
   wsj: { name: 'The Wall Street Journal', initials: 'WSJ', color: '#0274b6', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
   cbc: { name: 'CBC News', initials: 'CBC', color: '#dc2626', region: 'NA', regionName: 'North America', countryCode: 'ca', flag: '🇨🇦' },
   globalnews: { name: 'Global News', initials: 'GLB', color: '#b91c1c', region: 'NA', regionName: 'North America', countryCode: 'ca', flag: '🇨🇦' },
-  // Latin America
+  // Latin America (9 Active + 2 Legacy)
+  oglobo: { name: 'O Globo', initials: 'OGB', color: '#1d4ed8', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
+  agenciabrasil: { name: 'Agência Brasil', initials: 'AGB', color: '#16a34a', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
+  latercera: { name: 'La Tercera', initials: 'LTC', color: '#b91c1c', region: 'LATAM', regionName: 'Latin America', countryCode: 'cl', flag: '🇨🇱' },
+  mercopress: { name: 'MercoPress', initials: 'MCP', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'uy', flag: '🇺🇾' },
+  elpaisamerica: { name: 'El País América', initials: 'EPA', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'es', flag: '🌎' },
+  clarin: { name: 'Clarín', initials: 'CLA', color: '#dc2626', region: 'LATAM', regionName: 'Latin America', countryCode: 'ar', flag: '🇦🇷' },
+  eleconomista: { name: 'El Economista', initials: 'ECO', color: '#0f766e', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🇲🇽' },
+  lasillavacia: { name: 'La Silla Vacía', initials: 'LSV', color: '#ca8a04', region: 'LATAM', regionName: 'Latin America', countryCode: 'co', flag: '🇨🇴' },
+  elcomercio: { name: 'El Comercio', initials: 'ECM', color: '#b45309', region: 'LATAM', regionName: 'Latin America', countryCode: 'pe', flag: '🇵🇪' },
   batimes: { name: 'Buenos Aires Times', initials: 'BAT', color: '#0284c7', region: 'LATAM', regionName: 'Latin America', countryCode: 'ar', flag: '🇦🇷' },
   mexiconews: { name: 'Mexico News Daily', initials: 'MND', color: '#15803d', region: 'LATAM', regionName: 'Latin America', countryCode: 'mx', flag: '🇲🇽' },
-  mercopress: { name: 'MercoPress', initials: 'MCP', color: '#0369a1', region: 'LATAM', regionName: 'Latin America', countryCode: 'uy', flag: '🇺🇾' },
-  agenciabrasil: { name: 'Agência Brasil', initials: 'AGB', color: '#16a34a', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },
-  oglobo: { name: 'O Globo', initials: 'OGB', color: '#1d4ed8', region: 'LATAM', regionName: 'Latin America', countryCode: 'br', flag: '🇧🇷' },  latercera: { name: 'La Tercera', initials: 'LTC', color: '#b91c1c', region: 'LATAM', regionName: 'Latin America', countryCode: 'cl', flag: '🇨🇱' },
-  // United Kingdom
+  // United Kingdom (4)
   bbc: { name: 'BBC News', initials: 'BBC', color: '#ff3f3f', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   guardian: { name: 'The Guardian', initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   skynews: { name: 'Sky News', initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   ft: { name: 'Financial Times', initials: 'FT', color: '#d97706', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  // Europe
+  // Europe (12)
   dw: { name: 'DW News', initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
   nzz: { name: 'Neue Zürcher Zeitung', initials: 'NZZ', color: '#1e3a8a', region: 'EU', regionName: 'Europe', countryCode: 'ch', flag: '🇨🇭' },
   france24: { name: 'France 24', initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
@@ -74,21 +79,42 @@ const SOURCE_META = {
   elpais: { name: 'El País', initials: 'ELP', color: '#0c4a6e', region: 'EU', regionName: 'Europe', countryCode: 'es', flag: '🇪🇸' },
   repubblica: { name: 'La Repubblica', initials: 'REP', color: '#b91c1c', region: 'EU', regionName: 'Europe', countryCode: 'it', flag: '🇮🇹' },
   rte: { name: 'RTÉ News', initials: 'RTE', color: '#059669', region: 'EU', regionName: 'Europe', countryCode: 'ie', flag: '🇮🇪' },
-  // Asia-Pacific
+  pravdaua: { name: 'Ukrainska Pravda', initials: 'UPR', color: '#b91c1c', region: 'EU', regionName: 'Europe', countryCode: 'ua', flag: '🇺🇦' },
+  notesfrompoland: { name: 'Notes From Poland', initials: 'NFP', color: '#dc2626', region: 'EU', regionName: 'Europe', countryCode: 'pl', flag: '🇵🇱' },
+  balkaninsight: { name: 'Balkan Insight', initials: 'BIR', color: '#334155', region: 'EU', regionName: 'Europe', countryCode: 'eu', flag: '🇪🇺' },
+  errnews: { name: 'ERR News', initials: 'ERR', color: '#0284c7', region: 'EU', regionName: 'Europe', countryCode: 'ee', flag: '🇪🇪' },
+  // Middle East & North Africa (5)
+  aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'qa', flag: '🇶🇦' },
+  thenational: { name: 'The National', initials: 'NAT', color: '#0284c7', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'ae', flag: '🇦🇪' },
+  timesofisrael: { name: 'The Times of Israel', initials: 'TOI', color: '#0369a1', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'il', flag: '🇮🇱' },
+  dailynewsegypt: { name: 'Daily News Egypt', initials: 'DNE', color: '#b91c1c', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'eg', flag: '🇪🇬' },
+  almonitor: { name: 'Al-Monitor', initials: 'ALM', color: '#0f766e', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'ae', flag: '🌍' },
+  // Sub-Saharan Africa (4)
+  africanews: { name: 'Africanews', initials: 'AFR', color: '#d97706', region: 'AF', regionName: 'Sub-Saharan Africa', countryCode: 'cg', flag: '🌍' },
+  premiumtimes: { name: 'Premium Times', initials: 'PTN', color: '#15803d', region: 'AF', regionName: 'Sub-Saharan Africa', countryCode: 'ng', flag: '🇳🇬' },
+  dailymaverick: { name: 'Daily Maverick', initials: 'DMV', color: '#1d4ed8', region: 'AF', regionName: 'Sub-Saharan Africa', countryCode: 'za', flag: '🇿🇦' },
+  capitalfmke: { name: 'Capital FM Kenya', initials: 'CFM', color: '#0284c7', region: 'AF', regionName: 'Sub-Saharan Africa', countryCode: 'ke', flag: '🇰🇪' },
+  newtimesrw: { name: 'The New Times', initials: 'NTR', color: '#0284c7', region: 'AF', regionName: 'Sub-Saharan Africa', countryCode: 'rw', flag: '🇷🇼' },
+  // South Asia (3)
+  ndtv: { name: 'NDTV', initials: 'NDT', color: '#e11d48', region: 'SA', regionName: 'South Asia', countryCode: 'in', flag: '🇮🇳' },
+  scrollin: { name: 'Scroll.in', initials: 'SCR', color: '#c2410c', region: 'SA', regionName: 'South Asia', countryCode: 'in', flag: '🇮🇳' },
+  dawn: { name: 'Dawn', initials: 'DWN', color: '#1e293b', region: 'SA', regionName: 'South Asia', countryCode: 'pk', flag: '🇵🇰' },
+  // Asia-Pacific (8)
   abcau: { name: 'ABC News Australia', initials: 'ABC', color: '#0d9488', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
   smh: { name: 'Sydney Morning Herald', initials: 'SMH', color: '#0891b2', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
   scmp: { name: 'South China Morning Post', initials: 'SCM', color: '#4f46e5', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'hk', flag: '🇭🇰' },
   japantimes: { name: 'The Japan Times', initials: 'JPT', color: '#be123c', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'jp', flag: '🇯🇵' },
   cna: { name: 'CNA', initials: 'CNA', color: '#e11d48', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'sg', flag: '🇸🇬' },
-  // Middle East & Africa
-  aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East & Africa', countryCode: 'qa', flag: '🇶🇦' },
-  thenational: { name: 'The National', initials: 'NAT', color: '#0284c7', region: 'ME', regionName: 'Middle East & Africa', countryCode: 'ae', flag: '🇦🇪' },
-  africanews: { name: 'Africanews', initials: 'AFR', color: '#d97706', region: 'ME', regionName: 'Middle East & Africa', countryCode: 'za', flag: '🌍' },
-  // Global
+  koreaherald: { name: 'The Korea Herald', initials: 'KRH', color: '#1e40af', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'kr', flag: '🇰🇷' },
+  inquirer: { name: 'Philippine Daily Inquirer', initials: 'PDI', color: '#1d4ed8', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'ph', flag: '🇵🇭' },
+  vnexpress: { name: 'VnExpress International', initials: 'VNE', color: '#9f1239', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'vn', flag: '🇻🇳' },
+  // Global (6)
   reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
   ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
+  bloomberg: { name: 'Bloomberg', initials: 'BBG', color: '#4338ca', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
   newscientist: { name: 'New Scientist', initials: 'NSC', color: '#10b981', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🔬' },
-  arstechnica: { name: 'Ars Technica', initials: 'ARS', color: '#f97316', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '⚡' }
+  arstechnica: { name: 'Ars Technica', initials: 'ARS', color: '#f97316', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '⚡' },
+  unnews: { name: 'UN News', initials: 'UN', color: '#0284c7', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' }
 };
 
 // Cross-platform flag renderer (renders crisp FlagCDN images on Windows & mobile)
@@ -101,6 +127,39 @@ function getSourceFlagHTML(sourceId, extraClass = '') {
   return `<span class="flag-icon-globe ${extraClass}" title="${meta.regionName}">🌐</span>`;
 }
 window.getSourceFlagHTML = getSourceFlagHTML;
+
+// Compute Rhetorical Spin Intensity & Wire-Neutrality from 4-factor vectors (factors[3] = framing -100..+100)
+function computeClientRhetoricStats(articles) {
+  const list = (articles || []).filter(a => Array.isArray(a.factors) && a.factors.length >= 4 && typeof a.factors[3] === 'number');
+  if (list.length === 0) return null;
+  let sumAbs = 0, sumSigned = 0, wire = 0, alarm = 0, hype = 0;
+  for (const a of list) {
+    const f = Number(a.factors[3]) || 0;
+    sumAbs += Math.abs(f);
+    sumSigned += f;
+    if (Math.abs(f) <= 15) wire++;
+    if (f <= -25) alarm++;
+    if (f >= 25) hype++;
+  }
+  const n = list.length;
+  return {
+    spinIntensity: Number((sumAbs / n).toFixed(1)),
+    meanFraming: Number((sumSigned / n).toFixed(1)),
+    wireNeutralPct: Math.round((wire / n) * 100),
+    alarmistPct: Math.round((alarm / n) * 100),
+    hypePct: Math.round((hype / n) * 100),
+    count: n
+  };
+}
+
+function getSpinIntensityColor(spin) {
+  if (spin === null || spin === undefined || isNaN(spin)) return '#64748b';
+  if (spin <= 13.2) return '#10b981'; // crisp wire-neutral emerald
+  if (spin <= 16.0) return '#0ea5e9'; // composed broadsheet sky
+  if (spin <= 18.2) return '#f59e0b'; // punchy editorial amber
+  if (spin <= 20.5) return '#f97316'; // loaded orange
+  return '#ef4444'; // high-spin crimson
+}
 
 // Semantic Keyword-Matched Editorial Photography Pools (prevents generic topic fallback repetition)
 const SEMANTIC_KEYWORD_PHOTOS = [
@@ -1034,6 +1093,7 @@ const elements = {
   spectrumLanes: document.getElementById('spectrum-lanes-container'),
   spectrumMarkers: document.getElementById('spectrum-markers-container'),
   viewToggleAverages: document.getElementById('view-toggle-averages'),
+  viewToggleRhetoric: document.getElementById('view-toggle-rhetoric'),
   viewToggleDistribution: document.getElementById('view-toggle-distribution'),
   sourcesGrid: document.getElementById('sources-grid'),
   regionFilterTabs: document.getElementById('region-filter-tabs'),
@@ -1645,6 +1705,12 @@ function setupEventListeners() {
     switchSpectrumViewMode('averages');
   });
 
+  if (elements.viewToggleRhetoric) {
+    elements.viewToggleRhetoric.addEventListener('click', () => {
+      switchSpectrumViewMode('rhetoric');
+    });
+  }
+
   elements.viewToggleDistribution.addEventListener('click', () => {
     switchSpectrumViewMode('distribution');
   });
@@ -2053,40 +2119,53 @@ window.toggleEditorialBriefing = function() {
   }
 };
 
-// Switch active spectrum view mode (Averages vs Beeswarm Lanes)
+// Switch active spectrum view mode (Averages vs Rhetorical Spin vs Beeswarm Lanes)
 function switchSpectrumViewMode(mode) {
   state.spectrumViewMode = mode;
-  
-  if (mode === 'averages') {
-    elements.viewToggleAverages.classList.add('active');
-    elements.viewToggleAverages.style.background = 'var(--accent-color)';
-    elements.viewToggleAverages.style.color = '#fff';
-    elements.viewToggleAverages.style.boxShadow = '0 2px 6px rgba(99,102,241,0.25)';
-    
-    elements.viewToggleDistribution.classList.remove('active');
-    elements.viewToggleDistribution.style.background = 'transparent';
-    elements.viewToggleDistribution.style.color = 'var(--text-secondary)';
-    elements.viewToggleDistribution.style.boxShadow = 'none';
-    
+
+  const setBtnState = (btn, active) => {
+    if (!btn) return;
+    btn.classList.toggle('active', active);
+    btn.style.background = active ? 'var(--accent-color)' : 'transparent';
+    btn.style.color = active ? '#fff' : 'var(--text-secondary)';
+    btn.style.boxShadow = active ? '0 2px 6px rgba(99,102,241,0.25)' : 'none';
+  };
+
+  setBtnState(elements.viewToggleAverages, mode === 'averages');
+  setBtnState(elements.viewToggleRhetoric, mode === 'rhetoric');
+  setBtnState(elements.viewToggleDistribution, mode === 'distribution');
+
+  const scaleLabelsEl = document.getElementById('spectrum-scale-labels');
+  if (scaleLabelsEl) {
+    if (mode === 'rhetoric') {
+      scaleLabelsEl.innerHTML = `
+        <span class="label-pos"><i data-lucide="target"></i> Wire-Neutral (Low Spin)</span>
+        <span class="label-neu">Moderate Rhetoric</span>
+        <span class="label-neg">High Spin / Loaded <i data-lucide="flame"></i></span>
+      `;
+    } else {
+      scaleLabelsEl.innerHTML = `
+        <span class="label-neg"><i data-lucide="frown"></i> Alarmist (-1.0)</span>
+        <span class="label-neu">Neutral (0.0)</span>
+        <span class="label-pos">Optimistic (+1.0) <i data-lucide="smile"></i></span>
+      `;
+    }
+    if (window.lucide && lucide.createIcons) lucide.createIcons({ root: scaleLabelsEl });
+  }
+
+  if (mode === 'averages' || mode === 'rhetoric') {
     document.getElementById('averages-view-container').style.display = 'block';
     document.getElementById('distribution-view-container').style.display = 'none';
-    document.getElementById('spectrum-legend-text').innerText = '* Click on any source marker to filter headlines below.';
+    document.getElementById('spectrum-legend-text').innerText = mode === 'rhetoric'
+      ? '* Measures pure headline rhetoric (|framing|, 0–100) independent of event severity: left = dispassionate wire baseline, right = loaded emotional/promotional spin.'
+      : '* Click on any source marker to filter headlines below.';
   } else {
-    elements.viewToggleAverages.classList.remove('active');
-    elements.viewToggleAverages.style.background = 'transparent';
-    elements.viewToggleAverages.style.color = 'var(--text-secondary)';
-    elements.viewToggleAverages.style.boxShadow = 'none';
-    
-    elements.viewToggleDistribution.classList.add('active');
-    elements.viewToggleDistribution.style.background = 'var(--accent-color)';
-    elements.viewToggleDistribution.style.color = '#fff';
-    elements.viewToggleDistribution.style.boxShadow = '0 2px 6px rgba(99,102,241,0.25)';
-    
     document.getElementById('averages-view-container').style.display = 'none';
     document.getElementById('distribution-view-container').style.display = 'flex';
     document.getElementById('spectrum-legend-text').innerText = '* Click on any source name to filter the stream. Click a dot to view and scroll to the article.';
   }
-  
+
+  renderComparisonMatrix();
   renderSpectrum();
 }
 
@@ -2976,9 +3055,10 @@ function renderSpectrum() {
   const isCategoryFiltered = state.filters.category !== 'all';
   const activeRegion = (state.activeRegion || 'all').toUpperCase();
   
-  // Calculate average for each source (considering active category & region filter if set)
+  // Calculate average & rhetorical spin for each source (considering active category & region filter if set)
   const sourceScores = {};
-  const regionCounts = { all: 0, US: 0, UK: 0, EU: 0, ME: 0, GLOBAL: 0 };
+  const regionCounts = { all: 0, NA: 0, LATAM: 0, UK: 0, EU: 0, ME: 0, AF: 0, SA: 0, APAC: 0, GLOBAL: 0 };
+  const isRhetoricMode = state.spectrumViewMode === 'rhetoric';
 
   Object.keys(sources).forEach(id => {
     const src = sources[id];
@@ -2988,6 +3068,8 @@ function renderSpectrum() {
     }
     const scored = arts.filter(a => typeof a.sentiment === 'number');
     const avg = scored.length > 0 ? (scored.reduce((sum, a) => sum + a.sentiment, 0) / scored.length) : null;
+    const rawFallbackArts = (state.sources[id] && state.sources[id].articles) || [];
+    const rhetoric = computeClientRhetoricStats(arts.length >= 4 ? arts : rawFallbackArts);
     const meta = SOURCE_META[id] || { region: 'GLOBAL' };
     const regKey = (meta.region || 'GLOBAL').toUpperCase();
 
@@ -2999,39 +3081,47 @@ function renderSpectrum() {
     if (activeRegion !== 'ALL' && regKey !== activeRegion) {
       return;
     }
-    sourceScores[id] = { avg, scoredCount: scored.length, articles: arts };
+    sourceScores[id] = { avg, rhetoric, scoredCount: scored.length, articles: arts };
   });
 
   updateRegionPillCounts(regionCounts);
 
   const validScores = Object.values(sourceScores)
-    .map(s => s.avg)
+    .map(s => isRhetoricMode ? s.rhetoric?.spinIntensity : s.avg)
     .filter(v => typeof v === 'number' && !isNaN(v));
 
-  if (state.spectrumViewMode === 'averages') {
+  if (state.spectrumViewMode === 'averages' || isRhetoricMode) {
     elements.spectrumMarkers.innerHTML = '';
     const markerPositions = [];
 
-    const minAvg = validScores.length > 0 ? Math.min(...validScores) : -0.5;
-    const maxAvg = validScores.length > 0 ? Math.max(...validScores) : 0.05;
+    let domainMin, domainMax, domainSpan;
+    if (isRhetoricMode) {
+      const minSpin = validScores.length > 0 ? Math.min(...validScores) : 10;
+      const maxSpin = validScores.length > 0 ? Math.max(...validScores) : 23;
+      const pad = Math.max(1.0, (maxSpin - minSpin) * 0.12);
+      domainMin = Math.max(0, Math.floor(minSpin - pad));
+      domainMax = Math.ceil(maxSpin + pad);
+      domainSpan = Math.max(4, domainMax - domainMin);
+    } else {
+      const minAvg = validScores.length > 0 ? Math.min(...validScores) : -0.5;
+      const maxAvg = validScores.length > 0 ? Math.max(...validScores) : 0.05;
+      const pad = Math.max(0.06, (maxAvg - minAvg) * 0.12);
+      domainMin = Math.floor((minAvg - pad) * 10) / 10;
+      domainMax = Math.ceil((maxAvg + pad) * 10) / 10;
+      domainSpan = Math.max(0.15, domainMax - domainMin);
+    }
 
-    // Normed spacing: dynamically scale the track domain
-    const pad = Math.max(0.06, (maxAvg - minAvg) * 0.12);
-    const domainMin = Math.floor((minAvg - pad) * 10) / 10;
-    const domainMax = Math.ceil((maxAvg + pad) * 10) / 10;
-    const domainSpan = Math.max(0.15, domainMax - domainMin);
+    const colorFn = isRhetoricMode ? getSpinIntensityColor : getValenceColor;
 
     // Calibrate the track's color gradient dynamically across the normed domain
-    // so the track background precisely reflects the colors of the source circles!
     const trackElem = document.querySelector('.spectrum-track');
     if (trackElem) {
       const stops = [];
       const numSteps = 12;
       for (let s = 0; s <= numSteps; s++) {
         const pct = (s / numSteps) * 100;
-        // In the marker positioning, percentage maps from 6% to 94% across [domainMin, domainMax]
         const scoreAtPct = domainMin + (domainSpan * ((pct - 6) / 88));
-        const color = getValenceColor(scoreAtPct);
+        const color = colorFn(scoreAtPct);
         stops.push(`${color} ${pct.toFixed(1)}%`);
       }
       trackElem.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
@@ -3044,7 +3134,7 @@ function renderSpectrum() {
       for (let s = 0; s <= 6; s++) {
         const pct = (s / 6) * 100;
         const scoreAtPct = domainMin + (domainSpan * ((pct - 6) / 88));
-        const color = getValenceColor(scoreAtPct);
+        const color = colorFn(scoreAtPct);
         bgStops.push(`${color}0a ${pct.toFixed(1)}%`);
       }
       containerElem.style.background = `linear-gradient(to right, ${bgStops.join(', ')})`;
@@ -3056,9 +3146,12 @@ function renderSpectrum() {
       ticksContainer.innerHTML = '';
       for (let t = 0; t <= 4; t++) {
         const tickScore = domainMin + (domainSpan * (t / 4));
+        const tickLabel = isRhetoricMode
+          ? `${tickScore.toFixed(1)} spin`
+          : `${tickScore > 0 ? '+' : ''}${tickScore.toFixed(2)}`;
         const span = document.createElement('span');
         span.style.cssText = 'position: relative; width: 2px; height: 14px; background-color: var(--border-color);';
-        span.innerHTML = `<span style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 0.68rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">${tickScore > 0 ? '+' : ''}${tickScore.toFixed(2)}</span>`;
+        span.innerHTML = `<span style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 0.68rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">${tickLabel}</span>`;
         ticksContainer.appendChild(span);
       }
     }
@@ -3071,11 +3164,10 @@ function renderSpectrum() {
     Object.keys(sourceScores).forEach(id => {
       const source = sources[id];
       const data = sourceScores[id];
-      if (!data || data.avg === null || data.scoredCount === 0) return;
+      const metricVal = isRhetoricMode ? data?.rhetoric?.spinIntensity : data?.avg;
+      if (!data || metricVal === null || metricVal === undefined || data.scoredCount === 0) return;
       
-      const avg = data.avg;
-      // Stretched normed percentage: 6% to 94%
-      const percentage = Math.max(6, Math.min(94, 6 + (((avg - domainMin) / domainSpan) * 88)));
+      const percentage = Math.max(6, Math.min(94, 6 + (((metricVal - domainMin) / domainSpan) * 88)));
       
       // Dynamic collision avoidance: stack into additional tiers when markers are close horizontally
       let yLevel = 0;
@@ -3092,9 +3184,7 @@ function renderSpectrum() {
       }
 
       markerPositions.push({ x: percentage, y: yLevel });
-      
-      // Absolute valence color calibrated identically to the track gradient
-      const markerColor = getValenceColor(avg);
+      const markerColor = colorFn(metricVal);
 
       const meta = SOURCE_META[id] || { initials: id.toUpperCase().slice(0, 3), color: '#333' };
       const yOffset = yLevel * rowStepPx;
@@ -3107,13 +3197,17 @@ function renderSpectrum() {
       marker.style.left = `${percentage}%`;
       marker.style.bottom = `${yOffset}px`;
       marker.setAttribute('data-id', id);
+
+      const tooltipInner = isRhetoricMode && data.rhetoric
+        ? `${source.name}: <strong style="color:${markerColor};">Spin ${data.rhetoric.spinIntensity.toFixed(1)}</strong> · ${data.rhetoric.wireNeutralPct}% wire-neutral (${data.rhetoric.alarmistPct}% alarm / ${data.rhetoric.hypePct}% hype)`
+        : `${source.name}: <strong style="color:${markerColor};">${metricVal > 0 ? '+' : ''}${metricVal.toFixed(2)}</strong> ${isCategoryFiltered ? `(${state.filters.category})` : ''}`;
       
       marker.innerHTML = `
         <div class="marker-bubble" style="background-color: ${meta.color}; color: #fff; width: ${bubbleSize}px; height: ${bubbleSize}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: ${isMobileTrack ? '0.66rem' : '0.72rem'}; border: 2.5px solid ${markerColor}; box-shadow: 0 3px 8px rgba(0,0,0,0.18); transition: transform 0.2s;">
           <span>${meta.initials}</span>
         </div>
         <div class="marker-label" style="position: absolute; top: -28px; ${labelPosStyle} opacity: 0; pointer-events: none; background: var(--bg-card); border: 1px solid var(--border-color); padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,0.18); white-space: nowrap; color: var(--text-primary); transition: all 0.2s; z-index: 40;">
-          ${source.name}: <strong style="color:${markerColor};">${avg > 0 ? '+' : ''}${avg.toFixed(2)}</strong> ${isCategoryFiltered ? `(${state.filters.category})` : ''}
+          ${tooltipInner}
         </div>
       `;
       
@@ -3412,9 +3506,10 @@ function renderComparisonMatrix() {
   const isCategoryFiltered = state.filters.category !== 'all';
   const activeRegion = (state.activeRegion || 'all').toUpperCase();
 
-  // Compute category-aware metrics and dynamic region counts
+  // Compute category-aware metrics, rhetorical spin, and dynamic 9-region counts
   const outletMetrics = {};
-  const regionCounts = { all: 0, US: 0, UK: 0, EU: 0, ME: 0, GLOBAL: 0 };
+  const regionCounts = { all: 0, NA: 0, LATAM: 0, UK: 0, EU: 0, ME: 0, AF: 0, SA: 0, APAC: 0, GLOBAL: 0 };
+  const isRhetoricSort = state.spectrumViewMode === 'rhetoric';
 
   Object.keys(resolvedSources).forEach(id => {
     const src = resolvedSources[id];
@@ -3424,6 +3519,8 @@ function renderComparisonMatrix() {
     }
     const scored = arts.filter(a => typeof a.sentiment === 'number');
     const avg = scored.length > 0 ? Number((scored.reduce((s, a) => s + a.sentiment, 0) / scored.length).toFixed(3)) : null;
+    const rawFallbackArts = (state.sources[id] && state.sources[id].articles) || [];
+    const rhetoric = computeClientRhetoricStats(arts.length >= 4 ? arts : rawFallbackArts);
     let pos = 0, neu = 0, neg = 0;
     scored.forEach(a => {
       if (a.sentiment > 0.15) pos++;
@@ -3441,6 +3538,7 @@ function renderComparisonMatrix() {
       articles: arts,
       scoredCount: scored.length,
       avg,
+      rhetoric,
       distribution: { positive: pos, neutral: neu, negative: neg },
       regKey
     };
@@ -3448,17 +3546,23 @@ function renderComparisonMatrix() {
 
   updateRegionPillCounts(regionCounts);
 
-  // Sort sources from Worst (most negative/alarmist) to Best (most positive/constructive),
-  // then append any unranked outlets (scoredCount === 0 for the current timeperiod/topic) at the end.
+  // Sort sources: in 'rhetoric' mode from Most Loaded Spin -> Most Wire-Neutral; otherwise Worst -> Best sentiment
   let sortedIds = Object.keys(outletMetrics).filter(id => {
     if (activeRegion !== 'ALL' && outletMetrics[id].regKey !== activeRegion) return false;
     return true;
   }).sort((a, b) => {
-    const hasA = outletMetrics[a].scoredCount > 0 && typeof outletMetrics[a].avg === 'number';
-    const hasB = outletMetrics[b].scoredCount > 0 && typeof outletMetrics[b].avg === 'number';
+    const hasA = isRhetoricSort
+      ? (outletMetrics[a].scoredCount > 0 && outletMetrics[a].rhetoric)
+      : (outletMetrics[a].scoredCount > 0 && typeof outletMetrics[a].avg === 'number');
+    const hasB = isRhetoricSort
+      ? (outletMetrics[b].scoredCount > 0 && outletMetrics[b].rhetoric)
+      : (outletMetrics[b].scoredCount > 0 && typeof outletMetrics[b].avg === 'number');
     if (hasA && !hasB) return -1;
     if (!hasA && hasB) return 1;
     if (!hasA && !hasB) return (outletMetrics[a].source.name || a).localeCompare(outletMetrics[b].source.name || b);
+    if (isRhetoricSort) {
+      return outletMetrics[b].rhetoric.spinIntensity - outletMetrics[a].rhetoric.spinIntensity;
+    }
     return outletMetrics[a].avg - outletMetrics[b].avg;
   });
 
@@ -3483,22 +3587,34 @@ function renderComparisonMatrix() {
     return;
   }
 
-  const totalRanked = sortedIds.filter(id => outletMetrics[id].scoredCount > 0 && typeof outletMetrics[id].avg === 'number').length;
+  const totalRanked = sortedIds.filter(id => isRhetoricSort
+    ? (outletMetrics[id].scoredCount > 0 && outletMetrics[id].rhetoric)
+    : (outletMetrics[id].scoredCount > 0 && typeof outletMetrics[id].avg === 'number')).length;
   let currentRank = 0;
   sortedIds.forEach((id) => {
     const mData = outletMetrics[id];
     const source = mData.source;
-    const isUnranked = mData.scoredCount === 0 || typeof mData.avg !== 'number';
+    const isUnranked = isRhetoricSort
+      ? (mData.scoredCount === 0 || !mData.rhetoric)
+      : (mData.scoredCount === 0 || typeof mData.avg !== 'number');
     if (!isUnranked) currentRank++;
-    const displayRank = !isUnranked ? (totalRanked - currentRank + 1) : 0;
-    const avg = !isUnranked ? mData.avg : 0;
+    const displayRank = !isUnranked ? (isRhetoricSort ? currentRank : (totalRanked - currentRank + 1)) : 0;
+    const avg = (typeof mData.avg === 'number') ? mData.avg : 0;
+    const rhet = mData.rhetoric;
     const meta = SOURCE_META[id] || { initials: id.slice(0, 3).toUpperCase(), color: '#333', region: 'GLOBAL', regionName: 'Global News', flag: '🌐' };
     
     let moodClass = 'neutral';
-    const badgeText = isUnranked ? 'Unranked' : ((avg > 0 ? '+' : '') + avg.toFixed(2));
+    let badgeText = isUnranked ? 'Unranked' : ((avg > 0 ? '+' : '') + avg.toFixed(2));
+    let badgeInlineStyle = isUnranked ? 'opacity:0.65; font-size:0.7rem;' : '';
     if (!isUnranked) {
-      if (avg > 0.15) moodClass = 'positive';
-      else if (avg < -0.15) moodClass = 'negative';
+      if (isRhetoricSort && rhet) {
+        badgeText = `Spin ${rhet.spinIntensity.toFixed(1)}`;
+        const sc = getSpinIntensityColor(rhet.spinIntensity);
+        badgeInlineStyle = `background: ${sc}1c; color: ${sc}; border: 1px solid ${sc}45; font-family: var(--font-mono);`;
+      } else {
+        if (avg > 0.15) moodClass = 'positive';
+        else if (avg < -0.15) moodClass = 'negative';
+      }
     }
 
     // Historical average across all available articles for this outlet (all-time)
@@ -3511,6 +3627,8 @@ function renderComparisonMatrix() {
     let trendBadgeHTML = '';
     if (isUnranked) {
       trendBadgeHTML = `<span class="source-trend-badge stable" title="No scored stories in selected timeframe/topic">No stories in window</span>`;
+    } else if (isRhetoricSort && rhet) {
+      trendBadgeHTML = `<span class="source-trend-badge stable" title="${rhet.wireNeutralPct}% dispassionate wire-neutral headlines (${rhet.alarmistPct}% alarmist / ${rhet.hypePct}% hype)">${rhet.wireNeutralPct}% wire-neutral</span>`;
     } else if (Math.abs(delta) >= 0.04) {
       if (delta > 0) {
         trendBadgeHTML = `<span class="source-trend-badge up" title="Trending +${delta.toFixed(2)} vs all-time average (${histAvg.toFixed(2)})">▲ +${delta.toFixed(2)}</span>`;
@@ -3526,6 +3644,9 @@ function renderComparisonMatrix() {
     const posPct = total > 0 ? ((mData.distribution.positive || 0) / total * 100).toFixed(0) : 0;
     const neuPct = total > 0 ? ((mData.distribution.neutral || 0) / total * 100).toFixed(0) : 0;
     const negPct = total > 0 ? ((mData.distribution.negative || 0) / total * 100).toFixed(0) : 0;
+    const rhetoricSubLine = (!isUnranked && rhet)
+      ? `<div style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-secondary); margin-top:0.15rem; display:flex; justify-content:space-between; opacity:0.88;" title="Headline Rhetoric: ${rhet.wireNeutralPct}% wire-neutral (|framing| <= 15), ${rhet.alarmistPct}% alarmist spin, ${rhet.hypePct}% promotional/celebratory spin"><span>🎯 ${rhet.wireNeutralPct}% wire-neutral</span><span>Spin ${rhet.spinIntensity.toFixed(1)}</span></div>`
+      : '';
     
     const isSelected = state.filters.source === id;
 
@@ -3550,7 +3671,7 @@ function renderComparisonMatrix() {
           </div>
         </div>
         <div class="source-score-container" style="display:flex; flex-direction:column; align-items:flex-end; gap:0.2rem; flex-shrink:0;">
-          <span class="score-badge ${moodClass}" style="${isUnranked ? 'opacity:0.65; font-size:0.7rem;' : ''}">${badgeText}</span>
+          <span class="score-badge ${moodClass}" style="${badgeInlineStyle}">${badgeText}</span>
           ${trendBadgeHTML}
         </div>
       </div>
@@ -3566,6 +3687,7 @@ function renderComparisonMatrix() {
           <span style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted);">${isUnranked ? 'No coverage in active window' : `${negPct}% neg · ${neuPct}% neu · ${posPct}% pos`}</span>
           <span class="compact-filter-hint">${isSelected ? '✓ Filtering' : 'Inspect →'}</span>
         </div>
+        ${rhetoricSubLine}
       </div>
 
       <!-- Compact Sparkline Graph -->
@@ -5669,8 +5791,8 @@ function toggleSourceFilter(sourceId) {
     }
   });
   
-  // Update active marker highlights smoothly in averages mode, or rebuild lanes
-  if (state.spectrumViewMode === 'averages') {
+  // Update active marker highlights smoothly in track modes, or rebuild lanes
+  if (state.spectrumViewMode === 'averages' || state.spectrumViewMode === 'rhetoric') {
     updateSpectrumActiveStates();
   } else {
     renderSpectrum();
@@ -5703,9 +5825,11 @@ const REGION_LABELS = {
   LATAM: 'Latin America',
   UK: 'United Kingdom',
   EU: 'Europe',
+  ME: 'Middle East & N. Africa',
+  MENA: 'Middle East & N. Africa',
+  AF: 'Sub-Saharan Africa',
+  SA: 'South Asia',
   APAC: 'Asia-Pacific',
-  ME: 'Middle East & Africa',
-  MENA: 'Middle East & Africa',
   GLOBAL: 'Global'
 };
 
@@ -6339,6 +6463,27 @@ function renderSpotlightBanner(filteredArticles) {
           <div class="dist-slice pos" style="width: ${posPct}%; background-color: var(--pos-color);"></div>
         </div>
       </div>
+
+      ${(() => {
+        const spotRhet = computeClientRhetoricStats(scored);
+        if (!spotRhet) return '';
+        const midRhetPct = Math.max(0, 100 - spotRhet.wireNeutralPct - spotRhet.alarmistPct - spotRhet.hypePct);
+        const sc = getSpinIntensityColor(spotRhet.spinIntensity);
+        return `
+      <!-- Rhetorical Framing Breakdown -->
+      <div style="display: flex; flex-direction: column; gap: 0.35rem; width: 100%;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; flex-wrap: wrap; gap: 0.4rem;">
+          <span>Headline Rhetoric <strong style="color:${sc}; font-family:var(--font-mono); margin-left:0.35rem;">Spin ${spotRhet.spinIntensity.toFixed(1)}</strong></span>
+          <span style="font-family: var(--font-mono);">${spotRhet.wireNeutralPct}% Wire-Neutral · ${spotRhet.alarmistPct}% Alarmist Spin · ${spotRhet.hypePct}% Hype Spin</span>
+        </div>
+        <div class="dist-bar-track" style="height: 6px; border-radius: 3px; display: flex; overflow: hidden; background-color: var(--bg-tertiary); width: 100%;">
+          <div style="width: ${spotRhet.wireNeutralPct}%; background-color: #10b981;" title="Wire-Neutral (|framing| <= 15): ${spotRhet.wireNeutralPct}%"></div>
+          <div style="width: ${midRhetPct}%; background-color: #94a3b8;" title="Moderate Rhetoric: ${midRhetPct}%"></div>
+          <div style="width: ${spotRhet.alarmistPct}%; background-color: #ef4444;" title="Alarmist Spin (<= -25): ${spotRhet.alarmistPct}%"></div>
+          <div style="width: ${spotRhet.hypePct}%; background-color: #f59e0b;" title="Celebratory / Promotional Spin (>= +25): ${spotRhet.hypePct}%"></div>
+        </div>
+      </div>`;
+      })()}
       
       <!-- Sentiment Beeswarm Plot -->
       <div class="spotlight-beeswarm-wrap">
