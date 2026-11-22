@@ -256,43 +256,6 @@ function sanitizeClusterHeadlineIntegrity(rawCl, slugify) {
     }
   }
 
-  // 6. Sync superseded casualty/fatality counts (both AP number words "One".."Twelve" and digits) when confirmed toll rose
-  const WORD_TO_NUM_MAP = {
-    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-    eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, dozen: 12
-  };
-  const NUM_TO_AP_WORD_MAP = { 1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 6: 'Six', 7: 'Seven', 8: 'Eight', 9: 'Nine' };
-  const fatalityHeadMatch = story.match(/\b(kills?|killed|leaving)\s+(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\b|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+(dead|killed|die|dies|died)\b/i);
-  if (fatalityHeadMatch) {
-    const oldTok = fatalityHeadMatch[2] || fatalityHeadMatch[3];
-    const oldVal = WORD_TO_NUM_MAP[oldTok.toLowerCase()] || Number(oldTok);
-    const wasWord = /^[a-z]+$/i.test(oldTok);
-    const lastHistNote = Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1
-      ? String(cl.evolutionHistory[cl.evolutionHistory.length - 1]?.note || '')
-      : '';
-    const nonBackstorySummary = summary.replace(/^(?:Following|After|Amid)\s+[^,.]+,\s*/i, '');
-    const tollCandidateText = `${lastHistNote} . ${nonBackstorySummary}`;
-    const tollMatch = tollCandidateText.match(/\b(?:confirm\w*|at\s+least|rises?\s+to|reaches?|kills?|killed|leaving)\s+(?:at\s+least\s+)?(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+(?:people\s+)?(?:killed|dead|deaths|fatalit\w*)\b|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+(?:people\s+)?(?:confirmed\s+)?(?:killed|dead|deaths)\b/i);
-    if (tollMatch) {
-      const newRaw = (tollMatch[1] || tollMatch[2]).toLowerCase();
-      const newVal = WORD_TO_NUM_MAP[newRaw] || Number(newRaw);
-      const covConfirms = lastHistNote.length > 0 || (cl.coverage || []).some(a => {
-        const t = String(a?.title || '').toLowerCase();
-        return t.includes(String(newVal)) || (NUM_TO_AP_WORD_MAP[newVal] && t.includes(NUM_TO_AP_WORD_MAP[newVal].toLowerCase()));
-      });
-      if (covConfirms && Number.isFinite(newVal) && newVal > oldVal && newVal <= 500) {
-        const fmtVal = (wasWord && NUM_TO_AP_WORD_MAP[newVal]) ? NUM_TO_AP_WORD_MAP[newVal] : String(newVal);
-        const nextStory = fatalityHeadMatch[2]
-          ? story.replace(new RegExp(`\\b(${fatalityHeadMatch[1]})\\s+${oldTok}\\b`, 'i'), `$1 ${fmtVal}`)
-          : story.replace(new RegExp(`\\b${oldTok}\\s+(${fatalityHeadMatch[4]})\\b`, 'i'), `${fmtVal} $1`);
-        if (nextStory !== story) {
-          story = nextStory;
-          changed = true;
-        }
-      }
-    }
-  }
-
   if (changed) {
     const oldId = cl.id || slugify(rawCl.story);
     const newId = slugify(story);
@@ -908,37 +871,6 @@ function deduplicateAndSanitizeClusters(rawClusters) {
         }
       }
 
-      // Cross-Day Kinetic Episode Veto (0-1 shared URLs):
-      // Never merge two separate days' military strikes / bombardments (>=36h median gap or >=2d eventDate gap)
-      // when their shared headline stems are purely war actors, recurring theatre cities, or generic weapon/strike words.
-      if (shouldMerge && sharedUrls < 2) {
-        const KINETIC_MERGE_RE = /\b(strik\w*|airstrik\w*|drone\w*|missil\w*|barrag\w*|bombard\w*|shell\w*|raid\w*|rocket\w*|torpedo\w*|explosion\w*|blast\w*)\b/i;
-        if (KINETIC_MERGE_RE.test(primary.story || '') && KINETIC_MERGE_RE.test(secondary.story || '')) {
-          const medOf = (cl) => {
-            const ts = (cl.coverage || []).map(a => Date.parse(a?.pubDate || '') || 0).filter(t => t > 0).sort((a, b) => a - b);
-            return ts.length > 0 ? ts[Math.floor(ts.length / 2)] : 0;
-          };
-          const pMed = medOf(primary);
-          const sMed = medOf(secondary);
-          const evGapDays = (primary.eventDate && secondary.eventDate)
-            ? Math.abs(Date.parse(`${primary.eventDate}T12:00:00Z`) - Date.parse(`${secondary.eventDate}T12:00:00Z`)) / 86400000
-            : 0;
-          if ((pMed > 0 && sMed > 0 && Math.abs(pMed - sMed) >= 36 * 3600 * 1000) || evGapDays >= 2) {
-            const THEATRE_KINETIC_STOP = new Set([
-              ...GENERIC_EVENT_STEMS,
-              'kyiv','kiev','odesa','odessa','kharkiv','lviv','dnipro','dnipropetrovsk','crimea','donbas','gaza','rafah',
-              'beirut','damascus','tehran','bahrain','manama','kuwait','riyadh','aden','sanaa','yemen','houthi','hormuz',
-              'baltic','finland','drone','missil','rocket','barrag','airstrik','bombard','shell','raid','casualt','wound','injur','near','hit','target'
-            ]);
-            const rareSharedHead = [...mA.headStems].filter(s => mB.headStems.has(s) && !THEATRE_KINETIC_STOP.has(s));
-            if (rareSharedHead.length === 0) {
-              shouldMerge = false;
-              isDualFacetOrUmbrellaTwin = false;
-            }
-          }
-        }
-      }
-
       if (shouldMerge) {
         const priBirthMs = getClusterBirthMs(primary);
         const secBirthMs = getClusterBirthMs(secondary);
@@ -1430,121 +1362,6 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           filteredHist[0].type = 'initial';
           filteredHist[0].version = 1;
           cl.evolutionHistory = filteredHist;
-        }
-      }
-    }
-
-    // Episode Temporal & Causal Integrity Pass:
-    // (A) On v1 single-episode clusters, prune pre-episode straggler articles swept backward across days that share 0 episode-specific burst stems.
-    // (B) On dormant-reawakened clusters with a >=5-day (120h) silence chasm in evolutionHistory where >=75% of coverage sits in the new epoch,
-    //     re-base the cluster onto the active post-chasm episode so fresh events never claim "Broke 10d-30d ago".
-    const EPISODE_THEATRE_FRAME_STEMS = new Set([
-      ...BROAD_BEAT_STEMS, ...GENERIC_EVENT_STEMS,
-      'kyiv','kiev','odesa','odessa','kharkiv','lviv','dnipro','dnipropetrovsk','crimea','donbas','gaza','rafah',
-      'beirut','damascus','tehran','bahrain','manama','kuwait','riyadh','aden','sanaa','yemen','houthi','hormuz',
-      'baltic','finland','drone','missil','rocket','barrag','airstrik','bombard','shell','raid','casualt','wound','injur',
-      'one','two','three','four','five','six','seven','eight','nine','ten','dozen','near','hit','target','deadly',
-      'region','capital','city','area','outside','north','south','east','west','central','least','up','watch','live','video'
-    ]);
-    const clEventMs = cl.eventDate ? Date.parse(`${cl.eventDate}T12:00:00Z`) : NaN;
-    if ((Number(cl.version) || 1) <= 1 && Array.isArray(cl.coverage) && cl.coverage.length >= 4) {
-      const dated = cl.coverage
-        .map(a => ({ a, ms: Date.parse(a?.pubDate || '') || 0 }))
-        .filter(x => x.ms > 0)
-        .sort((a, b) => b.ms - a.ms);
-      if (dated.length >= 4) {
-        const newestMs = dated[0].ms;
-        const burst = [dated[0]];
-        for (let bi = 1; bi < dated.length; bi++) {
-          const prevInBurstMs = burst[burst.length - 1].ms;
-          if ((prevInBurstMs - dated[bi].ms) <= 15 * 3600 * 1000 && (newestMs - dated[bi].ms) <= 36 * 3600 * 1000) {
-            burst.push(dated[bi]);
-          } else {
-            break;
-          }
-        }
-        const burstEarliestMs = burst[burst.length - 1].ms;
-        const eventMatchesBurst = isNaN(clEventMs) || clEventMs >= burstEarliestMs - 36 * 3600 * 1000;
-        if (eventMatchesBurst && burst.length >= 3 && (burst.length / dated.length) >= 0.55 && (burstEarliestMs - dated[dated.length - 1].ms) >= 15 * 3600 * 1000) {
-          const burstStemCounts = new Map();
-          for (const bItem of burst) {
-            for (const s of getStems(bItem.a.title || '')) {
-              if (!EPISODE_THEATRE_FRAME_STEMS.has(s)) {
-                burstStemCounts.set(s, (burstStemCounts.get(s) || 0) + 1);
-              }
-            }
-          }
-          const sumSpec = getStems(cl.summary || '');
-          const burstEpisodeSpec = new Set(
-            [...burstStemCounts.entries()]
-              .filter(([s, cnt]) => cnt >= 2 || (cnt >= 1 && sumSpec.has(s)))
-              .map(([s]) => s)
-          );
-          if (burstEpisodeSpec.size >= 2) {
-            const keptCov = cl.coverage.filter(art => {
-              const ms = Date.parse(art?.pubDate || '') || 0;
-              if (!ms || ms >= burstEarliestMs - 14 * 3600 * 1000) return true;
-              const artTitleStems = getStems(art.title || '');
-              return [...artTitleStems].some(s => burstEpisodeSpec.has(s));
-            });
-            if (keptCov.length >= 3 && keptCov.length < cl.coverage.length) {
-              cl.coverage = keptCov;
-              cl.outletCount = keptCov.length;
-              const newEarliestMs = Math.min(...keptCov.map(a => Date.parse(a?.pubDate || '') || Infinity));
-              if (Number.isFinite(newEarliestMs)) {
-                cl.firstSeenAt = new Date(newEarliestMs).toISOString();
-                if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 0) {
-                  const initOc = Math.min(keptCov.length, Number(cl.evolutionHistory[0]?.outletCount) || 2);
-                  cl.evolutionHistory = cl.evolutionHistory.map((h, hIdx) => {
-                    if (!h) return h;
-                    if (hIdx === 0) return { ...h, timestamp: cl.firstSeenAt, outletCount: initOc };
-                    const clampedOc = Math.min(keptCov.length, Number(h.outletCount) || keptCov.length);
-                    return {
-                      ...h,
-                      outletCount: clampedOc,
-                      ...(typeof h.addedOutlets === 'number' ? { addedOutlets: Math.max(1, Math.min(h.addedOutlets, keptCov.length - initOc)) } : {})
-                    };
-                  });
-                }
-              }
-            }
-          }
-        }
-      }
-    } else if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length >= 2 && Array.isArray(cl.coverage) && cl.coverage.length >= 3) {
-      let chasmIdx = -1;
-      for (let hi = 1; hi < cl.evolutionHistory.length; hi++) {
-        const prevMs = Date.parse(cl.evolutionHistory[hi - 1]?.timestamp || '') || 0;
-        const currMs = Date.parse(cl.evolutionHistory[hi]?.timestamp || '') || 0;
-        if (prevMs > 0 && currMs > prevMs && (currMs - prevMs) >= 120 * 3600 * 1000) {
-          chasmIdx = hi;
-        }
-      }
-      if (chasmIdx >= 1) {
-        const chasmMs = Date.parse(cl.evolutionHistory[chasmIdx]?.timestamp || '') || 0;
-        const eventMatchesPostChasm = isNaN(clEventMs) || clEventMs >= chasmMs - 36 * 3600 * 1000;
-        const postCov = cl.coverage.filter(a => {
-          const ms = Date.parse(a?.pubDate || '') || 0;
-          return ms >= chasmMs - 24 * 3600 * 1000;
-        });
-        if (eventMatchesPostChasm && chasmMs > 0 && postCov.length >= 3 && (postCov.length / cl.coverage.length) >= 0.75) {
-          const oldOrigin = cl.evolutionHistory[0];
-          cl.priorTheaterEpisode = {
-            headline: oldOrigin?.headline || cl.story,
-            date: String(oldOrigin?.timestamp || '').slice(0, 10)
-          };
-          cl.coverage = postCov;
-          cl.outletCount = postCov.length;
-          const baseVer = Math.max(1, (Number(cl.evolutionHistory[chasmIdx]?.version) || 1) - 1);
-          cl.evolutionHistory = cl.evolutionHistory.slice(chasmIdx).map((h, idx) => ({
-            ...h,
-            type: idx === 0 ? 'initial' : h.type,
-            version: idx === 0 ? 1 : Math.max(1, (Number(h.version) || 1) - baseVer)
-          }));
-          cl.version = cl.evolutionHistory[cl.evolutionHistory.length - 1].version || 1;
-          const minPostMs = Math.min(chasmMs, ...postCov.map(a => Date.parse(a?.pubDate || '') || Infinity));
-          cl.firstSeenAt = new Date(minPostMs).toISOString();
-          cl.evolutionHistory[0].timestamp = cl.firstSeenAt;
         }
       }
     }
