@@ -38,8 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Wait 30 minutes before Pulse 2 (no concurrency lock held)
-        run: sleep 1800
+      - name: Wait 22m before next Pulse (~30m wall-clock cycle including sync + runner queue)
+        run: sleep 1320
 
   pulse-2:
     name: Sync Pulse 2 (T+30m)
@@ -57,8 +57,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Wait 30 minutes before Pulse 3 (no concurrency lock held)
-        run: sleep 1800
+      - name: Wait 22m before next Pulse (~30m wall-clock cycle including sync + runner queue)
+        run: sleep 1320
 
   pulse-3:
     name: Sync Pulse 3 (T+60m)
@@ -76,8 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Wait 30 minutes before Pulse 4 (no concurrency lock held)
-        run: sleep 1800
+      - name: Wait 22m before next Pulse (~30m wall-clock cycle including sync + runner queue)
+        run: sleep 1320
 
   pulse-4:
     name: Sync Pulse 4 (T+90m)
@@ -95,8 +95,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Wait 30 minutes before Pulse 5 (no concurrency lock held)
-        run: sleep 1800
+      - name: Wait 22m before next Pulse (~30m wall-clock cycle including sync + runner queue)
+        run: sleep 1320
 
   pulse-5:
     name: Sync Pulse 5 (T+120m)
@@ -114,8 +114,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - name: Wait 30 minutes before Pulse 6 (no concurrency lock held)
-        run: sleep 1800
+      - name: Wait 22m before next Pulse (~30m wall-clock cycle including sync + runner queue)
+        run: sleep 1320
 
   pulse-6:
     name: Sync Pulse 6 (T+150m)
