@@ -10,6 +10,7 @@ on:
       - 'public/app.js'
       - 'public/img/**'
       - 'public/data/**'
+      - '.github/workflows/deploy-ui.yml'
   workflow_dispatch:
 
 permissions:
@@ -39,10 +40,13 @@ jobs:
         uses: actions/configure-pages@v4
 
       - name: Upload static website artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
+          name: github-pages-ui
           path: 'public/'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-ui

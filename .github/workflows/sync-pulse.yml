@@ -111,7 +111,7 @@ jobs:
         if: steps.cooldown.outputs.skip != 'true' && steps.commit_step.outputs.has_changes == 'true'
         id: upload_pages
         continue-on-error: true
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           name: github-pages-${{ inputs.pulse_id }}
           path: 'public/'
