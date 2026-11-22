@@ -1490,13 +1490,19 @@ const CAMPAIGN_OR_THEATRE_FRAME_STEMS = new Set(extractCoherenceStems(
   'hold holds holding tight high stakes race head campaign candidate candidates result results ' +
   'trump biden harris america american united states washington midterm midterms senate congress ' +
   'israel israeli netanyahu gaza palestine palestinian ukraine ukrainian zelensky russia russian putin ' +
-  'france french macron paris britain british london starmer burnham china chinese beijing'
+  'france french macron paris britain british london starmer burnham china chinese beijing ' +
+  'kyiv kiev odesa odessa kharkiv lviv dnipro dnipropetrovsk kryvyi rih zaporizhzhia donbas donetsk crimea kherson sumy ' +
+  'rafah khan younis beirut tyre damascus aleppo tehran isfahan bahrain manama kuwait riyadh aden sanaa yemen houthi hormuz ' +
+  'khartoum darfur baltic finland drone drones missile missiles rocket rockets barrage airstrike airstrikes bombard bombardment ' +
+  'shell shelling artillery strike strikes attack attacks raid raids retaliate retaliates retaliation ' +
+  'deadly fatal kill kills killed dead death deaths wound wounds wounded injure injured casualty casualties ' +
+  'one two three four five six seven eight nine ten dozen dozens near hit hits target targets'
 ));
 
 const NON_EPISODIC_GENERIC_HEADLINE_MODIFIERS = new Set(extractCoherenceStems(
   'hold holds holding held high stakes tight open opens cast casting lead leads head heads face faces ' +
   'amid after ahead before first final new major pivotal general political tension tensions campaign ' +
-  'plan plans planned renew renewed push pushes pushed show shows deadlock'
+  'plan plans planned renew renewed push pushes pushed show shows deadlock massive overnight wave'
 ));
 
 function getEpisodeSpecificHeadlineStems(storyText, extraActorStems = null) {
@@ -1505,30 +1511,50 @@ function getEpisodeSpecificHeadlineStems(storyText, extraActorStems = null) {
     stems.filter(s =>
       !CAMPAIGN_OR_THEATRE_FRAME_STEMS.has(s) &&
       !NON_EPISODIC_GENERIC_HEADLINE_MODIFIERS.has(s) &&
+      !/^\d+$/.test(s) &&
       (!extraActorStems || !extraActorStems.has(s))
     )
   );
 }
 
-function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0) {
+const KINETIC_EPISODE_HEADLINE_RE = /\b(strik\w*|airstrik\w*|drone\w*|missil\w*|barrag\w*|bombard\w*|shell\w*|raid\w*|rocket\w*|torpedo\w*|explosion\w*|blast\w*)\b/i;
+
+function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0, anchorNewestMs = 0) {
+  // 1. Causal Floor: an article published >18h BEFORE the episode began cannot belong to that episode
+  if (anchorFirstSeenMs > 0 && newestCandidateMs > 0 && newestCandidateMs < anchorFirstSeenMs - 18 * 3600 * 1000) {
+    return true;
+  }
   const ageGapHours = (anchorFirstSeenMs > 0 && newestCandidateMs > anchorFirstSeenMs)
     ? (newestCandidateMs - anchorFirstSeenMs) / 3600000
     : 0;
-  // If the anchor cluster IS itself a general Election-Day / Voting / Poll / Tally cluster (and not a narrow pre-election
-  // debate, welfare handout, or endorsement episode), allow incoming voting, turnout, exit-poll, or result dispatches within 5 days (120h)
+  const dormantGapHours = (anchorNewestMs > 0 && newestCandidateMs > anchorNewestMs)
+    ? (newestCandidateMs - anchorNewestMs) / 3600000
+    : 0;
+
+  const episodeStems = getEpisodeSpecificHeadlineStems(anchorStory);
+  const candStems = new Set(extractCoherenceStems(candidateText || ''));
+  const sharedEpisode = [...episodeStems].filter(s => candStems.has(s));
+
+  // 2. Kinetic Operational Episode & Epoch Graduation Law:
+  //    - After >48h of silence, a new kinetic strike is a fresh episode (never re-awaken a dormant raid days later).
+  //    - Kinetic strike clusters graduate at 120h (5 days) max lifespan (or 96h without >=2 shared specific target/asset stems)
+  //      so recurring fronts never roll into 15-30 day Frankenstein war logs.
+  //    - Across >=36h, sharing only theatre cities + generic strike/weapon words (0 shared specific target/asset stems) is a separate day's strike.
+  if (KINETIC_EPISODE_HEADLINE_RE.test(anchorStory || '')) {
+    if (dormantGapHours > 48) return true;
+    if (ageGapHours > 120) return true;
+    if (ageGapHours > 96 && sharedEpisode.length < 2) return true;
+    if (ageGapHours >= 36 && sharedEpisode.length === 0) return true;
+  }
+
+  // 3. Election-Day / Voting / Poll / Tally anchors allow incoming turnout/exit-poll/result dispatches within 5 days (120h)
   const isMainElectionVotingAnchor =
     /\b(heads?\s+to\s+(?:the\s+)?polls?|general\s+election|runoff\s+election|presidential\s+(?:runoff|election)|parliamentary\s+elections?|knesset\s+(?:election|deadlock)|election\s+(?:confirms?|results?|deadlock)|midterm\s+elections?|exit\s+polls?|wins?\s+(?:re-?election|election|runoff|congress|senate|house|majorit\w*))\b/i.test(anchorStory || '') &&
     !/\b(debate\w*|spar\w*|welfare|subsid\w*|fast-?track\w*|endorse\w*|attack\s+ad\w*)\b/i.test(anchorStory || '');
   if (isMainElectionVotingAnchor && ageGapHours < 120) return false;
 
-  const episodeStems = getEpisodeSpecificHeadlineStems(anchorStory);
   if (episodeStems.size === 0) return false;
-  const candStems = new Set(extractCoherenceStems(candidateText || ''));
-  const sharedEpisode = [...episodeStems].filter(s => candStems.has(s));
-  // If the cluster is >5 days (120h) old, sharing only 1 subject/actor stem is not enough to bridge into a new episode
   if (sharedEpisode.length > 0 && (ageGapHours < 120 || sharedEpisode.length >= 2)) return false;
-  // Candidate text shares 0 episode-specific headline stems with the anchor (or only 1 stem across a >5d gap)!
-  // Check if the candidate text is purely matching on campaign/election/theatre frame stems or is separated by >24h from the episode origin:
   const candHasCampaignVotingFrame = /\b(polls?\s+open|cast\s+(?:their\s+)?ballots?|voting\s+(?:begins|underway|procedures|stations)|holds?\s+(?:high-stakes\s+)?(?:presidential\s+)?runoff|head\s+to\s+the\s+polls|tight\s+(?:presidential\s+)?runoff|exit\s+polls?)\b/i.test(candidateText || '');
   if (ageGapHours >= 24 || candHasCampaignVotingFrame) {
     return true;
@@ -1797,7 +1823,8 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
       const anc = activeClusterAnchors[cIdx];
       if (anc.outletPubMs.has(a.sourceId) && a.pubMs <= (anc.outletPubMs.get(a.sourceId) || 0) + 2 * 3600 * 1000) continue;
       const ancFirstMs = anc.anchorCluster?.firstSeenAt ? Date.parse(anc.anchorCluster.firstSeenAt) : 0;
-      if (hasEpisodicPhaseMismatch(anc.anchorStory || '', ancFirstMs, `${a.title || ''} ${a.description || ''}`, a.pubMs)) continue;
+      const ancNewestMs = Math.max(...Array.from(anc.outletPubMs.values()), 0);
+      if (hasEpisodicPhaseMismatch(anc.anchorStory || '', ancFirstMs, `${a.title || ''} ${a.description || ''}`, a.pubMs, ancNewestMs)) continue;
       if (hasDisjointSovereignCountryConflict(
         `${anc.anchorStory || ''} ${anc.description || ''}`,
         `${a.title || ''} ${a.description || ''}`,
@@ -2158,11 +2185,13 @@ Return JSON array in format:
               maxRareTitleStemDf
             );
             const newestMatchArtMs = Math.max(...matchingArticles.map(m => m.pubMs || (m.pubDate ? Date.parse(m.pubDate) : 0) || 0), 0);
+            const ancNewestCovMs = Math.max(...(ancCluster.coverage || []).map(c => c?.pubDate ? Date.parse(c.pubDate) || 0 : 0), 0);
             const isEpisodicMismatchAnchor = ancUrlHits === 0 && hasEpisodicPhaseMismatch(
               ancCluster.story || '',
               ancCluster.firstSeenAt ? Date.parse(ancCluster.firstSeenAt) : 0,
               `${cl.story || ''} ${matchingArticles.map(m => `${m.title || ''} ${m.description || ''}`).join(' ')}`,
-              newestMatchArtMs
+              newestMatchArtMs,
+              ancNewestCovMs
             );
             if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor || isEpisodicMismatchAnchor) {
               console.warn(`[Clusters] Detached theatre/single-entity/episodic-mismatch anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor}, episodicMismatch=${isEpisodicMismatchAnchor})`);
@@ -2700,7 +2729,9 @@ Return JSON array in format:
       upholds pause policy dismissed rumors health media retailer group stake pipeline network woman
       escalate accuses interference recover exports middle east early system services unveils
       injured wounded iran iranian oil crude gas fuel energy import imports export price prices trim trims cut cuts deal annual supply supplies
-      barcelona villarreal madrid
+      barcelona villarreal madrid kyiv kiev odesa odessa kharkiv lviv crimea dnipro dnipropetrovsk gaza rafah beirut damascus tehran
+      bahrain manama kuwait riyadh aden sanaa yemen houthi hormuz drone drones missile missiles rocket rockets barrage airstrike airstrikes bombard shelling
+      one two three four five six seven eight nine ten dozen near
     `));
     for (const cl of formattedClusters) {
       for (const c of (cl.coverage || [])) {
@@ -2765,14 +2796,23 @@ Return JSON array in format:
         const cov = cm.cl.coverage || [];
         if (cov.length < 2 || cm.clTitleArr.length < 2 || cm.clEntityStems.length < 1) continue;
         if (cov.some(c => c.sourceId === art.sourceId)) continue;
-        if (cm.minMs > 0 && (art.pubMs < cm.minMs - 72 * 3600 * 1000 || art.pubMs > cm.maxMs + 72 * 3600 * 1000)) continue;
+        const evFloorMs = cm.cl.eventDate ? Date.parse(`${cm.cl.eventDate}T00:00:00Z`) : NaN;
+        const causalMinMs = Math.max(
+          cm.minMs > 0 ? cm.minMs - 14 * 3600 * 1000 : 0,
+          Number.isFinite(evFloorMs) ? evFloorMs - 12 * 3600 * 1000 : 0
+        );
+        const isKineticCatchupCl = KINETIC_EPISODE_HEADLINE_RE.test(cm.cl.story || '');
+        const maxForwardMs = cm.maxMs + (isKineticCatchupCl ? 30 : 72) * 3600 * 1000;
+        if (cm.minMs > 0 && (art.pubMs < causalMinMs || art.pubMs > maxForwardMs)) continue;
         const anchorAgeHours = cm.firstSeenMs > 0 ? Math.max(0, (art.pubMs - cm.firstSeenMs) / 3600000) : 0;
+        if (isKineticCatchupCl && anchorAgeHours > 96) continue;
         if (!art.titleStems.has(cm.clEntityStems[0])) continue;
         if (hasEpisodicPhaseMismatch(
           cm.cl.story || '',
           cm.firstSeenMs || cm.minMs,
           `${art.title || ''} ${art.description || ''}`,
-          art.pubMs
+          art.pubMs,
+          cm.maxMs
         )) continue;
         if (hasDisjointSovereignCountryConflict(
           `${cm.cl.story || ''} ${cm.cl.summary || ''}`,
@@ -3376,7 +3416,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       } else {
         const triageHint = c._decisionTriage
           ? (c._decisionTriage.choice === 'clarification' && c._decisionTriage.pClar >= 0.70 && c._decisionTriage.pShift < 0.22
-              ? ` [DECISION-1 CALIBRATED VERDICT: "clarification" (${Math.round(c._decisionTriage.pClar * 100)}%) — refine summary & developmentNote without changing headline]`
+              ? ` [DECISION-1 CALIBRATED VERDICT: "clarification" (${Math.round(c._decisionTriage.pClar * 100)}%) — refine summary & developmentNote; keep existing story UNLESS an explicit number/word-tally (e.g. "One"/"1") or status verb in story is superseded by the updated summary]`
               : (c._decisionTriage.choice === 'material_shift' && c._decisionTriage.pShift >= 0.75
                   ? ` [DECISION-1 CALIBRATED VERDICT: "material_shift" (${Math.round(c._decisionTriage.pShift * 100)}%)]`
                   : ''))
@@ -3967,9 +4007,24 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         // synchronize `c.story` AND promote the step to `material_shift` so headlines never change silently without a recorded shift!
         let updatedClarificationStory = c.story;
         const candidateClarStory = (dev.story && dev.story.trim()) || '';
-        const oldStoryNums = ((c.story || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []).filter(n => Number(n.replace(/,/g, '')) > 1 && !/^(19|20)\d{2}$/.test(n));
-        const newSummaryNums = new Set((newSummary || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []);
-        const hasStaleHeadlineNumber = oldStoryNums.some(n => !newSummaryNums.has(n));
+        const WORD_TO_NUM = {
+          one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+          eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, dozen: 12
+        };
+        const NUM_TO_AP_WORD = { 1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 6: 'Six', 7: 'Seven', 8: 'Eight', 9: 'Nine' };
+        const parseCountVals = (txt) => {
+          const vals = new Set();
+          for (const m of String(txt || '').matchAll(/\b(\d+(?:,\d+)*(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|dozen)\b/gi)) {
+            const raw = m[1].toLowerCase().replace(/,/g, '');
+            const v = WORD_TO_NUM[raw] !== undefined ? WORD_TO_NUM[raw] : Number(raw);
+            if (Number.isFinite(v) && v >= 1 && !/^(19|20)\d{2}$/.test(raw)) vals.add(v);
+          }
+          return vals;
+        };
+        const oldStoryValSet = parseCountVals(c.story || '');
+        const newSummaryValSet = parseCountVals(newSummary || '');
+        const oldStoryNums = ((c.story || '').match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []).filter(n => Number(n.replace(/,/g, '')) >= 1 && !/^(19|20)\d{2}$/.test(n));
+        const hasStaleHeadlineNumber = [...oldStoryValSet].some(v => !newSummaryValSet.has(v));
         // Also detect semantic status/verb contradictions between existing headline and updated summary
         const storyLower = (c.story || '').toLowerCase();
         const sumLower = (newSummary || '').toLowerCase();
@@ -3985,14 +4040,36 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           const candHasImpossiblePct = /\b(\d{1,3}(?:,\d{3})+|[1-9]\d{2,})\s*(?:%|percent)\b/i.test(candidateClarStory);
           if (candidateClarStory && !candHasImpossiblePct && candidateClarStory !== c.story && isHeadlineAnchorRecognizable(candidateClarStory)) {
             updatedClarificationStory = candidateClarStory;
-          } else if (hasStaleHeadlineNumber && oldStoryNums.length === 1) {
-            const oldNum = oldStoryNums[0];
-            const escapedOldNum = oldNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const pctInStoryRe = new RegExp(`\\b${escapedOldNum}\\s*(%|percent)\\b`, 'i');
-            if (pctInStoryRe.test(c.story)) {
-              const sumPctMatch = (newSummary || '').match(/\b(\d{1,2}(?:\.\d+)?)\s*(?:%|percent)\b/i);
-              if (sumPctMatch && sumPctMatch[1] !== oldNum && Number(sumPctMatch[1]) <= 100) {
-                updatedClarificationStory = c.story.replace(new RegExp(`\\b${escapedOldNum}(?=\\s*(?:%|percent)\\b)`, 'i'), sumPctMatch[1]);
+          } else if (hasStaleHeadlineNumber) {
+            // Surgical programmatic healer for casualty/fatality counts (both AP words like "Kills One" -> "Kills Two" and digits)
+            const fatalityHeadRe = /\b(kills?|killed|leaving)\s+(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\b|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+(dead|killed|die|dies|died)\b/i;
+            const hm = (c.story || '').match(fatalityHeadRe);
+            if (hm) {
+              const oldToken = hm[2] || hm[3];
+              const oldVal = WORD_TO_NUM[oldToken.toLowerCase()] || Number(oldToken);
+              const wasWordStyle = /^[a-z]+$/i.test(oldToken);
+              const nonBackstorySum = String(newSummary || '').replace(/^(?:Following|After|Amid)\s+[^,.]+,\s*/i, '');
+              const tollSource = `${noteText || ''} . ${nonBackstorySum}`;
+              const tm = tollSource.match(/\b(?:confirm\w*|at\s+least|rises?\s+to|reaches?|kills?|killed|leaving)\s+(?:at\s+least\s+)?(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+(?:people\s+)?(?:killed|dead|deaths|fatalit\w*)\b|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\d+)\s+(?:people\s+)?(?:confirmed\s+)?(?:killed|dead|deaths)\b/i);
+              if (tm) {
+                const newTokRaw = (tm[1] || tm[2]).toLowerCase();
+                const newVal = WORD_TO_NUM[newTokRaw] || Number(newTokRaw);
+                if (Number.isFinite(newVal) && newVal > oldVal && newVal <= 500) {
+                  const formattedCount = (wasWordStyle && NUM_TO_AP_WORD[newVal]) ? NUM_TO_AP_WORD[newVal] : String(newVal);
+                  updatedClarificationStory = hm[2]
+                    ? c.story.replace(new RegExp(`\\b(${hm[1]})\\s+${oldToken}\\b`, 'i'), `$1 ${formattedCount}`)
+                    : c.story.replace(new RegExp(`\\b${oldToken}\\s+(${hm[4]})\\b`, 'i'), `${formattedCount} $1`);
+                }
+              }
+            } else if (oldStoryNums.length === 1) {
+              const oldNum = oldStoryNums[0];
+              const escapedOldNum = oldNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              const pctInStoryRe = new RegExp(`\\b${escapedOldNum}\\s*(%|percent)\\b`, 'i');
+              if (pctInStoryRe.test(c.story)) {
+                const sumPctMatch = (newSummary || '').match(/\b(\d{1,2}(?:\.\d+)?)\s*(?:%|percent)\b/i);
+                if (sumPctMatch && sumPctMatch[1] !== oldNum && Number(sumPctMatch[1]) <= 100) {
+                  updatedClarificationStory = c.story.replace(new RegExp(`\\b${escapedOldNum}(?=\\s*(?:%|percent)\\b)`, 'i'), sumPctMatch[1]);
+                }
               }
             }
           }
