@@ -2,7 +2,7 @@
  * Standalone Headless Sync & Bake Script
  * - Fetches RSS feeds from all configured news sources
  * - Deduplicates against historical data
- * - Analyzes sentiment using Gemini 3.8 Flash, Groq, OpenRouter, or Local VADER/AFINN
+ * - Analyzes sentiment using Gemini 4 Hydrogen / 3.5 Flash-Lite (Interactions API), Groq, OpenRouter, or Local VADER/AFINN
  * - Bakes optimized static files for lightning-fast zero-server web hosting
  */
 
@@ -11,7 +11,7 @@ const path = require('path');
 const Parser = require('rss-parser');
 const Sentiment = require('sentiment');
 const vader = require('vader-sentiment');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGeminiInteraction } = require('./gemini-client');
 const { generateDailyBriefing } = require('./briefing');
 const { NEWS_SOURCES, SOURCE_REGION_MAP, OUTLET_SUFFIX_REGEX } = require('./sources-registry');
 require('dotenv').config();
@@ -492,6 +492,7 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   // Default to gemini-3.5-flash-lite first so all batches across the day use one consistent high-quota model (zero cross-model variance, no 20-RPD cap stalls)
   const modelsToTry = [
     'gemini-3.5-flash-lite',
+    'gemini-4-hydrogen',
     'gemini-3.8-flash',
     'gemini-3.1-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
@@ -600,10 +601,9 @@ Return ONLY a JSON array of objects with:
 - englishSummary: REQUIRED whenever the article has a "lang" field (or is not in English) — provide a concise 1-2 sentence English journalistic summary of the dispatch (do NOT mention scores, polarity, or framing; omit field ONLY if input is already in English)
 - summary: ONLY IF polarity >= 15 AND input description is empty (""), write a clean, engaging 2-sentence journalistic summary of the story/breakthrough for readers (do NOT mention scores, polarity, or framing in summary; omit field otherwise)
 
-Articles:
-${JSON.stringify(promptData, null, 2)}
-
 Return ONLY valid JSON.`;
+
+    const batchInput = `Articles:\n${JSON.stringify(promptData, null, 2)}`;
 
     let batchSuccess = false;
     const activeTiers = getOrderedKeyTiers(apiKeyOrTiers);
@@ -613,28 +613,23 @@ Return ONLY valid JSON.`;
         if (batchSuccess) break;
         const modelTierKey = `${modelName}:${keyObj.tier}`;
         if (exhaustedModelTiers.has(modelTierKey)) continue;
-        const genAI = new GoogleGenerativeAI(keyObj.key);
         const maxAttempts = keyObj.tier === 'FREE' && activeTiers.length > 1 ? 1 : 2;
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
             console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} [${keyObj.tier} key] (attempt ${attempt}/${maxAttempts})...`);
-            const model = genAI.getGenerativeModel({
+            const { parsed } = await callGeminiInteraction({
+              apiKey: keyObj.key,
               model: modelName,
-              generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
+              systemInstruction: prompt,
+              input: batchInput,
+              thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+              maxOutputTokens: 65536,
+              jsonMode: true,
+              repairJsonArray: true,
+              serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
+              flexTimeoutMs: 25000,
+              timeoutMs: 120000
             });
-
-            const generatePromise = model.generateContent(prompt);
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Gemini API call timed out after 120s')), 120000)
-            );
-            const response = await Promise.race([generatePromise, timeoutPromise]);
-            let text = response.response.text().trim();
-            if (text.startsWith('```json')) text = text.substring(7);
-            else if (text.startsWith('```')) text = text.substring(3);
-            if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-            text = tryRepairJsonArray(text.trim());
-
-            const parsed = JSON.parse(text);
             if (Array.isArray(parsed) && parsed.length > 0) {
               let matchedInBatch = 0;
               chunk.forEach((item, idx) => {
@@ -1885,9 +1880,6 @@ Rules:
   • "eventTime": null UNLESS the dispatches explicitly state when the underlying real-world event occurred relative to [pub: ...] (e.g. "at 12:15am morning of Monday 13th", "late Tuesday night", "over the weekend"). ONLY when explicitly source-backed, set { "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" | null, "timeOfDay": "00:15 local" | "late night" | "weekend" | null, "precision": "exact_time" | "part_of_day" | "weekend" | "span" | "day", "label": "Mon Nov 13, 00:15 local" | "Weekend of Nov 14–15", "sourceBacked": true }.
 - Return ONLY a JSON array. If no shared stories exist, return [].
 
-Dispatches:
-${promptLines}
-
 Return JSON array in format:
 [
   {
@@ -1903,9 +1895,11 @@ Return JSON array in format:
   }
 ]`;
 
-  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const clusteringInput = `Dispatches:\n${promptLines}`;
+
   const modelsToTry = [
     'gemini-3.5-flash-lite',
+    'gemini-4-hydrogen',
     'gemini-3.8-flash',
     'gemini-3.1-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
@@ -1916,24 +1910,22 @@ Return JSON array in format:
     if (clusters) break;
     for (const keyObj of activeTiers) {
       if (clusters) break;
-      const genAI = new GoogleGenerativeAI(keyObj.key);
       const maxAttempts = 1;
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
-          const model = genAI.getGenerativeModel({
+          const { parsed } = await callGeminiInteraction({
+            apiKey: keyObj.key,
             model: modelName,
-            generationConfig: { temperature: 0.1, maxOutputTokens: 65536, responseMimeType: 'application/json' }
+            systemInstruction: prompt,
+            input: clusteringInput,
+            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            maxOutputTokens: 65536,
+            jsonMode: true,
+            repairJsonArray: true,
+            serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
+            flexTimeoutMs: 30000,
+            timeoutMs: 150000
           });
-          const generatePromise = model.generateContent(prompt);
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Clustering call timed out after 150s')), 150000)
-          );
-          const resp = await Promise.race([generatePromise, timeoutPromise]);
-          let text = resp.response.text().trim();
-          if (text.startsWith('```json')) text = text.substring(7);
-          else if (text.startsWith('```')) text = text.substring(3);
-          if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-          const parsed = JSON.parse(tryRepairJsonArray(text.trim()));
           if (Array.isArray(parsed) && parsed.length > 0) {
             clusters = parsed;
             console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName} [${keyObj.tier} key].`);
@@ -3510,26 +3502,26 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
 }`;
 
   try {
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
     const activeTiers = getOrderedKeyTiers(apiKey);
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+    const modelsToTry = ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite'];
     let parsed = null;
     for (const modelName of modelsToTry) {
       if (parsed) break;
       for (const keyObj of activeTiers) {
         if (parsed) break;
         try {
-          const genAI = new GoogleGenerativeAI(keyObj.key);
-          const model = genAI.getGenerativeModel({
+          const { parsed: respParsed } = await callGeminiInteraction({
+            apiKey: keyObj.key,
             model: modelName,
-            generationConfig: {
-              temperature: 0.1,
-              responseMimeType: 'application/json',
-              ...(modelName === 'gemini-3.8-flash' ? { thinkingConfig: { thinkingLevel: 'LOW' } } : {})
-            }
+            input: prompt,
+            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            maxOutputTokens: 65536,
+            jsonMode: true,
+            serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
+            flexTimeoutMs: 30000,
+            timeoutMs: 120000
           });
-          const resp = await model.generateContent(prompt);
-          parsed = JSON.parse(resp.response.text().trim());
+          parsed = respParsed;
           break;
         } catch (tierErr) {
           const msg = String(tierErr.message || tierErr);
@@ -4466,9 +4458,8 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
   const selected = candidates.slice(0, maxClustersThisRun);
   const batchSize = 6;
 
-  const { GoogleGenerativeAI } = require('@google/generative-ai');
   const activeTiers = getOrderedKeyTiers(apiKey);
-  const modelsToTry = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
+  const modelsToTry = ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite'];
   let totalPolished = 0;
 
   console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length} newly formed/updated cluster(s)...`);
@@ -4538,9 +4529,6 @@ STRICT EDITORIAL & CHRONOLOGICAL SYNTHESIS RULES:
    - Only include a specific venue prefix ("Specific Venue, City" in "name", e.g. "Musée du Louvre, Paris", "City Ground, Nottingham") when the event physically occurred at a famous landmark, stadium, museum, university, airport, or military base explicitly named in the Covering Dispatches. NEVER invent or prepend bureaucratic council, ministry, or agency names (never write "Devon Rural District Council, Devon" or "Department of Foreign Affairs, Canberra" — write "Devon, England" or "Canberra, Australia").
    - "region" MUST be "State/Province/Autonomous Region, Country" or "Country", always ending with the sovereign Country name (e.g. "Tibet Autonomous Region, China", "Tennessee, United States", "England, United Kingdom").
 
-Clusters to synthesize:
-${clusterBlocks}
-
 Return ONLY a valid JSON array matching this exact schema:
 [
   {
@@ -4565,31 +4553,27 @@ Return ONLY a valid JSON array matching this exact schema:
   }
 ]`;
 
+    const polishInput = `Clusters to synthesize:\n${clusterBlocks}`;
+
     let parsedBatch = null;
     for (const modelName of modelsToTry) {
       if (parsedBatch) break;
       for (const keyObj of activeTiers) {
         if (parsedBatch) break;
         try {
-          const genAI = new GoogleGenerativeAI(keyObj.key);
-          const model = genAI.getGenerativeModel({
+          const { parsed: arr } = await callGeminiInteraction({
+            apiKey: keyObj.key,
             model: modelName,
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 8192,
-              responseMimeType: 'application/json',
-              ...(modelName === 'gemini-3.8-flash' ? { thinkingConfig: { thinkingLevel: 'LOW' } } : {})
-            }
+            systemInstruction: prompt,
+            input: polishInput,
+            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            maxOutputTokens: 32768,
+            jsonMode: true,
+            repairJsonArray: true,
+            serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
+            flexTimeoutMs: 22000,
+            timeoutMs: 75000
           });
-          const resp = await Promise.race([
-            model.generateContent(prompt),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Summary synthesis call timed out after 75s')), 75000))
-          ]);
-          let text = resp.response.text().trim();
-          if (text.startsWith('```json')) text = text.substring(7);
-          else if (text.startsWith('```')) text = text.substring(3);
-          if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-          const arr = JSON.parse(tryRepairJsonArray(text.trim()));
           if (Array.isArray(arr) && arr.length > 0) {
             parsedBatch = arr;
           }

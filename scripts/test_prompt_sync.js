@@ -2,7 +2,7 @@ require('dotenv').config();
 const Parser = require('rss-parser');
 const Sentiment = require('sentiment');
 const vader = require('vader-sentiment');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGeminiInteraction } = require('./gemini-client');
 
 const parser = new Parser({
   timeout: 10000,
@@ -135,28 +135,30 @@ ${JSON.stringify(promptData, null, 2)}
 Return ONLY valid JSON.`;
 
   const apiKey = process.env.GEMINI_API_KEY;
-  const genAI = new GoogleGenerativeAI(apiKey);
   
   const modelsToTry = [
     'gemini-3.5-flash-lite',
+    'gemini-4-hydrogen',
     'gemini-3.8-flash'
   ];
 
-  let rawJson = null;
+  let results = null;
   let modelUsed = null;
 
   for (const m of modelsToTry) {
     try {
-      console.log(`🤖 Invoking Gemini API (${m})...`);
-      const model = genAI.getGenerativeModel({
+      console.log(`🤖 Invoking Gemini Interactions API (${m})...`);
+      const { parsed } = await callGeminiInteraction({
+        apiKey,
         model: m,
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: 'application/json'
-        }
+        input: prompt,
+        thinkingLevel: m.includes('flash-lite') ? 'minimal' : 'low',
+        maxOutputTokens: 32768,
+        jsonMode: true,
+        repairJsonArray: true,
+        timeoutMs: 60000
       });
-      const res = await model.generateContent(prompt);
-      rawJson = res.response.text();
+      results = parsed;
       modelUsed = m;
       break;
     } catch (err) {
@@ -164,12 +166,11 @@ Return ONLY valid JSON.`;
     }
   }
 
-  if (!rawJson) {
+  if (!results) {
     console.error('Failed to get response from Gemini.');
     return;
   }
 
-  const results = JSON.parse(rawJson);
   console.log(`✅ Received analysis from ${modelUsed}:\n`);
 
   results.forEach(res => {

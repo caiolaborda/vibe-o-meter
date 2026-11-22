@@ -1,9 +1,15 @@
-name: Daily Cross-Archive Longitudinal Realignment
+name: Longitudinal Cross-Archive Realignment (6h Flex / Batch)
 
 on:
   schedule:
-    - cron: '15 4 * * *'
+    - cron: '15 */6 * * *'
   workflow_dispatch:
+    inputs:
+      use_batch_api:
+        description: 'Submit/poll via Gemini Batch API (--batch) instead of Flex tier'
+        required: false
+        default: 'false'
+        type: string
 
 permissions:
   contents: write
@@ -14,7 +20,7 @@ jobs:
   realign:
     name: Realign Multi-Day Evolutions & Lateral Graph
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     concurrency:
       group: 'pages'
       cancel-in-progress: false
@@ -38,7 +44,12 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_PAID_API_KEY: ${{ secrets.GEMINI_PAID_API_KEY }}
-        run: node scripts/realign-archive.js
+        run: |
+          if [ "${{ inputs.use_batch_api }}" = "true" ]; then
+            node scripts/realign-archive.js --batch
+          else
+            node scripts/realign-archive.js
+          fi
 
       - name: Commit updated archive & feeds
         run: |

@@ -7,7 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGeminiInteraction } = require('./gemini-client');
 require('dotenv').config();
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -156,25 +156,18 @@ async function generateDailyBriefing(options = {}) {
 
   let briefingText = '';
   const apiKey = process.env.GEMINI_PAID_API_KEY || process.env.GEMINI_API_KEY;
-  const envModel = process.env.GEMINI_MODEL === 'gemini-2.5-flash' ? 'gemini-3.8-flash' : process.env.GEMINI_MODEL;
+  const envModel = (/^gemini-(?:1\.5|2\.|3\.8-flash)/.test(String(process.env.GEMINI_MODEL || '')))
+    ? 'gemini-4-hydrogen'
+    : process.env.GEMINI_MODEL;
   const modelsToTry = [
     envModel,
+    'gemini-4-hydrogen',
     'gemini-3.8-flash',
-    'gemini-3.5-flash',
-    'gemini-3.5-flash-lite',
-    'gemini-2.5-flash'
+    'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   if (apiKey) {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    for (const modelName of modelsToTry) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: { temperature: 0.85, responseMimeType: 'application/json' }
-        });
-
-        const prompt = `You are a dry, effortlessly witty editorial columnist (think Charlie Brooker, Douglas Adams, Marina Hyde, Weekend Update) writing the daily 2-sentence front-page executive briefing for "There's No Such Thing As Good News".
+    const briefingSystemInstruction = `You are a dry, effortlessly witty editorial columnist (think Charlie Brooker, Douglas Adams, Marina Hyde, Weekend Update) writing the daily 2-sentence front-page executive briefing for "There's No Such Thing As Good News".
 
 HOW TO USE THE FULL MENU OF STORIES & CONTEXT BELOW:
 - Below is a rich buffet of today's major multi-outlet story clusters and individual dispatches across 5 spheres (Clusters, Politics/Statecraft, Corporate/Economy, Tech/Culture, and Verified Breakthroughs), complete with their lead summaries and context.
@@ -204,22 +197,28 @@ STRICT RULES FOR EVERY DRAFT:
 - Weave 3 to 4 interactive markdown links [concise 2-4 word phrase](url) naturally into the text using ONLY the exact URLs provided below.
 - NEVER use the words "wire", "wires", "beat", or "local news", and never include numeric scores.
 
-TODAY'S FULL MENU OF CLUSTERS, STORIES, CONTEXT & URLS:
-${topClusterLines}
-${sampleHeadlines}
-
 Return ONLY valid JSON in this exact format:
 {
   "drafts": ["draft 0 markdown string", "draft 1 markdown string", "draft 2 markdown string"],
   "best_index": 0
 }`;
 
-        const res = await model.generateContent(prompt);
-        let raw = res.response.text().trim();
-        if (raw.startsWith('```json')) raw = raw.substring(7);
-        else if (raw.startsWith('```')) raw = raw.substring(3);
-        if (raw.endsWith('```')) raw = raw.substring(0, raw.length - 3);
-        const parsed = JSON.parse(raw.trim());
+    const briefingInput = `TODAY'S FULL MENU OF CLUSTERS, STORIES, CONTEXT & URLS:\n${topClusterLines}\n${sampleHeadlines}`;
+
+    for (const modelName of modelsToTry) {
+      try {
+        const { parsed } = await callGeminiInteraction({
+          apiKey,
+          model: modelName,
+          systemInstruction: briefingSystemInstruction,
+          input: briefingInput,
+          thinkingLevel: modelName.includes('flash-lite') ? 'low' : 'medium',
+          maxOutputTokens: 32768,
+          jsonMode: true,
+          serviceTierMode: 'flex_with_fallback',
+          flexTimeoutMs: 45000,
+          timeoutMs: 90000
+        });
         const chosen = (parsed.drafts && parsed.drafts[parsed.best_index ?? 0]) || (parsed.drafts && parsed.drafts[0]) || '';
         const text = chosen.trim().replace(/^["']|["']$/g, '');
         if (text && text.length > 20) {

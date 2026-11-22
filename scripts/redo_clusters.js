@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGeminiInteraction } = require('./gemini-client');
 
 const CLUSTER_STOP_WORDS = new Set([
   'about', 'after', 'again', 'against', 'amid', 'among', 'around', 'back', 'before', 'behind',
@@ -113,11 +113,10 @@ function tryRepairJsonArray(text) {
   return clean;
 }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     process.env.GEMINI_MODEL,
+    'gemini-4-hydrogen',
     'gemini-3.8-flash',
-    'gemini-3.5-flash',
     'gemini-3.5-flash-lite'
   ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
@@ -128,16 +127,16 @@ function tryRepairJsonArray(text) {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         console.log(`Calling ${modelName} for clustering (attempt ${attempt}/${maxAttempts})...`);
-        const model = genAI.getGenerativeModel({
+        const { parsed } = await callGeminiInteraction({
+          apiKey,
           model: modelName,
-          generationConfig: { temperature: 0.1, maxOutputTokens: 16384, responseMimeType: 'application/json' }
+          input: prompt,
+          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+          maxOutputTokens: 32768,
+          jsonMode: true,
+          repairJsonArray: true,
+          timeoutMs: 120000
         });
-        const resp = await model.generateContent(prompt);
-        let text = resp.response.text().trim();
-        if (text.startsWith('```json')) text = text.substring(7);
-        else if (text.startsWith('```')) text = text.substring(3);
-        if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-        const parsed = JSON.parse(tryRepairJsonArray(text.trim()));
         if (Array.isArray(parsed) && parsed.length > 0) {
           rawClusters = parsed;
           console.log(`${modelName} returned ${rawClusters.length} raw clusters.`);

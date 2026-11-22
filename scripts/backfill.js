@@ -8,7 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGeminiInteraction, runGeminiInlineBatch } = require('./gemini-client');
 require('dotenv').config();
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -31,14 +31,7 @@ function tryRepairJsonArray(text) {
   return clean;
 }
 
-async function analyzeBatchWithGemini(chunk, genAI, modelsToTry) {
-  const promptData = chunk.map((item, index) => ({
-    index,
-    headline: item.title,
-    description: item.description || ''
-  }));
-
-  const prompt = `You are a world-class news sentiment analyst and senior media editor.
+const BACKFILL_SYSTEM_INSTRUCTION = `You are a world-class news sentiment analyst and senior media editor.
 Analyze the inherent emotional valence of the real-world events described in each article headline and short description.
 
 VALENCE CALIBRATION (-1.00 to +1.00 continuous scale):
@@ -63,30 +56,32 @@ Return a JSON array of objects with:
 - category: one of 'politics', 'world', 'business', 'technology', 'science', 'health', 'entertainment', 'sports', 'other'
 - explanation: concise 1-sentence analytical rationale
 
-Articles:
-${JSON.stringify(promptData, null, 2)}
-
 Return ONLY valid JSON.`;
+
+async function analyzeBatchWithGemini(chunk, apiKey, modelsToTry) {
+  const promptData = chunk.map((item, index) => ({
+    index,
+    headline: item.title,
+    description: item.description || ''
+  }));
+  const input = `Articles:\n${JSON.stringify(promptData, null, 2)}`;
 
   for (const modelName of modelsToTry) {
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        const model = genAI.getGenerativeModel({
+        const { parsed } = await callGeminiInteraction({
+          apiKey,
           model: modelName,
-          generationConfig: {
-            temperature: 0.1,
-            responseMimeType: 'application/json'
-          }
+          systemInstruction: BACKFILL_SYSTEM_INSTRUCTION,
+          input,
+          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+          maxOutputTokens: 32768,
+          jsonMode: true,
+          repairJsonArray: true,
+          serviceTierMode: 'flex_with_fallback',
+          flexTimeoutMs: 60000,
+          timeoutMs: 120000
         });
-
-        const res = await model.generateContent(prompt);
-        let text = res.response.text().trim();
-        if (text.startsWith('```json')) text = text.substring(7);
-        else if (text.startsWith('```')) text = text.substring(3);
-        if (text.endsWith('```')) text = text.substring(0, text.length - 3);
-        text = tryRepairJsonArray(text.trim());
-
-        const parsed = JSON.parse(text);
         if (Array.isArray(parsed)) {
           return { parsed, modelName };
         }
@@ -110,12 +105,12 @@ async function runBackfill() {
     process.exit(1);
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
   const modelsToTry = [
     'gemini-3.5-flash-lite',
-    'gemini-3.5-flash',
+    'gemini-4-hydrogen',
+    'gemini-3.8-flash',
     process.env.GEMINI_MODEL
-  ].filter(Boolean);
+  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   if (!fs.existsSync(DATA_FILE)) {
     console.error('Error: data/vibe-data.json does not exist.');
@@ -151,24 +146,44 @@ async function runBackfill() {
   let processedCount = 0;
   let successCount = 0;
 
-  for (let b = 0; b < queue.length; b += BATCH_SIZE) {
-    const chunkItems = queue.slice(b, b + BATCH_SIZE);
-    const articlesChunk = chunkItems.map(item => item.article);
-    const batchNum = Math.floor(b / BATCH_SIZE) + 1;
-
-    console.log(`[Backfill] Running batch ${batchNum}/${totalBatches} (${articlesChunk.length} articles)...`);
-    try {
-      const { parsed, modelName } = await analyzeBatchWithGemini(articlesChunk, genAI, modelsToTry);
-      
+  const useBatchApi = process.argv.includes('--batch');
+  if (useBatchApi) {
+    const batchItems = [];
+    const chunksByKey = new Map();
+    for (let b = 0; b < queue.length; b += BATCH_SIZE) {
+      const articlesChunk = queue.slice(b, b + BATCH_SIZE).map(item => item.article);
+      const key = `batch_${Math.floor(b / BATCH_SIZE) + 1}`;
+      chunksByKey.set(key, articlesChunk);
+      const promptData = articlesChunk.map((item, index) => ({
+        index,
+        headline: item.title,
+        description: item.description || ''
+      }));
+      batchItems.push({
+        key,
+        systemInstruction: BACKFILL_SYSTEM_INSTRUCTION,
+        prompt: `Articles:\n${JSON.stringify(promptData, null, 2)}`
+      });
+    }
+    const batchRes = await runGeminiInlineBatch({
+      apiKey,
+      model: modelsToTry[0],
+      displayName: `vibe-backfill-${new Date().toISOString().slice(0, 10)}`,
+      items: batchItems,
+      repairJsonArray: true,
+      checkpointFile: path.join(DATA_DIR, 'backfill-batch-job.json')
+    });
+    if (!batchRes.completed) return;
+    for (const [key, articlesChunk] of chunksByKey.entries()) {
+      const parsed = batchRes.resultsByKey.get(key);
+      if (!Array.isArray(parsed)) continue;
       parsed.forEach(p => {
         const target = articlesChunk[p.index];
         if (target) {
           const score = typeof p.score === 'number' ? p.score : parseFloat(p.score) || 0;
           target.sentimentGemini = score;
-          target.explanationGemini = p.explanation || `Analyzed with Gemini (${modelName}).`;
+          target.explanationGemini = p.explanation || `Analyzed with Gemini Batch (${modelsToTry[0]}).`;
           target.categoryGemini = p.category || 'other';
-
-          // Set primary values
           target.sentiment = score;
           target.explanation = target.explanationGemini;
           target.category = target.categoryGemini;
@@ -176,13 +191,41 @@ async function runBackfill() {
         }
       });
       processedCount += articlesChunk.length;
-      console.log(`  ✓ Batch ${batchNum} completed successfully.`);
-    } catch (err) {
-      console.error(`  ✕ Batch ${batchNum} failed:`, err.message);
     }
+  } else {
+    for (let b = 0; b < queue.length; b += BATCH_SIZE) {
+      const chunkItems = queue.slice(b, b + BATCH_SIZE);
+      const articlesChunk = chunkItems.map(item => item.article);
+      const batchNum = Math.floor(b / BATCH_SIZE) + 1;
 
-    if (b + BATCH_SIZE < queue.length) {
-      await new Promise(r => setTimeout(r, 1200)); // Respect RPM limit
+      console.log(`[Backfill] Running batch ${batchNum}/${totalBatches} (${articlesChunk.length} articles)...`);
+      try {
+        const { parsed, modelName } = await analyzeBatchWithGemini(articlesChunk, apiKey, modelsToTry);
+        
+        parsed.forEach(p => {
+          const target = articlesChunk[p.index];
+          if (target) {
+            const score = typeof p.score === 'number' ? p.score : parseFloat(p.score) || 0;
+            target.sentimentGemini = score;
+            target.explanationGemini = p.explanation || `Analyzed with Gemini (${modelName}).`;
+            target.categoryGemini = p.category || 'other';
+
+            // Set primary values
+            target.sentiment = score;
+            target.explanation = target.explanationGemini;
+            target.category = target.categoryGemini;
+            successCount++;
+          }
+        });
+        processedCount += articlesChunk.length;
+        console.log(`  ✓ Batch ${batchNum} completed successfully.`);
+      } catch (err) {
+        console.error(`  ✕ Batch ${batchNum} failed:`, err.message);
+      }
+
+      if (b + BATCH_SIZE < queue.length) {
+        await new Promise(r => setTimeout(r, 1200)); // Respect RPM limit
+      }
     }
   }
 

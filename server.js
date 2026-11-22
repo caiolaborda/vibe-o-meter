@@ -4,7 +4,7 @@ const fs = require('fs');
 const Parser = require('rss-parser');
 const Sentiment = require('sentiment');
 const vader = require('vader-sentiment');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { callGeminiInteraction } = require('./scripts/gemini-client');
 require('dotenv').config();
 
 const app = express();
@@ -170,38 +170,39 @@ function analyzeLocally(headlines) {
   });
 }
 
-// Helper to try generation using Gemini models (gemini-3.8-flash with fallbacks)
-async function generateWithFallback(genAI, prompt) {
+// Helper to try generation using Gemini models via GA Interactions API
+async function generateWithFallback(apiKey, prompt) {
+  const rawEnvModel = process.env.GEMINI_MODEL;
+  const safeEnvModel = /^gemini-(?:1\.5|2\.)/.test(String(rawEnvModel || ''))
+    ? 'gemini-4-hydrogen'
+    : rawEnvModel;
   const modelsToTry = [
-    process.env.GEMINI_MODEL || 'gemini-3.8-flash',
-    'gemini-2.5-flash',
-    'gemini-1.5-flash'
-  ].filter(Boolean);
+    safeEnvModel || 'gemini-4-hydrogen',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite'
+  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
 
   let lastError = null;
   for (const modelName of modelsToTry) {
     try {
-      console.log(`Attempting Gemini model ${modelName} with API version v1beta...`);
-      
-      const config = {
-        temperature: 0.1,
-        responseMimeType: 'application/json'
-      };
-      
-      const model = genAI.getGenerativeModel(
-        {
-          model: modelName,
-          generationConfig: config
-        },
-        { apiVersion: 'v1beta' }
-      );
-      const response = await model.generateContent(prompt);
+      console.log(`Attempting Gemini model ${modelName} via Interactions API...`);
+      const { parsed, text } = await callGeminiInteraction({
+        apiKey,
+        model: modelName,
+        input: prompt,
+        thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+        maxOutputTokens: 32768,
+        jsonMode: true,
+        repairJsonArray: true,
+        timeoutMs: 90000
+      });
       return {
-        text: response.response.text(),
+        text: text || JSON.stringify(parsed),
+        parsed,
         modelUsed: modelName
       };
     } catch (err) {
-      console.warn(`Gemini model ${modelName} (v1beta) failed:`, err.message || err);
+      console.warn(`Gemini model ${modelName} failed:`, err.message || err);
       lastError = err;
     }
   }
@@ -230,10 +231,9 @@ function tryRepairJsonArray(text) {
   return clean;
 }
 
-// Gemini API Single-Prompt Structured Analyzer (no batching needed due to 1M+ context / 8K output tokens)
+// Gemini API Single-Prompt Structured Analyzer (no batching needed due to 1M+ context / 32K+ output tokens)
 async function analyzeWithGemini(headlines, apiKey) {
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
     const results = [];
 
     const promptData = headlines.map((item, index) => ({
@@ -278,7 +278,7 @@ ${JSON.stringify(promptData, null, 2)}
 Return ONLY valid JSON.`;
 
     console.log(`[Gemini Sync] Sending ALL ${headlines.length} articles to Gemini in a single well-structured request...`);
-    const { text, modelUsed } = await generateWithFallback(genAI, prompt);
+    const { text, modelUsed } = await generateWithFallback(apiKey, prompt);
     
     console.log(`[Gemini Sync] Received response from model "${modelUsed}":`);
     console.log(`========================================`);

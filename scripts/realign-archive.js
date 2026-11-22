@@ -8,19 +8,23 @@
  *   3. Summary coverage gaps where multi-day headlines outgrew the cluster summary
  *
  * Usage:
- *   node scripts/realign-archive.js
+ *   node scripts/realign-archive.js                  (Flex tier 50% off w/ automatic Standard fallback)
+ *   node scripts/realign-archive.js --batch          (Official Gemini Batch API inline job w/ checkpoint resume)
+ *   node scripts/realign-archive.js --submit-batch   (Submit Batch API job & save checkpoint to data/realign-batch-job.json)
  *   node scripts/realign-archive.js --from-json <path-to-audit-json>
  */
 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const { callGeminiInteraction, runGeminiInlineBatch } = require('./gemini-client');
 
 const ROOT_DIR = path.join(__dirname, '..');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
 const PUBLIC_DATA_DIR = path.join(ROOT_DIR, 'public', 'data');
 const VIBE_DATA_FILE = path.join(DATA_DIR, 'vibe-data.json');
 const ARCHIVE_FILE = path.join(DATA_DIR, 'clusters-archive.json');
+const BATCH_CHECKPOINT_FILE = path.join(DATA_DIR, 'realign-batch-job.json');
 
 const SILO_DEFS = [
   {
@@ -65,31 +69,52 @@ const SILO_DEFS = [
   }
 ];
 
-async function callGeminiJson(prompt, apiKey, modelPreference = ['gemini-3.5-flash-lite', 'gemini-3.8-flash']) {
+const REALIGN_SYSTEM_INSTRUCTION = `You are the Senior Archival Intelligence Editor for ISOBAR & Vibe-O-Meter.
+We are conducting a Cross-Archive Re-Indexing inside a macro geopolitical/thematic silo of news clusters ordered chronologically.
+
+Identify:
+1. "missedEvolutionChains": Pairs where [S_old] and [S_new] represent the exact same ongoing crisis, policy battle, investigation, or military/civil flashpoint entering a new chronological chapter days later (or a duplicate split). Do NOT merge separate events in the same country; put separate interacting events in "newLateralLinks".
+2. "newLateralLinks": Up to 18 high-value causal or thematic connections between DISTINCT clusters [S_a] and [S_b] in this silo—especially connecting unlinked clusters (curLat:0) to downstream developments.
+
+Return ONLY valid JSON:
+{
+  "missedEvolutionChains": [
+    {
+      "ancestorCode": "S3",
+      "successorCode": "S19",
+      "relationshipType": "direct_continuation | duplicate_split",
+      "confidence": 0.95,
+      "rationale": "1 crisp sentence explaining why S19 is the direct chronological continuation of S3."
+    }
+  ],
+  "newLateralLinks": [
+    {
+      "fromCode": "S2",
+      "toCode": "S24",
+      "connectionType": "Causal Trigger | Cross-Border Contagion | Policy Fallout | Retaliation | Shared Theater",
+      "causalMechanism": "1 crisp sentence (12-22 words) explaining the exact causal or structural link between these two clusters."
+    }
+  ]
+}`;
+
+async function callGeminiJson(inputPrompt, apiKey, modelPreference = ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite']) {
   let lastErr = null;
   for (const model of modelPreference) {
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.15,
-              responseMimeType: 'application/json'
-            }
-          })
+        const { parsed } = await callGeminiInteraction({
+          apiKey,
+          model,
+          systemInstruction: REALIGN_SYSTEM_INSTRUCTION,
+          input: inputPrompt,
+          thinkingLevel: model.includes('flash-lite') ? 'minimal' : 'low',
+          maxOutputTokens: 32768,
+          jsonMode: true,
+          serviceTierMode: 'flex_with_fallback',
+          flexTimeoutMs: 75000,
+          timeoutMs: 120000
         });
-        if (!res.ok) {
-          const t = await res.text();
-          throw new Error(`HTTP ${res.status}: ${t.slice(0, 200)}`);
-        }
-        const data = await res.json();
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        const clean = rawText.replace(/^```json\s*/i, '').replace(/```\s*$/i, '').trim();
-        return { parsed: JSON.parse(clean), model };
+        return { parsed, model };
       } catch (err) {
         lastErr = err;
         await new Promise(r => setTimeout(r, 1200 * attempt));
@@ -268,85 +293,95 @@ async function main() {
       siloBuckets.set(s.id, capped);
     }
 
+    const useBatchApi = process.argv.includes('--batch') || process.argv.includes('--submit-batch');
+    const submitBatchOnly = process.argv.includes('--submit-batch');
+
+    const preparedSilos = SILO_DEFS.map((siloDef) => {
+      const list = siloBuckets.get(siloDef.id);
+      const codeToCluster = new Map();
+      const lines = list.map((c, idx) => {
+        const code = `S${idx + 1}`;
+        codeToCluster.set(code, c);
+        const firstDate = (c.firstSeenAt || c.latestUpdateAt || '').slice(0, 10);
+        const lastDate = (c.latestUpdateAt || c.firstSeenAt || '').slice(0, 10);
+        const dateStr = firstDate === lastDate ? firstDate : `${firstDate}->${lastDate}`;
+        const existingLat = (c.lateralConnections || []).length;
+        const sampleCov = (c.coverage || []).slice(0, 2).map(a => `"${a.title}"`).join(' ; ');
+        return `[${code}] (${dateStr} · ${c.outletCount || 2} outlets · v${c.version || 1} · curLat:${existingLat}) id="${c.id}" | "${c.story}" — ${c.summary || ''} [Sample Headlines: ${sampleCov}]`;
+      }).join('\n');
+
+      const inputPrompt = `MACRO SILO: "${siloDef.name}" (${list.length} clusters ordered chronologically)\n\nCLUSTERS IN SILO (${siloDef.name}):\n${lines}`;
+      return { siloDef, codeToCluster, inputPrompt };
+    });
+
+    const mapParsedSiloOutput = (parsed, codeToCluster) => {
+      const safeParsed = parsed || {};
+      const evolutions = (safeParsed.missedEvolutionChains || []).map(e => {
+        const anc = codeToCluster.get(String(e.ancestorCode || '').replace(/[\[\]\s]/g, ''));
+        const suc = codeToCluster.get(String(e.successorCode || '').replace(/[\[\]\s]/g, ''));
+        if (!anc || !suc || anc.id === suc.id) return null;
+        return {
+          ancestorId: anc.id,
+          ancestorStory: anc.story,
+          successorId: suc.id,
+          successorStory: suc.story,
+          relationshipType: e.relationshipType,
+          confidence: e.confidence,
+          rationale: e.rationale
+        };
+      }).filter(Boolean);
+
+      const links = (safeParsed.newLateralLinks || []).map(l => {
+        const fromCl = codeToCluster.get(String(l.fromCode || '').replace(/[\[\]\s]/g, ''));
+        const toCl = codeToCluster.get(String(l.toCode || '').replace(/[\[\]\s]/g, ''));
+        if (!fromCl || !toCl || fromCl.id === toCl.id) return null;
+        return {
+          fromId: fromCl.id,
+          toId: toCl.id,
+          connectionType: l.connectionType,
+          causalMechanism: l.causalMechanism
+        };
+      }).filter(Boolean);
+
+      return { evolutions, links };
+    };
+
     const siloResults = [];
-    for (let i = 0; i < SILO_DEFS.length; i += 4) {
-      const batch = SILO_DEFS.slice(i, i + 4);
-      const res = await Promise.all(batch.map(async (siloDef) => {
-        const list = siloBuckets.get(siloDef.id);
-        const codeToCluster = new Map();
-        const lines = list.map((c, idx) => {
-          const code = `S${idx + 1}`;
-          codeToCluster.set(code, c);
-          const firstDate = (c.firstSeenAt || c.latestUpdateAt || '').slice(0, 10);
-          const lastDate = (c.latestUpdateAt || c.firstSeenAt || '').slice(0, 10);
-          const dateStr = firstDate === lastDate ? firstDate : `${firstDate}->${lastDate}`;
-          const existingLat = (c.lateralConnections || []).length;
-          const sampleCov = (c.coverage || []).slice(0, 2).map(a => `"${a.title}"`).join(' ; ');
-          return `[${code}] (${dateStr} · ${c.outletCount || 2} outlets · v${c.version || 1} · curLat:${existingLat}) id="${c.id}" | "${c.story}" — ${c.summary || ''} [Sample Headlines: ${sampleCov}]`;
-        }).join('\n');
-
-        const prompt = `You are the Senior Archival Intelligence Editor for ISOBAR & Vibe-O-Meter.
-We are conducting a Cross-Archive Re-Indexing inside the macro silo: "${siloDef.name}".
-Below are ${list.length} news clusters ordered chronologically.
-
-Identify:
-1. "missedEvolutionChains": Pairs where [S_old] and [S_new] represent the exact same ongoing crisis, policy battle, investigation, or military/civil flashpoint entering a new chronological chapter days later (or a duplicate split). Do NOT merge separate events in the same country; put separate interacting events in "newLateralLinks".
-2. "newLateralLinks": Up to 18 high-value causal or thematic connections between DISTINCT clusters [S_a] and [S_b] in this silo—especially connecting unlinked clusters (curLat:0) to downstream developments.
-
-CLUSTERS IN SILO (${siloDef.name}):
-${lines}
-
-Return ONLY valid JSON:
-{
-  "missedEvolutionChains": [
-    {
-      "ancestorCode": "S3",
-      "successorCode": "S19",
-      "relationshipType": "direct_continuation" | "duplicate_split",
-      "confidence": 0.95,
-      "rationale": "1 crisp sentence explaining why S19 is the direct chronological continuation of S3."
-    }
-  ],
-  "newLateralLinks": [
-    {
-      "fromCode": "S2",
-      "toCode": "S24",
-      "connectionType": "Causal Trigger | Cross-Border Contagion | Policy Fallout | Retaliation | Shared Theater",
-      "causalMechanism": "1 crisp sentence (12-22 words) explaining the exact causal or structural link between these two clusters."
-    }
-  ]
-}`;
-        const { parsed } = await callGeminiJson(prompt, apiKey);
-        const evolutions = (parsed.missedEvolutionChains || []).map(e => {
-          const anc = codeToCluster.get(String(e.ancestorCode || '').replace(/[\[\]\s]/g, ''));
-          const suc = codeToCluster.get(String(e.successorCode || '').replace(/[\[\]\s]/g, ''));
-          if (!anc || !suc || anc.id === suc.id) return null;
-          return {
-            ancestorId: anc.id,
-            ancestorStory: anc.story,
-            successorId: suc.id,
-            successorStory: suc.story,
-            relationshipType: e.relationshipType,
-            confidence: e.confidence,
-            rationale: e.rationale
-          };
-        }).filter(Boolean);
-
-        const links = (parsed.newLateralLinks || []).map(l => {
-          const fromCl = codeToCluster.get(String(l.fromCode || '').replace(/[\[\]\s]/g, ''));
-          const toCl = codeToCluster.get(String(l.toCode || '').replace(/[\[\]\s]/g, ''));
-          if (!fromCl || !toCl || fromCl.id === toCl.id) return null;
-          return {
-            fromId: fromCl.id,
-            toId: toCl.id,
-            connectionType: l.connectionType,
-            causalMechanism: l.causalMechanism
-          };
-        }).filter(Boolean);
-
-        return { evolutions, links };
-      }));
-      siloResults.push(...res);
+    if (useBatchApi) {
+      const batchModel = process.env.GEMINI_BATCH_MODEL || 'gemini-3.8-flash';
+      const batchRes = await runGeminiInlineBatch({
+        apiKey,
+        model: batchModel,
+        displayName: `realign-archive-${new Date().toISOString().slice(0, 10)}`,
+        items: preparedSilos.map(s => ({
+          key: s.siloDef.id,
+          systemInstruction: REALIGN_SYSTEM_INSTRUCTION,
+          prompt: s.inputPrompt
+        })),
+        pollIntervalMs: 15000,
+        maxWaitMs: 22 * 60 * 1000,
+        checkpointFile: BATCH_CHECKPOINT_FILE,
+        submitOnly: submitBatchOnly
+      });
+      if (!batchRes.completed) {
+        console.log(`[Realign Batch] Batch job ${batchRes.jobName} queued/running. Re-run with --batch later to collect and apply results.`);
+        return;
+      }
+      for (const s of preparedSilos) {
+        const parsed = batchRes.resultsByKey.get(s.siloDef.id);
+        if (parsed) {
+          siloResults.push(mapParsedSiloOutput(parsed, s.codeToCluster));
+        }
+      }
+    } else {
+      for (let i = 0; i < preparedSilos.length; i += 4) {
+        const batch = preparedSilos.slice(i, i + 4);
+        const res = await Promise.all(batch.map(async (s) => {
+          const { parsed } = await callGeminiJson(s.inputPrompt, apiKey);
+          return mapParsedSiloOutput(parsed, s.codeToCluster);
+        }));
+        siloResults.push(...res);
+      }
     }
 
     auditData = {

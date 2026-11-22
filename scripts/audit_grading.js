@@ -114,9 +114,7 @@ async function runGeminiSelfAudit() {
   }
 
   try {
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const { callGeminiInteraction } = require('./gemini-client');
 
     // Pick 10 diverse test cases across positive, negative, and neutral
     const testCases = [
@@ -145,9 +143,28 @@ Provide a concise meta-audit summary:
 - Any systematic biases detected
 - Final verdict`;
 
-    console.log('\n--- Running Gemini Meta-Audit LLM Check ---');
-    const result = await model.generateContent(prompt);
-    console.log(result.response.text());
+    console.log('\n--- Running Gemini 4 Meta-Audit LLM Check ---');
+    let auditText = null;
+    for (const auditModel of ['gemini-4-argon', 'gemini-4-hydrogen', 'gemini-3.8-flash']) {
+      try {
+        const res = await callGeminiInteraction({
+          apiKey,
+          model: auditModel,
+          input: prompt,
+          thinkingLevel: 'medium',
+          maxOutputTokens: 32768,
+          jsonMode: false,
+          serviceTierMode: 'flex_with_fallback',
+          flexTimeoutMs: 45000,
+          timeoutMs: 90000
+        });
+        auditText = res.text;
+        break;
+      } catch (e) {
+        console.warn(`[Gemini AI Check] ${auditModel} notice:`, e.message);
+      }
+    }
+    if (auditText) console.log(auditText);
   } catch (err) {
     console.warn('[Gemini AI Check] Could not complete live audit:', err.message);
   }
