@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
   pages: write
   id-token: write
 
@@ -115,6 +116,10 @@ jobs:
         with:
           name: github-pages-${{ inputs.pulse_id }}
           path: 'public/'
+
+      - name: Allow artifact index to settle
+        if: steps.cooldown.outputs.skip != 'true' && steps.commit_step.outputs.has_changes == 'true' && steps.upload_pages.outcome == 'success'
+        run: sleep 3
 
       - name: Deploy to GitHub Pages
         if: steps.cooldown.outputs.skip != 'true' && steps.commit_step.outputs.has_changes == 'true' && steps.upload_pages.outcome == 'success'
