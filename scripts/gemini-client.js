@@ -16,7 +16,12 @@ const _clientCache = new Map();
 function getGenAiClient(apiKey, apiVersion = undefined) {
   const cacheKey = `${apiKey}::${apiVersion || 'default'}`;
   if (!_clientCache.has(cacheKey)) {
-    const opts = { apiKey };
+    const opts = {
+      apiKey,
+      httpOptions: {
+        retryOptions: { attempts: 1 }
+      }
+    };
     if (apiVersion) opts.apiVersion = apiVersion;
     _clientCache.set(cacheKey, new GoogleGenAI(opts));
   }
@@ -134,8 +139,16 @@ function isSheddableOrTimeoutError(err) {
 }
 
 function isFlexFallbackEligibleError(err) {
-  if (isSheddableOrTimeoutError(err)) return true;
   const msg = String(err?.message || err || '').toLowerCase();
+  if (
+    msg.includes('spending cap') ||
+    msg.includes('spend cap') ||
+    msg.includes('requests per day') ||
+    msg.includes('per_day')
+  ) {
+    return false;
+  }
+  if (isSheddableOrTimeoutError(err)) return true;
   const status = err?.status || err?.statusCode || 0;
   if (status === 400 || status === 403 || status === 404) {
     return (

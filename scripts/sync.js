@@ -746,7 +746,7 @@ Return ONLY valid JSON.`;
       if (batchSuccess) break;
       const modelTierKey = `${modelName}:${keyObj.tier}`;
       if (exhaustedModelTiers.has(modelTierKey)) continue;
-      const maxAttempts = keyObj.tier === 'FREE' && candidatePlan.length > 1 ? 1 : 2;
+      const maxAttempts = 2;
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
           console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} [${keyObj.tier} key] (attempt ${attempt}/${maxAttempts})...`);
@@ -816,9 +816,18 @@ Return ONLY valid JSON.`;
           }
         } catch (err) {
           const msg = String(err.message || err);
-          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
-          const isDemandSpike = isQuotaOrRateLimit || msg.includes('503') || msg.includes('high demand') || msg.includes('timed out');
+          const msgLower = msg.toLowerCase();
+          const isProjectSpendCap = msgLower.includes('spending cap') || msgLower.includes('spend cap');
+          const isQuotaOrRateLimit = isProjectSpendCap || msg.includes('429') || msgLower.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msgLower.includes('rate limit');
+          const isDemandSpike = isQuotaOrRateLimit || msg.includes('503') || msgLower.includes('high demand') || msgLower.includes('timed out');
           console.warn(`[Gemini] Model ${modelName} [${keyObj.tier} key] attempt ${attempt}/${maxAttempts} warning:`, msg);
+          if (isProjectSpendCap) {
+            for (const m of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen']) {
+              exhaustedModelTiers.add(`${m}:${keyObj.tier}`);
+            }
+            console.log(`[Gemini] Monthly spend cap reached for [${keyObj.tier} key] — failing over immediately to remaining key tiers...`);
+            break;
+          }
           if (isQuotaOrRateLimit) {
             exhaustedModelTiers.add(modelTierKey);
             console.log(`[Gemini] Quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
@@ -827,8 +836,6 @@ Return ONLY valid JSON.`;
           if (attempt < maxAttempts) {
             const waitMs = isDemandSpike ? 4000 : 2000;
             await new Promise(r => setTimeout(r, waitMs));
-          } else {
-            exhaustedModelTiers.add(modelTierKey);
           }
         }
       }
