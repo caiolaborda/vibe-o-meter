@@ -2213,24 +2213,31 @@ function exportPublicJsonFeeds(fullPayload) {
     'russia','moscow','putin','zelens','israel','netany','palest','gaza','iran','tehran','saudi','lebanon',
     'syria','turk','turkey','ankara','istanb','china','chines','beijin','japan','tokyo','kore','india','delhi',
     'pakist','austral','sydney','canad','ottawa','brazil','mexic','attack','strik','protes','court','judg',
-    'elect','market','econom','compan','health'
+    'elect','market','econom','compan','health','drone','missil','rocket','shell','injur','kill','dead','death',
+    'damag','destro','casual','leav','target','photo','video','energy','power','force','milit','troop','border',
+    'region','oblast','polic','arrest','charg','lawsui','billio','millio','worker','union','climat','govern'
   ]);
-  const isNonNewsWireFeature = (art, cat, f, eb) => {
+  const BARE_COUNTRY_NAMES = new Set([
+    'ukraine','russia','united states','china','india','brazil','canada','australia','france','germany',
+    'united kingdom','italy','spain','poland','turkey','iran','israel','mexico','argentina','colombia',
+    'south africa','nigeria','kenya','indonesia','japan','south korea','pakistan'
+  ]);
+  const isNonNewsWireFeature = (art, cat, f, eb, { allowLowPolarity = false } = {}) => {
     if (['sports', 'entertainment', 'lifestyle'].includes(cat)) return true;
     const rawLink = String(art?.link || '').toLowerCase();
     if (/\/(opinion|opinions|commentisfree|editorial|editorials|letters|lifestyle|culture|arts|books|travel|food|fashion|magazine|podcast|podcasts|video|videos|education)\//.test(rawLink)) {
       return true;
     }
     const cleanT = String(art?.title || '').replace(/\s+-\s+[^-]+$/, '').trim();
-    if (!cleanT) return true;
+    if (!cleanT || cleanT.split(/\s+/).length < 4) return true;
     // Opinion column byline pipe (e.g. "... | Steven Greenhouse")
     if (/\s\|\s+[A-ZÀ-Ý][a-zà-ÿ]+(\s+[A-ZÀ-Ý][a-zà-ÿ]+){0,2}$/.test(cleanT)) return true;
-    // Profiles, interrogative explainers, roundups, podcasts, op-eds
-    if (/^(meet\s+|how\s+|why\s+|what\s+|who\s+|can\s+|should\s+|could\s+|did\s+|is\s+|are\s+|will\s+|behind\s+|inside\s+|watch:|listen:|opinion:|editorial:|analysis:|explainer:|review:|podcast:|q&a:|letter:)/i.test(cleanT)) {
+    // Profiles, interrogative explainers, roundups, podcasts, op-eds, live tickers
+    if (/^(meet\s+|how\s+|why\s+|what\s+|who\s+|can\s+|should\s+|could\s+|did\s+|is\s+|are\s+|will\s+|behind\s+|inside\s+|watch:|listen:|opinion:|editorial:|analysis:|explainer:|review:|podcast:|q&a:|letter:|live\s+ticker)/i.test(cleanT)) {
       return true;
     }
-    if (/:\s*(how|why|what)\s+/i.test(cleanT)) return true;
-    if (/\b(here'?s why|here'?s what|what to know|what law says|what it means|what is at stake|what it is and what|and more top headlines|morning briefing|evening briefing|live updates|europe live|middle east latest)\b/i.test(cleanT)) {
+    if (/:\s*(how|why|what|inside)\s+/i.test(cleanT)) return true;
+    if (/\b(here'?s why|here'?s what|what to know|what law says|what it means|what is at stake|what it is and what|and more top headlines|morning briefing|evening briefing|live updates|europe live|middle east latest|rams\s+suv|on\s+trial\s+for\s+murder)\b/i.test(cleanT)) {
       return true;
     }
     if (/:\s*study$/i.test(cleanT)) return true;
@@ -2238,8 +2245,7 @@ function exportPublicJsonFeeds(fullPayload) {
     if (/\b(ancient\s+human|archaeolog|palaeontolog|fossil|dinosaur|mayan\s+ritual|exoplanet|tiny\s+star|huge\s+planet|textbook\s+view|solved\s+a\s+\d+-year-old|million\s+years\s+ago|billion\s+years\s+ago|boosted\s+biomass|fields\s+of\s+graves|three\s+months\s+after|decades\s+after|master\s+plan\s+to\s+become\b.*\bby\s+20\d{2}|has\s+an?\s+\d+\s*km\s+underground|possible\s+scenarios|could\s+significantly|gets\s+harder\s+the\s+longer|wants\s+to\s+crown\s+himself|we\s+shouldn'?t\s+be\s+okay\s+with|log\s+of\s+a\s+defeat|stigma\s+persists|is\s+the\s+path\s+against\s+violence|paves\s+the\s+way\s+for\s+peace\s+and\s+prosperity)\b/i.test(cleanT)) {
       return true;
     }
-    // Require concrete event polarity so neutral explainers & high-rhetoric op-eds don't pose as hard news
-    if (Array.isArray(f) && f.length >= 4) {
+    if (!allowLowPolarity && Array.isArray(f) && f.length >= 4) {
       const polAbs = Math.abs(Number(f[0]) || 0);
       const rhetAbs = Math.abs(Number(f[3]) || 0);
       if (polAbs < 14 && Math.abs(Number(eb) || 0) < 0.16) return true;
@@ -2332,18 +2338,20 @@ function exportPublicJsonFeeds(fullPayload) {
     for (const prof of clusterEchoProfiles) {
       if (prof.latestMs > 0 && pubMs > 0 && Math.abs(pubMs - prof.latestMs) > 96 * 3600 * 1000) continue;
 
-      const LARGE_COUNTRIES = new Set(['us', 'ru', 'cn', 'ca', 'br', 'au', 'in']);
-      const sameSmallCountry = Boolean(artIso && prof.countryIso && artIso === prof.countryIso && !LARGE_COUNTRIES.has(artIso));
-      const nearCoords = (artLat !== null && prof.lat !== null)
-        ? Math.hypot(artLat - prof.lat, artLon - prof.lon) <= 4.0
+      // Same metro area (~38km): never treat a whole country (like 1,300km-wide Ukraine) as one city!
+      const nearCity = (artLat !== null && prof.lat !== null)
+        ? Math.hypot(artLat - prof.lat, artLon - prof.lon) <= 0.38
         : false;
-      const geoCompatible = sameSmallCountry || nearCoords;
+      const geoCompatible = nearCity;
 
-      let shTitle = 0, shAll = 0, shSpecTitle = 0, shSpecAll = 0, shRareTitle = 0;
+      let shTitle = 0, shAll = 0, shSpecTitle = 0, shSpecAll = 0, shRareTitle = 0, hasEventCodeStem = false;
       for (const s of artTitleStems) {
         if (prof.titleStems.has(s)) shTitle++;
         if (prof.specTitleStems.has(s)) shSpecTitle++;
-        if (prof.rareTitleStems.has(s)) shRareTitle++;
+        if (prof.rareTitleStems.has(s)) {
+          shRareTitle++;
+          if (/\d/.test(s)) hasEventCodeStem = true;
+        }
       }
       for (const s of artAllStems) {
         if (prof.allStems.has(s)) shAll++;
@@ -2351,7 +2359,7 @@ function exportPublicJsonFeeds(fullPayload) {
       }
 
       // Cross-country reaction echo on a distinctive named cluster (e.g. "COP31 failure" reaction from Beijing/UN/Fiji)
-      if (shRareTitle >= 1 && shSpecTitle >= 2) {
+      if ((hasEventCodeStem && shAll >= 1) || (shRareTitle >= 1 && shSpecTitle >= 2)) {
         return true;
       }
 
@@ -2416,8 +2424,8 @@ function exportPublicJsonFeeds(fullPayload) {
   rawScoopPool.sort((a, b) => b.weight - a.weight);
   const rawScoops72h = rawScoopPool.slice(0, 60);
 
-  // Export standalone public/data/wire-map.json (48h genuine hard-news geolocated unclustered scoops, scrubbed of features & cluster echoes)
-  const wireCutoff48hMs = Date.now() - (48 * 3600 * 1000);
+  // Export standalone public/data/wire-map.json (72h spatial 1-best-per-town field dispatches, scrubbed of features & cluster echoes)
+  const wireCutoff72hMs = Date.now() - (72 * 3600 * 1000);
   const rawWireCandidates = [];
   const seenWireNorm = new Set();
   for (const [srcId, srcObj] of Object.entries(sources)) {
@@ -2426,15 +2434,17 @@ function exportPublicJsonFeeds(fullPayload) {
       if (!art.title || !art.link) continue;
       if (!art.loc || typeof art.loc.lat !== 'number' || typeof art.loc.lon !== 'number') continue;
       const pubMs = Date.parse(art.pubDate || '') || 0;
-      if (!pubMs || pubMs < wireCutoff48hMs) continue;
+      if (!pubMs || pubMs < wireCutoff72hMs) continue;
       const cat = (art.categoryGemini || art.category || 'world').toLowerCase();
       const f = Array.isArray(art.factors) && art.factors.length >= 4 ? art.factors : null;
       const eb = typeof art.eventBase === 'number' ? art.eventBase : (typeof art.sentiment === 'number' ? art.sentiment : 0);
-      if (isNonNewsWireFeature(art, cat, f, eb)) continue;
+      if (isNonNewsWireFeature(art, cat, f, eb, { allowLowPolarity: true })) continue;
       const weight = f
         ? Math.round(((f[1] * 0.45) + (f[2] * 0.45) + (Math.abs(f[0]) * 0.25)) * 10) / 10
         : Math.round(Math.abs(eb) * 100);
-      if (weight < 49.5 || (weight < 50.5 && (!f || Math.abs(Number(f[0]) || 0) < 30))) continue;
+      if (weight < 28) continue;
+      const locNameClean = String(art.loc.name || '').trim();
+      if (weight < 60 && !locNameClean.includes(',') && BARE_COUNTRY_NAMES.has(locNameClean.toLowerCase())) continue;
       if (isArticleClusterEcho(srcId, art, pubMs)) continue;
       const normT = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
       if (seenWireNorm.has(normT)) continue;
@@ -2456,7 +2466,7 @@ function exportPublicJsonFeeds(fullPayload) {
         weight,
         _specStems: [...extractEchoStems(art.title)].filter(s => !ECHO_BROAD_ACTORS.has(s)),
         primaryLocation: {
-          name: art.loc.name,
+          name: locNameClean,
           countryIso: art.loc.iso || null,
           lat: art.loc.lat,
           lon: art.loc.lon
@@ -2466,18 +2476,20 @@ function exportPublicJsonFeeds(fullPayload) {
   }
   rawWireCandidates.sort((a, b) => (b.weight - a.weight) || (Date.parse(b.pubDate) - Date.parse(a.pubDate)));
 
-  // Keep strictly at most 1 highest-signal wire scoop per ~35km spot AND deduplicate cross-city coverage of the same unclustered event
+  // Spatial winner-take-all: keep the single highest-importance dispatch per ~18km town (up to 320 global towns)
+  // and deduplicate same-event dispatches within ~150km so capitals never stack while every regional/frontline town shines
   const keptWire = [];
   for (const cand of rawWireCandidates) {
-    if (keptWire.length >= 90) break;
+    if (keptWire.length >= 320) break;
     const lat = cand.primaryLocation.lat;
     const lon = cand.primaryLocation.lon;
     const cosLat = Math.max(0.28, Math.cos((lat * Math.PI) / 180));
     const isDupOrStacked = keptWire.some(kept => {
       const dLat = kept.primaryLocation.lat - lat;
       const dLon = (kept.primaryLocation.lon - lon) * cosLat;
-      if (Math.hypot(dLat, dLon) < 0.32) return true;
-      if (cand._specStems.length >= 2 && kept._specStems.length >= 2) {
+      const distDeg = Math.hypot(dLat, dLon);
+      if (distDeg < 0.16) return true;
+      if (distDeg < 1.5 && cand._specStems.length >= 2 && kept._specStems.length >= 2) {
         let shared = 0;
         for (const s of cand._specStems) {
           if (kept._specStems.includes(s)) shared++;
@@ -2493,7 +2505,7 @@ function exportPublicJsonFeeds(fullPayload) {
   const wireMapPayload = {
     dataset: 'vibe-o-meter/wire-map',
     lastUpdated: nowIso,
-    windowHours: 48,
+    windowHours: 72,
     count: wireMapItems.length,
     highSignalCount: wireMapItems.filter(it => it.weight >= 60).length,
     items: wireMapItems
