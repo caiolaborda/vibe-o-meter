@@ -1179,7 +1179,7 @@ const SOVEREIGN_COUNTRY_PATTERNS = [
 
 function detectSovereignCountries(text) {
   const s = new Set();
-  const str = String(text || '');
+  const str = String(text || '').replace(/\b[A-Za-z]+\s+(?:media|press|newspaper|newspapers|broadcaster|daily|outlet|outlets)\s+(?:say|says|said|report|reports|reported)\b/gi, ' ');
   for (const [code, re] of SOVEREIGN_COUNTRY_PATTERNS) {
     if (re.test(str)) s.add(code);
   }
@@ -2909,7 +2909,20 @@ Return JSON array in format:
         if (cov.some(c => c.sourceId === art.sourceId)) continue;
         if (cm.minMs > 0 && (art.pubMs < cm.minMs - 72 * 3600 * 1000 || art.pubMs > cm.maxMs + 72 * 3600 * 1000)) continue;
         const anchorAgeHours = cm.firstSeenMs > 0 ? Math.max(0, (art.pubMs - cm.firstSeenMs) / 3600000) : 0;
-        if (!art.titleStems.has(cm.clEntityStems[0])) continue;
+        const matchedEntitiesInTitle = cm.clEntityStems.filter(s => art.titleStems.has(s));
+        const matchedEntitiesInAll = cm.clEntityStems.filter(s => art.allStems.has(s));
+        const shTitle = cm.clTitleArr.filter(s => art.titleStems.has(s));
+        const shTitleFromArtAll = cm.clTitleArr.filter(s => art.allStems.has(s));
+
+        // Allow peer-corroborated syndication catch-up when 1 org/attribution stem in cl.story (e.g. "Oxfam")
+        // is omitted from another outlet's headline, provided >=2 rare entity stems + >=3 headline stems still match!
+        const hasStrictLeadEntity = art.titleStems.has(cm.clEntityStems[0]) &&
+          (cm.clEntityStems.length < 2 || art.allStems.has(cm.clEntityStems[1]));
+        const hasMultiRareHeadlineMatch = cm.clEntityStems.length >= 3 &&
+          matchedEntitiesInTitle.length >= 2 &&
+          shTitle.length >= 3;
+        if (!hasStrictLeadEntity && !hasMultiRareHeadlineMatch) continue;
+
         if (hasEpisodicPhaseMismatch(
           cm.cl.story || '',
           cm.firstSeenMs || cm.minMs,
@@ -2925,17 +2938,16 @@ Return JSON array in format:
           stemDocFreq,
           maxRareTitleStemDf
         )) continue;
-        if (cm.clEntityStems.length >= 2 && !art.allStems.has(cm.clEntityStems[1])) continue;
-        const matchedEntitiesInTitle = cm.clEntityStems.filter(s => art.titleStems.has(s));
-        const matchedEntitiesInAll = cm.clEntityStems.filter(s => art.allStems.has(s));
-        if (cm.clEntityStems.length <= 3) {
+
+        if (cm.clEntityStems.length <= 2) {
           if (matchedEntitiesInAll.length < cm.clEntityStems.length) continue;
           if (matchedEntitiesInTitle.length < Math.min(2, cm.clEntityStems.length)) continue;
+        } else if (cm.clEntityStems.length === 3) {
+          if (matchedEntitiesInTitle.length < 2) continue;
+          if (matchedEntitiesInAll.length < 3 && !hasMultiRareHeadlineMatch) continue;
         } else {
           if (matchedEntitiesInTitle.length < 2 || matchedEntitiesInAll.length < 3) continue;
         }
-        const shTitle = cm.clTitleArr.filter(s => art.titleStems.has(s));
-        const shTitleFromArtAll = cm.clTitleArr.filter(s => art.allStems.has(s));
         if (shTitle.length < 2) continue;
         if ((shTitleFromArtAll.length / cm.clTitleArr.length) < 0.60) continue;
         // Prevent >5-day-old zombie clusters from vacuuming up new-phase events that only match actor/country stems

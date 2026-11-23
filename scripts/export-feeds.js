@@ -2195,26 +2195,194 @@ function exportPublicJsonFeeds(fullPayload) {
     };
   });
 
-  // Export top 60 unclustered high-signal 72h raw RSS scoops so remote/Netlify NewsApp can rescue early scoops without needing data/vibe-data.json
+  // Export top 60 unclustered high-signal 72h raw RSS scoops & wire-map.json, scrubbing both exact clustered links/titles
+  // AND redundant "cluster echo" follow-up/analysis dispatches on events already represented by an active cluster.
+  const ECHO_STOP_WORDS = new Set([
+    'about','accord','after','against','amid','among','announc','around','author','before','between','billion',
+    'called','calls','city','comes','confirm','could','countries','country','despite','during','early','first',
+    'former','found','global','govern','government','group','intern','international','into','leader','leaders',
+    'major','making','million','minist','minister','month','national','nearly','official','officials','other','over',
+    'people','plans','polic','police','presid','president','public','recent','report','reports','reuters','right',
+    'second','secur','security','senate','several','since','south','north','state','states','still','story','study',
+    'support','their','there','these','those','three','through','today','under','until','update','warns',
+    'water','weeks','where','which','while','world','would','years'
+  ]);
+  const ECHO_BROAD_ACTORS = new Set([
+    'united','americ','washin','donald','trump','biden','white','feder','congre','britain','british','london',
+    'france','french','paris','german','berlin','ital','rome','spain','madrid','poland','europe','ukrain',
+    'russia','moscow','putin','zelens','israel','netany','palest','gaza','iran','tehran','saudi','lebanon',
+    'syria','turk','turkey','ankara','istanb','china','chines','beijin','japan','tokyo','kore','india','delhi',
+    'pakist','austral','sydney','canad','ottawa','brazil','mexic','attack','strik','protes','court','judg',
+    'elect','market','econom','compan','health'
+  ]);
+  const isNonNewsWireFeature = (art, cat, f, eb) => {
+    if (['sports', 'entertainment', 'lifestyle'].includes(cat)) return true;
+    const rawLink = String(art?.link || '').toLowerCase();
+    if (/\/(opinion|opinions|commentisfree|editorial|editorials|letters|lifestyle|culture|arts|books|travel|food|fashion|magazine|podcast|podcasts|video|videos|education)\//.test(rawLink)) {
+      return true;
+    }
+    const cleanT = String(art?.title || '').replace(/\s+-\s+[^-]+$/, '').trim();
+    if (!cleanT) return true;
+    // Opinion column byline pipe (e.g. "... | Steven Greenhouse")
+    if (/\s\|\s+[A-ZÀ-Ý][a-zà-ÿ]+(\s+[A-ZÀ-Ý][a-zà-ÿ]+){0,2}$/.test(cleanT)) return true;
+    // Profiles, interrogative explainers, roundups, podcasts, op-eds
+    if (/^(meet\s+|how\s+|why\s+|what\s+|who\s+|can\s+|should\s+|could\s+|did\s+|is\s+|are\s+|will\s+|behind\s+|inside\s+|watch:|listen:|opinion:|editorial:|analysis:|explainer:|review:|podcast:|q&a:|letter:)/i.test(cleanT)) {
+      return true;
+    }
+    if (/:\s*(how|why|what)\s+/i.test(cleanT)) return true;
+    if (/\b(here'?s why|here'?s what|what to know|what law says|what it means|what is at stake|what it is and what|and more top headlines|morning briefing|evening briefing|live updates|europe live|middle east latest)\b/i.test(cleanT)) {
+      return true;
+    }
+    if (/:\s*study$/i.test(cleanT)) return true;
+    // Evergreen science/history trivia, municipal 2050 PR visions, and talking-head speculation
+    if (/\b(ancient\s+human|archaeolog|palaeontolog|fossil|dinosaur|mayan\s+ritual|exoplanet|tiny\s+star|huge\s+planet|textbook\s+view|solved\s+a\s+\d+-year-old|million\s+years\s+ago|billion\s+years\s+ago|boosted\s+biomass|fields\s+of\s+graves|three\s+months\s+after|decades\s+after|master\s+plan\s+to\s+become\b.*\bby\s+20\d{2}|has\s+an?\s+\d+\s*km\s+underground|possible\s+scenarios|could\s+significantly|gets\s+harder\s+the\s+longer|wants\s+to\s+crown\s+himself|we\s+shouldn'?t\s+be\s+okay\s+with|log\s+of\s+a\s+defeat|stigma\s+persists|is\s+the\s+path\s+against\s+violence|paves\s+the\s+way\s+for\s+peace\s+and\s+prosperity)\b/i.test(cleanT)) {
+      return true;
+    }
+    // Require concrete event polarity so neutral explainers & high-rhetoric op-eds don't pose as hard news
+    if (Array.isArray(f) && f.length >= 4) {
+      const polAbs = Math.abs(Number(f[0]) || 0);
+      const rhetAbs = Math.abs(Number(f[3]) || 0);
+      if (polAbs < 14 && Math.abs(Number(eb) || 0) < 0.16) return true;
+      if (rhetAbs >= 45 && polAbs < 28) return true;
+    }
+    return false;
+  };
+  const extractEchoStems = (txt) => {
+    const raw = String(txt || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\bcop\s*31\b/g, 'cop31')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/);
+    const out = new Set();
+    for (const w of raw) {
+      if (w.length < 4 && !/^(cop31|idf|imf|fda|who|nato|hiv|oil|gas)$/.test(w)) continue;
+      if (ECHO_STOP_WORDS.has(w)) continue;
+      const stem = w.length <= 4 ? w : w.replace(/(ing|tion|ions|ment|ments|ness|ed|es|s)$/, '').slice(0, 6);
+      if (stem.length >= 3 && !ECHO_STOP_WORDS.has(stem)) out.add(stem);
+    }
+    return out;
+  };
+
   const clusteredLinksSet = new Set();
-  for (const c of enrichedClusters) {
-    for (const cov of (c.coverage || [])) {
-      if (cov?.link) clusteredLinksSet.add(cov.link);
+  const clusteredCanonicalSet = new Set();
+  const clusteredCleanTitles = new Set();
+  for (const rawCl of (fullPayload.clusters || [])) {
+    if (Array.isArray(rawCl?.seenArticleKeys)) {
+      for (const k of rawCl.seenArticleKeys) {
+        if (k) {
+          clusteredCanonicalSet.add(String(k).toLowerCase());
+          clusteredCleanTitles.add(String(k).toLowerCase());
+        }
+      }
     }
   }
+  const clusterEchoProfiles = [];
+  const specTitleStemFreq = new Map();
+  for (const c of enrichedClusters) {
+    const outletIds = new Set();
+    for (const cov of (c.coverage || [])) {
+      if (cov?.sourceId) outletIds.add(cov.sourceId);
+      if (cov?.link) {
+        clusteredLinksSet.add(cov.link);
+        clusteredCanonicalSet.add(canonicalUrl(cov.link));
+      }
+      if (cov?.title) {
+        clusteredCleanTitles.add(cleanHeadlineTitle(cov.title));
+      }
+    }
+    const latestMs = Date.parse(c.latestUpdateAt || c.firstSeenAt || '') || 0;
+    const titleStems = extractEchoStems(c.story || '');
+    const allStems = extractEchoStems(`${c.story || ''} ${c.summary || ''}`);
+    const specTitleStems = new Set([...titleStems].filter(s => !ECHO_BROAD_ACTORS.has(s)));
+    const specAllStems = new Set([...allStems].filter(s => !ECHO_BROAD_ACTORS.has(s)));
+    for (const s of specTitleStems) {
+      specTitleStemFreq.set(s, (specTitleStemFreq.get(s) || 0) + 1);
+    }
+    const loc = c.primaryLocation;
+    const countryIso = String(loc?.countryIso || loc?.iso || loc?.countryCode || '').toLowerCase();
+    const lat = typeof loc?.lat === 'number' ? loc.lat : null;
+    const lon = typeof loc?.lon === 'number' ? loc.lon : null;
+    clusterEchoProfiles.push({ outletIds, latestMs, titleStems, allStems, specTitleStems, specAllStems, rareTitleStems: new Set(), countryIso, lat, lon });
+  }
+  for (const prof of clusterEchoProfiles) {
+    for (const s of prof.specTitleStems) {
+      if (s.length >= 5 && (specTitleStemFreq.get(s) || 0) <= 2) {
+        prof.rareTitleStems.add(s);
+      }
+    }
+  }
+
+  const isArticleClusterEcho = (srcId, art, pubMs) => {
+    if (!art?.title || !art?.link) return true;
+    if (clusteredLinksSet.has(art.link)) return true;
+    const cUrl = canonicalUrl(art.link);
+    if (cUrl && clusteredCanonicalSet.has(cUrl)) return true;
+    const cTitle = cleanHeadlineTitle(art.title);
+    if (cTitle && clusteredCleanTitles.has(cTitle)) return true;
+
+    const artTitleStems = extractEchoStems(art.title);
+    const artAllStems = extractEchoStems(`${art.title} ${(art.description || '').slice(0, 180)}`);
+    if (artAllStems.size === 0) return false;
+
+    const artIso = String(art.loc?.iso || '').toLowerCase();
+    const artLat = typeof art.loc?.lat === 'number' ? art.loc.lat : null;
+    const artLon = typeof art.loc?.lon === 'number' ? art.loc.lon : null;
+
+    for (const prof of clusterEchoProfiles) {
+      if (prof.latestMs > 0 && pubMs > 0 && Math.abs(pubMs - prof.latestMs) > 96 * 3600 * 1000) continue;
+
+      const LARGE_COUNTRIES = new Set(['us', 'ru', 'cn', 'ca', 'br', 'au', 'in']);
+      const sameSmallCountry = Boolean(artIso && prof.countryIso && artIso === prof.countryIso && !LARGE_COUNTRIES.has(artIso));
+      const nearCoords = (artLat !== null && prof.lat !== null)
+        ? Math.hypot(artLat - prof.lat, artLon - prof.lon) <= 4.0
+        : false;
+      const geoCompatible = sameSmallCountry || nearCoords;
+
+      let shTitle = 0, shAll = 0, shSpecTitle = 0, shSpecAll = 0, shRareTitle = 0;
+      for (const s of artTitleStems) {
+        if (prof.titleStems.has(s)) shTitle++;
+        if (prof.specTitleStems.has(s)) shSpecTitle++;
+        if (prof.rareTitleStems.has(s)) shRareTitle++;
+      }
+      for (const s of artAllStems) {
+        if (prof.allStems.has(s)) shAll++;
+        if (prof.specAllStems.has(s)) shSpecAll++;
+      }
+
+      // Cross-country reaction echo on a distinctive named cluster (e.g. "COP31 failure" reaction from Beijing/UN/Fiji)
+      if (shRareTitle >= 1 && shSpecTitle >= 2) {
+        return true;
+      }
+
+      if (!geoCompatible && shSpecTitle < 3) continue;
+
+      // 1. Same-outlet follow-up/analysis on a story that outlet ALREADY covers in this cluster
+      if (prof.outletIds.has(srcId) && shSpecAll >= 2 && (shTitle >= 2 || shAll >= 3)) {
+        return true;
+      }
+      // 2. Cross-outlet echo of an already-clustered event
+      if ((shSpecTitle >= 2 && shSpecAll >= 3) || (geoCompatible && shSpecAll >= 3 && shSpecTitle >= 2 && shAll >= 4)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const scoopCutoffMs = Date.now() - (72 * 3600 * 1000);
   const rawScoopPool = [];
   const seenScoopNorm = new Set();
   for (const [srcId, srcObj] of Object.entries(sources)) {
     for (const art of (srcObj.articles || [])) {
-      if (!art.title || !art.link || clusteredLinksSet.has(art.link)) continue;
+      if (!art.title || !art.link) continue;
       const pubMs = Date.parse(art.pubDate || '') || 0;
       if (!pubMs || pubMs < scoopCutoffMs) continue;
       const f = art.factors;
       if (!Array.isArray(f) || f.length < 4) continue;
       const cat = (art.categoryGemini || art.category || 'world').toLowerCase();
-      if (['sports', 'entertainment', 'lifestyle'].includes(cat)) continue;
       const eb = typeof art.eventBase === 'number' ? art.eventBase : (art.sentimentScore || 0);
+      if (isNonNewsWireFeature(art, cat, f, eb)) continue;
+      if (isArticleClusterEcho(srcId, art, pubMs)) continue;
       if (f[1] >= 65 && f[2] >= 55 && (Math.abs(f[0]) >= 35 || Math.abs(eb) >= 0.35)) {
         const normT = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
         if (seenScoopNorm.has(normT)) continue;
@@ -2248,26 +2416,30 @@ function exportPublicJsonFeeds(fullPayload) {
   rawScoopPool.sort((a, b) => b.weight - a.weight);
   const rawScoops72h = rawScoopPool.slice(0, 60);
 
-  // Export standalone public/data/wire-map.json (48h geolocated unclustered wire dispatches, pre-sorted by signal weight for optional Isobar Map View layering)
+  // Export standalone public/data/wire-map.json (48h genuine hard-news geolocated unclustered scoops, scrubbed of features & cluster echoes)
   const wireCutoff48hMs = Date.now() - (48 * 3600 * 1000);
-  const wireMapItems = [];
+  const rawWireCandidates = [];
   const seenWireNorm = new Set();
   for (const [srcId, srcObj] of Object.entries(sources)) {
     const meta = OUTLET_META_MAP[srcId] || {};
     for (const art of (srcObj.articles || [])) {
-      if (!art.title || !art.link || clusteredLinksSet.has(art.link)) continue;
+      if (!art.title || !art.link) continue;
       if (!art.loc || typeof art.loc.lat !== 'number' || typeof art.loc.lon !== 'number') continue;
       const pubMs = Date.parse(art.pubDate || '') || 0;
       if (!pubMs || pubMs < wireCutoff48hMs) continue;
-      const normT = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
-      if (seenWireNorm.has(normT)) continue;
-      seenWireNorm.add(normT);
+      const cat = (art.categoryGemini || art.category || 'world').toLowerCase();
       const f = Array.isArray(art.factors) && art.factors.length >= 4 ? art.factors : null;
       const eb = typeof art.eventBase === 'number' ? art.eventBase : (typeof art.sentiment === 'number' ? art.sentiment : 0);
+      if (isNonNewsWireFeature(art, cat, f, eb)) continue;
       const weight = f
         ? Math.round(((f[1] * 0.45) + (f[2] * 0.45) + (Math.abs(f[0]) * 0.25)) * 10) / 10
         : Math.round(Math.abs(eb) * 100);
-      wireMapItems.push({
+      if (weight < 49.5 || (weight < 50.5 && (!f || Math.abs(Number(f[0]) || 0) < 30))) continue;
+      if (isArticleClusterEcho(srcId, art, pubMs)) continue;
+      const normT = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
+      if (seenWireNorm.has(normT)) continue;
+      seenWireNorm.add(normT);
+      rawWireCandidates.push({
         sourceId: srcId,
         sourceName: srcObj.name || meta.name || srcId,
         region: OUTLET_REGION_MAP[srcId] || 'GLOBAL',
@@ -2277,11 +2449,12 @@ function exportPublicJsonFeeds(fullPayload) {
         link: art.link,
         ...(isValidImage(art.imageUrl) ? { imageUrl: art.imageUrl } : {}),
         pubDate: art.pubDate,
-        category: (art.categoryGemini || art.category || 'world').toLowerCase(),
+        category: cat,
         sentiment: typeof art.sentiment === 'number' ? art.sentiment : eb,
         eventBase: eb,
         ...(f ? { factors: f } : {}),
         weight,
+        _specStems: [...extractEchoStems(art.title)].filter(s => !ECHO_BROAD_ACTORS.has(s)),
         primaryLocation: {
           name: art.loc.name,
           countryIso: art.loc.iso || null,
@@ -2291,7 +2464,32 @@ function exportPublicJsonFeeds(fullPayload) {
       });
     }
   }
-  wireMapItems.sort((a, b) => (b.weight - a.weight) || (Date.parse(b.pubDate) - Date.parse(a.pubDate)));
+  rawWireCandidates.sort((a, b) => (b.weight - a.weight) || (Date.parse(b.pubDate) - Date.parse(a.pubDate)));
+
+  // Keep strictly at most 1 highest-signal wire scoop per ~35km spot AND deduplicate cross-city coverage of the same unclustered event
+  const keptWire = [];
+  for (const cand of rawWireCandidates) {
+    if (keptWire.length >= 90) break;
+    const lat = cand.primaryLocation.lat;
+    const lon = cand.primaryLocation.lon;
+    const cosLat = Math.max(0.28, Math.cos((lat * Math.PI) / 180));
+    const isDupOrStacked = keptWire.some(kept => {
+      const dLat = kept.primaryLocation.lat - lat;
+      const dLon = (kept.primaryLocation.lon - lon) * cosLat;
+      if (Math.hypot(dLat, dLon) < 0.32) return true;
+      if (cand._specStems.length >= 2 && kept._specStems.length >= 2) {
+        let shared = 0;
+        for (const s of cand._specStems) {
+          if (kept._specStems.includes(s)) shared++;
+        }
+        if (shared >= 3 || (shared >= 2 && Math.min(cand._specStems.length, kept._specStems.length) === 2)) return true;
+      }
+      return false;
+    });
+    if (isDupOrStacked) continue;
+    keptWire.push(cand);
+  }
+  const wireMapItems = keptWire.map(({ _specStems, ...cleanCand }) => cleanCand);
   const wireMapPayload = {
     dataset: 'vibe-o-meter/wire-map',
     lastUpdated: nowIso,
