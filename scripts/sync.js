@@ -568,14 +568,11 @@ function resolveSyncServiceTier(keyObj) {
 }
 
 /**
- * Build an ordered [{ model, keyObj }] execution plan that exhausts independent Free-tier
- * model RPD buckets ($0) BEFORE stepping onto Paid Flex (50% off):
- * - 'editorial' (clustering, episode consolidation, summary briefings):
- *     FREE: gemini-3.8-flash -> gemini-3.6-flash -> gemini-3.5-flash-lite
- *     PAID (Flex 50% off): gemini-4-hydrogen -> gemini-3.5-flash-lite
- * - 'grading' (20m 4-factor numeric headline scoring):
- *     FREE: gemini-3.5-flash-lite -> gemini-3.1-flash-lite
- *     PAID (Flex 50% off): gemini-3.5-flash-lite -> gemini-4-hydrogen -> gemini-3.1-flash-lite
+ * Build an ordered [{ model, keyObj }] execution plan aligned to the Gemini 4 evaluation:
+ * - 'grading' (20m 4-factor grading + initial semantic clustering):
+ *     gemini-3.5-flash-lite [FREE, $0] -> gemini-3.5-flash-lite [PAID Flex, 50% off] -> gemini-4-hydrogen [PAID Flex, 50% off]
+ * - 'editorial' (longitudinal episode consolidation & whyItMatters/whatsNext synthesis):
+ *     gemini-4-hydrogen [PAID Flex, 50% off] -> gemini-3.8-flash [FREE] -> gemini-3.5-flash-lite [FREE / PAID Flex]
  */
 function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
   const rawTiers = getOrderedKeyTiers(apiKeyOrTiers);
@@ -593,30 +590,32 @@ function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
   if (taskType === 'grading') {
     if (freeKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
-      pushCandidate('gemini-3.1-flash-lite', freeKeyObj);
     }
     if (paidKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
       pushCandidate('gemini-4-hydrogen', paidKeyObj);
-      pushCandidate('gemini-3.1-flash-lite', paidKeyObj);
+    }
+    if (freeKeyObj) {
+      pushCandidate('gemini-3.8-flash', freeKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-3.5-flash-lite', 'gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.1-flash-lite']) {
+      for (const m of ['gemini-3.5-flash-lite', 'gemini-4-hydrogen', 'gemini-3.8-flash']) {
         pushCandidate(m, singleKeyObj);
       }
     }
   } else {
+    if (paidKeyObj) {
+      pushCandidate('gemini-4-hydrogen', paidKeyObj);
+    }
     if (freeKeyObj) {
       pushCandidate('gemini-3.8-flash', freeKeyObj);
-      pushCandidate('gemini-3.6-flash', freeKeyObj);
       pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
     }
     if (paidKeyObj) {
-      pushCandidate('gemini-4-hydrogen', paidKeyObj);
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-4-hydrogen', 'gemini-3.5-flash-lite']) {
+      for (const m of ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite']) {
         pushCandidate(m, singleKeyObj);
       }
     }
@@ -2076,7 +2075,7 @@ Return JSON array in format:
   const clusteringInput = `Dispatches:\n${promptLines}`;
 
   let clusters = null;
-  const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
+  const candidatePlan = buildModelTierPlan(apiKey, 'grading');
   for (const { model: modelName, keyObj } of candidatePlan) {
     if (clusters) break;
     const modelTierKey = `${modelName}:${keyObj.tier}`;
@@ -5362,13 +5361,13 @@ async function main() {
       } else if (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
         console.log(`[Backlog Trigger] 📥 Heavy ingest wave (${newlyAnalyzedCount} new articles analyzed, ${hoursSinceLastCluster.toFixed(1)}h since last cluster) — triggering immediate clustering pass.`);
       }
-      const editorialPlan = buildModelTierPlan(geminiKeyTiers, 'editorial');
-      const hasFreeEditorialSlot = editorialPlan.some(c => c.keyObj.tier === 'FREE');
-      if (hasFreeEditorialSlot && newlyAnalyzedCount > 0) {
+      const clusteringPlan = buildModelTierPlan(geminiKeyTiers, 'grading');
+      const hasFreeClusteringSlot = clusteringPlan[0]?.keyObj?.tier === 'FREE';
+      if (hasFreeClusteringSlot && newlyAnalyzedCount > 0) {
         console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
         await new Promise(r => setTimeout(r, 6000));
       }
-      const orderedTiersLabel = editorialPlan.map(c => `${c.model}[${c.keyObj.tier}]`).join(' -> ');
+      const orderedTiersLabel = clusteringPlan.map(c => `${c.model}[${c.keyObj.tier}]`).join(' -> ');
       const triggerReason = forceCluster
         ? 'forced'
         : (breakingBurst && hoursSinceLastCluster < clusterIntervalHours
