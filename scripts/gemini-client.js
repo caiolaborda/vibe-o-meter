@@ -194,7 +194,7 @@ async function callGeminiInteraction({
   const effectiveThinking = normalizeThinkingLevelForModel(model, thinkingLevel);
   const effectiveMaxTokens = normalizeMaxOutputTokens(model, maxOutputTokens);
 
-  const invokeTier = async (tier, budgetMs) => {
+  const invokeTier = async (tier, budgetMs, queueBudgetMs = 0) => {
     // Flex service_tier uses v1beta when previewed; Standard uses default GA v1
     const client = getGenAiClient(apiKey, tier === 'flex' ? 'v1beta' : undefined);
     const params = {
@@ -213,62 +213,158 @@ async function callGeminiInteraction({
         }
       } : {}),
       ...(tier === 'flex' ? { service_tier: 'flex' } : {}),
-      ...(typeof store === 'boolean' ? { store } : {})
+      ...(typeof store === 'boolean' ? { store } : {}),
+      stream: true
     };
 
-    const callPromise = client.interactions.create(params, budgetMs > 0 ? { timeout: budgetMs } : undefined);
-    const timeoutGuard = budgetMs > 0
-      ? new Promise((_, reject) => setTimeout(() => reject(new Error(`Gemini ${tier} call timed out after ${Math.round(budgetMs / 1000)}s`)), budgetMs + 500))
-      : null;
+    const abortCtrl = new AbortController();
+    let totalTimer = null;
+    let queueTimer = null;
+    let idleTimer = null;
+    let completedOk = false;
+    const IDLE_STALL_MS = 45000;
 
-    const interaction = timeoutGuard
-      ? await Promise.race([callPromise, timeoutGuard])
-      : await callPromise;
-
-    const rawText = extractInteractionText(interaction);
-    const usage = interaction?.usage || null;
-    if (usage?.total_cached_tokens > 0) {
-      console.log(`[Gemini Cache Hit] ${model} (${tier}): ${usage.total_cached_tokens}/${usage.total_input_tokens || '?'} input tokens cached`);
-    }
-
-    let parsed = null;
-    if (jsonMode) {
-      const cleaned = cleanJsonText(rawText, repairJsonArray);
-      parsed = JSON.parse(cleaned);
-    }
-
-    return {
-      text: rawText,
-      parsed,
-      usage,
-      modelUsed: model,
-      serviceTierUsed: tier
+    const resetIdleTimer = (rejectFn) => {
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        rejectFn(new Error(`Gemini ${tier} stream stalled after ${Math.round(IDLE_STALL_MS / 1000)}s without events`));
+      }, IDLE_STALL_MS);
     };
+
+    try {
+      const streamOutcome = await new Promise((resolve, reject) => {
+        let settled = false;
+        const safeReject = (err) => {
+          if (settled) return;
+          settled = true;
+          reject(err);
+        };
+        const safeResolve = (val) => {
+          if (settled) return;
+          settled = true;
+          resolve(val);
+        };
+
+        if (budgetMs > 0) {
+          totalTimer = setTimeout(() => {
+            safeReject(new Error(`Gemini ${tier} call timed out after ${Math.round(budgetMs / 1000)}s`));
+          }, budgetMs + 500);
+        }
+
+        if (queueBudgetMs > 0) {
+          queueTimer = setTimeout(() => {
+            safeReject(new Error(`Gemini ${tier} queue timed out after ${Math.round(queueBudgetMs / 1000)}s before first token`));
+          }, queueBudgetMs);
+        }
+
+        (async () => {
+          try {
+            const reqOpts = {
+              signal: abortCtrl.signal,
+              ...(budgetMs > 0 ? { timeout: budgetMs } : {})
+            };
+            const stream = await client.interactions.create(params, reqOpts);
+            let accText = '';
+            let completedInteraction = null;
+            let workerStarted = false;
+
+            for await (const rawEv of stream) {
+              if (settled) break;
+              const ev = (rawEv && rawEv.data && rawEv.data.event_type) ? rawEv.data : rawEv;
+              if (!ev) continue;
+
+              const evType = ev.event_type || '';
+              if (evType === 'error' || evType === 'interaction.failed' || ev.interaction?.status === 'failed') {
+                const errPayload = ev.error || ev.interaction?.error || ev;
+                const errMsg = typeof errPayload === 'string'
+                  ? errPayload
+                  : (errPayload?.message || JSON.stringify(errPayload));
+                const sseErr = new Error(`Gemini ${tier} error: ${errMsg}`);
+                const rawCode = Number(errPayload?.code || errPayload?.status);
+                sseErr.status = Number.isFinite(rawCode) && rawCode >= 400 ? rawCode : 503;
+                throw sseErr;
+              }
+
+              if (!workerStarted && (evType === 'step.start' || evType === 'step.delta')) {
+                workerStarted = true;
+                if (queueTimer) {
+                  clearTimeout(queueTimer);
+                  queueTimer = null;
+                }
+              }
+              if (workerStarted) {
+                resetIdleTimer(safeReject);
+              }
+
+              if (evType === 'step.delta' && ev.delta?.type === 'text' && typeof ev.delta.text === 'string') {
+                accText += ev.delta.text;
+              } else if (evType === 'interaction.completed') {
+                completedInteraction = ev.interaction || null;
+              }
+            }
+
+            safeResolve({ accText, completedInteraction });
+          } catch (innerErr) {
+            safeReject(innerErr);
+          }
+        })();
+      });
+
+      completedOk = true;
+      const rawText = (streamOutcome.accText && streamOutcome.accText.trim().length > 0)
+        ? streamOutcome.accText
+        : extractInteractionText(streamOutcome.completedInteraction);
+      const usage = streamOutcome.completedInteraction?.usage || null;
+      if (usage?.total_cached_tokens > 0) {
+        console.log(`[Gemini Cache Hit] ${model} (${tier}): ${usage.total_cached_tokens}/${usage.total_input_tokens || '?'} input tokens cached`);
+      }
+
+      let parsed = null;
+      if (jsonMode) {
+        const cleaned = cleanJsonText(rawText, repairJsonArray);
+        parsed = JSON.parse(cleaned);
+      }
+
+      return {
+        text: rawText,
+        parsed,
+        usage,
+        modelUsed: model,
+        serviceTierUsed: tier
+      };
+    } finally {
+      if (totalTimer) clearTimeout(totalTimer);
+      if (queueTimer) clearTimeout(queueTimer);
+      if (idleTimer) clearTimeout(idleTimer);
+      if (!completedOk) {
+        try { abortCtrl.abort(); } catch (_) {}
+      }
+    }
   };
 
   if (serviceTierMode === 'flex') {
-    return await invokeTier('flex', flexTimeoutMs || timeoutMs);
+    return await invokeTier('flex', timeoutMs || flexTimeoutMs, 0);
   }
 
   if (serviceTierMode === 'flex_with_fallback') {
     if (Date.now() < _flexCongestedUntilMs) {
-      return await invokeTier('standard', timeoutMs);
+      return await invokeTier('standard', timeoutMs, 0);
     }
-    const boundedFlexMs = Math.min(Number(flexTimeoutMs) || 18000, 18000);
+    const queueBudgetMs = Math.min(Math.max(Number(flexTimeoutMs) || 20000, 12000), 22000);
     const t0 = Date.now();
     try {
-      return await invokeTier('flex', boundedFlexMs);
+      return await invokeTier('flex', timeoutMs, queueBudgetMs);
     } catch (flexErr) {
       if (!isFlexFallbackEligibleError(flexErr)) {
         throw flexErr;
       }
       _flexCongestedUntilMs = Date.now() + 15 * 60 * 1000;
-      console.log(`[Gemini Flex -> Standard] ${model} Flex unavailable after ${Date.now() - t0}ms (${String(flexErr.message || '').slice(0, 90)}); circuit-breaking Flex for 15m and falling back to Standard.`);
-      return await invokeTier('standard', timeoutMs);
+      console.log(`[Gemini Flex -> Standard] ${model} Flex unavailable after ${Date.now() - t0}ms (${String(flexErr.message || '').slice(0, 100)}); circuit-breaking Flex for 15m and falling back to Standard.`);
+      return await invokeTier('standard', timeoutMs, 0);
     }
   }
 
-  return await invokeTier('standard', timeoutMs);
+  return await invokeTier('standard', timeoutMs, 0);
 }
 
 /**

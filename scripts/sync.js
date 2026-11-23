@@ -43,14 +43,23 @@ const parser = new Parser({
 const sentimentAnalyzer = new Sentiment();
 
 let lastGoogleNewsFetchMs = 0;
+let _googleNewsGate = Promise.resolve();
 
 async function fetchAndParseFeed(url) {
   if (url.includes('news.google.com')) {
-    const elapsed = Date.now() - lastGoogleNewsFetchMs;
-    if (elapsed < 1600) {
-      await new Promise(r => setTimeout(r, 1600 - elapsed));
+    const prevGate = _googleNewsGate;
+    let releaseGate;
+    _googleNewsGate = new Promise(resolve => { releaseGate = resolve; });
+    await prevGate;
+    try {
+      const elapsed = Date.now() - lastGoogleNewsFetchMs;
+      if (elapsed < 1600) {
+        await new Promise(r => setTimeout(r, 1600 - elapsed));
+      }
+      lastGoogleNewsFetchMs = Date.now();
+    } finally {
+      releaseGate();
     }
-    lastGoogleNewsFetchMs = Date.now();
   }
 
   const headerProfiles = [
@@ -985,7 +994,10 @@ function detectCrossRegionBreakingBurst(finalSources, previousClusters = [], las
 
       const cUrl = art.link ? canonicalUrl(art.link) : '';
       const cTitle = cleanHeadlineTitle(art.title || '');
-      const isFreshSinceLastCluster = (pubMs > lastClusterMs) || (!alreadyClusteredKeys.has(cUrl) && !alreadyClusteredKeys.has(cTitle));
+      const isUnclustered = !alreadyClusteredKeys.has(cUrl) && !alreadyClusteredKeys.has(cTitle);
+      const isFreshSinceLastCluster = lastClusterMs > 0
+        ? (pubMs > lastClusterMs && isUnclustered)
+        : isUnclustered;
 
       recentArticles.push({
         sourceId,
@@ -1091,13 +1103,17 @@ function extractCoherenceStems(str) {
     injured: 'injur', injuries: 'injur', wounded: 'injur', cuts: 'cut', cutting: 'cut', slashes: 'cut', reductions: 'cut'
   };
   const HIGH_SIGNAL_3LETTER = new Set([
-    'aid', 'war', 'ban', 'tax', 'oil', 'gas', 'fda', 'who', 'idf', 'doj', 'fbi', 'ice', 'epa', 'imf', 'gdp', 'ipo', 'ceo', 'jet', 'bus', 'dam', 'hiv'
+    'aid', 'war', 'ban', 'tax', 'oil', 'gas', 'fda', 'who', 'idf', 'doj', 'fbi', 'ice', 'epa', 'imf', 'gdp', 'ipo', 'ceo', 'jet', 'bus', 'dam', 'hiv', 'cop', 'faa', 'sec', 'dnc', 'gop', 'nhs'
   ]);
   const rawStr = stripDiacritics(str).replace(/\b(?:([A-Z])\.){2,}/g, (m) => m.replace(/\./g, ''));
-  const acronymTokens = (rawStr.match(/\b[A-Z]{2,5}\b/g) || [])
-    .map(a => a.toLowerCase())
-    .filter(a => !stop.has(a) && !/^q[1-4]$/.test(a))
-    .map(a => demonymMap[a] || a);
+  const copSummitTokens = /\bcop\d{2}\b/i.test(rawStr) ? ['cop'] : [];
+  const acronymTokens = [
+    ...copSummitTokens,
+    ...(rawStr.match(/\b[A-Z]{2,5}\b/g) || [])
+      .map(a => a.toLowerCase())
+      .filter(a => !stop.has(a) && !/^q[1-4]$/.test(a))
+      .map(a => demonymMap[a] || a)
+  ];
   return [
     ...acronymTokens,
     ...rawStr
@@ -1634,8 +1650,10 @@ function getEpisodeSpecificHeadlineStems(storyText, extraActorStems = null) {
 }
 
 function hasEpisodicPhaseMismatch(anchorStory, anchorFirstSeenMs, candidateText, newestCandidateMs = 0, anchorCluster = null) {
-  const ageGapHours = (anchorFirstSeenMs > 0 && newestCandidateMs > anchorFirstSeenMs)
-    ? (newestCandidateMs - anchorFirstSeenMs) / 3600000
+  const anchorLastDevMs = anchorCluster?.lastDevelopedAt ? (Date.parse(anchorCluster.lastDevelopedAt) || 0) : 0;
+  const phaseOriginMs = Math.max(anchorFirstSeenMs || 0, anchorLastDevMs);
+  const ageGapHours = (phaseOriginMs > 0 && newestCandidateMs > phaseOriginMs)
+    ? (newestCandidateMs - phaseOriginMs) / 3600000
     : 0;
   // If the anchor cluster IS itself a general Election-Day / Voting / Poll / Tally cluster (and not a narrow pre-election
   // debate, welfare handout, or endorsement episode), allow incoming voting, turnout, exit-poll, or result dispatches within 5 days (120h)
@@ -2104,8 +2122,15 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
   for (let i = 0; i < rawUnclustered.length; i++) {
     const a = rawUnclustered[i];
     for (let cIdx = 0; cIdx < activeClusterAnchors.length; cIdx++) {
+      if (matchedUnclusteredIndices.has(i) && matchedAnchorIndices.has(cIdx)) continue;
       const anc = activeClusterAnchors[cIdx];
       if (anc.outletPubMs.has(a.sourceId) && a.pubMs <= (anc.outletPubMs.get(a.sourceId) || 0) + 2 * 3600 * 1000) continue;
+      // Fast O(1) Set stem-overlap filter FIRST before running expensive country/episode regexes (50,000x faster!)
+      const shT = [...a.titleStems].filter(s => anc.titleStems.has(s) && (stemDocFreq.get(s) || 0) <= maxTitleStemDf);
+      const shA = [...a.allStems].filter(s => anc.allStems.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf);
+      const hasSpecificAnchorStem = shT.some(s => !GENERIC_CANDIDATE_STEMS.has(s)) || shA.filter(s => !GENERIC_CANDIDATE_STEMS.has(s)).length >= 2;
+      if (!hasSpecificAnchorStem || !(shT.length >= 2 || (shT.length >= 1 && shA.length >= 3))) continue;
+
       const ancFirstMs = anc.anchorCluster?.firstSeenAt ? Date.parse(anc.anchorCluster.firstSeenAt) : 0;
       if (hasEpisodicPhaseMismatch(anc.anchorStory || '', ancFirstMs, `${a.title || ''} ${a.description || ''}`, a.pubMs, anc.anchorCluster)) continue;
       if (hasDisjointSovereignCountryConflict(
@@ -2116,13 +2141,8 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
         stemDocFreq,
         maxRareTitleStemDf
       )) continue;
-      const shT = [...a.titleStems].filter(s => anc.titleStems.has(s) && (stemDocFreq.get(s) || 0) <= maxTitleStemDf);
-      const shA = [...a.allStems].filter(s => anc.allStems.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf);
-      const hasSpecificAnchorStem = shT.some(s => !GENERIC_CANDIDATE_STEMS.has(s)) || shA.filter(s => !GENERIC_CANDIDATE_STEMS.has(s)).length >= 2;
-      if (hasSpecificAnchorStem && (shT.length >= 2 || (shT.length >= 1 && shA.length >= 3))) {
-        matchedUnclusteredIndices.add(i);
-        matchedAnchorIndices.add(cIdx);
-      }
+      matchedUnclusteredIndices.add(i);
+      matchedAnchorIndices.add(cIdx);
     }
     for (let j = i + 1; j < rawUnclustered.length; j++) {
       const b = rawUnclustered[j];
@@ -2135,13 +2155,19 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
         matchedUnclusteredIndices.add(j);
       }
     }
-    // Also include top-10 very recent (<=24h) unclustered dispatches per outlet if they share >=2 stems with any peer
+    // Also include top-10 very recent (<=24h) unclustered dispatches per outlet if they share >=2 stems (at least 1 non-generic) with any peer
     if (a.rankInOutlet <= 10 && a.pubMs >= twentyFourHoursAgo && !matchedUnclusteredIndices.has(i)) {
       const hasAnyPeerPair = rawUnclustered.some((b, j) => {
         if (i === j || a.sourceId === b.sourceId) return false;
         let sh = 0;
-        for (const s of a.allStems) if (b.allStems.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf) sh++;
-        return sh >= 2;
+        let specificSh = 0;
+        for (const s of a.allStems) {
+          if (b.allStems.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf) {
+            sh++;
+            if (!GENERIC_CANDIDATE_STEMS.has(s)) specificSh++;
+          }
+        }
+        return sh >= 2 && specificSh >= 1;
       });
       if (hasAnyPeerPair) matchedUnclusteredIndices.add(i);
     }
@@ -2149,16 +2175,21 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
 
   // Sort matched unclustered dispatches newest-first so freshly corroborated 2-outlet leads across any region
   // (APAC, LATAM, MEA, EU, NA) sit at the top of the prompt and cluster immediately instead of waiting behind older 48h items
-  const sortedMatchedUnclustered = [...matchedUnclusteredIndices]
+  const allMatchedUnclustered = [...matchedUnclusteredIndices]
     .map(idx => rawUnclustered[idx])
     .sort((a, b) => (b.pubMs || 0) - (a.pubMs || 0));
+
+  const maxUnclusteredCandidates = (process.argv.includes('--recalc-24h') || process.argv.includes('--recalc-48h')) ? 1400 : 850;
+  const eighteenHoursAgo = Date.now() - (18 * 60 * 60 * 1000);
+  const recentMatchedCount = allMatchedUnclustered.filter(a => (a.pubMs || 0) >= eighteenHoursAgo).length;
+  const sortedMatchedUnclustered = allMatchedUnclustered.slice(0, Math.max(maxUnclusteredCandidates, Math.min(recentMatchedCount, 1050)));
 
   const candidates = [
     ...[...matchedAnchorIndices].map(idx => activeClusterAnchors[idx]),
     ...sortedMatchedUnclustered
   ];
 
-  console.log(`[Clusters] Smart candidate pool built: ${matchedAnchorIndices.size} active/dormant cluster anchors + ${matchedUnclusteredIndices.size} unclustered dispatches (${candidates.length} total items from ${rawUnclustered.length} unclustered 48h articles).`);
+  console.log(`[Clusters] Smart candidate pool built: ${matchedAnchorIndices.size} active/dormant cluster anchors + ${sortedMatchedUnclustered.length}/${allMatchedUnclustered.length} unclustered dispatches (${candidates.length} total items from ${rawUnclustered.length} unclustered 48h articles).`);
 
   if (candidates.length < 4) return previousClusters;
 
@@ -2228,7 +2259,7 @@ Return JSON array in format:
   const clusteringInput = `Dispatches:\n${promptLines}`;
 
   let clusters = null;
-  const candidatePlan = buildModelTierPlan(apiKey, 'grading');
+  const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
   for (const { model: modelName, keyObj } of candidatePlan) {
     if (clusters) break;
     const modelTierKey = `${modelName}:${keyObj.tier}`;
@@ -2244,8 +2275,8 @@ Return JSON array in format:
         jsonMode: true,
         repairJsonArray: true,
         serviceTierMode: resolveSyncServiceTier(keyObj),
-        flexTimeoutMs: 85000,
-        timeoutMs: 150000
+        flexTimeoutMs: 20000,
+        timeoutMs: 210000
       });
       if (Array.isArray(parsed) && parsed.length > 0) {
         clusters = parsed;
@@ -2254,9 +2285,15 @@ Return JSON array in format:
       }
     } catch (err) {
       const msg = String(err.message || err);
-      const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+      const msgLower = msg.toLowerCase();
+      const isProjectSpendCap = msgLower.includes('spending cap') || msgLower.includes('spend cap');
+      const isQuotaOrRateLimit = isProjectSpendCap || msg.includes('429') || msgLower.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msgLower.includes('rate limit');
       console.warn(`[Sync] Clustering attempt with ${modelName} [${keyObj.tier} key] failed: ${msg}`);
-      if (isQuotaOrRateLimit) {
+      if (isProjectSpendCap) {
+        for (const m of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen']) {
+          exhaustedModelTiers.add(`${m}:${keyObj.tier}`);
+        }
+      } else if (isQuotaOrRateLimit) {
         exhaustedModelTiers.add(modelTierKey);
         console.log(`[Clusters] Quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
       }
@@ -3253,6 +3290,8 @@ async function callGeminiDecisionsApi(apiKeyOrTiers, inputText, questions) {
   });
 
   for (const keyObj of activeTiers) {
+    const decisionTierKey = `gemini-decision-1:${keyObj.tier}`;
+    if (exhaustedModelTiers.has(decisionTierKey)) continue;
     try {
       const res = await new Promise((resolve, reject) => {
         const req = https.request({
@@ -3270,9 +3309,9 @@ async function callGeminiDecisionsApi(apiKeyOrTiers, inputText, questions) {
           resp.on('data', chunk => { raw += chunk; });
           resp.on('end', () => {
             try {
-              resolve({ status: resp.statusCode, data: JSON.parse(raw) });
+              resolve({ status: resp.statusCode, data: JSON.parse(raw), raw });
             } catch (e) {
-              resolve({ status: resp.statusCode, data: null });
+              resolve({ status: resp.statusCode, data: null, raw });
             }
           });
         });
@@ -3283,6 +3322,9 @@ async function callGeminiDecisionsApi(apiKeyOrTiers, inputText, questions) {
       });
       if (res.status === 200 && res.data && res.data.answers) {
         return res.data.answers;
+      }
+      if (res.status === 429 || (res.status === 403 && /quota|spend|rate/i.test(String(res.raw || '')))) {
+        exhaustedModelTiers.add(decisionTierKey);
       }
     } catch (err) {
       // Fall through to next key tier or graceful fallback
@@ -3450,19 +3492,42 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     }
   }
 
+  const GENERIC_PAIR_TEMPLATE_STEMS = new Set([
+    ...COMMON_HEADLINE_NON_ENTITY_STEMS,
+    'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'train', 'charg', 'releas', 'crash',
+    'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
+    'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
+    'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
+    'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study',
+    'united', 'state', 'americ', 'administr', 'white', 'house', 'feder', 'nation', 'global', 'world'
+  ]);
+  const maxClusterEntityFreq = Math.max(8, Math.min(18, Math.round(meta.length * 0.045)));
+
   for (let i = 0; i < meta.length; i++) {
     for (let j = i + 1; j < meta.length; j++) {
       // At least one of the pair should be within 72h (or have a pending update)
       if (meta[i].ageHours > 72 && meta[j].ageHours > 72 && !meta[i].c._pendingUpdate && !meta[j].c._pendingUpdate) continue;
-      const GENERIC_PAIR_TEMPLATE_STEMS = new Set([
-        ...COMMON_HEADLINE_NON_ENTITY_STEMS,
-        'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'train', 'charg', 'releas', 'crash',
-        'fire', 'attack', 'protes', 'court', 'judg', 'polic', 'arrest', 'strik', 'launch', 'approv',
-        'reject', 'elect', 'voter', 'campai', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist',
-        'presid', 'invest', 'probe', 'threat', 'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay',
-        'announ', 'reveal', 'confirm', 'report', 'discov', 'found', 'scient', 'astron', 'study',
-        'united', 'state', 'americ', 'administr', 'white', 'house', 'feder', 'nation', 'global', 'world'
+      // Fast O(1) Set stem-overlap check FIRST before expensive country regexes!
+      const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
+      if (sharedAll.length < 2) continue;
+      const hasSpecificEntityStem = sharedAll.some(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s) && (clusterStemFreq.get(s) || 0) <= maxClusterEntityFreq);
+      if (!hasSpecificEntityStem) continue;
+      const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
+      const crossTitleStems = new Set([
+        ...[...meta[i].titleStems].filter(s => meta[j].allStems.has(s)),
+        ...[...meta[j].titleStems].filter(s => meta[i].allStems.has(s))
       ]);
+      const specificSharedTitle = sharedTitle.filter(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s));
+      const specificSharedAll = sharedAll.filter(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s));
+      if (
+        !(
+          (specificSharedTitle.length >= 1 && sharedTitle.length >= 2) ||
+          (specificSharedTitle.length >= 1 && sharedAll.length >= 3 && specificSharedAll.length >= 2) ||
+          (crossTitleStems.size >= 2 && sharedAll.length >= 4 && specificSharedAll.length >= 3)
+        )
+      ) {
+        continue;
+      }
       const clA = meta[i].c;
       const clB = meta[j].c;
       if (
@@ -3471,28 +3536,9 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       ) {
         continue;
       }
-      const sharedTitle = [...meta[i].titleStems].filter(s => meta[j].titleStems.has(s));
-      const sharedAll = [...meta[i].allStems].filter(s => meta[j].allStems.has(s));
-      const crossTitleStems = new Set([
-        ...[...meta[i].titleStems].filter(s => meta[j].allStems.has(s)),
-        ...[...meta[j].titleStems].filter(s => meta[i].allStems.has(s))
-      ]);
-      const specificSharedTitle = sharedTitle.filter(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s));
-      const specificSharedAll = sharedAll.filter(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s));
-      const maxClusterEntityFreq = Math.max(8, Math.min(18, Math.round(meta.length * 0.045)));
-      const hasSpecificEntityStem = sharedAll.some(s => !GENERIC_PAIR_TEMPLATE_STEMS.has(s) && (clusterStemFreq.get(s) || 0) <= maxClusterEntityFreq);
-      if (
-        hasSpecificEntityStem &&
-        (
-          (specificSharedTitle.length >= 1 && sharedTitle.length >= 2) ||
-          (specificSharedTitle.length >= 1 && sharedAll.length >= 3 && specificSharedAll.length >= 2) ||
-          (crossTitleStems.size >= 2 && sharedAll.length >= 4 && specificSharedAll.length >= 3)
-        )
-      ) {
-        const isSeparateEpisodeOrSubject = hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxClusterEntityFreq);
-        const pairSpecScore = (specificSharedTitle.length * 10) + (sharedTitle.length * 4) + (specificSharedAll.length * 2) - (isSeparateEpisodeOrSubject ? 15 : 0);
-        candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll, specificSharedTitle, specificSharedAll, pairSpecScore, isSeparateEpisodeOrSubject });
-      }
+      const isSeparateEpisodeOrSubject = hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxClusterEntityFreq);
+      const pairSpecScore = (specificSharedTitle.length * 10) + (sharedTitle.length * 4) + (specificSharedAll.length * 2) - (isSeparateEpisodeOrSubject ? 15 : 0);
+      candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll, specificSharedTitle, specificSharedAll, pairSpecScore, isSeparateEpisodeOrSubject });
     }
   }
   candidatePairHints.sort((a, b) => (b.pairSpecScore || 0) - (a.pairSpecScore || 0));
@@ -4804,9 +4850,9 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
     const hasBriefing = Boolean(
       c.briefing &&
       c.briefing.whyItMatters &&
-      c.briefing.whyItMatters.length >= 210 &&
+      c.briefing.whyItMatters.length >= 80 &&
       c.briefing.whatsNext &&
-      c.briefing.whatsNext.length >= 130
+      c.briefing.whatsNext.length >= 50
     );
     if (!forceAll && c.summarySynthesizedSig === targetSig && hasPinpointLoc && hasBriefing) return;
 
@@ -4814,29 +4860,30 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
     const ageHours = newestMs > 0 ? Math.max(0, (nowMs - newestMs) / 3600000) : 999;
     if (!forceAll && !process.argv.includes('--polish-summaries') && ageHours > cutoffHours) return;
 
-    candidates.push({ idx, c, targetSig, newestMs, histLen: (c.evolutionHistory || []).length });
+    const missingBriefing = !c.briefing || !c.briefing.whyItMatters || !c.briefing.whatsNext ? 1 : 0;
+    candidates.push({ idx, c, targetSig, newestMs, missingBriefing, histLen: (c.evolutionHistory || []).length });
   });
 
   if (candidates.length === 0) return clusters;
 
-  // Prioritize recently updated & multi-stage evolving stories first
-  candidates.sort((a, b) => (b.newestMs - a.newestMs) || (b.histLen - a.histLen) || ((b.c.outletCount || 0) - (a.c.outletCount || 0)));
+  // Prioritize stories completely missing Why It Matters / What's Next first, then recently updated & multi-stage evolving stories
+  candidates.sort((a, b) => (b.missingBriefing - a.missingBriefing) || (b.newestMs - a.newestMs) || (b.histLen - a.histLen) || ((b.c.outletCount || 0) - (a.c.outletCount || 0)));
 
   const maxClustersThisRun = (forceAll || process.argv.includes('--polish-summaries'))
     ? candidates.length
-    : Math.min(candidates.length, 24);
+    : Math.min(candidates.length, 48);
   const selected = candidates.slice(0, maxClustersThisRun);
-  const batchSize = 6;
+  const batchSize = 8;
 
   let totalPolished = 0;
 
-  console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length} newly formed/updated cluster(s)...`);
+  console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length}/${candidates.length} cluster(s)...`);
 
   const batches = [];
   for (let offset = 0; offset < selected.length; offset += batchSize) {
     batches.push({ offset, batch: selected.slice(offset, offset + batchSize) });
   }
-  const SUMMARY_CONCURRENCY = 2;
+  const SUMMARY_CONCURRENCY = 3;
   for (let bGroup = 0; bGroup < batches.length; bGroup += SUMMARY_CONCURRENCY) {
     const groupSlice = batches.slice(bGroup, bGroup + SUMMARY_CONCURRENCY);
     await Promise.all(groupSlice.map(async ({ offset, batch }) => {
@@ -5187,28 +5234,49 @@ async function main() {
   const fetchedBySource = {};
   const unanalyzedArticles = [];
 
-  // 1. Fetch RSS Feeds (supports single feedUrl or multi-section curated feedUrls composites)
+  // 1. Fetch RSS Feeds concurrently (bounded pool of 8 + Google News rate gate) while merging deterministically in source order
   const syncFetchNowMs = Date.now();
-  for (const source of NEWS_SOURCES) {
-    try {
-      const urlsToFetch = Array.isArray(source.feedUrls) && source.feedUrls.length > 0
-        ? source.feedUrls
-        : [source.feedUrl];
-      console.log(`[RSS] Fetching ${source.name}${urlsToFetch.length > 1 ? ` (${urlsToFetch.length} sections)` : ''}...`);
-      const settled = await Promise.allSettled(urlsToFetch.map(u => fetchAndParseFeed(u)));
-      let fulfilledFeeds = settled.filter(r => r.status === 'fulfilled' && r.value);
-      if (fulfilledFeeds.length === 0 && source.fallbackFeedUrl) {
-        const primaryErr = settled.find(r => r.status === 'rejected')?.reason;
-        console.warn(`[RSS] Primary feed failed for ${source.name} (${primaryErr?.message || 'error'}) — retrying fallback feed...`);
-        const fbFeed = await fetchAndParseFeed(source.fallbackFeedUrl);
-        if (fbFeed) {
-          fulfilledFeeds = [{ status: 'fulfilled', value: fbFeed }];
+  const RSS_FETCH_CONCURRENCY = 8;
+  const rawFetchedByIdx = new Array(NEWS_SOURCES.length);
+  let nextRssIdx = 0;
+  await Promise.all(Array.from({ length: Math.min(RSS_FETCH_CONCURRENCY, NEWS_SOURCES.length) }, async () => {
+    while (nextRssIdx < NEWS_SOURCES.length) {
+      const idx = nextRssIdx++;
+      const source = NEWS_SOURCES[idx];
+      try {
+        const urlsToFetch = Array.isArray(source.feedUrls) && source.feedUrls.length > 0
+          ? source.feedUrls
+          : [source.feedUrl];
+        console.log(`[RSS] Fetching ${source.name}${urlsToFetch.length > 1 ? ` (${urlsToFetch.length} sections)` : ''}...`);
+        const settled = await Promise.allSettled(urlsToFetch.map(u => fetchAndParseFeed(u)));
+        let fulfilledFeeds = settled.filter(r => r.status === 'fulfilled' && r.value);
+        if (fulfilledFeeds.length === 0 && source.fallbackFeedUrl) {
+          const primaryErr = settled.find(r => r.status === 'rejected')?.reason;
+          console.warn(`[RSS] Primary feed failed for ${source.name} (${primaryErr?.message || 'error'}) — retrying fallback feed...`);
+          const fbFeed = await fetchAndParseFeed(source.fallbackFeedUrl);
+          if (fbFeed) {
+            fulfilledFeeds = [{ status: 'fulfilled', value: fbFeed }];
+          }
         }
+        if (fulfilledFeeds.length === 0) {
+          const firstErr = settled.find(r => r.status === 'rejected')?.reason;
+          throw new Error(firstErr?.message || 'All RSS endpoints failed');
+        }
+        rawFetchedByIdx[idx] = { ok: true, fulfilledFeeds };
+      } catch (err) {
+        rawFetchedByIdx[idx] = { ok: false, error: err };
       }
-      if (fulfilledFeeds.length === 0) {
-        const firstErr = settled.find(r => r.status === 'rejected')?.reason;
-        throw new Error(firstErr?.message || 'All RSS endpoints failed');
+    }
+  }));
+
+  for (let sIdx = 0; sIdx < NEWS_SOURCES.length; sIdx++) {
+    const source = NEWS_SOURCES[sIdx];
+    const fetchOutcome = rawFetchedByIdx[sIdx];
+    try {
+      if (!fetchOutcome || !fetchOutcome.ok) {
+        throw (fetchOutcome?.error || new Error('All RSS endpoints failed'));
       }
+      const fulfilledFeeds = fetchOutcome.fulfilledFeeds;
 
       const rawCombined = [];
       for (const fRes of fulfilledFeeds) {
@@ -5582,6 +5650,7 @@ async function main() {
   const hasHeavyBacklog = newlyAnalyzedCount >= 35 && hoursSinceLastCluster >= 1.0;
   const shouldRunClustering = forceCluster || sharedStoryClusters.length === 0 || hoursSinceLastCluster >= clusterIntervalHours || Boolean(breakingBurst) || hasHeavyBacklog;
 
+  let clusteringDidSucceed = false;
   if (shouldRunClustering) {
     try {
       if (breakingBurst && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
@@ -5589,7 +5658,7 @@ async function main() {
       } else if (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
         console.log(`[Backlog Trigger] 📥 Heavy ingest wave (${newlyAnalyzedCount} new articles analyzed, ${hoursSinceLastCluster.toFixed(1)}h since last cluster) — triggering immediate clustering pass.`);
       }
-      const clusteringPlan = buildModelTierPlan(geminiKeyTiers, 'grading');
+      const clusteringPlan = buildModelTierPlan(geminiKeyTiers, 'editorial');
       const hasFreeClusteringSlot = clusteringPlan[0]?.keyObj?.tier === 'FREE';
       if (hasFreeClusteringSlot && newlyAnalyzedCount > 0) {
         console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
@@ -5603,10 +5672,13 @@ async function main() {
           : (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours ? 'ingest-backlog' : 'scheduled'));
       console.log(`[Sync] Running cross-outlet story clustering (tiers: ${orderedTiersLabel}, reason: ${triggerReason}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
       const clusters = await clusterCrossOutletStories(finalSources, geminiKeyTiers, currentCache.sharedStoryClusters, { deferSummarySynthesis: true });
-      if (clusters && clusters.length > 0) {
+      if (clusters && clusters.length > 0 && clusters !== currentCache.sharedStoryClusters) {
         sharedStoryClusters = clusters;
+        clusteringDidSucceed = true;
         lastClusteredAt = new Date().toISOString();
         console.log(`[Sync] Successfully identified ${sharedStoryClusters.length} cross-outlet story clusters.`);
+      } else if (clusters === currentCache.sharedStoryClusters) {
+        console.warn('[Sync] Story clustering returned unchanged cache (insufficient candidates or upstream timeout) — preserving existing lastClusteredAt for retry.');
       }
     } catch (clusterErr) {
       console.warn('[Sync] Non-blocking story clustering notice:', clusterErr.message);
@@ -5695,7 +5767,14 @@ async function main() {
       }
     });
 
-    if (shouldRunClustering || process.argv.includes('--polish-summaries') || process.argv.includes('--polish-summaries-all')) {
+    const recentCutoffBriefingMs = Date.now() - 120 * 3600 * 1000;
+    const hasUnbriefedActiveClusters = sharedStoryClusters.some(cl => {
+      if (!cl || !Array.isArray(cl.coverage) || cl.coverage.length < 2) return false;
+      if (cl.briefing?.whyItMatters && cl.briefing?.whatsNext) return false;
+      const newestCovMs = Math.max(...cl.coverage.map(a => new Date(a.pubDate).getTime() || 0), 0);
+      return newestCovMs >= recentCutoffBriefingMs;
+    });
+    if (clusteringDidSucceed || hasUnbriefedActiveClusters || process.argv.includes('--polish-summaries') || process.argv.includes('--polish-summaries-all')) {
       try {
         await synthesizeIntegratedClusterSummaries(sharedStoryClusters, geminiKeyTiers, finalSources);
       } catch (sumErr) {
@@ -5735,7 +5814,7 @@ async function main() {
   // 6. Build Payloads (use true completion timestamp so Wire synced badge and 16m workflow cooldown reflect actual completion, not pre-clustering start)
   const completedNow = new Date();
   const completedAtIso = completedNow.toISOString();
-  if (shouldRunClustering && sharedStoryClusters.length > 0) {
+  if (clusteringDidSucceed && sharedStoryClusters.length > 0) {
     lastClusteredAt = completedAtIso;
     globalStats.lastClusteredAt = completedAtIso;
   }
