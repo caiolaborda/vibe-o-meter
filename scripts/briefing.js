@@ -155,18 +155,25 @@ async function generateDailyBriefing(options = {}) {
   ].join('\n');
 
   let briefingText = '';
-  const apiKey = process.env.GEMINI_PAID_API_KEY || process.env.GEMINI_API_KEY;
-  const envModel = (/^gemini-(?:1\.5|2\.|3\.8-flash)/.test(String(process.env.GEMINI_MODEL || '')))
-    ? 'gemini-4-hydrogen'
-    : process.env.GEMINI_MODEL;
-  const modelsToTry = [
-    envModel,
-    'gemini-4-hydrogen',
-    'gemini-3.8-flash',
-    'gemini-3.5-flash-lite'
-  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
+  const freeKey = process.env.GEMINI_API_KEY || null;
+  const paidKey = (process.env.GEMINI_PAID_API_KEY && process.env.GEMINI_PAID_API_KEY !== freeKey)
+    ? process.env.GEMINI_PAID_API_KEY
+    : null;
+  const candidatePlan = [];
+  if (freeKey) {
+    candidatePlan.push({ model: 'gemini-3.8-flash', key: freeKey, tier: 'FREE' });
+    candidatePlan.push({ model: 'gemini-3.6-flash', key: freeKey, tier: 'FREE' });
+    candidatePlan.push({ model: 'gemini-3.5-flash-lite', key: freeKey, tier: 'FREE' });
+  }
+  if (paidKey) {
+    candidatePlan.push({ model: 'gemini-4-hydrogen', key: paidKey, tier: 'PAID' });
+    candidatePlan.push({ model: 'gemini-3.5-flash-lite', key: paidKey, tier: 'PAID' });
+  } else if (!freeKey && process.env.GEMINI_PAID_API_KEY) {
+    candidatePlan.push({ model: 'gemini-4-hydrogen', key: process.env.GEMINI_PAID_API_KEY, tier: 'PAID' });
+    candidatePlan.push({ model: 'gemini-3.5-flash-lite', key: process.env.GEMINI_PAID_API_KEY, tier: 'PAID' });
+  }
 
-  if (apiKey) {
+  if (candidatePlan.length > 0) {
     const briefingSystemInstruction = `You are a dry, effortlessly witty editorial columnist (think Charlie Brooker, Douglas Adams, Marina Hyde, Weekend Update) writing the daily 2-sentence front-page executive briefing for "There's No Such Thing As Good News".
 
 HOW TO USE THE FULL MENU OF STORIES & CONTEXT BELOW:
@@ -205,17 +212,17 @@ Return ONLY valid JSON in this exact format:
 
     const briefingInput = `TODAY'S FULL MENU OF CLUSTERS, STORIES, CONTEXT & URLS:\n${topClusterLines}\n${sampleHeadlines}`;
 
-    for (const modelName of modelsToTry) {
+    for (const { model: modelName, key: candidateKey, tier } of candidatePlan) {
       try {
         const { parsed } = await callGeminiInteraction({
-          apiKey,
+          apiKey: candidateKey,
           model: modelName,
           systemInstruction: briefingSystemInstruction,
           input: briefingInput,
           thinkingLevel: modelName.includes('flash-lite') ? 'low' : 'medium',
           maxOutputTokens: 32768,
           jsonMode: true,
-          serviceTierMode: process.env.GEMINI_SYNC_FLEX === '0' ? 'standard' : 'flex_with_fallback',
+          serviceTierMode: tier === 'FREE' ? 'standard' : (process.env.GEMINI_SYNC_FLEX === '0' ? 'standard' : 'flex_with_fallback'),
           flexTimeoutMs: 75000,
           timeoutMs: 120000
         });
@@ -223,11 +230,11 @@ Return ONLY valid JSON in this exact format:
         const text = chosen.trim().replace(/^["']|["']$/g, '');
         if (text && text.length > 20) {
           briefingText = text;
-          console.log(`[Briefing] Generated via Gemini (${modelName}):`, briefingText);
+          console.log(`[Briefing] Generated via Gemini (${modelName} [${tier} key]):`, briefingText);
           break;
         }
       } catch (err) {
-        console.warn(`[Briefing] Model ${modelName} failed:`, err.message);
+        console.warn(`[Briefing] Model ${modelName} [${tier} key] failed:`, err.message);
       }
     }
   }

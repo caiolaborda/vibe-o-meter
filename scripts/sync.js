@@ -495,24 +495,14 @@ function computeFourFactorScore(match) {
   };
 }
 
-// Track if the Free Tier key hit a quota/rate-limit during this process run so subsequent calls skip straight to Paid fallback
-let freeKeyExhaustedThisRun = false;
-// Per-model:tier circuit breaker so a model hitting 429 daily quota is skipped immediately on all subsequent batches
+// Per-model:tier circuit breaker so a single model hitting its Free RPD cap never locks out other Free models
 const exhaustedModelTiers = new Set();
 
 function getOrderedKeyTiers(apiKeyOrTiers) {
   if (Array.isArray(apiKeyOrTiers)) {
-    const valid = apiKeyOrTiers.filter(t => t && t.key);
-    if (freeKeyExhaustedThisRun && valid.length > 1) {
-      return valid.filter(t => t.tier !== 'FREE').concat(valid.filter(t => t.tier === 'FREE'));
-    }
-    return valid;
+    return apiKeyOrTiers.filter(t => t && t.key);
   }
   return apiKeyOrTiers ? [{ key: apiKeyOrTiers, tier: 'PRIMARY' }] : [];
-}
-
-function isPaidOnlyModel(modelName) {
-  return String(modelName || '').toLowerCase().startsWith('gemini-4-');
 }
 
 function resolveSyncServiceTier(keyObj) {
@@ -520,16 +510,69 @@ function resolveSyncServiceTier(keyObj) {
   return process.env.GEMINI_SYNC_FLEX === '0' ? 'standard' : 'flex_with_fallback';
 }
 
+/**
+ * Build an ordered [{ model, keyObj }] execution plan that exhausts independent Free-tier
+ * model RPD buckets ($0) BEFORE stepping onto Paid Flex (50% off):
+ * - 'editorial' (clustering, episode consolidation, summary briefings):
+ *     FREE: gemini-3.8-flash -> gemini-3.6-flash -> gemini-3.5-flash-lite
+ *     PAID (Flex 50% off): gemini-4-hydrogen -> gemini-3.5-flash-lite
+ * - 'grading' (20m 4-factor numeric headline scoring):
+ *     FREE: gemini-3.5-flash-lite -> gemini-3.1-flash-lite
+ *     PAID (Flex 50% off): gemini-3.5-flash-lite -> gemini-4-hydrogen -> gemini-3.1-flash-lite
+ */
+function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
+  const rawTiers = getOrderedKeyTiers(apiKeyOrTiers);
+  const freeKeyObj = rawTiers.find(t => t.tier === 'FREE') || null;
+  const paidKeyObj = rawTiers.find(t => t.tier === 'PAID') || null;
+  const singleKeyObj = (!freeKeyObj && !paidKeyObj) ? rawTiers[0] : null;
+
+  const plan = [];
+  const pushCandidate = (model, keyObj) => {
+    if (!keyObj || !keyObj.key) return;
+    if (exhaustedModelTiers.has(`${model}:${keyObj.tier}`)) return;
+    plan.push({ model, keyObj });
+  };
+
+  if (taskType === 'grading') {
+    if (freeKeyObj) {
+      pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
+      pushCandidate('gemini-3.1-flash-lite', freeKeyObj);
+    }
+    if (paidKeyObj) {
+      pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
+      pushCandidate('gemini-4-hydrogen', paidKeyObj);
+      pushCandidate('gemini-3.1-flash-lite', paidKeyObj);
+    }
+    if (singleKeyObj) {
+      for (const m of ['gemini-3.5-flash-lite', 'gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.1-flash-lite']) {
+        pushCandidate(m, singleKeyObj);
+      }
+    }
+  } else {
+    if (freeKeyObj) {
+      pushCandidate('gemini-3.8-flash', freeKeyObj);
+      pushCandidate('gemini-3.6-flash', freeKeyObj);
+      pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
+    }
+    if (paidKeyObj) {
+      pushCandidate('gemini-4-hydrogen', paidKeyObj);
+      pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
+    }
+    if (singleKeyObj) {
+      for (const m of ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-4-hydrogen', 'gemini-3.5-flash-lite']) {
+        pushCandidate(m, singleKeyObj);
+      }
+    }
+  }
+
+  return plan;
+}
+
 // Structured Gemini sentiment analysis with cross-outlet batching & 4-Factor First-Principles Formula
 async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, customBatchSize, existingEvaluatedPool = []) {
   const keyTiers = getOrderedKeyTiers(apiKeyOrTiers);
-  // Default to gemini-3.5-flash-lite first so all batches across the day use one consistent high-quota model (zero cross-model variance, no 20-RPD cap stalls)
-  const modelsToTry = [
-    'gemini-3.5-flash-lite',
-    'gemini-4-hydrogen',
-    'gemini-3.8-flash',
-    'gemini-3.1-flash-lite'
-  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
+  // Keep 20m numeric 4-factor grading anchored on Flash-Lite first (zero cross-model baseline drift + preserves 3.8/3.6 Free RPD for clustering & synthesis)
+  const initialPlan = buildModelTierPlan(apiKeyOrTiers, 'grading');
 
   // Pre-tokenize recent 4-factor articles from the last 36 hours for verified same-incident calibration
   const recentCutoffMs = Date.now() - (36 * 60 * 60 * 1000);
@@ -579,7 +622,7 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
   const orderedHeadlines = interleaveByOutlet(headlines);
   const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || 50;
   const allResults = [];
-  let modelUsed = modelsToTry[0];
+  let modelUsed = initialPlan[0]?.model || 'gemini-3.5-flash-lite';
   let tierUsed = keyTiers[0]?.tier || 'PRIMARY';
 
   for (let i = 0; i < orderedHeadlines.length; i += BATCH_SIZE) {
@@ -640,101 +683,92 @@ Return ONLY valid JSON.`;
     const batchInput = `Articles:\n${JSON.stringify(promptData, null, 2)}`;
 
     let batchSuccess = false;
-    const activeTiers = getOrderedKeyTiers(apiKeyOrTiers);
-    for (const modelName of modelsToTry) {
+    const candidatePlan = buildModelTierPlan(apiKeyOrTiers, 'grading');
+    for (const { model: modelName, keyObj } of candidatePlan) {
       if (batchSuccess) break;
-      for (const keyObj of activeTiers) {
-        if (batchSuccess) break;
-        if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
-        const modelTierKey = `${modelName}:${keyObj.tier}`;
-        if (exhaustedModelTiers.has(modelTierKey)) continue;
-        const maxAttempts = keyObj.tier === 'FREE' && activeTiers.length > 1 ? 1 : 2;
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-          try {
-            console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} [${keyObj.tier} key] (attempt ${attempt}/${maxAttempts})...`);
-            const { parsed } = await callGeminiInteraction({
-              apiKey: keyObj.key,
-              model: modelName,
-              systemInstruction: prompt,
-              input: batchInput,
-              thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-              maxOutputTokens: 65536,
-              jsonMode: true,
-              repairJsonArray: true,
-              serviceTierMode: resolveSyncServiceTier(keyObj),
-              flexTimeoutMs: 75000,
-              timeoutMs: 120000
-            });
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              let matchedInBatch = 0;
-              chunk.forEach((item, idx) => {
-                const match = parsed.find(r => r && r.index === idx);
-                // Never fabricate a 0.00 fallback if an item was omitted or truncated
-                const requiresTranslation = Boolean(item.lang || NATIVE_LANG_SOURCES.has(item.sourceId));
-                if (!match || typeof match.polarity !== 'number' || !match.explanation || (requiresTranslation && (!match.englishTitle || match.englishTitle.trim().length <= 10))) {
-                  return;
-                }
-                matchedInBatch++;
-                const calc = computeFourFactorScore(match);
-                const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
-                const rawExp = String(match.explanation).replace(/\s*\[Event Base:.*$/, '');
-                const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
-                const cleanEnTitle = typeof match.englishTitle === 'string' && match.englishTitle.trim().length > 10 ? match.englishTitle.trim() : null;
-                const cleanEnDesc = typeof match.englishSummary === 'string' && match.englishSummary.trim().length > 20 ? match.englishSummary.trim() : null;
-                const effectiveTitle = cleanEnTitle || item.title;
-                allResults.push({
-                  sourceId: item.sourceId,
-                  title: item.title,
-                  ...(cleanEnTitle ? { englishTitle: cleanEnTitle } : {}),
-                  ...(cleanEnDesc ? { englishSummary: cleanEnDesc } : {}),
-                  link: item.link,
-                  sentiment: calc.score,
-                  eventBase: calc.eventBase,
-                  framingMod: calc.framingMod,
-                  factors: [calc.polarity, calc.reach, calc.permanence, calc.framing],
-                  category: match.category || 'other',
-                  explanation: rawExp + expSuffix,
-                  ...(cleanSummary ? { summary: cleanSummary } : {})
-                });
-                // Feed verified [polarity, reach, permanence] + headline into anchorCandidates for subsequent batches in this run
-                const itemTokens = getHeadlineTopicTokens(effectiveTitle);
-                if (itemTokens.length >= 2) {
-                  anchorCandidates.push({
-                    headline: effectiveTitle,
-                    factors: [calc.polarity, calc.reach, calc.permanence],
-                    tokens: new Set(itemTokens)
-                  });
-                }
+      const modelTierKey = `${modelName}:${keyObj.tier}`;
+      if (exhaustedModelTiers.has(modelTierKey)) continue;
+      const maxAttempts = keyObj.tier === 'FREE' && candidatePlan.length > 1 ? 1 : 2;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} [${keyObj.tier} key] (attempt ${attempt}/${maxAttempts})...`);
+          const { parsed } = await callGeminiInteraction({
+            apiKey: keyObj.key,
+            model: modelName,
+            systemInstruction: prompt,
+            input: batchInput,
+            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            maxOutputTokens: 65536,
+            jsonMode: true,
+            repairJsonArray: true,
+            serviceTierMode: resolveSyncServiceTier(keyObj),
+            flexTimeoutMs: 75000,
+            timeoutMs: 120000
+          });
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            let matchedInBatch = 0;
+            chunk.forEach((item, idx) => {
+              const match = parsed.find(r => r && r.index === idx);
+              // Never fabricate a 0.00 fallback if an item was omitted or truncated
+              const requiresTranslation = Boolean(item.lang || NATIVE_LANG_SOURCES.has(item.sourceId));
+              if (!match || typeof match.polarity !== 'number' || !match.explanation || (requiresTranslation && (!match.englishTitle || match.englishTitle.trim().length <= 10))) {
+                return;
+              }
+              matchedInBatch++;
+              const calc = computeFourFactorScore(match);
+              const expSuffix = ` [Event Base: ${calc.eventBase >= 0 ? '+' : ''}${calc.eventBase.toFixed(2)} | Editorial Framing: ${calc.framingMod >= 0 ? '+' : ''}${calc.framingMod.toFixed(2)}]`;
+              const rawExp = String(match.explanation).replace(/\s*\[Event Base:.*$/, '');
+              const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
+              const cleanEnTitle = typeof match.englishTitle === 'string' && match.englishTitle.trim().length > 10 ? match.englishTitle.trim() : null;
+              const cleanEnDesc = typeof match.englishSummary === 'string' && match.englishSummary.trim().length > 20 ? match.englishSummary.trim() : null;
+              const effectiveTitle = cleanEnTitle || item.title;
+              allResults.push({
+                sourceId: item.sourceId,
+                title: item.title,
+                ...(cleanEnTitle ? { englishTitle: cleanEnTitle } : {}),
+                ...(cleanEnDesc ? { englishSummary: cleanEnDesc } : {}),
+                link: item.link,
+                sentiment: calc.score,
+                eventBase: calc.eventBase,
+                framingMod: calc.framingMod,
+                factors: [calc.polarity, calc.reach, calc.permanence, calc.framing],
+                category: match.category || 'other',
+                explanation: rawExp + expSuffix,
+                ...(cleanSummary ? { summary: cleanSummary } : {})
               });
-              if (matchedInBatch < chunk.length) {
-                console.warn(`[Gemini] Partial batch: ${matchedInBatch}/${chunk.length} items returned (${chunk.length - matchedInBatch} left queued).`);
+              // Feed verified [polarity, reach, permanence] + headline into anchorCandidates for subsequent batches in this run
+              const itemTokens = getHeadlineTopicTokens(effectiveTitle);
+              if (itemTokens.length >= 2) {
+                anchorCandidates.push({
+                  headline: effectiveTitle,
+                  factors: [calc.polarity, calc.reach, calc.permanence],
+                  tokens: new Set(itemTokens)
+                });
               }
-              modelUsed = modelName;
-              tierUsed = keyObj.tier;
-              batchSuccess = true;
-              break;
+            });
+            if (matchedInBatch < chunk.length) {
+              console.warn(`[Gemini] Partial batch: ${matchedInBatch}/${chunk.length} items returned (${chunk.length - matchedInBatch} left queued).`);
             }
-          } catch (err) {
-            const msg = String(err.message || err);
-            const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
-            const isDemandSpike = isQuotaOrRateLimit || msg.includes('503') || msg.includes('high demand') || msg.includes('timed out');
-            console.warn(`[Gemini] Model ${modelName} [${keyObj.tier} key] attempt ${attempt}/${maxAttempts} warning:`, msg);
-            if (isQuotaOrRateLimit) {
-              exhaustedModelTiers.add(modelTierKey);
-              if (keyObj.tier === 'FREE' && activeTiers.length > 1) {
-                freeKeyExhaustedThisRun = true;
-                console.log('[Gemini] Free tier key reached rate/quota limit — switching to PAID fallback key...');
-              } else {
-                console.log(`[Gemini] Quota reached for ${modelName} [${keyObj.tier} key] — circuit-breaking model for remainder of run.`);
-              }
-              break;
-            }
-            if (attempt < maxAttempts) {
-              const waitMs = isDemandSpike ? 4000 : 2000;
-              await new Promise(r => setTimeout(r, waitMs));
-            } else {
-              exhaustedModelTiers.add(modelTierKey);
-            }
+            modelUsed = modelName;
+            tierUsed = keyObj.tier;
+            batchSuccess = true;
+            break;
+          }
+        } catch (err) {
+          const msg = String(err.message || err);
+          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+          const isDemandSpike = isQuotaOrRateLimit || msg.includes('503') || msg.includes('high demand') || msg.includes('timed out');
+          console.warn(`[Gemini] Model ${modelName} [${keyObj.tier} key] attempt ${attempt}/${maxAttempts} warning:`, msg);
+          if (isQuotaOrRateLimit) {
+            exhaustedModelTiers.add(modelTierKey);
+            console.log(`[Gemini] Quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
+            break;
+          }
+          if (attempt < maxAttempts) {
+            const waitMs = isDemandSpike ? 4000 : 2000;
+            await new Promise(r => setTimeout(r, waitMs));
+          } else {
+            exhaustedModelTiers.add(modelTierKey);
           }
         }
       }
@@ -1981,54 +2015,38 @@ Return JSON array in format:
 
   const clusteringInput = `Dispatches:\n${promptLines}`;
 
-  const modelsToTry = [
-    'gemini-3.5-flash-lite',
-    'gemini-4-hydrogen',
-    'gemini-3.8-flash',
-    'gemini-3.1-flash-lite'
-  ].filter((m, idx, arr) => m && arr.indexOf(m) === idx);
-
   let clusters = null;
-  const activeTiers = getOrderedKeyTiers(apiKey);
-  for (const modelName of modelsToTry) {
+  const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
+  for (const { model: modelName, keyObj } of candidatePlan) {
     if (clusters) break;
-    for (const keyObj of activeTiers) {
-      if (clusters) break;
-      if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
-      const maxAttempts = 1;
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-          const { parsed } = await callGeminiInteraction({
-            apiKey: keyObj.key,
-            model: modelName,
-            systemInstruction: prompt,
-            input: clusteringInput,
-            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-            maxOutputTokens: 65536,
-            jsonMode: true,
-            repairJsonArray: true,
-            serviceTierMode: resolveSyncServiceTier(keyObj),
-            flexTimeoutMs: 85000,
-            timeoutMs: 150000
-          });
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            clusters = parsed;
-            console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName} [${keyObj.tier} key].`);
-            break;
-          }
-        } catch (err) {
-          const msg = String(err.message || err);
-          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
-          console.warn(`[Sync] Clustering attempt ${attempt}/${maxAttempts} with ${modelName} [${keyObj.tier} key] failed: ${msg}`);
-          if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
-            freeKeyExhaustedThisRun = true;
-            console.log('[Clusters] Free tier key reached rate/quota limit — switching to PAID fallback key...');
-            break;
-          }
-          if (attempt < maxAttempts) {
-            await new Promise(r => setTimeout(r, 5000));
-          }
-        }
+    const modelTierKey = `${modelName}:${keyObj.tier}`;
+    if (exhaustedModelTiers.has(modelTierKey)) continue;
+    try {
+      const { parsed } = await callGeminiInteraction({
+        apiKey: keyObj.key,
+        model: modelName,
+        systemInstruction: prompt,
+        input: clusteringInput,
+        thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+        maxOutputTokens: 65536,
+        jsonMode: true,
+        repairJsonArray: true,
+        serviceTierMode: resolveSyncServiceTier(keyObj),
+        flexTimeoutMs: 85000,
+        timeoutMs: 150000
+      });
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        clusters = parsed;
+        console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName} [${keyObj.tier} key].`);
+        break;
+      }
+    } catch (err) {
+      const msg = String(err.message || err);
+      const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+      console.warn(`[Sync] Clustering attempt with ${modelName} [${keyObj.tier} key] failed: ${msg}`);
+      if (isQuotaOrRateLimit) {
+        exhaustedModelTiers.add(modelTierKey);
+        console.log(`[Clusters] Quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
       }
     }
   }
@@ -3590,36 +3608,33 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
 }`;
 
   try {
-    const activeTiers = getOrderedKeyTiers(apiKey);
-    const modelsToTry = ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite'];
+    const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
     let parsed = null;
-    for (const modelName of modelsToTry) {
+    for (const { model: modelName, keyObj } of candidatePlan) {
       if (parsed) break;
-      for (const keyObj of activeTiers) {
-        if (parsed) break;
-        if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
-        try {
-          const { parsed: respParsed } = await callGeminiInteraction({
-            apiKey: keyObj.key,
-            model: modelName,
-            input: prompt,
-            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-            maxOutputTokens: 65536,
-            jsonMode: true,
-            serviceTierMode: resolveSyncServiceTier(keyObj),
-            flexTimeoutMs: 85000,
-            timeoutMs: 120000
-          });
-          parsed = respParsed;
-          break;
-        } catch (tierErr) {
-          const msg = String(tierErr.message || tierErr);
-          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
-          console.warn(`[Clusters] Consolidation pass warning with ${modelName} [${keyObj.tier} key]: ${msg}`);
-          if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
-            freeKeyExhaustedThisRun = true;
-            console.log('[Clusters] Switching consolidation pass to PAID fallback key...');
-          }
+      const modelTierKey = `${modelName}:${keyObj.tier}`;
+      if (exhaustedModelTiers.has(modelTierKey)) continue;
+      try {
+        const { parsed: respParsed } = await callGeminiInteraction({
+          apiKey: keyObj.key,
+          model: modelName,
+          input: prompt,
+          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+          maxOutputTokens: 65536,
+          jsonMode: true,
+          serviceTierMode: resolveSyncServiceTier(keyObj),
+          flexTimeoutMs: 85000,
+          timeoutMs: 120000
+        });
+        parsed = respParsed;
+        console.log(`[Clusters] Episode consolidation pass completed via ${modelName} [${keyObj.tier} key].`);
+        break;
+      } catch (tierErr) {
+        const msg = String(tierErr.message || tierErr);
+        const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+        console.warn(`[Clusters] Consolidation pass warning with ${modelName} [${keyObj.tier} key]: ${msg}`);
+        if (isQuotaOrRateLimit) {
+          exhaustedModelTiers.add(modelTierKey);
         }
       }
     }
@@ -4548,8 +4563,6 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
   const selected = candidates.slice(0, maxClustersThisRun);
   const batchSize = 6;
 
-  const activeTiers = getOrderedKeyTiers(apiKey);
-  const modelsToTry = ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite'];
   let totalPolished = 0;
 
   console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length} newly formed/updated cluster(s)...`);
@@ -4646,35 +4659,35 @@ Return ONLY a valid JSON array matching this exact schema:
     const polishInput = `Clusters to synthesize:\n${clusterBlocks}`;
 
     let parsedBatch = null;
-    for (const modelName of modelsToTry) {
+    const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
+    for (const { model: modelName, keyObj } of candidatePlan) {
       if (parsedBatch) break;
-      for (const keyObj of activeTiers) {
-        if (parsedBatch) break;
-        if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
-        try {
-          const { parsed: arr } = await callGeminiInteraction({
-            apiKey: keyObj.key,
-            model: modelName,
-            systemInstruction: prompt,
-            input: polishInput,
-            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-            maxOutputTokens: 32768,
-            jsonMode: true,
-            repairJsonArray: true,
-            serviceTierMode: resolveSyncServiceTier(keyObj),
-            flexTimeoutMs: 80000,
-            timeoutMs: 120000
-          });
-          if (Array.isArray(arr) && arr.length > 0) {
-            parsedBatch = arr;
-          }
-        } catch (err) {
-          const msg = String(err.message || err);
-          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
-          console.warn(`[Clusters] Summary synthesis attempt (${modelName} / ${keyObj.tier}) notice: ${msg}`);
-          if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
-            freeKeyExhaustedThisRun = true;
-          }
+      const modelTierKey = `${modelName}:${keyObj.tier}`;
+      if (exhaustedModelTiers.has(modelTierKey)) continue;
+      try {
+        const { parsed: arr } = await callGeminiInteraction({
+          apiKey: keyObj.key,
+          model: modelName,
+          systemInstruction: prompt,
+          input: polishInput,
+          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+          maxOutputTokens: 32768,
+          jsonMode: true,
+          repairJsonArray: true,
+          serviceTierMode: resolveSyncServiceTier(keyObj),
+          flexTimeoutMs: 80000,
+          timeoutMs: 120000
+        });
+        if (Array.isArray(arr) && arr.length > 0) {
+          parsedBatch = arr;
+          console.log(`[Clusters] Summary batch ${Math.floor(offset / batchSize) + 1} synthesized via ${modelName} [${keyObj.tier} key].`);
+        }
+      } catch (err) {
+        const msg = String(err.message || err);
+        const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+        console.warn(`[Clusters] Summary synthesis attempt (${modelName} / ${keyObj.tier}) notice: ${msg}`);
+        if (isQuotaOrRateLimit) {
+          exhaustedModelTiers.add(modelTierKey);
         }
       }
     }
@@ -5283,11 +5296,13 @@ async function main() {
       } else if (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
         console.log(`[Backlog Trigger] 📥 Heavy ingest wave (${newlyAnalyzedCount} new articles analyzed, ${hoursSinceLastCluster.toFixed(1)}h since last cluster) — triggering immediate clustering pass.`);
       }
-      if (!freeKeyExhaustedThisRun && newlyAnalyzedCount > 0) {
+      const editorialPlan = buildModelTierPlan(geminiKeyTiers, 'editorial');
+      const hasFreeEditorialSlot = editorialPlan.some(c => c.keyObj.tier === 'FREE');
+      if (hasFreeEditorialSlot && newlyAnalyzedCount > 0) {
         console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
         await new Promise(r => setTimeout(r, 6000));
       }
-      const orderedTiersLabel = getOrderedKeyTiers(geminiKeyTiers).map(t => t.tier).join(' -> ');
+      const orderedTiersLabel = editorialPlan.map(c => `${c.model}[${c.keyObj.tier}]`).join(' -> ');
       const triggerReason = forceCluster
         ? 'forced'
         : (breakingBurst && hoursSinceLastCluster < clusterIntervalHours
