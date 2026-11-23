@@ -133,12 +133,30 @@ function isSheddableOrTimeoutError(err) {
   );
 }
 
+function isFlexFallbackEligibleError(err) {
+  if (isSheddableOrTimeoutError(err)) return true;
+  const msg = String(err?.message || err || '').toLowerCase();
+  const status = err?.status || err?.statusCode || 0;
+  if (status === 400 || status === 403 || status === 404) {
+    return (
+      msg.includes('service_tier') ||
+      msg.includes('service tier') ||
+      msg.includes('flex') ||
+      msg.includes('not supported') ||
+      msg.includes('not available') ||
+      msg.includes('permission_denied') ||
+      msg.includes('invalid_argument')
+    );
+  }
+  return msg.includes('service_tier') || msg.includes('flex');
+}
+
 /**
  * Call the GA Gemini Interactions API via @google/genai.
  * Supports:
  * - 'standard': direct Standard tier
  * - 'flex': Flex tier only (50% discount)
- * - 'flex_with_fallback': tries Flex tier first up to `flexTimeoutMs`, falling back immediately to Standard on 503/429/timeout.
+ * - 'flex_with_fallback': tries Flex tier first up to `flexTimeoutMs`, falling back immediately to Standard on 503/429/timeout or unsupported tier errors.
  */
 async function callGeminiInteraction({
   apiKey,
@@ -223,7 +241,7 @@ async function callGeminiInteraction({
     try {
       return await invokeTier('flex', flexTimeoutMs);
     } catch (flexErr) {
-      if (!isSheddableOrTimeoutError(flexErr)) {
+      if (!isFlexFallbackEligibleError(flexErr)) {
         throw flexErr;
       }
       console.log(`[Gemini Flex -> Standard] ${model} Flex unavailable after ${Date.now() - t0}ms (${String(flexErr.message || '').slice(0, 90)}); falling back to Standard.`);

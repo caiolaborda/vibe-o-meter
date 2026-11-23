@@ -41,7 +41,7 @@ let state = {
 
 let resolvedSources = {};
 
-// News Source Metadata with Origin Region, Country Codes and Visual Colors (60 Active + Legacy Archive IDs)
+// News Source Metadata with Origin Region, Country Codes and Visual Colors (64 Active + Legacy Archive IDs)
 const SOURCE_META = {
   // North America (9)
   nyt: { name: 'The New York Times', initials: 'NYT', color: '#1e293b', region: 'NA', regionName: 'North America', countryCode: 'us', flag: '🇺🇸' },
@@ -70,7 +70,7 @@ const SOURCE_META = {
   guardian: { name: 'The Guardian', initials: 'GD', color: '#005689', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   skynews: { name: 'Sky News', initials: 'SKY', color: '#f22613', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
   ft: { name: 'Financial Times', initials: 'FT', color: '#d97706', region: 'UK', regionName: 'United Kingdom', countryCode: 'gb', flag: '🇬🇧' },
-  // Europe (12)
+  // Europe (13)
   dw: { name: 'DW News', initials: 'DW', color: '#002b49', region: 'EU', regionName: 'Europe', countryCode: 'de', flag: '🇩🇪' },
   nzz: { name: 'Neue Zürcher Zeitung', initials: 'NZZ', color: '#1e3a8a', region: 'EU', regionName: 'Europe', countryCode: 'ch', flag: '🇨🇭' },
   france24: { name: 'France 24', initials: 'F24', color: '#009fe3', region: 'EU', regionName: 'Europe', countryCode: 'fr', flag: '🇫🇷' },
@@ -83,12 +83,14 @@ const SOURCE_META = {
   notesfrompoland: { name: 'Notes From Poland', initials: 'NFP', color: '#dc2626', region: 'EU', regionName: 'Europe', countryCode: 'pl', flag: '🇵🇱' },
   balkaninsight: { name: 'Balkan Insight', initials: 'BIR', color: '#334155', region: 'EU', regionName: 'Europe', countryCode: 'eu', flag: '🇪🇺' },
   errnews: { name: 'ERR News', initials: 'ERR', color: '#0284c7', region: 'EU', regionName: 'Europe', countryCode: 'ee', flag: '🇪🇪' },
-  // Middle East & North Africa (5)
+  radiosweden: { name: 'Radio Sweden', initials: 'RSW', color: '#0284c7', region: 'EU', regionName: 'Europe', countryCode: 'se', flag: '🇸🇪' },
+  // Middle East & North Africa (6)
   aljazeera: { name: 'Al Jazeera', initials: 'AJ', color: '#ff9900', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'qa', flag: '🇶🇦' },
   thenational: { name: 'The National', initials: 'NAT', color: '#0284c7', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'ae', flag: '🇦🇪' },
   timesofisrael: { name: 'The Times of Israel', initials: 'TOI', color: '#0369a1', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'il', flag: '🇮🇱' },
   dailynewsegypt: { name: 'Daily News Egypt', initials: 'DNE', color: '#b91c1c', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'eg', flag: '🇪🇬' },
   almonitor: { name: 'Al-Monitor', initials: 'ALM', color: '#0f766e', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'ae', flag: '🌍' },
+  turkishminute: { name: 'Turkish Minute', initials: 'TRM', color: '#dc2626', region: 'ME', regionName: 'Middle East & N. Africa', countryCode: 'tr', flag: '🇹🇷' },
   // Sub-Saharan Africa (4)
   africanews: { name: 'Africanews', initials: 'AFR', color: '#d97706', region: 'AF', regionName: 'Sub-Saharan Africa', countryCode: 'cg', flag: '🌍' },
   premiumtimes: { name: 'Premium Times', initials: 'PTN', color: '#15803d', region: 'AF', regionName: 'Sub-Saharan Africa', countryCode: 'ng', flag: '🇳🇬' },
@@ -99,7 +101,7 @@ const SOURCE_META = {
   ndtv: { name: 'NDTV', initials: 'NDT', color: '#e11d48', region: 'SA', regionName: 'South Asia', countryCode: 'in', flag: '🇮🇳' },
   scrollin: { name: 'Scroll.in', initials: 'SCR', color: '#c2410c', region: 'SA', regionName: 'South Asia', countryCode: 'in', flag: '🇮🇳' },
   dawn: { name: 'Dawn', initials: 'DWN', color: '#1e293b', region: 'SA', regionName: 'South Asia', countryCode: 'pk', flag: '🇵🇰' },
-  // Asia-Pacific (8)
+  // Asia-Pacific (10)
   abcau: { name: 'ABC News Australia', initials: 'ABC', color: '#0d9488', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
   smh: { name: 'Sydney Morning Herald', initials: 'SMH', color: '#0891b2', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'au', flag: '🇦🇺' },
   scmp: { name: 'South China Morning Post', initials: 'SCM', color: '#4f46e5', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'hk', flag: '🇭🇰' },
@@ -108,6 +110,8 @@ const SOURCE_META = {
   koreaherald: { name: 'The Korea Herald', initials: 'KRH', color: '#1e40af', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'kr', flag: '🇰🇷' },
   inquirer: { name: 'Philippine Daily Inquirer', initials: 'PDI', color: '#1d4ed8', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'ph', flag: '🇵🇭' },
   vnexpress: { name: 'VnExpress International', initials: 'VNE', color: '#9f1239', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'vn', flag: '🇻🇳' },
+  focustaiwan: { name: 'Focus Taiwan', initials: 'FTW', color: '#2563eb', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'tw', flag: '🇹🇼' },
+  cnnindonesia: { name: 'CNN Indonesia', initials: 'CNI', color: '#cc0000', region: 'APAC', regionName: 'Asia-Pacific', countryCode: 'id', flag: '🇮🇩' },
   // Global (6)
   reuters: { name: 'Reuters', initials: 'RTR', color: '#ff8000', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },
   ap: { name: 'Associated Press', initials: 'AP', color: '#ff0055', region: 'GLOBAL', regionName: 'Global', countryCode: 'un', flag: '🌐' },

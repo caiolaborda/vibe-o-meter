@@ -42,6 +42,31 @@ const parser = new Parser({
 });
 const sentimentAnalyzer = new Sentiment();
 
+async function fetchAndParseFeed(url) {
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; Vibe-O-Meter/2.0; +https://caiolaborda.github.io/vibe-o-meter/)',
+      'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*'
+    },
+    redirect: 'follow',
+    signal: AbortSignal.timeout(12000)
+  });
+  if (!res.ok) {
+    throw new Error(`Status code ${res.status}`);
+  }
+  const rawXml = await res.text();
+  const cleanXml = rawXml.replace(/^\uFEFF/, '').trim();
+  try {
+    return await parser.parseString(cleanXml);
+  } catch (parseErr) {
+    const repairedXml = cleanXml.replace(
+      /(<!\[CDATA\[[\s\S]*?\]\]>)|&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)/g,
+      (m, cdata) => (cdata ? cdata : '&amp;')
+    );
+    return await parser.parseString(repairedXml);
+  }
+}
+
 const NATIVE_LANG_SOURCES = new Map(NEWS_SOURCES.filter(s => s.lang && s.lang !== 'en').map(s => [s.id, s.lang]));
 
 const MAX_ARTICLES_PER_SOURCE = 500;
@@ -88,11 +113,11 @@ function cleanHeadlineTitle(title) {
 function needsCleanEditorialSummary(desc, title) {
   const rawD = sanitizeText(desc || '').trim();
   // Google News RSS descriptions are bare headline echoes ending with the outlet name (often from an earlier version of a rolling URL)
-  if (/\s+(Bloomberg\.com|Reuters|AP News|Associated Press|WSJ|The Wall Street Journal)\s*$/i.test(rawD) && !/[.!?]\s+[A-Z]/.test(rawD.replace(/\b(U\.S\.|U\.K\.|U\.N\.|St\.|Mr\.|Ms\.|Dr\.|Inc\.|Corp\.|Ltd\.)/g, ''))) {
+  if (/\s+(Bloomberg\.com|Reuters|AP News|Associated Press|WSJ|The Wall Street Journal|CNN|Focus Taiwan|CNA English News|The Times of Israel|Times of Israel)\s*$/i.test(rawD) && !/[.!?]\s+[A-Z]/.test(rawD.replace(/\b(U\.S\.|U\.K\.|U\.N\.|St\.|Mr\.|Ms\.|Dr\.|Inc\.|Corp\.|Ltd\.)/g, ''))) {
     return true;
   }
   const cleanD = rawD
-    .replace(/\s*[-–—|]?\s*(Bloomberg\.com|Bloomberg|Reuters|AP News|Associated Press|CNN|The Wall Street Journal|WSJ)\s*$/i, '')
+    .replace(/\s*[-–—|]?\s*(Bloomberg\.com|Bloomberg|Reuters|AP News|Associated Press|CNN|The Wall Street Journal|WSJ|Focus Taiwan|CNA English News|The Times of Israel|Times of Israel)\s*$/i, '')
     .trim();
   if (!cleanD || cleanD.length < 35) return true;
   if (/\[Event Base:/i.test(cleanD) || /^Event base\b/i.test(cleanD) || /\bframing\s*\([+-]?\d/i.test(cleanD)) return true;
@@ -486,6 +511,15 @@ function getOrderedKeyTiers(apiKeyOrTiers) {
   return apiKeyOrTiers ? [{ key: apiKeyOrTiers, tier: 'PRIMARY' }] : [];
 }
 
+function isPaidOnlyModel(modelName) {
+  return String(modelName || '').toLowerCase().startsWith('gemini-4-');
+}
+
+function resolveSyncServiceTier(keyObj) {
+  if (keyObj?.tier === 'FREE') return 'standard';
+  return process.env.GEMINI_SYNC_FLEX === '0' ? 'standard' : 'flex_with_fallback';
+}
+
 // Structured Gemini sentiment analysis with cross-outlet batching & 4-Factor First-Principles Formula
 async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, customBatchSize, existingEvaluatedPool = []) {
   const keyTiers = getOrderedKeyTiers(apiKeyOrTiers);
@@ -611,6 +645,7 @@ Return ONLY valid JSON.`;
       if (batchSuccess) break;
       for (const keyObj of activeTiers) {
         if (batchSuccess) break;
+        if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
         const modelTierKey = `${modelName}:${keyObj.tier}`;
         if (exhaustedModelTiers.has(modelTierKey)) continue;
         const maxAttempts = keyObj.tier === 'FREE' && activeTiers.length > 1 ? 1 : 2;
@@ -626,8 +661,8 @@ Return ONLY valid JSON.`;
               maxOutputTokens: 65536,
               jsonMode: true,
               repairJsonArray: true,
-              serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
-              flexTimeoutMs: 25000,
+              serviceTierMode: resolveSyncServiceTier(keyObj),
+              flexTimeoutMs: 75000,
               timeoutMs: 120000
             });
             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -1959,6 +1994,7 @@ Return JSON array in format:
     if (clusters) break;
     for (const keyObj of activeTiers) {
       if (clusters) break;
+      if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
       const maxAttempts = 1;
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
@@ -1971,8 +2007,8 @@ Return JSON array in format:
             maxOutputTokens: 65536,
             jsonMode: true,
             repairJsonArray: true,
-            serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
-            flexTimeoutMs: 30000,
+            serviceTierMode: resolveSyncServiceTier(keyObj),
+            flexTimeoutMs: 85000,
             timeoutMs: 150000
           });
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -3561,6 +3597,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       if (parsed) break;
       for (const keyObj of activeTiers) {
         if (parsed) break;
+        if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
         try {
           const { parsed: respParsed } = await callGeminiInteraction({
             apiKey: keyObj.key,
@@ -3569,8 +3606,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
             thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
             maxOutputTokens: 65536,
             jsonMode: true,
-            serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
-            flexTimeoutMs: 30000,
+            serviceTierMode: resolveSyncServiceTier(keyObj),
+            flexTimeoutMs: 85000,
             timeoutMs: 120000
           });
           parsed = respParsed;
@@ -4613,6 +4650,7 @@ Return ONLY a valid JSON array matching this exact schema:
       if (parsedBatch) break;
       for (const keyObj of activeTiers) {
         if (parsedBatch) break;
+        if (keyObj.tier === 'FREE' && isPaidOnlyModel(modelName) && activeTiers.some(t => t.tier === 'PAID')) continue;
         try {
           const { parsed: arr } = await callGeminiInteraction({
             apiKey: keyObj.key,
@@ -4623,16 +4661,18 @@ Return ONLY a valid JSON array matching this exact schema:
             maxOutputTokens: 32768,
             jsonMode: true,
             repairJsonArray: true,
-            serviceTierMode: process.env.GEMINI_SYNC_FLEX === '1' ? 'flex_with_fallback' : 'standard',
-            flexTimeoutMs: 22000,
-            timeoutMs: 75000
+            serviceTierMode: resolveSyncServiceTier(keyObj),
+            flexTimeoutMs: 80000,
+            timeoutMs: 120000
           });
           if (Array.isArray(arr) && arr.length > 0) {
             parsedBatch = arr;
           }
         } catch (err) {
-          console.warn(`[Clusters] Summary synthesis attempt (${modelName} / ${keyObj.tier}) notice: ${err.message}`);
-          if (keyObj.tier === 'FREE' && activeTiers.length > 1) {
+          const msg = String(err.message || err);
+          const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
+          console.warn(`[Clusters] Summary synthesis attempt (${modelName} / ${keyObj.tier}) notice: ${msg}`);
+          if (keyObj.tier === 'FREE' && isQuotaOrRateLimit && activeTiers.length > 1) {
             freeKeyExhaustedThisRun = true;
           }
         }
@@ -4866,8 +4906,16 @@ async function main() {
         ? source.feedUrls
         : [source.feedUrl];
       console.log(`[RSS] Fetching ${source.name}${urlsToFetch.length > 1 ? ` (${urlsToFetch.length} sections)` : ''}...`);
-      const settled = await Promise.allSettled(urlsToFetch.map(u => parser.parseURL(u)));
-      const fulfilledFeeds = settled.filter(r => r.status === 'fulfilled' && r.value);
+      const settled = await Promise.allSettled(urlsToFetch.map(u => fetchAndParseFeed(u)));
+      let fulfilledFeeds = settled.filter(r => r.status === 'fulfilled' && r.value);
+      if (fulfilledFeeds.length === 0 && source.fallbackFeedUrl) {
+        const primaryErr = settled.find(r => r.status === 'rejected')?.reason;
+        console.warn(`[RSS] Primary feed failed for ${source.name} (${primaryErr?.message || 'error'}) — retrying fallback feed...`);
+        const fbFeed = await fetchAndParseFeed(source.fallbackFeedUrl);
+        if (fbFeed) {
+          fulfilledFeeds = [{ status: 'fulfilled', value: fbFeed }];
+        }
+      }
       if (fulfilledFeeds.length === 0) {
         const firstErr = settled.find(r => r.status === 'rejected')?.reason;
         throw new Error(firstErr?.message || 'All RSS endpoints failed');
@@ -5218,10 +5266,10 @@ async function main() {
   //  (Mode 1) Global Cross-Region Breaking Burst (>=4 outlets across >=3 regions, or >=3 fresh across >=3 regions in 90m)
   //  (Mode 2) Regional Breaking Surge (>=5 outlets in 1-2 regions with >=3 fresh in 90m)
   //  (Mode 3) Heavy Ingest Backlog (>=35 newly analyzed articles this run and >=1.0h since last cluster)
-  //  (Mode 4) Regular Scheduled Cadence (default: every 2 hours, or via --force / --cluster)
+  //  (Mode 4) Regular Scheduled Cadence (default: every 1 hour, or via --force / --cluster)
   let sharedStoryClusters = currentCache.sharedStoryClusters || [];
   let lastClusteredAt = currentCache.lastClusteredAt || (currentCache.globalStats && currentCache.globalStats.lastClusteredAt) || null;
-  const clusterIntervalHours = Number(process.env.CLUSTER_INTERVAL_HOURS || 2);
+  const clusterIntervalHours = Number(process.env.CLUSTER_INTERVAL_HOURS || 1);
   const hoursSinceLastCluster = lastClusteredAt ? (now.getTime() - new Date(lastClusteredAt).getTime()) / (1000 * 60 * 60) : Infinity;
   const forceCluster = process.argv.includes('--force') || process.argv.includes('--cluster') || process.argv.includes('--recalc-24h');
   const breakingBurst = detectCrossRegionBreakingBurst(finalSources, sharedStoryClusters, lastClusteredAt, now.getTime());

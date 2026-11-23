@@ -215,9 +215,9 @@ Return ONLY valid JSON in this exact format:
           thinkingLevel: modelName.includes('flash-lite') ? 'low' : 'medium',
           maxOutputTokens: 32768,
           jsonMode: true,
-          serviceTierMode: 'flex_with_fallback',
-          flexTimeoutMs: 45000,
-          timeoutMs: 90000
+          serviceTierMode: process.env.GEMINI_SYNC_FLEX === '0' ? 'standard' : 'flex_with_fallback',
+          flexTimeoutMs: 75000,
+          timeoutMs: 120000
         });
         const chosen = (parsed.drafts && parsed.drafts[parsed.best_index ?? 0]) || (parsed.drafts && parsed.drafts[0]) || '';
         const text = chosen.trim().replace(/^["']|["']$/g, '');

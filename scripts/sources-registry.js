@@ -1,5 +1,5 @@
 /**
- * Canonical 60-Outlet Global Newsroom Registry & 9-Region Taxonomy
+ * Canonical 64-Outlet Global Newsroom Registry & 9-Region Taxonomy
  * Single source of truth consumed by:
  *   - scripts/sync.js (RSS ingestion, multi-section composites, native-lang translation, burst detection)
  *   - scripts/export-feeds.js (outlets.json metadata, regionRosterCounts, clusters.json regionsCovered)
@@ -285,7 +285,7 @@ const NEWS_SOURCES = [
     feedUrl: 'https://www.ft.com/world?format=rss'
   },
 
-  // ================= EUROPE (12) =================
+  // ================= EUROPE (13) =================
   {
     id: 'dw',
     name: 'DW News',
@@ -416,8 +416,18 @@ const NEWS_SOURCES = [
     feedUrl: 'https://news.err.ee/rss',
     excludeFluff: true
   },
+  {
+    id: 'radiosweden',
+    name: 'Radio Sweden',
+    initials: 'RSW',
+    color: '#0284c7',
+    region: 'EU',
+    countryCode: 'se',
+    flag: '🇸🇪',
+    feedUrl: 'https://api.sr.se/api/rss/program/2054'
+  },
 
-  // ================= MIDDLE EAST & NORTH AFRICA (5) =================
+  // ================= MIDDLE EAST & NORTH AFRICA (6) =================
   {
     id: 'aljazeera',
     name: 'Al Jazeera',
@@ -448,7 +458,8 @@ const NEWS_SOURCES = [
     region: 'ME',
     countryCode: 'il',
     flag: '🇮🇱',
-    feedUrl: 'https://www.timesofisrael.com/feed/'
+    feedUrl: 'https://www.timesofisrael.com/feed/',
+    fallbackFeedUrl: 'https://news.google.com/rss/search?q=site:timesofisrael.com+when:1d&hl=en-US&gl=US&ceid=US:en'
   },
   {
     id: 'dailynewsegypt',
@@ -470,6 +481,16 @@ const NEWS_SOURCES = [
     countryCode: 'ae',
     flag: '🌍',
     feedUrl: 'https://www.al-monitor.com/rss'
+  },
+  {
+    id: 'turkishminute',
+    name: 'Turkish Minute',
+    initials: 'TRM',
+    color: '#dc2626',
+    region: 'ME',
+    countryCode: 'tr',
+    flag: '🇹🇷',
+    feedUrl: 'https://www.turkishminute.com/feed/'
   },
 
   // ================= SUB-SAHARAN AFRICA (4) =================
@@ -556,7 +577,7 @@ const NEWS_SOURCES = [
     excludeFluff: true
   },
 
-  // ================= ASIA-PACIFIC (8) =================
+  // ================= ASIA-PACIFIC (10) =================
   {
     id: 'abcau',
     name: 'ABC News Australia',
@@ -653,6 +674,32 @@ const NEWS_SOURCES = [
     countryCode: 'vn',
     flag: '🇻🇳',
     feedUrl: 'https://e.vnexpress.net/rss/news.rss',
+    excludeFluff: true
+  },
+  {
+    id: 'focustaiwan',
+    name: 'Focus Taiwan',
+    initials: 'FTW',
+    color: '#2563eb',
+    region: 'APAC',
+    countryCode: 'tw',
+    flag: '🇹🇼',
+    feedUrl: 'https://news.google.com/rss/search?q=site:focustaiwan.tw+when:1d&hl=en-US&gl=US&ceid=US:en'
+  },
+  {
+    id: 'cnnindonesia',
+    name: 'CNN Indonesia',
+    initials: 'CNI',
+    color: '#cc0000',
+    region: 'APAC',
+    countryCode: 'id',
+    flag: '🇮🇩',
+    lang: 'id',
+    feedUrl: 'https://www.cnnindonesia.com/nasional/rss',
+    feedUrls: [
+      'https://www.cnnindonesia.com/nasional/rss',
+      'https://www.cnnindonesia.com/ekonomi/rss'
+    ],
     excludeFluff: true
   },
 
@@ -777,7 +824,7 @@ const ACTIVE_SOURCE_IDS = new Set(NEWS_SOURCES.map(s => s.id));
 
 const OUTLET_SUFFIX_PATTERN = NEWS_SOURCES
   .concat(Object.values(LEGACY_SOURCES))
-  .flatMap(s => [s.name, s.id === 'nyt' ? 'nyt' : null, s.id === 'ft' ? 'ft' : null, s.id === 'wsj' ? 'wsj' : null, s.id === 'scmp' ? 'scmp' : null, s.id === 'smh' ? 'smh' : null, s.id === 'ap' ? 'ap news' : null, s.id === 'cna' ? 'channel newsasia' : null])
+  .flatMap(s => [s.name, s.id === 'nyt' ? 'nyt' : null, s.id === 'ft' ? 'ft' : null, s.id === 'wsj' ? 'wsj' : null, s.id === 'scmp' ? 'scmp' : null, s.id === 'smh' ? 'smh' : null, s.id === 'ap' ? 'ap news' : null, s.id === 'cna' ? 'channel newsasia' : null, s.id === 'focustaiwan' ? 'cna english news' : null, s.id === 'timesofisrael' ? 'times of israel' : null])
   .filter(Boolean)
   .map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   .sort((a, b) => b.length - a.length)
