@@ -836,6 +836,9 @@ Return ONLY valid JSON.`;
           if (attempt < maxAttempts) {
             const waitMs = isDemandSpike ? 4000 : 2000;
             await new Promise(r => setTimeout(r, waitMs));
+          } else if (isDemandSpike && keyObj.tier === 'FREE') {
+            exhaustedModelTiers.add(modelTierKey);
+            console.log(`[Gemini] Free-tier high demand persisted for ${modelName} — failing over to next tier for remaining batches...`);
           }
         }
       }
@@ -3354,7 +3357,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     const cov = c.coverage || [];
     if (cov.length < 3) continue;
     const newestCovMs = Math.max(...cov.map(a => new Date(a.pubDate).getTime() || 0), 0);
-    const newestCovAgeHours = newestCovMs > 0 ? Math.max(0, (now - newestCovMs) / 3600000) : 999;
+    const newestCovAgeHours = newestCovMs > 0 ? Math.max(0, (nowMs - newestCovMs) / 3600000) : 999;
     if (meta[i].ageHours > 72 && newestCovAgeHours > 48) continue;
     const histArr = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
     const lastHistMs = Math.max(
