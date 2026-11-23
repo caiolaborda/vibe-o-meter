@@ -2213,9 +2213,7 @@ function exportPublicJsonFeeds(fullPayload) {
     'russia','moscow','putin','zelens','israel','netany','palest','gaza','iran','tehran','saudi','lebanon',
     'syria','turk','turkey','ankara','istanb','china','chines','beijin','japan','tokyo','kore','india','delhi',
     'pakist','austral','sydney','canad','ottawa','brazil','mexic','attack','strik','protes','court','judg',
-    'elect','market','econom','compan','health','drone','missil','rocket','shell','injur','kill','dead','death',
-    'damag','destro','casual','leav','target','photo','video','energy','power','force','milit','troop','border',
-    'region','oblast','polic','arrest','charg','lawsui','billio','millio','worker','union','climat','govern'
+    'elect','market','econom','compan','health'
   ]);
   const isNonNewsWireFeature = (art, cat, f, eb) => {
     if (['sports', 'entertainment', 'lifestyle'].includes(cat)) return true;
@@ -2224,15 +2222,15 @@ function exportPublicJsonFeeds(fullPayload) {
       return true;
     }
     const cleanT = String(art?.title || '').replace(/\s+-\s+[^-]+$/, '').trim();
-    if (!cleanT || cleanT.split(/\s+/).length < 4) return true;
+    if (!cleanT) return true;
     // Opinion column byline pipe (e.g. "... | Steven Greenhouse")
     if (/\s\|\s+[A-ZÀ-Ý][a-zà-ÿ]+(\s+[A-ZÀ-Ý][a-zà-ÿ]+){0,2}$/.test(cleanT)) return true;
-    // Profiles, interrogative explainers, roundups, podcasts, op-eds, live tickers
-    if (/^(meet\s+|how\s+|why\s+|what\s+|who\s+|can\s+|should\s+|could\s+|did\s+|is\s+|are\s+|will\s+|behind\s+|inside\s+|watch:|listen:|opinion:|editorial:|analysis:|explainer:|review:|podcast:|q&a:|letter:|live\s+ticker)/i.test(cleanT)) {
+    // Profiles, interrogative explainers, roundups, podcasts, op-eds
+    if (/^(meet\s+|how\s+|why\s+|what\s+|who\s+|can\s+|should\s+|could\s+|did\s+|is\s+|are\s+|will\s+|behind\s+|inside\s+|watch:|listen:|opinion:|editorial:|analysis:|explainer:|review:|podcast:|q&a:|letter:)/i.test(cleanT)) {
       return true;
     }
-    if (/:\s*(how|why|what|inside)\s+/i.test(cleanT)) return true;
-    if (/\b(here'?s why|here'?s what|what to know|what law says|what it means|what is at stake|what it is and what|and more top headlines|morning briefing|evening briefing|live updates|europe live|middle east latest|rams\s+suv|on\s+trial\s+for\s+murder)\b/i.test(cleanT)) {
+    if (/:\s*(how|why|what)\s+/i.test(cleanT)) return true;
+    if (/\b(here'?s why|here'?s what|what to know|what law says|what it means|what is at stake|what it is and what|and more top headlines|morning briefing|evening briefing|live updates|europe live|middle east latest)\b/i.test(cleanT)) {
       return true;
     }
     if (/:\s*study$/i.test(cleanT)) return true;
@@ -2334,20 +2332,18 @@ function exportPublicJsonFeeds(fullPayload) {
     for (const prof of clusterEchoProfiles) {
       if (prof.latestMs > 0 && pubMs > 0 && Math.abs(pubMs - prof.latestMs) > 96 * 3600 * 1000) continue;
 
-      // Same metro area (~55km): never treat a whole country (like 1,300km-wide Ukraine) as one city!
-      const nearCity = (artLat !== null && prof.lat !== null)
-        ? Math.hypot(artLat - prof.lat, artLon - prof.lon) <= 0.55
+      const LARGE_COUNTRIES = new Set(['us', 'ru', 'cn', 'ca', 'br', 'au', 'in']);
+      const sameSmallCountry = Boolean(artIso && prof.countryIso && artIso === prof.countryIso && !LARGE_COUNTRIES.has(artIso));
+      const nearCoords = (artLat !== null && prof.lat !== null)
+        ? Math.hypot(artLat - prof.lat, artLon - prof.lon) <= 4.0
         : false;
-      const geoCompatible = nearCity;
+      const geoCompatible = sameSmallCountry || nearCoords;
 
-      let shTitle = 0, shAll = 0, shSpecTitle = 0, shSpecAll = 0, shRareTitle = 0, hasEventCodeStem = false;
+      let shTitle = 0, shAll = 0, shSpecTitle = 0, shSpecAll = 0, shRareTitle = 0;
       for (const s of artTitleStems) {
         if (prof.titleStems.has(s)) shTitle++;
         if (prof.specTitleStems.has(s)) shSpecTitle++;
-        if (prof.rareTitleStems.has(s)) {
-          shRareTitle++;
-          if (/\d/.test(s)) hasEventCodeStem = true;
-        }
+        if (prof.rareTitleStems.has(s)) shRareTitle++;
       }
       for (const s of artAllStems) {
         if (prof.allStems.has(s)) shAll++;
@@ -2355,7 +2351,7 @@ function exportPublicJsonFeeds(fullPayload) {
       }
 
       // Cross-country reaction echo on a distinctive named cluster (e.g. "COP31 failure" reaction from Beijing/UN/Fiji)
-      if ((hasEventCodeStem && shAll >= 1) || (shRareTitle >= 1 && shSpecTitle >= 2)) {
+      if (shRareTitle >= 1 && shSpecTitle >= 2) {
         return true;
       }
 
@@ -2438,11 +2434,7 @@ function exportPublicJsonFeeds(fullPayload) {
       const weight = f
         ? Math.round(((f[1] * 0.45) + (f[2] * 0.45) + (Math.abs(f[0]) * 0.25)) * 10) / 10
         : Math.round(Math.abs(eb) * 100);
-      const polAbs = f ? Math.abs(Number(f[0]) || 0) : Math.round(Math.abs(eb) * 100);
-      const reachVal = f ? (Number(f[1]) || 0) : 35;
-      const passesMajorTier = weight >= 50.5;
-      const passesTownDispatchTier = weight >= 36 && polAbs >= 35 && reachVal >= 30;
-      if (!passesMajorTier && !passesTownDispatchTier) continue;
+      if (weight < 49.5 || (weight < 50.5 && (!f || Math.abs(Number(f[0]) || 0) < 30))) continue;
       if (isArticleClusterEcho(srcId, art, pubMs)) continue;
       const normT = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
       if (seenWireNorm.has(normT)) continue;
@@ -2474,17 +2466,17 @@ function exportPublicJsonFeeds(fullPayload) {
   }
   rawWireCandidates.sort((a, b) => (b.weight - a.weight) || (Date.parse(b.pubDate) - Date.parse(a.pubDate)));
 
-  // Keep strictly at most 1 highest-signal wire dispatch per ~25km town AND deduplicate cross-city coverage of the same unclustered event
+  // Keep strictly at most 1 highest-signal wire scoop per ~35km spot AND deduplicate cross-city coverage of the same unclustered event
   const keptWire = [];
   for (const cand of rawWireCandidates) {
-    if (keptWire.length >= 190) break;
+    if (keptWire.length >= 90) break;
     const lat = cand.primaryLocation.lat;
     const lon = cand.primaryLocation.lon;
     const cosLat = Math.max(0.28, Math.cos((lat * Math.PI) / 180));
     const isDupOrStacked = keptWire.some(kept => {
       const dLat = kept.primaryLocation.lat - lat;
       const dLon = (kept.primaryLocation.lon - lon) * cosLat;
-      if (Math.hypot(dLat, dLon) < 0.24) return true;
+      if (Math.hypot(dLat, dLon) < 0.32) return true;
       if (cand._specStems.length >= 2 && kept._specStems.length >= 2) {
         let shared = 0;
         for (const s of cand._specStems) {
