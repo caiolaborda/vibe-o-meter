@@ -10,6 +10,7 @@ const fs = require('fs');
 const { GoogleGenAI } = require('@google/genai');
 
 const MIN_THINKING_MAX_OUTPUT_TOKENS = 32768;
+let _flexCongestedUntilMs = 0;
 
 // Cache SDK client instances by apiKey + apiVersion
 const _clientCache = new Map();
@@ -250,14 +251,19 @@ async function callGeminiInteraction({
   }
 
   if (serviceTierMode === 'flex_with_fallback') {
+    if (Date.now() < _flexCongestedUntilMs) {
+      return await invokeTier('standard', timeoutMs);
+    }
+    const boundedFlexMs = Math.min(Number(flexTimeoutMs) || 18000, 18000);
     const t0 = Date.now();
     try {
-      return await invokeTier('flex', flexTimeoutMs);
+      return await invokeTier('flex', boundedFlexMs);
     } catch (flexErr) {
       if (!isFlexFallbackEligibleError(flexErr)) {
         throw flexErr;
       }
-      console.log(`[Gemini Flex -> Standard] ${model} Flex unavailable after ${Date.now() - t0}ms (${String(flexErr.message || '').slice(0, 90)}); falling back to Standard.`);
+      _flexCongestedUntilMs = Date.now() + 15 * 60 * 1000;
+      console.log(`[Gemini Flex -> Standard] ${model} Flex unavailable after ${Date.now() - t0}ms (${String(flexErr.message || '').slice(0, 90)}); circuit-breaking Flex for 15m and falling back to Standard.`);
       return await invokeTier('standard', timeoutMs);
     }
   }

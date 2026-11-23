@@ -5549,6 +5549,21 @@ async function main() {
     console.warn('[Sync] Non-blocking image enrichment notice:', imgErr.message);
   }
 
+  // Save an intermediate article checkpoint before clustering so graded articles are never lost if a runner times out
+  if (newlyAnalyzedCount > 0) {
+    try {
+      const checkpointPayload = {
+        ...currentCache,
+        lastUpdated: new Date().toISOString(),
+        analyzerUsed: activeAnalyzerLabel,
+        sources: finalSources,
+        timeSeries
+      };
+      fs.writeFileSync(DATA_FILE, JSON.stringify(checkpointPayload, null, 2), 'utf8');
+      console.log(`[Checkpoint] Saved ${newlyAnalyzedCount} newly graded articles to data/vibe-data.json prior to clustering.`);
+    } catch (_) {}
+  }
+
   // 5.7 Cross-Outlet Story Clustering (4-Mode Activation Matrix)
   // Activates on:
   //  (Mode 1) Global Cross-Region Breaking Burst (>=4 outlets across >=3 regions, or >=3 fresh across >=3 regions in 90m)
