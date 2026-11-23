@@ -458,8 +458,8 @@ const NEWS_SOURCES = [
     region: 'ME',
     countryCode: 'il',
     flag: '🇮🇱',
-    feedUrl: 'https://www.timesofisrael.com/feed/',
-    fallbackFeedUrl: 'https://news.google.com/rss/search?q=site:timesofisrael.com+when:1d&hl=en-US&gl=US&ceid=US:en'
+    feedUrl: 'https://feeds.feedburner.com/thetimesofisrael',
+    fallbackFeedUrl: 'https://www.timesofisrael.com/feed/'
   },
   {
     id: 'dailynewsegypt',
@@ -573,7 +573,8 @@ const NEWS_SOURCES = [
     region: 'SA',
     countryCode: 'pk',
     flag: '🇵🇰',
-    feedUrl: 'https://www.dawn.com/feeds/home',
+    feedUrl: 'https://feeds.feedburner.com/dawn-news',
+    fallbackFeedUrl: 'https://www.dawn.com/feeds/home',
     excludeFluff: true
   },
 
@@ -684,7 +685,8 @@ const NEWS_SOURCES = [
     region: 'APAC',
     countryCode: 'tw',
     flag: '🇹🇼',
-    feedUrl: 'https://news.google.com/rss/search?q=site:focustaiwan.tw+when:1d&hl=en-US&gl=US&ceid=US:en'
+    feedUrl: 'https://feeds.feedburner.com/rsscna/engnews',
+    fallbackFeedUrl: 'https://news.google.com/rss/search?q=site:focustaiwan.tw+when:1d&hl=en-US&gl=US&ceid=US:en'
   },
   {
     id: 'cnnindonesia',

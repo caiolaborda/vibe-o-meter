@@ -2232,13 +2232,75 @@ function exportPublicJsonFeeds(fullPayload) {
           category: cat,
           eventBase: eb,
           factors: f,
-          weight: Math.round(weight * 10) / 10
+          weight: Math.round(weight * 10) / 10,
+          ...(art.loc && typeof art.loc.lat === 'number' && typeof art.loc.lon === 'number' ? {
+            primaryLocation: {
+              name: art.loc.name,
+              countryIso: art.loc.iso || null,
+              lat: art.loc.lat,
+              lon: art.loc.lon
+            }
+          } : {})
         });
       }
     }
   }
   rawScoopPool.sort((a, b) => b.weight - a.weight);
   const rawScoops72h = rawScoopPool.slice(0, 60);
+
+  // Export standalone public/data/wire-map.json (48h geolocated unclustered wire dispatches, pre-sorted by signal weight for optional Isobar Map View layering)
+  const wireCutoff48hMs = Date.now() - (48 * 3600 * 1000);
+  const wireMapItems = [];
+  const seenWireNorm = new Set();
+  for (const [srcId, srcObj] of Object.entries(sources)) {
+    const meta = OUTLET_META_MAP[srcId] || {};
+    for (const art of (srcObj.articles || [])) {
+      if (!art.title || !art.link || clusteredLinksSet.has(art.link)) continue;
+      if (!art.loc || typeof art.loc.lat !== 'number' || typeof art.loc.lon !== 'number') continue;
+      const pubMs = Date.parse(art.pubDate || '') || 0;
+      if (!pubMs || pubMs < wireCutoff48hMs) continue;
+      const normT = art.title.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 50);
+      if (seenWireNorm.has(normT)) continue;
+      seenWireNorm.add(normT);
+      const f = Array.isArray(art.factors) && art.factors.length >= 4 ? art.factors : null;
+      const eb = typeof art.eventBase === 'number' ? art.eventBase : (typeof art.sentiment === 'number' ? art.sentiment : 0);
+      const weight = f
+        ? Math.round(((f[1] * 0.45) + (f[2] * 0.45) + (Math.abs(f[0]) * 0.25)) * 10) / 10
+        : Math.round(Math.abs(eb) * 100);
+      wireMapItems.push({
+        sourceId: srcId,
+        sourceName: srcObj.name || meta.name || srcId,
+        region: OUTLET_REGION_MAP[srcId] || 'GLOBAL',
+        countryCode: meta.countryCode || 'un',
+        title: art.title,
+        description: (art.description || '').slice(0, 180),
+        link: art.link,
+        ...(isValidImage(art.imageUrl) ? { imageUrl: art.imageUrl } : {}),
+        pubDate: art.pubDate,
+        category: (art.categoryGemini || art.category || 'world').toLowerCase(),
+        sentiment: typeof art.sentiment === 'number' ? art.sentiment : eb,
+        eventBase: eb,
+        ...(f ? { factors: f } : {}),
+        weight,
+        primaryLocation: {
+          name: art.loc.name,
+          countryIso: art.loc.iso || null,
+          lat: art.loc.lat,
+          lon: art.loc.lon
+        }
+      });
+    }
+  }
+  wireMapItems.sort((a, b) => (b.weight - a.weight) || (Date.parse(b.pubDate) - Date.parse(a.pubDate)));
+  const wireMapPayload = {
+    dataset: 'vibe-o-meter/wire-map',
+    lastUpdated: nowIso,
+    windowHours: 48,
+    count: wireMapItems.length,
+    highSignalCount: wireMapItems.filter(it => it.weight >= 60).length,
+    items: wireMapItems
+  };
+  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'wire-map.json'), JSON.stringify(wireMapPayload), 'utf8');
 
   const clustersPayload = {
     dataset: 'vibe-o-meter/clusters',
@@ -2703,6 +2765,12 @@ function exportPublicJsonFeeds(fullPayload) {
         description: 'Rolling historical sentiment trajectory snapshots across global and individual newsroom averages.',
         pointCount: (fullPayload.timeSeries || []).length
       },
+      wireMap: {
+        path: 'data/wire-map.json',
+        description: 'Standalone 48h geolocated unclustered wire dispatches sorted by signal weight for optional map-layer rendering.',
+        itemCount: wireMapItems.length,
+        highSignalCount: wireMapPayload.highSignalCount
+      },
       summary: {
         path: 'data/summary.json',
         description: 'Lightweight 24h/48h dashboard payload combining global stats, active story clusters, and recent outlet dispatches.'
@@ -2728,7 +2796,8 @@ function exportPublicJsonFeeds(fullPayload) {
     archivedClustersCount: archivedClustersList.length,
     goodNews24hCount: goodStories24h.length,
     goodNews7dCount: goodStories7d.length,
-    outletsCount: outletsList.length
+    outletsCount: outletsList.length,
+    wireMapCount: wireMapItems.length
   };
 }
 
@@ -2745,22 +2814,24 @@ if (require.main === module) {
     console.error('data/vibe-data.json not found.');
     process.exit(1);
   }
+  const stripArticleLocReplacer = (key, val) => (key === 'loc' ? undefined : val);
   const payload = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   const stats = exportPublicJsonFeeds(payload);
   fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf8');
-  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'data.json'), JSON.stringify(payload), 'utf8');
+  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'data.json'), JSON.stringify(payload, stripArticleLocReplacer), 'utf8');
   const summaryPath = path.join(PUBLIC_DATA_DIR, 'summary.json');
   if (fs.existsSync(summaryPath)) {
     const sumPayload = JSON.parse(fs.readFileSync(summaryPath, 'utf8'));
     sumPayload.sharedStoryClusters = stats.activeClusters48h;
     if (sumPayload.globalStats) sumPayload.globalStats.sharedStoryClusters = stats.activeClusters48h;
-    fs.writeFileSync(summaryPath, JSON.stringify(sumPayload), 'utf8');
+    fs.writeFileSync(summaryPath, JSON.stringify(sumPayload, stripArticleLocReplacer), 'utf8');
   }
   console.log('✅ Exported public JSON feeds to public/data/:', {
     clustersCount: stats.clustersCount,
     archivedClustersCount: stats.archivedClustersCount,
     goodNews24hCount: stats.goodNews24hCount,
     goodNews7dCount: stats.goodNews7dCount,
-    outletsCount: stats.outletsCount
+    outletsCount: stats.outletsCount,
+    wireMapCount: stats.wireMapCount
   });
 }

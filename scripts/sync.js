@@ -42,19 +42,58 @@ const parser = new Parser({
 });
 const sentimentAnalyzer = new Sentiment();
 
+let lastGoogleNewsFetchMs = 0;
+
 async function fetchAndParseFeed(url) {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; Vibe-O-Meter/2.0; +https://caiolaborda.github.io/vibe-o-meter/)',
-      'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*'
-    },
-    redirect: 'follow',
-    signal: AbortSignal.timeout(12000)
-  });
-  if (!res.ok) {
-    throw new Error(`Status code ${res.status}`);
+  if (url.includes('news.google.com')) {
+    const elapsed = Date.now() - lastGoogleNewsFetchMs;
+    if (elapsed < 1600) {
+      await new Promise(r => setTimeout(r, 1600 - elapsed));
+    }
+    lastGoogleNewsFetchMs = Date.now();
   }
-  const rawXml = await res.text();
+
+  const headerProfiles = [
+    {
+      'User-Agent': 'Vibe-O-Meter/2.0 (News Sentiment Monitor)',
+      'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8'
+    },
+    {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9'
+    }
+  ];
+
+  let rawXml = null;
+  let lastErr = null;
+  for (let attempt = 0; attempt < headerProfiles.length; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: headerProfiles[attempt],
+        redirect: 'follow',
+        signal: AbortSignal.timeout(14000)
+      });
+      if (!res.ok) {
+        const statusErr = new Error(`Status code ${res.status}`);
+        statusErr.status = res.status;
+        throw statusErr;
+      }
+      rawXml = await res.text();
+      break;
+    } catch (err) {
+      lastErr = err;
+      const st = err?.status || 0;
+      const retryable = st === 403 || st === 406 || st === 429 || st === 503 || /timeout|aborted/i.test(String(err?.message || ''));
+      if (attempt + 1 < headerProfiles.length && retryable) {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (rawXml === null) throw (lastErr || new Error('Empty RSS response'));
+
   const cleanXml = rawXml.replace(/^\uFEFF/, '').trim();
   try {
     return await parser.parseString(cleanXml);
@@ -65,6 +104,24 @@ async function fetchAndParseFeed(url) {
     );
     return await parser.parseString(repairedXml);
   }
+}
+
+function sanitizeArticleLocation(rawLoc) {
+  if (!rawLoc || typeof rawLoc !== 'object') return null;
+  const name = typeof rawLoc.name === 'string' ? rawLoc.name.trim() : '';
+  const iso = typeof rawLoc.iso === 'string' ? rawLoc.iso.trim().toLowerCase() : '';
+  const lat = Number(rawLoc.lat);
+  const lon = Number(rawLoc.lon);
+  if (!name || name.length < 2 || name.length > 90) return null;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  if (Math.abs(lat) < 0.05 && Math.abs(lon) < 0.05) return null;
+  return {
+    name,
+    ...(iso.length === 2 ? { iso } : {}),
+    lat: Number(lat.toFixed(2)),
+    lon: Number(lon.toFixed(2))
+  };
 }
 
 const NATIVE_LANG_SOURCES = new Map(NEWS_SOURCES.filter(s => s.lang && s.lang !== 'en').map(s => [s.id, s.lang]));
@@ -677,6 +734,7 @@ Return ONLY a JSON array of objects with:
 - englishTitle: REQUIRED whenever the article has a "lang" field (or is not in English) — translate the headline into a natural, accurate English wire headline that faithfully preserves the outlet's exact tone and framing (omit field ONLY if input is already in English)
 - englishSummary: REQUIRED whenever the article has a "lang" field (or is not in English) — provide a concise 1-2 sentence English journalistic summary of the dispatch (do NOT mention scores, polarity, or framing; omit field ONLY if input is already in English)
 - summary: ONLY IF polarity >= 15 AND input description is empty (""), write a clean, engaging 2-sentence journalistic summary of the story/breakthrough for readers (do NOT mention scores, polarity, or framing in summary; omit field otherwise)
+- loc: ONLY IF the headline or description explicitly takes place in or concerns a concrete real-world city, region, or country, set { "name": "City/Region, Country", "iso": "2-letter lowercase ISO country code", "lat": 59.33, "lon": 18.07 } (2 decimal places); set null for abstract science/tech, global market wraps, reviews, or essays — NEVER fall back to the newsroom's headquarters.
 
 Return ONLY valid JSON.`;
 
@@ -721,6 +779,7 @@ Return ONLY valid JSON.`;
               const cleanSummary = typeof match.summary === 'string' && match.summary.trim().length > 25 ? match.summary.trim() : null;
               const cleanEnTitle = typeof match.englishTitle === 'string' && match.englishTitle.trim().length > 10 ? match.englishTitle.trim() : null;
               const cleanEnDesc = typeof match.englishSummary === 'string' && match.englishSummary.trim().length > 20 ? match.englishSummary.trim() : null;
+              const cleanLoc = sanitizeArticleLocation(match.loc);
               const effectiveTitle = cleanEnTitle || item.title;
               allResults.push({
                 sourceId: item.sourceId,
@@ -734,7 +793,8 @@ Return ONLY valid JSON.`;
                 factors: [calc.polarity, calc.reach, calc.permanence, calc.framing],
                 category: match.category || 'other',
                 explanation: rawExp + expSuffix,
-                ...(cleanSummary ? { summary: cleanSummary } : {})
+                ...(cleanSummary ? { summary: cleanSummary } : {}),
+                ...(cleanLoc ? { loc: cleanLoc } : {})
               });
               // Feed verified [polarity, reach, permanence] + headline into anchorCandidates for subsequent batches in this run
               const itemTokens = getHeadlineTopicTokens(effectiveTitle);
@@ -4832,6 +4892,9 @@ function compactArticleRecord(art, sourceId) {
   const category = art.categoryGemini || art.category || 'other';
   let explanation = hasGemini ? (art.explanationGemini || art.explanation || '') : undefined;
 
+  const ageMs = art.pubDate ? (Date.now() - Date.parse(art.pubDate)) : Infinity;
+  const cleanLoc = (Number.isFinite(ageMs) && ageMs <= 96 * 3600 * 1000) ? sanitizeArticleLocation(art.loc) : null;
+
   const clean = {
     sourceId: art.sourceId || sourceId,
     title: art.title,
@@ -4839,7 +4902,8 @@ function compactArticleRecord(art, sourceId) {
     description: art.description || '',
     link: art.link || '',
     ...(art.imageUrl ? { imageUrl: art.imageUrl } : {}),
-    pubDate: art.pubDate
+    pubDate: art.pubDate,
+    ...(cleanLoc ? { loc: cleanLoc } : {})
   };
   if (score !== null) {
     if (Array.isArray(art.factors) && art.factors.length === 4) {
@@ -5014,6 +5078,7 @@ async function main() {
               delete cached.eventBase;
               delete cached.framingMod;
               delete cached.factors;
+              delete cached.loc;
               cached.explanation = '';
             } else if (!cached.originalTitle) {
               cached.title = item.title;
@@ -5097,6 +5162,7 @@ async function main() {
             if (Array.isArray(res.factors)) target.factors = res.factors;
             target.explanation = res.explanation;
             target.category = res.category;
+            if (res.loc) target.loc = res.loc;
             if (res.englishTitle && res.englishTitle !== target.title) {
               if (!target.originalTitle) target.originalTitle = target.title;
               target.title = res.englishTitle;
@@ -5474,10 +5540,11 @@ async function main() {
     summaryPayload.globalStats = { ...summaryPayload.globalStats, sharedStoryClusters: summaryPayload.sharedStoryClusters };
   }
 
-  // Save primary outputs
+  // Save primary outputs (strip per-article `loc` from Vibe-O-Meter's own non-map data.json & summary.json to keep them lean; wire-map.json carries geolocated wire dispatches)
+  const stripArticleLocReplacer = (key, val) => (key === 'loc' ? undefined : val);
   fs.writeFileSync(DATA_FILE, JSON.stringify(fullPayload, null, 2), 'utf8');
-  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'data.json'), JSON.stringify(fullPayload), 'utf8');
-  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'summary.json'), JSON.stringify(summaryPayload), 'utf8');
+  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'data.json'), JSON.stringify(fullPayload, stripArticleLocReplacer), 'utf8');
+  fs.writeFileSync(path.join(PUBLIC_DATA_DIR, 'summary.json'), JSON.stringify(summaryPayload, stripArticleLocReplacer), 'utf8');
 
   console.log('==============================================');
   console.log('✅ Sync Completed Successfully!');
