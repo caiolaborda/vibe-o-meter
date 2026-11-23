@@ -1789,8 +1789,150 @@ function hasDisjointProperSubjectMergeConflict(clA, clB, stemDfMap = null, maxDf
   return false;
 }
 
+const MACRO_MARKET_ROUNDUP_HEAD_RE = /^(?:(?:global|world|asian|european|u\.?s\.?|american|emerging|tech|ai)\s+)?(?:stocks?|stock\s+markets?|markets?|equit(?:y|ies)|shares?|wall\s+street|nasdaq|s&p\s*500|dow(?:\s+jones)?|brent\s+crude|oil\s+prices?)(?:(?:\s+and|\s*,)\s+(?:(?:global|world|asian|european|u\.?s\.?|tech|ai)\s+)?(?:stocks?|markets?|shares?|equit(?:y|ies)|oil|bonds?))*\s+(?:slumps?|plunges?|sinks?|tumbles?|slides?|falls?|drops?|routs?|rebounds?|rallies|rally|surges?|jumps?|climbs?|gains?|wobbles?|steadies|mixed|edges?|opens?|closes?)\b/i;
+
+const DISCRETE_ENTITY_ACTION_RE = /\b(reinstat\w*|reappoint\w*|appoint\w*|nam(?:es|ed)\s+(?:ceo|chief|chair|minister|head)|oust\w*|fires?|fired|sacks?|sacked|resign\w*|steps?\s+down|indict\w*|arrest\w*|charg\w*|convict\w*|acquit\w*|sentenc\w*|subpoena\w*|su(?:es|ed)|lawsuit|antitrust|probe\w*|investigat\w*|acquir\w*|buyout|merger|bankrupt\w*|recalls?|recalled|approv\w*|blocks?|blocked|bans?|banned|veto\w*|ceasefire|truce)\b/i;
+
+const PRIOR_NEGATION_OR_PRELUDE_CLAUSE_RE = /\b(not|no|never|without|refus\w*|reject\w*|deni\w*|deny\w*|rule[sd]?\s+out|block\w*|stall\w*|deadlock\w*|fail\w*|unlikely|weigh\w*|mull\w*|consider\w*|deliberat\w*|debat\w*|propos\w*|seek\w*|push\w*\s+for|call\w*\s+for|petition\w*|urg\w*|demand\w*|hope\w*|rumor\w*|speculat\w*|threaten\w*|warn\w*|fear\w*|await\w*|pend\w*|interim|oust\w*|exit\w*|resign\w*|step\w*\s+down|suspend\w*|halt\w*|delay\w*|postpon\w*)\b/i;
+
+const HEADLINE_SPECULATIVE_OR_NEGATED_RE = /\b(not|never|refus\w*|reject\w*|deni\w*|deny\w*|rule[sd]?\s+out|weigh\w*|mull\w*|consider\w*|call\w*\s+for|petition\w*|urg\w*|hope\w*\s+(?:of|for)|amid\s+hopes|on\s+hopes|rumor\w*|speculat\w*|could|might|should\s+be|if\s+|whether\b)\b/i;
+
+const HEADLINE_OPEN_OR_REVERSIBLE_STATE_RE = /\b(weigh\w*|mull\w*|consider\w*|deliberat\w*|debat\w*|prepar\w*|plan\w*|set\s+to|poised\s+to|near\w*|eye\w*|threaten\w*|seek\w*|push\w*|await\w*|stall\w*|deadlock\w*|halt\w*|suspend\w*|delay\w*|postpon\w*|block\w*|probe\w*|investigat\w*|oust\w*|exit\w*|resign\w*|step\w*\s+down|shut\w*|clos\w*|ban\w*|strik\w*)\b/i;
+
+let _decisiveOutcomeStemsCache = null;
+function getDecisiveOutcomeOrReversalStems() {
+  if (!_decisiveOutcomeStemsCache) {
+    _decisiveOutcomeStemsCache = new Set(extractCoherenceStems(
+      'reinstates reinstated reappoints reappointed rejoined retakes recaptured reopens reopened resumes resumed ' +
+      'lifts lifted repeals repealed overturns overturned reverses reversed rescinds rescinded dismissed acquits acquitted ' +
+      'convicts convicted sentences sentenced indicts indicted arrests arrested extradites extradited impeaches impeached ' +
+      'removes removed ousts ousted resigns resigned fires fired sacks sacked appoints appointed elects elected ' +
+      'defeats defeated concedes conceded passes passed enacts enacted ratifies ratified vetoes vetoed approves approved ' +
+      'authorizes authorized prohibits prohibited reaches reached seals sealed brokers brokered ceasefire truce ' +
+      'surrenders surrendered collapses collapsed withdraws withdrew pullout invades invaded erupts erupted'
+    ));
+  }
+  return _decisiveOutcomeStemsCache;
+}
+
+/**
+ * Domain-agnostic detector for polarity inversions ("board refuses to reinstate X" -> "board reinstates X",
+ * "senate blocks bill" -> "senate passes bill") and open-to-enacted state transitions where pure bag-of-stems
+ * novelty misses the shift because the action/entity stems already appeared in negated or prelude context.
+ */
+function hasHeadlineStateOrPolarityShift(currentStory, priorContextText, candidateArticles, evalSet = null) {
+  if (!Array.isArray(candidateArticles) || candidateArticles.length < 2) {
+    return { shifted: false, triggerTokens: [], matchingArticles: [] };
+  }
+  const storyStr = String(currentStory || '');
+  const storyStems = new Set(extractCoherenceStems(storyStr));
+  const contestedPriorStems = new Set();
+  const clauses = String(priorContextText || '').split(/[.!?;]+/);
+  for (const clause of clauses) {
+    if (PRIOR_NEGATION_OR_PRELUDE_CLAUSE_RE.test(clause)) {
+      for (const st of extractCoherenceStems(clause)) {
+        if (st.length >= 4 && !storyStems.has(st)) {
+          contestedPriorStems.add(st);
+        }
+      }
+    }
+  }
+  const headlineHasOpenOrReversibleState = HEADLINE_OPEN_OR_REVERSIBLE_STATE_RE.test(storyStr);
+  const stemArticleHits = new Map();
+  const matchingSet = new Set();
+
+  for (const art of candidateArticles) {
+    const cleanT = cleanHeadlineTitle(art?.title || '');
+    if (!cleanT || HEADLINE_SPECULATIVE_OR_NEGATED_RE.test(cleanT)) continue;
+    const tStems = new Set(extractCoherenceStems(cleanT));
+    let matchedAny = false;
+    for (const st of tStems) {
+      if (storyStems.has(st)) continue;
+      if (evalSet && evalSet.has(`pol:${st}`)) continue;
+      const isPolarityFlip = contestedPriorStems.has(st);
+      const isOutcomeShift = headlineHasOpenOrReversibleState && getDecisiveOutcomeOrReversalStems().has(st);
+      if (isPolarityFlip || isOutcomeShift) {
+        stemArticleHits.set(st, (stemArticleHits.get(st) || 0) + 1);
+        matchedAny = true;
+      }
+    }
+    if (matchedAny) matchingSet.add(art);
+  }
+
+  const triggerTokens = [...stemArticleHits.entries()]
+    .filter(([, cnt]) => cnt >= 2)
+    .map(([st]) => st);
+  if (triggerTokens.length === 0) {
+    return { shifted: false, triggerTokens: [], matchingArticles: [] };
+  }
+  const matchingArticles = candidateArticles.filter(art => {
+    if (!matchingSet.has(art)) return false;
+    const tStems = new Set(extractCoherenceStems(cleanHeadlineTitle(art?.title || '')));
+    return triggerTokens.some(st => tStems.has(st));
+  });
+  return {
+    shifted: matchingArticles.length >= 2,
+    triggerTokens,
+    matchingArticles
+  };
+}
+
+/**
+ * Prevents generic rolling macro market-index roundup clusters ("Global Stocks Rebound...", "Wall Street Slumps...")
+ * from hijacking discrete named-entity governance, legal, executive, diplomatic, or operational breaking news.
+ */
+function isMacroMarketRoundupHijack(anchorCluster, candidateStory, candidateArticles = []) {
+  if (!anchorCluster) return false;
+  const originHead = String(anchorCluster.evolutionHistory?.[0]?.headline || anchorCluster.story || '').trim();
+  const currentHead = String(anchorCluster.story || '').trim();
+  const anchorIsMacroRoundup = MACRO_MARKET_ROUNDUP_HEAD_RE.test(originHead) || MACRO_MARKET_ROUNDUP_HEAD_RE.test(currentHead);
+  if (!anchorIsMacroRoundup) return false;
+
+  const candHead = String(candidateStory || '').trim();
+  if (candHead && MACRO_MARKET_ROUNDUP_HEAD_RE.test(candHead)) return false;
+
+  const originStems = new Set(extractCoherenceStems(originHead));
+  const arts = Array.isArray(candidateArticles) ? candidateArticles : [];
+  if (arts.length === 0) {
+    return Boolean(candHead && DISCRETE_ENTITY_ACTION_RE.test(candHead));
+  }
+
+  let discreteActionCount = 0;
+  const properStemCounts = new Map();
+  const IGNORE_MARKET_PROPER = new Set([
+    'wall', 'street', 'nasdaq', 'dow', 'global', 'asian', 'european', 'world', 'market', 'markets',
+    'stock', 'stocks', 'share', 'shares', 'tech', 'reuters', 'bloomberg', 'monday', 'tuesday',
+    'wednesday', 'thursday', 'friday', 'sunday', 'saturday'
+  ]);
+
+  for (const a of arts) {
+    const rawT = String(a?.title || '').replace(/\s+[-–—|]\s+[^-–—|]+$/, '').trim();
+    if (!rawT) continue;
+    if (DISCRETE_ENTITY_ACTION_RE.test(rawT) && !MACRO_MARKET_ROUNDUP_HEAD_RE.test(rawT)) {
+      discreteActionCount++;
+    }
+    const words = rawT.split(/\s+/);
+    const seenInTitle = new Set();
+    for (let wi = 0; wi < words.length; wi++) {
+      const cleanW = words[wi].replace(/[^a-zA-Z0-9]/g, '');
+      if (cleanW.length < 3 || !/^[A-Z]/.test(cleanW)) continue;
+      if (IGNORE_MARKET_PROPER.has(cleanW.toLowerCase())) continue;
+      for (const st of extractCoherenceStems(cleanW)) {
+        if (st.length >= 3 && !originStems.has(st)) seenInTitle.add(st);
+      }
+    }
+    for (const st of seenInTitle) {
+      properStemCounts.set(st, (properStemCounts.get(st) || 0) + 1);
+    }
+  }
+
+  const minRequired = Math.max(1, Math.ceil(arts.length * 0.5));
+  const hasDominantNovelEntity = [...properStemCounts.values()].some(cnt => cnt >= minRequired);
+  return hasDominantNovelEntity && (discreteActionCount >= Math.max(1, Math.floor(arts.length * 0.4)) || DISCRETE_ENTITY_ACTION_RE.test(candHead));
+}
+
 // Cross-Outlet Story Clustering (Smart Candidate Pool + 14-Day Dormant Cluster Wake-Up + Peer-to-Peer Coherence Guard)
-async function clusterCrossOutletStories(finalSources, apiKey, previousClusters = []) {
+async function clusterCrossOutletStories(finalSources, apiKey, previousClusters = [], options = {}) {
   if (!apiKey) return previousClusters;
 
   const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
@@ -2306,8 +2448,9 @@ Return JSON array in format:
               newestMatchArtMs,
               ancCluster
             );
-            if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor || isEpisodicMismatchAnchor) {
-              console.warn(`[Clusters] Detached theatre/single-entity/episodic-mismatch anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor}, episodicMismatch=${isEpisodicMismatchAnchor})`);
+            const isMacroTickerHijackAnchor = ancUrlHits <= 1 && isMacroMarketRoundupHijack(ancCluster, cl.story || '', matchingArticles);
+            if ((ancUrlHits === 0 && ancSpecHeadStems.size > 0 && sharedSpecHead === 0 && sharedSpecAll < 2) || isSingleArticleTangent || isDisjointCountryAnchor || isEpisodicMismatchAnchor || isMacroTickerHijackAnchor) {
+              console.warn(`[Clusters] Detached theatre/single-entity/episodic-mismatch anchor "${ancCluster.story}" from "${cl.story}" (urlHits=${ancUrlHits}, sharedSpecHead=${sharedSpecHead}, sharedSpecAll=${sharedSpecAll}, sharedTotal=${sharedWithAnchor}, episodicMismatch=${isEpisodicMismatchAnchor}, macroHijack=${isMacroTickerHijackAnchor})`);
               continue;
             }
             if (!matchedPrev) {
@@ -2382,7 +2525,8 @@ Return JSON array in format:
 
             // Never deterministically hijack a previous cluster when sharedCount === 0 (zero shared URLs/titles);
             // zero-URL duplicate-incident merges are evaluated by the LLM in consolidateEvolvingClusters (Job 1).
-            if (!hasCountryConflict && (isUrlTitleMatch || isHighSpecificityStemMatch)) {
+            const isMacroTickerHijackPrev = sharedCount <= 2 && isMacroMarketRoundupHijack(prev, cl.story || '', matchingArticles);
+            if (!hasCountryConflict && !isMacroTickerHijackPrev && (isUrlTitleMatch || isHighSpecificityStemMatch)) {
               const candidateScore = sharedCount * 100 + sharedTitleStemCount * 25 + sharedAllStemCount * 5 + ((prev.version || 1) * 10) + (prev.coverage.length || 0);
               if (candidateScore > bestPrevScore) {
                 bestPrevScore = candidateScore;
@@ -2607,7 +2751,12 @@ Return JSON array in format:
               }
             }
             const hasSharedNovelStem = [...waveNovelStemCounts.values()].some(cnt => cnt >= 2);
-            const hasSubstantiveInfoGain = hasNovelNumber || hasSharedNovelStem || (maxSingleArtNovelSpecific >= 2 && minSingleArtOverlap < 0.55);
+            const polarityCheck = hasHeadlineStateOrPolarityShift(
+              matchedPrev.story || '',
+              `${matchedPrev.summary || ''} ${(Array.isArray(matchedPrev.evolutionHistory) ? matchedPrev.evolutionHistory.map(h => `${h?.headline || ''} ${h?.note || ''}`).join('. ') : '')}`,
+              addedArticles
+            );
+            const hasSubstantiveInfoGain = hasNovelNumber || hasSharedNovelStem || polarityCheck.shifted || (maxSingleArtNovelSpecific >= 2 && minSingleArtOverlap < 0.55);
             if (hasSubstantiveInfoGain) {
               const newestAddedMs = Math.max(...addedArticles.map(a => a.pubDate ? new Date(a.pubDate).getTime() : 0).filter(Boolean));
               pendingUpdate = {
@@ -2938,6 +3087,7 @@ Return JSON array in format:
           stemDocFreq,
           maxRareTitleStemDf
         )) continue;
+        if (isMacroMarketRoundupHijack(cm.cl, art.title || '', [art])) continue;
 
         if (cm.clEntityStems.length <= 2) {
           if (matchedEntitiesInAll.length < cm.clEntityStems.length) continue;
@@ -3011,7 +3161,14 @@ Return JSON array in format:
         const cleanT = cleanHeadlineTitle(art.title || "");
         const aNums = (cleanT.match(/\b\d+(?:[.,]\d+)?\b/g) || []).filter(n => !baseNums.has(n));
         const novelSpec = [...art.titleStems].filter(s => !baseStems.has(s) && (stemDocFreq.get(s) || 0) <= 18);
-        if (aNums.length > 0 || novelSpec.length >= 2) {
+        const storyStemSet = new Set(extractCoherenceStems(bestCl.story || ""));
+        const hasSinglePolarityCue = !HEADLINE_SPECULATIVE_OR_NEGATED_RE.test(cleanT) && [...art.titleStems].some(st =>
+          !storyStemSet.has(st) && (
+            getDecisiveOutcomeOrReversalStems().has(st) ||
+            (PRIOR_NEGATION_OR_PRELUDE_CLAUSE_RE.test(baseText) && st.length >= 4 && !baseStems.has(st))
+          )
+        );
+        if (aNums.length > 0 || novelSpec.length >= 2 || hasSinglePolarityCue) {
           const lineStr = `${art.sourceName || art.sourceId}: "${art.title}"${art.description ? ` (${String(art.description).slice(0, 160).trim()})` : ""}`;
           if (!bestCl._pendingUpdate) {
             bestCl._pendingUpdate = {
@@ -3036,8 +3193,10 @@ Return JSON array in format:
     // Longitudinal Cluster Consolidation & Development Verification Pass
     const consolidatedClusters = await consolidateEvolvingClusters(formattedClusters, apiKey);
 
-    // Post-Consolidation Integrated Summary Synthesis Pass (honing newly created & newly updated clusters across all covering outlets + history)
-    await synthesizeIntegratedClusterSummaries(consolidatedClusters, apiKey, finalSources);
+    // Post-Consolidation Integrated Summary Synthesis Pass (skipped here when main() runs it once after post-cluster outlier filtering)
+    if (!options?.deferSummarySynthesis) {
+      await synthesizeIntegratedClusterSummaries(consolidatedClusters, apiKey, finalSources);
+    }
 
     // Smooth 4-tier recency curve across the 7-day rolling window so fresh breaking stories lead while major developing stories stay visible
     const nowMs = Date.now();
@@ -3184,10 +3343,12 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
   ]);
   for (let i = 0; i < meta.length; i++) {
     const c = meta[i].c;
-    if (c._pendingUpdate || meta[i].ageHours > 72) continue;
+    if (c._pendingUpdate) continue;
     const cov = c.coverage || [];
     if (cov.length < 3) continue;
     const newestCovMs = Math.max(...cov.map(a => new Date(a.pubDate).getTime() || 0), 0);
+    const newestCovAgeHours = newestCovMs > 0 ? Math.max(0, (now - newestCovMs) / 3600000) : 999;
+    if (meta[i].ageHours > 72 && newestCovAgeHours > 48) continue;
     const histArr = Array.isArray(c.evolutionHistory) ? c.evolutionHistory : [];
     const lastHistMs = Math.max(
       c.lastDevelopedAt ? (new Date(c.lastDevelopedAt).getTime() || 0) : 0,
@@ -3203,6 +3364,9 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     const baseStems = new Set(extractCoherenceStems(baseText));
     const evalSet = new Set(Array.isArray(c.evaluatedDesyncTokens) ? c.evaluatedDesyncTokens : []);
     const recentCov = hasPostHistSurge ? postHistCov.slice(0, 8) : cov.slice(0, 5);
+    const polarityDesync = hasPostHistSurge
+      ? hasHeadlineStateOrPolarityShift(c.story || '', `${c.summary || ''}. ${c.developmentNote || ''}. ${histArr.map(h => `${h.headline || ''} ${h.note || ''}`).join('. ')}`, recentCov, evalSet)
+      : { shifted: false, triggerTokens: [], matchingArticles: [] };
     const tokenHits = new Map();
     for (const a of recentCov) {
       const cleanT = String(a.title || '').replace(/\s+[-–—|]\s+[^-–—|]+$/, '');
@@ -3231,21 +3395,28 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       for (const wl of seenInArt) tokenHits.set(wl, (tokenHits.get(wl) || 0) + 1);
     }
     const missingShared = [...tokenHits.entries()].filter(([, cnt]) => cnt >= 2).map(([wl]) => wl);
-    if (missingShared.length > 0) {
-      const matchArts = recentCov.filter(a => {
-        const tLow = String(a.title || '').toLowerCase();
-        const tStems = new Set(extractCoherenceStems(a.title || ''));
-        return missingShared.some(wl => tLow.includes(wl) || tStems.has(wl));
-      });
+    if (missingShared.length > 0 || polarityDesync.shifted) {
+      const matchArts = polarityDesync.shifted && missingShared.length === 0
+        ? polarityDesync.matchingArticles
+        : recentCov.filter(a => {
+            const tLow = String(a.title || '').toLowerCase();
+            const tStems = new Set(extractCoherenceStems(a.title || ''));
+            return missingShared.some(wl => tLow.includes(wl) || tStems.has(wl)) ||
+              polarityDesync.triggerTokens.some(st => tStems.has(st));
+          });
       const newestMatchMs = Math.max(...matchArts.map(a => new Date(a.pubDate).getTime() || 0), 0);
       if (matchArts.length >= 2 && (hasPostHistSurge || !c.lastEvaluatedCoverageMs || newestMatchMs > c.lastEvaluatedCoverageMs)) {
-        console.log(`[Clusters] Self-healing desync detected on "${c.story}" (missing from summary: ${missingShared.slice(0, 8).join(', ')}) — queueing for Job 2.`);
+        const desyncTokensOut = [
+          ...missingShared,
+          ...polarityDesync.triggerTokens.map(st => `pol:${st}`)
+        ].slice(0, 12);
+        console.log(`[Clusters] Self-healing desync detected on "${c.story}" (triggers: ${desyncTokensOut.slice(0, 8).join(', ')}) — queueing for Job 2.`);
         c._pendingUpdate = {
           candidateStory: c.story,
           candidateSummary: c.summary || '',
           newestAddedMs: newestMatchMs || Date.now(),
           addedHeadlines: (hasPostHistSurge ? postHistCov.slice(0, 7) : matchArts.slice(0, 5)).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`),
-          desyncTokens: missingShared.slice(0, 12)
+          desyncTokens: desyncTokensOut
         };
       }
     }
@@ -3357,7 +3528,7 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
             criteria: {
               none: 'Pure syndication echo repeating facts already in the Existing Cluster Summary or Prior Recorded Evolution Stages.',
               clarification: 'Adds in-phase factual details, figures, quotes, deliberations, or localized sub-incidents without crossing into a new real-world event phase or requiring a new headline.',
-              material_shift: 'Crosses an irreversible State Envelope (new sovereign border, formal legal/executive enactment, decisive verdict/vote outcome, or major phase transition) that invalidates the Existing Cluster Headline.'
+              material_shift: 'Crosses an irreversible State Envelope (new sovereign border, formal legal/executive/board enactment or reversal, corporate/institutional leadership appointment/ousting/reinstatement, decisive verdict/vote outcome, or major phase transition) that invalidates or supersedes the Existing Cluster Headline.'
             }
           }
         };
@@ -4035,11 +4206,23 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       };
 
       // Helper to verify that a candidate headline retains >= 1 recognizable subject/place stem from the origin headline
+      // (or from a recurring >=2-outlet entity in c.summary + addedHeadlines when evolving out of a generic umbrella headline)
       const originAnchorHeadline = hist[0]?.headline || c.story || '';
-      const originAnchorStems = new Set(
-        extractCoherenceStems(`${originAnchorHeadline} ${c.story || ''}`)
-          .filter(s => !/^\d+$/.test(s) && !/^(kill|dead|die|halt|stop|prepar|hold|held|plan|weigh|mull|consider|spurs|spark|prompt|delay)$/.test(s))
-      );
+      const summaryStemsSet = new Set(extractCoherenceStems(c.summary || ''));
+      const addedHeadStemCounts = new Map();
+      for (const line of (c._pendingUpdate?.addedHeadlines || [])) {
+        for (const st of new Set(extractCoherenceStems(line))) {
+          if (st.length >= 4 && summaryStemsSet.has(st)) {
+            addedHeadStemCounts.set(st, (addedHeadStemCounts.get(st) || 0) + 1);
+          }
+        }
+      }
+      const groundedEntityStems = [...addedHeadStemCounts.entries()].filter(([, cnt]) => cnt >= 2).map(([st]) => st);
+      const originAnchorStems = new Set([
+        ...extractCoherenceStems(`${originAnchorHeadline} ${c.story || ''}`)
+          .filter(s => !/^\d+$/.test(s) && !/^(kill|dead|die|halt|stop|prepar|hold|held|plan|weigh|mull|consider|spurs|spark|prompt|delay)$/.test(s)),
+        ...groundedEntityStems
+      ]);
       const isHeadlineAnchorRecognizable = (candTitle) => {
         if (!candTitle || originAnchorStems.size === 0) return Boolean(candTitle);
         const candStems = extractCoherenceStems(candTitle);
@@ -4639,8 +4822,14 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
 
   console.log(`[Clusters] Running integrated summary synthesis pass for ${selected.length} newly formed/updated cluster(s)...`);
 
+  const batches = [];
   for (let offset = 0; offset < selected.length; offset += batchSize) {
-    const batch = selected.slice(offset, offset + batchSize);
+    batches.push({ offset, batch: selected.slice(offset, offset + batchSize) });
+  }
+  const SUMMARY_CONCURRENCY = 2;
+  for (let bGroup = 0; bGroup < batches.length; bGroup += SUMMARY_CONCURRENCY) {
+    const groupSlice = batches.slice(bGroup, bGroup + SUMMARY_CONCURRENCY);
+    await Promise.all(groupSlice.map(async ({ offset, batch }) => {
     const clusterBlocks = batch.map((item, bIdx) => {
       const c = item.c;
       const covSorted = [...(c.coverage || [])].sort((a, b) => {
@@ -4764,7 +4953,7 @@ Return ONLY a valid JSON array matching this exact schema:
       }
     }
 
-    if (!Array.isArray(parsedBatch)) continue;
+    if (!Array.isArray(parsedBatch)) return;
 
     for (const entry of parsedBatch) {
       const bIdx = typeof entry?.index === 'number' ? entry.index : batch.findIndex(x => x.c.id === entry?.id);
@@ -4824,6 +5013,7 @@ Return ONLY a valid JSON array matching this exact schema:
       c.summarySynthesizedSig = getClusterSummarySynthesisSignature(c);
       totalPolished++;
     }
+    }));
   }
 
   if (totalPolished > 0) {
@@ -5387,10 +5577,10 @@ async function main() {
           ? breakingBurst.mode
           : (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours ? 'ingest-backlog' : 'scheduled'));
       console.log(`[Sync] Running cross-outlet story clustering (tiers: ${orderedTiersLabel}, reason: ${triggerReason}, last run: ${lastClusteredAt ? hoursSinceLastCluster.toFixed(1) + 'h ago' : 'never'})...`);
-      const clusters = await clusterCrossOutletStories(finalSources, geminiKeyTiers, currentCache.sharedStoryClusters);
+      const clusters = await clusterCrossOutletStories(finalSources, geminiKeyTiers, currentCache.sharedStoryClusters, { deferSummarySynthesis: true });
       if (clusters && clusters.length > 0) {
         sharedStoryClusters = clusters;
-        lastClusteredAt = now.toISOString();
+        lastClusteredAt = new Date().toISOString();
         console.log(`[Sync] Successfully identified ${sharedStoryClusters.length} cross-outlet story clusters.`);
       }
     } catch (clusterErr) {
@@ -5517,9 +5707,15 @@ async function main() {
     sharedStoryClusters
   };
 
-  // 6. Build Payloads
+  // 6. Build Payloads (use true completion timestamp so Wire synced badge and 16m workflow cooldown reflect actual completion, not pre-clustering start)
+  const completedNow = new Date();
+  const completedAtIso = completedNow.toISOString();
+  if (shouldRunClustering && sharedStoryClusters.length > 0) {
+    lastClusteredAt = completedAtIso;
+    globalStats.lastClusteredAt = completedAtIso;
+  }
   const fullPayload = {
-    lastUpdated: now.toISOString(),
+    lastUpdated: completedAtIso,
     lastClusteredAt,
     analyzerUsed: activeAnalyzerLabel,
     editorialSummaryDate: todayDateStr,
@@ -5531,7 +5727,7 @@ async function main() {
   };
 
   const summaryPayload = {
-    lastUpdated: now.toISOString(),
+    lastUpdated: completedAtIso,
     lastClusteredAt,
     analyzerUsed: activeAnalyzerLabel,
     editorialSummaryDate: todayDateStr,
@@ -5606,5 +5802,7 @@ async function main() {
     clusterCrossOutletStories,
     consolidateEvolvingClusters,
     synthesizeIntegratedClusterSummaries,
-    detectCrossRegionBreakingBurst
+    detectCrossRegionBreakingBurst,
+    hasHeadlineStateOrPolarityShift,
+    isMacroMarketRoundupHijack
   };
