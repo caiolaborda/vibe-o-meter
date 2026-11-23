@@ -210,6 +210,7 @@ function extractBestDescription(item) {
     if (typeof c === 'string' && c.trim().length > 25) {
       const clean = sanitizeText(c)
         .replace(/^The post\s+.*?\s+appeared first on\s+.*$/i, '')
+        .replace(/--\s*Delivered by RssEverything service\s*$/i, '')
         .trim();
       if (clean.length > 25) {
         // Truncate to ~450 characters (2-3 solid sentences) to balance rich context with low token usage
@@ -5028,7 +5029,7 @@ async function main() {
 
       const items = dedupedRaw.map(item => ({
         sourceId: source.id,
-        title: sanitizeText(item.title),
+        title: sanitizeText(item.title).replace(/^ERR\s*\|\s*/i, ''),
         description: extractBestDescription(item),
         link: item.link || '',
         imageUrl: extractImageUrl(item),

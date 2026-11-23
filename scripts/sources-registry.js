@@ -413,7 +413,8 @@ const NEWS_SOURCES = [
     region: 'EU',
     countryCode: 'ee',
     flag: '🇪🇪',
-    feedUrl: 'https://news.err.ee/rss',
+    feedUrl: 'https://feeds.feedburner.com/errnews',
+    fallbackFeedUrl: 'https://news.err.ee/rss',
     excludeFluff: true
   },
   {
