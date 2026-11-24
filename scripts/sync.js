@@ -1959,6 +1959,45 @@ function isMacroMarketRoundupHijack(anchorCluster, candidateStory, candidateArti
   return hasDominantNovelEntity && (discreteActionCount >= Math.max(1, Math.floor(arts.length * 0.4)) || DISCRETE_ENTITY_ACTION_RE.test(candHead));
 }
 
+const MARKET_ASSET_CONTEXT_RE = /\b(stocks?|markets?|equit\w*|futures?|wall\s+street|nasdaq|s&p|dow|stoxx|asx|kospi|nikkei|ftse|dax|bovespa|merval|oil|crude|brent|gold|bullion|silver|gas|bitcoin|crypto\w*|yields?|treasur\w*|dollar|yen|yuan|peso|pound|euro|shares?)\b/i;
+const MARKET_DIR_UP_RE = /\b(rebound\w*|rall(?:y|ies|ied|ying)|surg(?:e|es|ed|ing)|soar\w*|jump\w*|climb\w*|gain\w*|advanc(?:e|es|ed|ing)|recover\w*|bounce\w*|pare\w*\s+(?:loss\w*|drop\w*)|storm\w*\s+back|roar\w*\s+(?:back|higher))\b/i;
+const MARKET_DIR_DOWN_RE = /\b(fall(?:s|ing)?|fell|plung(?:e|es|ed|ing)|tumbl(?:e|es|ed|ing)|slid(?:e|es|ing)|slump\w*|sink(?:s|ing)?|sank|rout\w*|crash\w*|drop(?:s|ped|ping)?|sell-?off\w*|wipeout|plummet\w*|worst\s+week)\b/i;
+const MARKET_NEGATED_UP_RE = /\b(fail\w*\s+to\s+(?:rebound|rally|recover|hold\s+gains)|halt\w*\s+rally|stall\w*\s+rebound)\b/i;
+
+/**
+ * Prevents opposite-direction market/asset/price articles (e.g. "Why are stock markets falling so sharply / dotcom crash"
+ * vs "US Tech Futures and Wall Street Rebound") from cross-bleeding during Stage-1 grouping or deterministic catch-up.
+ * Note: Recovery headlines ("Stocks surge after brutal sell-off") contain BOTH up + historical down cues -> net 'up'.
+ */
+function classifyMarketHeadlineDirection(headline) {
+  const h = String(headline || '').trim();
+  if (!h || !MARKET_ASSET_CONTEXT_RE.test(h)) return null;
+  const hasUp = MARKET_DIR_UP_RE.test(h) && !MARKET_NEGATED_UP_RE.test(h);
+  const hasDown = MARKET_DIR_DOWN_RE.test(h);
+  if (hasUp && !hasDown) return 'up';
+  if (hasDown && !hasUp) return 'down';
+  if (hasUp && hasDown) {
+    // Check which cue appears in the lead main clause (before after/from/following/amid/despite), or if recovery verbs lead
+    const leadClause = h.split(/\s+(?:after|from|following|amid|despite)\s+/i)[0] || h;
+    if (MARKET_DIR_UP_RE.test(leadClause) && !MARKET_DIR_DOWN_RE.test(leadClause)) return 'up';
+    if (MARKET_DIR_DOWN_RE.test(leadClause) && !MARKET_DIR_UP_RE.test(leadClause)) return 'down';
+    const upMatch = h.match(MARKET_DIR_UP_RE);
+    const downMatch = h.match(MARKET_DIR_DOWN_RE);
+    if (upMatch && downMatch && upMatch.index < downMatch.index && /\b(rebound\w*|recover\w*|pare\w*|bounce\w*|claw\w*\s+back)\b/i.test(h)) {
+      return 'up';
+    }
+  }
+  return null;
+}
+
+function hasOppositeMarketDirectionConflict(anchorHead, candidateHead) {
+  const dirA = classifyMarketHeadlineDirection(anchorHead);
+  if (!dirA) return false;
+  const dirB = classifyMarketHeadlineDirection(candidateHead);
+  if (!dirB) return false;
+  return dirA !== dirB;
+}
+
 // Cross-Outlet Story Clustering (Smart Candidate Pool + 14-Day Dormant Cluster Wake-Up + Peer-to-Peer Coherence Guard)
 async function clusterCrossOutletStories(finalSources, apiKey, previousClusters = [], options = {}) {
   if (!apiKey) return previousClusters;
@@ -1995,13 +2034,33 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
   const activeClusterAnchors = [];
   const stemDocFreq = new Map();
 
+  const GENERIC_CANDIDATE_STEMS = new Set([
+    'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'army', 'servic', 'draft', 'train', 'charg', 'releas',
+    'crash', 'fire', 'attack', 'protes', 'court', 'suprem', 'appeal', 'judg', 'justic', 'senten', 'offend',
+    'prison', 'family', 'polic', 'arrest', 'strik', 'launch', 'approv', 'reject', 'elect', 'voter', 'campai',
+    'midter', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist', 'presid', 'invest', 'probe', 'threat',
+    'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay', 'announ', 'reveal', 'confirm', 'report', 'discov',
+    'found', 'scient', 'astron', 'study', 'united', 'state', 'americ', 'administr', 'white', 'house', 'feder',
+    'nation', 'global', 'world', 'donald', 'trump', 'biden', 'europe', 'middl', 'east', 'foreig', 'defens',
+    'first', 'after', 'amid', 'cancer', 'vaccin', 'patien', 'treat', 'diseas', 'medic', 'health', 'hospit',
+    'doctor', 'clinic', 'trial', 'resear', 'breakt', 'stock', 'share', 'market', 'budget', 'fiscal', 'treasu',
+    'econom', 'financ', 'compan', 'corpor', 'indust', 'techno', 'tunisi', 'tunis', 'brazil', 'ecuado', 'albani',
+    'indone', 'malays', 'israel', 'palest', 'iran', 'saudi', 'yemen', 'syria', 'lebanon', 'egypt', 'turk',
+    'ukrain', 'russia', 'china', 'chines', 'taiwan', 'japan', 'kore', 'india', 'pakist', 'austral', 'canad',
+    'mexic', 'britain', 'france', 'german', 'ital', 'spain', 'poland'
+  ]);
+
   for (const cl of allKnownPrevClusters) {
     const cov = cl.coverage || [];
     const outletPubMs = new Map();
+    const outletTitleStemsMap = new Map();
     for (const c of cov) {
       if (c.link) alreadyClusteredUrls.add(canonicalUrl(c.link));
       if (c.title) alreadyClusteredTitles.add(cleanHeadlineTitle(c.title));
-      if (c.sourceId) outletPubMs.set(c.sourceId, new Date(c.pubDate).getTime() || 0);
+      if (c.sourceId) {
+        outletPubMs.set(c.sourceId, new Date(c.pubDate).getTime() || 0);
+        outletTitleStemsMap.set(c.sourceId, new Set(extractCoherenceStems(c.title || '')));
+      }
     }
     if (Array.isArray(cl.seenArticleKeys)) {
       cl.seenArticleKeys.forEach(k => {
@@ -2026,6 +2085,8 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
         isClusterAnchor: true,
         anchorCluster: cl,
         outletPubMs,
+        outletTitleStemsMap,
+        storyStemSet,
         sourceId: lead.sourceId,
         sourceName: lead.sourceName || lead.sourceId,
         anchorStory: cl.story,
@@ -2060,17 +2121,47 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
 
       const titleStems = new Set(extractCoherenceStems(art.title));
       const allStems = new Set(extractCoherenceStems(`${art.title} ${(art.description || '').slice(0, 240)}`));
+      const specificArtTitleStems = [...titleStems].filter(s => !GENERIC_CANDIDATE_STEMS.has(s));
+      const causalParts = String(art.title || '').split(/\s+(?:after|as|amid|following|upon)\s+/i);
+      const hasCausalSplit = causalParts.length >= 2 && causalParts[0].trim().split(/\s+/).length >= 2;
+      const leadClauseStems = hasCausalSplit ? extractCoherenceStems(causalParts[0]) : [];
 
-      // Skip secondary/older dispatches from an outlet that already has a representative article in a matching cluster
+      // Skip true same-angle redundant updates from an outlet that already has a representative article in `anc`,
+      // while preserving distinct spin-off / consequence stories (e.g. "Nasdaq jumps 7% as Nvidia soars", "Brent surges after strike",
+      // or independent stories in another cluster where `sourceId` isn't yet present)
       const alreadyCoveredBySameOutlet = activeClusterAnchors.some(anc => {
         if (!anc.outletPubMs.has(sourceId)) return false;
+        const existingMs = anc.outletPubMs.get(sourceId) || 0;
+        if (t > existingMs + 2 * 3600 * 1000) return false;
+
         const shT = [...titleStems].filter(s => anc.titleStems.has(s));
         const shA = [...allStems].filter(s => anc.allStems.has(s));
-        if (shT.length >= 2 || (shT.length >= 1 && shA.length >= 3)) {
-          const existingMs = anc.outletPubMs.get(sourceId) || 0;
-          if (t <= existingMs + 2 * 3600 * 1000) return true;
+        if (!(shT.length >= 2 || (shT.length >= 1 && shA.length >= 3))) return false;
+
+        const outletExistingStems = anc.outletTitleStemsMap?.get(sourceId);
+        const refSpecificExists = [...specificArtTitleStems].some(s => anc.storyStemSet.has(s) || (outletExistingStems && outletExistingStems.has(s)));
+        if (!refSpecificExists) return false;
+
+        // If the lead main clause ("Stocks Surge | After...", "Gold Futures Rebound | as...") introduces a completely
+        // different subject with zero specific entity overlap with `anc.storyStemSet`, keep it in the pool!
+        if (hasCausalSplit && leadClauseStems.length >= 2) {
+          const leadSharesSpecificEntity = leadClauseStems.some(s => !GENERIC_CANDIDATE_STEMS.has(s) && anc.storyStemSet.has(s));
+          if (!leadSharesSpecificEntity) return false;
         }
-        return false;
+
+        // If < 50% of the headline's non-generic stems overlap `anc` and it introduces >= 2 unshared non-generic stems, keep it!
+        if (specificArtTitleStems.length >= 3) {
+          const sharedSpecCount = specificArtTitleStems.filter(s => anc.storyStemSet.has(s) || (outletExistingStems && outletExistingStems.has(s))).length;
+          const unsharedSpecCount = specificArtTitleStems.filter(s => !anc.storyStemSet.has(s) && !anc.titleStems.has(s)).length;
+          if (unsharedSpecCount >= 2 && (sharedSpecCount / specificArtTitleStems.length) < 0.50) {
+            return false;
+          }
+        }
+
+        if (hasDisjointSovereignCountryConflict(anc.anchorStory || '', art.title || '', anc.anchorStory || '', art.title || '')) {
+          return false;
+        }
+        return true;
       });
       if (alreadyCoveredBySameOutlet) continue;
 
@@ -2100,21 +2191,6 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
   const maxTitleStemDf = Math.max(24, Math.min(115, Math.round(totalCorpusDocs * 0.032)));
   const maxAllStemDf = Math.max(30, Math.min(135, Math.round(totalCorpusDocs * 0.038)));
   const maxRareTitleStemDf = Math.max(10, Math.min(35, Math.round(totalCorpusDocs * 0.01)));
-  const GENERIC_CANDIDATE_STEMS = new Set([
-    'record', 'fatal', 'kill', 'dead', 'death', 'milit', 'army', 'servic', 'draft', 'train', 'charg', 'releas',
-    'crash', 'fire', 'attack', 'protes', 'court', 'suprem', 'appeal', 'judg', 'justic', 'senten', 'offend',
-    'prison', 'family', 'polic', 'arrest', 'strik', 'launch', 'approv', 'reject', 'elect', 'voter', 'campai',
-    'midter', 'senat', 'congre', 'parlia', 'govern', 'offici', 'minist', 'presid', 'invest', 'probe', 'threat',
-    'crisis', 'emerg', 'warn', 'disrup', 'cancel', 'delay', 'announ', 'reveal', 'confirm', 'report', 'discov',
-    'found', 'scient', 'astron', 'study', 'united', 'state', 'americ', 'administr', 'white', 'house', 'feder',
-    'nation', 'global', 'world', 'donald', 'trump', 'biden', 'europe', 'middl', 'east', 'foreig', 'defens',
-    'first', 'after', 'amid', 'cancer', 'vaccin', 'patien', 'treat', 'diseas', 'medic', 'health', 'hospit',
-    'doctor', 'clinic', 'trial', 'resear', 'breakt', 'stock', 'share', 'market', 'budget', 'fiscal', 'treasu',
-    'econom', 'financ', 'compan', 'corpor', 'indust', 'techno', 'tunisi', 'tunis', 'brazil', 'ecuado', 'albani',
-    'indone', 'malays', 'israel', 'palest', 'iran', 'saudi', 'yemen', 'syria', 'lebanon', 'egypt', 'turk',
-    'ukrain', 'russia', 'china', 'chines', 'taiwan', 'japan', 'kore', 'india', 'pakist', 'austral', 'canad',
-    'mexic', 'britain', 'france', 'german', 'ital', 'spain', 'poland'
-  ]);
 
   const matchedAnchorIndices = new Set();
   const matchedUnclusteredIndices = new Set();
@@ -2370,6 +2446,10 @@ Return JSON array in format:
           console.warn(`[Clusters] Dropped episodic phase-mismatch article from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
           return false;
         }
+        if (!art.isClusterAnchor && hasOppositeMarketDirectionConflict(primaryStoryText, art.title || '')) {
+          console.warn(`[Clusters] Dropped opposite-direction market/asset article from "${primaryStoryText}": [${art.sourceId}] "${art.title}"`);
+          return false;
+        }
         if (!art.isClusterAnchor && hasDisjointSovereignCountryConflict(
           `${primaryStoryText} ${cl.summary || ''} ${directAnchorInIds?.anchorCluster?.summary || ''}`,
           `${art.title || ''} ${art.description || ''}`,
@@ -2402,9 +2482,11 @@ Return JSON array in format:
           const sharedAll = [...myAllStems].filter(s => otherAllStems.has(s));
           const hasSpecificAll = sharedAll.some(s => !GENERIC_CANDIDATE_STEMS.has(s) && !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxAllStemDf);
           const hasRareTitle = sharedTitle.some(s => !GENERIC_CANDIDATE_STEMS.has(s) && !BROAD_THEATRE_ACTOR_STEMS.has(s) && (stemDocFreq.get(s) || 0) <= maxRareTitleStemDf) && sharedAll.length >= 2;
+          const bothRecentPeer = Math.abs((art.pubMs || 0) - (other.pubMs || 0)) <= 18 * 3600 * 1000;
           return (sharedTitle.length >= 1 && sharedAll.length >= 2 && hasSpecificAll) ||
             hasRareTitle ||
-            (sharedTitleToFull.length >= 2 && sharedAll.length >= 3 && hasSpecificAll);
+            (sharedTitleToFull.length >= 2 && sharedAll.length >= 3 && hasSpecificAll) ||
+            (bothRecentPeer && sharedTitle.length >= 4 && sharedAll.length >= 5);
         });
         if (!keep) {
           console.warn(`[Clusters] Dropped low-specificity/thematic outlier from "${cl.story}": [${art.sourceId}] "${art.title}"`);
@@ -2717,6 +2799,9 @@ Return JSON array in format:
               if (!Array.isArray(anc.coverage)) continue;
               for (const prevArt of anc.coverage) {
                 if (!prevArt || !prevArt.sourceId || seenOutlets.has(prevArt.sourceId)) continue;
+                if (prevVersion === 1 && matchingArticles.length >= 2 && hasOppositeMarketDirectionConflict(finalStory, prevArt.title || '')) {
+                  continue;
+                }
                 seenOutlets.add(prevArt.sourceId);
                 matchingArticles.push({
                   sourceId: prevArt.sourceId,
@@ -2951,10 +3036,14 @@ Return JSON array in format:
         const newestPrevMs = Math.max(...prev.coverage.map(c => new Date(c.pubDate).getTime() || 0));
         if (newestPrevMs < sevenDaysAgo) return;
 
-        const unclaimedCoverage = prev.coverage.filter(c =>
+        let unclaimedCoverage = prev.coverage.filter(c =>
           !(c.link && coveredUrls.has(canonicalUrl(c.link))) &&
           !(c.title && coveredTitles.has(cleanHeadlineTitle(c.title)))
         );
+        if ((prev.version || 1) === 1 && unclaimedCoverage.length > 2) {
+          const dirClean = unclaimedCoverage.filter(c => !hasOppositeMarketDirectionConflict(prev.story || '', c.title || ''));
+          if (dirClean.length >= 2) unclaimedCoverage = dirClean;
+        }
         const coveredCount = prev.coverage.length - unclaimedCoverage.length;
         // Only treat a previous cluster as superseded by coveredUrls if >= 60% (and at least 2) of its articles
         // were absorbed into new clusters, OR if fewer than 2 unclaimed articles remain.
@@ -3011,6 +3100,59 @@ Return JSON array in format:
           formattedClusters.push(prevClone);
         }
       });
+    }
+
+    // Sub-Angle Shadow Cluster Absorption Guard:
+    // Because spin-off unlocking keeps secondary articles from major outlets in the pool, guard against minting a redundant
+    // 2–4 outlet v1 sub-angle shadow cluster (e.g. "Employees Cheer Huang at Nvidia HQ" or "Leaders Trade Blame After COP31")
+    // when >= 60% of its covering outlets are ALREADY inside a much larger active cluster sharing the exact same proper-noun subject
+    // and the new cluster introduces neither a disjoint country, a distinct proper-noun entity, nor a macro market/commodity shockwave.
+    const prevKnownIdSet = new Set((previousClusters || []).map(p => p?.id).filter(Boolean));
+    for (let sIdx = formattedClusters.length - 1; sIdx >= 0; sIdx--) {
+      const subCl = formattedClusters[sIdx];
+      if (!subCl || (subCl.version || 1) > 1 || prevKnownIdSet.has(subCl.id)) continue;
+      const subCov = subCl.coverage || [];
+      if (subCov.length < 2 || subCov.length > 4) continue;
+      if (MACRO_MARKET_ROUNDUP_HEAD_RE.test(subCl.story || '')) continue;
+
+      const { properStems: subProper } = extractProperSubjectEntities(subCl.story || '', subCl.summary || '');
+      if (subProper.size === 0) continue;
+
+      let parentBigCl = null;
+      for (let bIdx = 0; bIdx < formattedClusters.length; bIdx++) {
+        if (bIdx === sIdx) continue;
+        const bigCl = formattedClusters[bIdx];
+        const bigCov = bigCl?.coverage || [];
+        if (bigCov.length < Math.max(6, subCov.length * 2)) continue;
+
+        const bigOutlets = new Set(bigCov.map(c => c.sourceId));
+        const overlapOutlets = subCov.filter(c => bigOutlets.has(c.sourceId)).length;
+        if ((overlapOutlets / subCov.length) < 0.60) continue;
+
+        if (hasDisjointSovereignCountryConflict(bigCl.story || '', subCl.story || '', bigCl.story || '', subCl.story || '')) continue;
+
+        const { properStems: bigProper } = extractProperSubjectEntities(bigCl.story || '', `${bigCl.summary || ''} ${bigCov.slice(0, 6).map(a => a.title || '').join(' ')}`);
+        const sharedProper = [...subProper].filter(s => bigProper.has(s) && !COMMON_HEADLINE_NON_ENTITY_STEMS.has(s));
+        const novelProper = [...subProper].filter(s => !bigProper.has(s) && !COMMON_HEADLINE_NON_ENTITY_STEMS.has(s));
+        if (sharedProper.length >= 1 && novelProper.length === 0) {
+          parentBigCl = bigCl;
+          break;
+        }
+      }
+
+      if (parentBigCl) {
+        const bigOutlets = new Set((parentBigCl.coverage || []).map(c => c.sourceId));
+        for (const covItem of subCov) {
+          if (!bigOutlets.has(covItem.sourceId)) {
+            parentBigCl.coverage.push(covItem);
+            bigOutlets.add(covItem.sourceId);
+          }
+        }
+        parentBigCl.coverage.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+        parentBigCl.outletCount = parentBigCl.coverage.length;
+        console.log(`[Clusters] Absorbed redundant ${subCov.length}-outlet sub-angle shadow cluster "${subCl.story}" into "${parentBigCl.story}".`);
+        formattedClusters.splice(sIdx, 1);
+      }
     }
 
     // Deterministic Post-LLM Entity-Anchor + Event-Action Coverage Catch-Up Pass (Rolling 7-Day Window):
@@ -3135,6 +3277,7 @@ Return JSON array in format:
           maxRareTitleStemDf
         )) continue;
         if (isMacroMarketRoundupHijack(cm.cl, art.title || '', [art])) continue;
+        if (hasOppositeMarketDirectionConflict(cm.cl.story || '', art.title || '')) continue;
 
         if (cm.clEntityStems.length <= 2) {
           if (matchedEntitiesInAll.length < cm.clEntityStems.length) continue;
@@ -5742,6 +5885,10 @@ async function main() {
             console.log(`[Clusters] Stripped market-ticker intruder from "${cl.story}": [${cov.sourceId}] "${cov.title}"`);
             return false;
           }
+          if ((cl.version || 1) === 1 && hasOppositeMarketDirectionConflict(cl.story || '', cov.title || '')) {
+            console.log(`[Clusters] Stripped opposite-direction market outlier from v1 cluster "${cl.story}": [${cov.sourceId}] "${cov.title}"`);
+            return false;
+          }
           if (medEb <= -0.55 && (eb - medEb) >= 0.42) {
             const hasCasualtyWord = /\b(kill|kills|killed|dead|death|deaths|casualt|wound|injur|strike|strikes|missile|camp|fire|blaze|flood|rescue)\b/i.test(cov.title || '');
             if (!hasCasualtyWord) {
@@ -5908,5 +6055,7 @@ async function main() {
     synthesizeIntegratedClusterSummaries,
     detectCrossRegionBreakingBurst,
     hasHeadlineStateOrPolarityShift,
-    isMacroMarketRoundupHijack
+    isMacroMarketRoundupHijack,
+    classifyMarketHeadlineDirection,
+    hasOppositeMarketDirectionConflict
   };
