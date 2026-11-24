@@ -1905,6 +1905,266 @@ function hasHeadlineStateOrPolarityShift(currentStory, priorContextText, candida
   };
 }
 
+function levenshteinInterior1(a, b) {
+  if (a === b) return 0;
+  const la = a.length;
+  const lb = b.length;
+  if (Math.abs(la - lb) > 1) return 2;
+  // Never treat trailing 1-char grammatical inflections (Russia/Russian, German/Germany, Teenage/Teenager, Expand/Expands) as typos
+  if (la !== lb && (a.slice(0, -1) === b || b.slice(0, -1) === a)) return 2;
+  if (la === lb && a.slice(0, -1) === b.slice(0, -1)) return 2;
+  let i = 0;
+  let j = 0;
+  let diffs = 0;
+  while (i < la && j < lb) {
+    if (a[i] === b[j]) {
+      i++;
+      j++;
+    } else {
+      diffs++;
+      if (diffs > 1) return 2;
+      if (la > lb) i++;
+      else if (lb > la) j++;
+      else {
+        i++;
+        j++;
+      }
+    }
+  }
+  if (i < la || j < lb) diffs++;
+  return diffs;
+}
+
+/**
+ * Deterministically repairs LLM headline stutters ("Treasure Treasury Secretary" -> "Treasury Secretary")
+ * and interior 1-char proper-noun/brand spelling corruptions ("BISERI" -> "Bisleri", "Flamingo" -> "Flamengo")
+ * when the headline token appears 0 times in coverage+summary and >=2 covering dispatches share the exact 1-edit match.
+ */
+function sanitizeDeterministicHeadlineTypos(story, coverage = [], summary = '') {
+  let out = String(story || '').trim();
+  if (!out) return out;
+  const tokens = out.split(/\s+/);
+  const deduped = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const cur = tokens[i];
+    const nxt = tokens[i + 1];
+    if (nxt) {
+      const cClean = cur.replace(/[^a-zA-Z]/g, '').toLowerCase();
+      const nClean = nxt.replace(/[^a-zA-Z]/g, '').toLowerCase();
+      const isFuncDup = cClean === nClean && /^(the|a|an|in|on|at|to|for|of|by|with|and|amid|over|after|secretary|minister|president|senator|governor)$/.test(cClean);
+      const isPrefixStutter = cClean !== nClean && cClean.length >= 5 && nClean.length >= cClean.length &&
+        Math.abs(nClean.length - cClean.length) <= 2 &&
+        nClean.startsWith(cClean.slice(0, -1)) &&
+        /^[A-Z]/.test(cur) && /^[A-Z]/.test(nxt);
+      if (isFuncDup || isPrefixStutter) continue;
+    }
+    deduped.push(cur);
+  }
+  out = deduped.join(' ');
+
+  const evidenceText = `${summary || ''} ${(coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ')}`;
+  const propCounts = new Map();
+  for (const a of (coverage || [])) {
+    const seenInArt = new Set();
+    for (const m of String(`${a.title || ''} ${a.description || ''}`).matchAll(/\b[A-Z][a-zA-Z]{4,}\b/g)) {
+      const w = m[0];
+      const low = w.toLowerCase();
+      if (!seenInArt.has(low)) {
+        seenInArt.add(low);
+        propCounts.set(low, { display: w, count: (propCounts.get(low)?.count || 0) + 1 });
+      }
+    }
+  }
+  out = out.split(/\s+/).map(tok => {
+    const m = tok.match(/^([^a-zA-Z0-9]*)([A-Z][a-zA-Z]{4,})([^a-zA-Z0-9]*)$/);
+    if (!m) return tok;
+    const [, pre, core, post] = m;
+    const coreLow = core.toLowerCase();
+    if (new RegExp(`\\b${core.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(evidenceText)) {
+      return tok;
+    }
+    let bestCand = null;
+    for (const [candLow, info] of propCounts.entries()) {
+      if (info.count < 2) continue;
+      if (coreLow[0] === candLow[0] && coreLow.slice(-1) === candLow.slice(-1) && levenshteinInterior1(coreLow, candLow) === 1) {
+        if (!bestCand || info.count > bestCand.count) bestCand = info;
+      }
+    }
+    return bestCand ? `${pre}${bestCand.display}${post}` : tok;
+  }).join(' ');
+  return out;
+}
+
+function cleanLateralConnectionReason(rawReason) {
+  let s = String(rawReason || '').trim();
+  if (!s) return '';
+  s = s
+    .replace(/^\[?S?\d{1,3}\]?\s+is\s+the\s+direct\s+[^,]+?\s+of\s+\[?S?\d{1,3}\]?,\s*(?:as\s+)?/i, '')
+    .replace(/^\[?S?\d{1,3}\]?\s+(?=(?:continues|details|follows|expands|tracks|reflects|links)\b)/i, 'This development ')
+    .replace(/\s+(?:from|in|of)\s+\[?S\d{1,3}\]?(?=[,.;\s]|$)/gi, '')
+    .replace(/\s+\[\d{1,3}\](?=[,.;\s]|$)/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  if (s.length > 1 && /^[a-z]/.test(s)) {
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  return s;
+}
+
+function applyDeterministicHeadlineHygiene(c) {
+  if (!c || typeof c !== 'object') return false;
+  let changed = false;
+  if (c.story) {
+    const fixedStory = sanitizeDeterministicHeadlineTypos(c.story, c.coverage, c.summary);
+    if (fixedStory && fixedStory !== c.story) {
+      const oldSlug = c.id || String(c.story).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const newSlug = String(fixedStory).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      console.log(`[Clusters] Repaired deterministic headline typo/stutter: "${c.story}" -> "${fixedStory}"`);
+      c.story = fixedStory;
+      if (newSlug && newSlug !== oldSlug) {
+        const ev = new Set(Array.isArray(c.evolvedFromIds) ? c.evolvedFromIds : []);
+        if (oldSlug) ev.add(oldSlug);
+        ev.delete(newSlug);
+        if (ev.size > 0) c.evolvedFromIds = Array.from(ev);
+        c.id = newSlug;
+      }
+      if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
+        const lastIdx = c.evolutionHistory.length - 1;
+        c.evolutionHistory[lastIdx].headline = fixedStory;
+        if (c.evolutionHistory.length === 1) c.evolutionHistory[0].headline = fixedStory;
+      }
+      changed = true;
+    }
+  }
+  if (Array.isArray(c.lateralConnections)) {
+    for (const lc of c.lateralConnections) {
+      if (lc && lc.howItConnects) {
+        const cleaned = cleanLateralConnectionReason(lc.howItConnects);
+        if (cleaned && cleaned !== lc.howItConnects) {
+          lc.howItConnects = cleaned;
+          changed = true;
+        }
+      }
+    }
+  }
+  return changed;
+}
+
+/**
+ * Detects when an existing cluster headline frames an event in an unresolved/anticipatory/preview state
+ * ("World Court Set to Rule on...", "Prepares to Launch...", "Ahead of Vote...") while the summary or
+ * covering dispatches confirm the decisive outcome has already occurred in the real world.
+ */
+function hasHeadlineOpenPreviewVsResolvedOutcome(storyText, summaryAndTitlesText) {
+  const s = String(storyText || '');
+  if (!/\b(set\s+to|poised\s+to|expected\s+to|scheduled\s+to|slated\s+to|gears?\s+up(?:\s+to)?|prepares?\s+to|preparing\s+to|braces?\s+for|ahead\s+of\b(?!.*polls?\s+show)|await(?:s|ing)\b|mulls?\b|weighs?\b|considers?\b|considering\b|to\s+rule\s+on|to\s+vote\s+on|to\s+decide\s+on|on\s+the\s+brink\s+of|holds?\s+(?:high-stakes\s+|tight\s+)?(?:referendum|election|runoff|vote))\b/i.test(s)) {
+    return false;
+  }
+  const cleaned = String(summaryAndTitlesText || '')
+    .replace(/\b(?:will|would|could|might|may|can|should|expected\s+to|set\s+to|poised\s+to|scheduled\s+to|plans?\s+to|preparing\s+to|intends?\s+to|threatens?\s+to|hopes?\s+to|seeks?\s+to|if\s+[a-z]+\s+)\s+[a-z0-9\s,'"-]{1,65}/gi, ' ');
+  return /\b(issued\s+(?:a|an|its|the)\s+(?:landmark\s+|historic\s+|final\s+|formal\s+|binding\s+|unanimous\s+)?(?:ruling|verdict|judgment|judgement|decision|order)|convicted|acquitted|found\s+(?:[a-z]+\s+){0,4}(?:guilty|liable|responsible)|sentenced|ruled\s+that|determines?\s+that|concludes?\s+that|struck\s+down|upheld|overturned|officially\s+approved|formally\s+approved|voters\s+(?:decisively\s+)?(?:rejected|approved|backed|elected)|successfully\s+launched|lifted\s+off|appointed\s+administrators|entered\s+administration|won\s+the\s+(?:election|runoff|presidency|majority)|elected\s+(?:president|prime\s+minister)|signed\s+into\s+law|ratified|vetoed)\b/i.test(cleaned);
+}
+
+const HEADLINE_ENTITY_EXPANSIONS = {
+  eu: /\b(eu|european\s+union|brussels|eurozone|european\s+commission|european\s+parliament|european\s+council)\b/i,
+  uk: /\b(uk|u\.k\.|united\s+kingdom|britain|british|england|english|london|westminster|scotland|scottish|wales|welsh)\b/i,
+  us: /\b(us|u\.s\.|usa|united\s+states|america|american|washington|white\s+house|pentagon|congress|senate|house\s+of\s+representatives|trump|biden|federal|doj|fbi|cia|nsa|sec|faa|fda|epa|cdc|irs|ice|dhs)\b/i,
+  un: /\b(un|u\.n\.|united\s+nations|world\s+court|international\s+court|security\s+council|general\s+assembly|who|unicef|unhcr|unrwa|iaea|cop\d+)\b/i,
+  uae: /\b(uae|united\s+arab\s+emirates|emirati|dubai|abu\s+dhabi)\b/i,
+  nato: /\b(nato|north\s+atlantic\s+treaty|transatlantic\s+alliance)\b/i,
+  imf: /\b(imf|international\s+monetary\s+fund)\b/i,
+  icj: /\b(icj|international\s+court\s+of\s+justice|world\s+court|hague)\b/i,
+  icc: /\b(icc|international\s+criminal\s+court|international\s+cricket\s+council)\b/i,
+  itlos: /\b(itlos|international\s+tribunal\s+for\s+the\s+law\s+of\s+the\s+sea)\b/i,
+  afp: /\b(afp|australian\s+federal\s+police|agence\s+france-presse)\b/i,
+  fx: /\b(fx|foreign[- ]exchange|forex|yuan|currency)\b/i,
+  cba: /\b(cba|collective\s+bargaining|labor\s+deal|union|players\s+association|salary\s+cap|lockout)\b/i,
+  gop: /\b(gop|republican|republicans)\b/i,
+  pm: /\b(pm|prime\s+minister|premier)\b/i,
+  ceo: /\b(ceo|chief\s+executive)\b/i,
+  ai: /\b(ai|artificial\s+intelligence|machine\s+learning|llm)\b/i,
+  ev: /\b(ev|evs|electric\s+vehicle|electric\s+car)\b/i,
+  it: /\b(it|information\s+technology|tech|software|cyber)\b/i,
+  tv: /\b(tv|television|broadcast)\b/i
+};
+
+function detectHeadlineGroundingDefect(c) {
+  if (!c || !c.story) return null;
+  const normSelf = String(c.story).toLowerCase().trim();
+  const histText = (c.evolutionHistory || [])
+    .map(h => `${(h.headline && h.headline.toLowerCase().trim() !== normSelf) ? h.headline : ''} ${h.note || ''} ${h.summary || ''}`)
+    .join(' ');
+  const covText = (c.coverage || []).map(a => `${a.title || ''} ${a.description || ''}`).join(' ');
+  const evidence = `${c.summary || ''} ${c.developmentNote || ''} ${histText} ${covText}`;
+  if (hasHeadlineOpenPreviewVsResolvedOutcome(c.story, `${c.summary || ''}. ${(c.coverage || []).slice(0, 4).map(a => a.title || '').join('. ')}`)) {
+    return { kind: 'stale_preview', detail: c.story };
+  }
+  for (const rawTok of String(c.story).split(/\s+/)) {
+    const w = rawTok.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '').replace(/'s$/i, '');
+    if (!w || w.length < 2 || /^\d+$/.test(w)) continue;
+    const low = w.toLowerCase();
+    if (HEADLINE_ENTITY_EXPANSIONS[low]) {
+      if (!HEADLINE_ENTITY_EXPANSIONS[low].test(evidence)) {
+        return { kind: 'ungrounded_entity', token: w };
+      }
+      continue;
+    }
+    if (/^[A-Z]{2,6}$/.test(w) && !/^(II|III|IV|VI|VII|AM|PM|VS|OK|NO)$/.test(w)) {
+      const re = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (!re.test(evidence)) {
+        return { kind: 'ungrounded_acronym', token: w };
+      }
+    }
+  }
+  return null;
+}
+
+const PARENT_HEADLINE_RULING_RE = /\b(ruling|rule\s+on|rules?\s+(?:on|that|against|in\s+favor)|verdict|judgment|judgement|convict\w*|acquit\w*|guilty|arrest\s+warrant|tribunal|icj|icc|world\s+court|supreme\s+court|high\s+court|(?:un|security\s+council)\s+.*\bresolution)\b/i;
+const CHILD_POST_RULING_RE = /\b(?:after|following|over)\s+(?:[a-z0-9'’-]+\s+){0,5}(?:ruling|verdict|judgment|judgement|warrant|resolution)\b|\b(?:acknowledg\w*|recogni[sz]\w*|support\w*|back\w*|welcom\w*|endorse\w*|reject\w*|defy|defies|defied|appeal\w*|enforc\w*)\s+(?:[a-z0-9'’-]+\s+){0,6}(?:ruling|verdict|judgment|judgement|warrant|resolution)\b/i;
+const GENERIC_LEGAL_REACTION_STEMS = new Set(extractCoherenceStems(
+  'court ruling verdict judgment judgement justice international world united nations state states government leaders military president minister countries group after amid over against supports support acknowledge acknowledges recognizes sanctions guilty landmark first top high supreme federal appeal appeals resolution warrant convict convicted'
+));
+
+/**
+ * Identifies direct diplomatic recognition, acknowledgment, appeal, or ruling-triggered enforcement/sanctions clusters
+ * arriving within <= 5 days (120h) of a landmark court/tribunal/UN ruling where >= 60% of the follow-up's covering
+ * headlines explicitly cite that exact ruling/verdict/warrant as their direct object.
+ */
+function isDirectPostRulingEnforcementFollowUp(clA, clB, stemDfMap = null, maxDf = 10) {
+  if (!clA || !clB) return false;
+  const tryOrder = (parent, child) => {
+    const pCov = parent.coverage || [];
+    const cCov = child.coverage || [];
+    if (pCov.length < 2 || cCov.length < 2) return false;
+    const pEarliest = Date.parse(parent.firstSeenAt || '') || Math.min(...pCov.map(a => Date.parse(a.pubDate || '') || Infinity));
+    const cEarliest = Date.parse(child.firstSeenAt || '') || Math.min(...cCov.map(a => Date.parse(a.pubDate || '') || Infinity));
+    if (!(cEarliest > pEarliest + 2 * 3600000)) return false;
+    const pLatest = Math.max(Date.parse(parent.lastDevelopedAt || '') || 0, ...pCov.map(a => Date.parse(a.pubDate || '') || 0));
+    const gapHours = (cEarliest - pLatest) / 3600000;
+    const spanFromBreakHours = (cEarliest - pEarliest) / 3600000;
+    if (gapHours > 120 || spanFromBreakHours > 14 * 24) return false;
+
+    const pTitlesText = `${parent.story || ''} ${(parent.evolutionHistory || []).map(h => h?.headline || '').join(' ')}`;
+    if (!PARENT_HEADLINE_RULING_RE.test(pTitlesText)) return false;
+
+    let directHits = 0;
+    for (const a of cCov) {
+      if (CHILD_POST_RULING_RE.test(a.title || '')) directHits++;
+    }
+    if ((directHits / cCov.length) < 0.60) return false;
+
+    const isRareCaseStem = (s) => !GENERIC_LEGAL_REACTION_STEMS.has(s) && (!stemDfMap || (stemDfMap.get(s) || 0) <= maxDf);
+    const pRareHead = extractCoherenceStems(parent.story || '').filter(isRareCaseStem);
+    const pRareAll = new Set(extractCoherenceStems(`${parent.story || ''} ${parent.summary || ''}`).filter(isRareCaseStem));
+    const cTitlesBlob = cCov.map(a => a.title || '').join(' ');
+    const cRareAll = new Set(extractCoherenceStems(`${child.story || ''} ${cTitlesBlob}`).filter(isRareCaseStem));
+    const sharedRare = [...pRareAll].filter(s => cRareAll.has(s));
+    const sharedRareInHead = pRareHead.filter(s => cRareAll.has(s));
+    return sharedRare.length >= 2 && sharedRareInHead.length >= 1;
+  };
+  return tryOrder(clA, clB) || tryOrder(clB, clA);
+}
+
 /**
  * Prevents generic rolling macro market-index roundup clusters ("Global Stocks Rebound...", "Wall Street Slumps...")
  * from hijacking discrete named-entity governance, legal, executive, diplomatic, or operational breaking news.
@@ -3499,6 +3759,8 @@ function appendClusterUpdateAuditLog(entries) {
 async function consolidateEvolvingClusters(clusters, apiKey) {
   if (!apiKey || !Array.isArray(clusters) || clusters.length < 4) return clusters;
 
+  clusters.forEach(c => applyDeterministicHeadlineHygiene(c));
+
   const slugify = (str) => String(str || 'story').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const nowMs = Date.now();
 
@@ -3554,6 +3816,21 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       ? cov.filter(a => (new Date(a.pubDate).getTime() || 0) > lastHistMs + 20 * 60000)
       : [];
     const hasPostHistSurge = postHistCov.length >= 2 && newestCovMs > lastHistMs + 30 * 60000;
+    const hasFrozenPreviewOutcome = hasHeadlineOpenPreviewVsResolvedOutcome(
+      c.story || '',
+      `${c.summary || ''}. ${cov.slice(0, 5).map(a => a.title || '').join('. ')}`
+    );
+    if (hasFrozenPreviewOutcome) {
+      console.log(`[Clusters] Stale preview headline vs resolved outcome detected on "${c.story}" — queueing for Job 2 shift promotion.`);
+      c._pendingUpdate = {
+        candidateStory: c.story,
+        candidateSummary: c.summary || '',
+        newestAddedMs: newestCovMs || Date.now(),
+        addedHeadlines: cov.slice(0, 5).map(a => `${a.sourceName || a.sourceId}: "${a.title}"${a.description ? ` (${String(a.description).slice(0, 160).trim()})` : ''}`),
+        isPreviewToOutcomeRepair: true
+      };
+      continue;
+    }
     if (!hasPostHistSurge && c.lastEvaluatedCoverageMs && newestCovMs <= c.lastEvaluatedCoverageMs) continue;
     const baseText = `${c.story || ''} ${c.summary || ''} ${c.developmentNote || ''} ${histArr.map(h => h.note || '').join(' ')}`.toLowerCase();
     const baseStems = new Set(extractCoherenceStems(baseText));
@@ -3673,15 +3950,21 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       }
       const clA = meta[i].c;
       const clB = meta[j].c;
+      const isDirectPostRulingFollowUp = isDirectPostRulingEnforcementFollowUp(clA, clB, clusterStemFreq, maxClusterEntityFreq);
       if (
-        hasDisjointSovereignCountryConflict(`${clA.story || ''} ${clA.summary || ''}`, `${clB.story || ''} ${clB.summary || ''}`, clA.story || '', clB.story || '', clusterStemFreq, 8) ||
-        hasDisjointSovereignCountryConflict(`${clB.story || ''} ${clB.summary || ''}`, `${clA.story || ''} ${clA.summary || ''}`, clB.story || '', clA.story || '', clusterStemFreq, 8)
+        !isDirectPostRulingFollowUp &&
+        (
+          hasDisjointSovereignCountryConflict(`${clA.story || ''} ${clA.summary || ''}`, `${clB.story || ''} ${clB.summary || ''}`, clA.story || '', clB.story || '', clusterStemFreq, 8) ||
+          hasDisjointSovereignCountryConflict(`${clB.story || ''} ${clB.summary || ''}`, `${clA.story || ''} ${clA.summary || ''}`, clB.story || '', clA.story || '', clusterStemFreq, 8)
+        )
       ) {
         continue;
       }
-      const isSeparateEpisodeOrSubject = hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxClusterEntityFreq);
-      const pairSpecScore = (specificSharedTitle.length * 10) + (sharedTitle.length * 4) + (specificSharedAll.length * 2) - (isSeparateEpisodeOrSubject ? 15 : 0);
-      candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll, specificSharedTitle, specificSharedAll, pairSpecScore, isSeparateEpisodeOrSubject });
+      const isSeparateEpisodeOrSubject = isDirectPostRulingFollowUp
+        ? false
+        : hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxClusterEntityFreq);
+      const pairSpecScore = (specificSharedTitle.length * 10) + (sharedTitle.length * 4) + (specificSharedAll.length * 2) - (isSeparateEpisodeOrSubject ? 15 : 0) + (isDirectPostRulingFollowUp ? 45 : 0);
+      candidatePairHints.push({ origA: i, origB: j, sharedTitle, sharedAll, specificSharedTitle, specificSharedAll, pairSpecScore, isSeparateEpisodeOrSubject, isDirectPostRulingFollowUp });
     }
   }
   candidatePairHints.sort((a, b) => (b.pairSpecScore || 0) - (a.pairSpecScore || 0));
@@ -3818,16 +4101,16 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
         const ans = await callGeminiDecisionsApi(apiKey, pairInput, {
           same_incident_merge: {
             type: 'noul',
-            instructions: 'Should Cluster A and Cluster B be merged into a single incident cluster? Answer YES only if they report on the exact same discrete real-world event, same policy decision, or consecutive stages of the exact same physical incident; answer NO if they are separate actions by different sovereign countries, separate matches, or distinct events in the same broader region.'
+            instructions: 'Should Cluster A and Cluster B be merged into a single evolving story cluster? Answer YES if they report on the exact same discrete real-world event, same policy decision, consecutive stages of the exact same physical/legal incident, OR direct diplomatic recognition/acknowledgment/appeal/sanctions explicitly responding to the exact court ruling, verdict, or arrest warrant in the other cluster within 5 days; answer NO if they are separate domestic metrics, independent bilateral policy programs (such as a refugee resettlement deal), separate military strikes, separate matches, or distinct events in the same broader region.'
           }
         });
         const mAns = ans?.same_incident_merge;
         if (mAns && typeof mAns.noul === 'number') {
-          if (mAns.noul < 0.22 && (mAns.confidence || 0) >= 0.78) {
+          if (!p.isDirectPostRulingFollowUp && mAns.noul < 0.22 && (mAns.confidence || 0) >= 0.78) {
             p.isSeparateEpisodeOrSubject = true;
             vetoedPairsCount++;
-          } else if (mAns.noul >= 0.82) {
-            p.verifiedSameIncidentProb = Math.round(mAns.noul * 100);
+          } else if (mAns.noul >= 0.82 || p.isDirectPostRulingFollowUp) {
+            p.verifiedSameIncidentProb = Math.max(Math.round(mAns.noul * 100), p.isDirectPostRulingFollowUp ? 88 : 0);
             verifiedMergePairsCount++;
           }
         }
@@ -3899,13 +4182,19 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       if (c._pendingUpdate.isInitialGrounding) {
         line += `\n    [CANDIDATE IN-PLACE UPDATE (INITIAL GROUNDING — outlier was stripped or title is too broad; set updateType="material_shift" to replace "story" and "summary" so they name the exact city/country/actor shared ONLY by these surviving headlines): ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
       } else {
-        const triageHint = c._decisionTriage
-          ? (c._decisionTriage.choice === 'clarification' && c._decisionTriage.pClar >= 0.70 && c._decisionTriage.pShift < 0.22
-              ? ` [DECISION-1 CALIBRATED VERDICT: "clarification" (${Math.round(c._decisionTriage.pClar * 100)}%) — refine summary & developmentNote without changing headline]`
-              : (c._decisionTriage.choice === 'material_shift' && c._decisionTriage.pShift >= 0.75
-                  ? ` [DECISION-1 CALIBRATED VERDICT: "material_shift" (${Math.round(c._decisionTriage.pShift * 100)}%)]`
-                  : ''))
-          : '';
+        const isPreviewToOutcome = Boolean(
+          c._pendingUpdate.isPreviewToOutcomeRepair ||
+          hasHeadlineOpenPreviewVsResolvedOutcome(c.story || '', `${c.summary || ''}. ${c._pendingUpdate.addedHeadlines.join('. ')}`)
+        );
+        const triageHint = isPreviewToOutcome
+          ? ` [PREVIEW-TO-OUTCOME TRANSITION: Existing headline "${c.story}" uses pre-event preview framing, while dispatches report the completed verdict/result — MUST set updateType="material_shift" and update "story" to state the actual outcome!]`
+          : (c._decisionTriage
+              ? (c._decisionTriage.choice === 'clarification' && c._decisionTriage.pClar >= 0.70 && c._decisionTriage.pShift < 0.22
+                  ? ` [DECISION-1 CALIBRATED VERDICT: "clarification" (${Math.round(c._decisionTriage.pClar * 100)}%) — refine summary & developmentNote without changing headline]`
+                  : (c._decisionTriage.choice === 'material_shift' && c._decisionTriage.pShift >= 0.75
+                      ? ` [DECISION-1 CALIBRATED VERDICT: "material_shift" (${Math.round(c._decisionTriage.pShift * 100)}%)]`
+                      : ''))
+              : '');
         line += `\n    [CANDIDATE IN-PLACE UPDATE:${triageHint} +${c._pendingUpdate.addedHeadlines.length} new dispatches -> ${c._pendingUpdate.addedHeadlines.join(' | ')}]`;
       }
     }
@@ -3925,11 +4214,13 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       candidatePairHints.slice(0, 25).map(p => {
         const pA = origToPromptIdx.get(p.origA);
         const pB = origToPromptIdx.get(p.origB);
-        const tag = p.isSeparateEpisodeOrSubject
-          ? ' [SEPARATE EPISODES / SUBJECTS — evaluate ONLY for JOB 3 lateralConnections, DO NOT merge in Job 1]'
-          : (p.verifiedSameIncidentProb
-              ? ` [DECISION-1 VERIFIED SAME-INCIDENT MERGE (P=${p.verifiedSameIncidentProb}%)]`
-              : '');
+        const tag = p.isDirectPostRulingFollowUp
+          ? ' [DIRECT POST-RULING RECOGNITION / ENFORCEMENT STAGE — merge in Job 1 with "updateType": "material_shift", updating "story" to state the landmark ruling outcome + new international recognition/sanctions shift]'
+          : (p.isSeparateEpisodeOrSubject
+              ? ' [SEPARATE EPISODES / SUBJECTS — evaluate ONLY for JOB 3 lateralConnections, DO NOT merge in Job 1]'
+              : (p.verifiedSameIncidentProb
+                  ? ` [DECISION-1 VERIFIED SAME-INCIDENT MERGE (P=${p.verifiedSameIncidentProb}%)]`
+                  : ''));
         return `- Compare [${pA}] "${clusters[p.origA].story}" <-> [${pB}] "${clusters[p.origB].story}" (shared stems: ${p.sharedAll.slice(0, 6).join(', ')})${tag}`;
       }).join('\n')
     : '';
@@ -3988,7 +4279,7 @@ JOB 1 — "merges" (Strict Duplicate-Incident Consolidation — Return [] If Non
 Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME specific physical incident, referendum, legislative bill, court ruling, or scientific study (e.g. two clusters that both report on the exact same train crash, or an earlier cluster on a referendum/protest and a newer cluster on that exact same referendum/protest):
 - CRITICAL NEGATIVE RULE: NEVER put two clusters in "merges" if they are different events, policies, conferences, economic reactions, debates, or studies that merely involve the same country, leader, election campaign, or war!
   • Example of FORBIDDEN merge #1: "Amazon Deforestation Falls to Record Low" + "Brazil Approves Shorter Workweek" + "Lula and Bolsonaro Spar in Debate" are THREE COMPLETELY DIFFERENT EVENTS (one is satellite climate data, one is a Congressional labor bill, one is a TV debate). They must NEVER appear in "merges" — put them in "lateralConnections" (Job 3) instead!
-  • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate diplomatic or economic fallout ("Saudi Arabia Postpones Investor Conference" or "Egypt Pledges Support to Saudi Arabia") are DISTINCT EVENTS with different actors and severities. NEVER merge an economic/diplomatic reaction cluster into a casualty/strike cluster — link them via "lateralConnections" (Job 3) instead!
+  • Example of FORBIDDEN merge #2: A military strike ("Houthi Attack Kills 53 in Yemen") and a separate economic/conference fallout ("Saudi Arabia Postpones Investor Conference") or an independent bilateral policy program ("Malaysia to Resettle 10,000 Rohingya in Turkey") are DISTINCT EVENTS with their own standalone programs/actors. Keep independent bilateral programs or economic conferences in "lateralConnections" (Job 3)!
   • Example of FORBIDDEN merge #3 (Parallel Domestic / Corporate Releases Across Different Countries or Entities): NEVER merge two clusters that report parallel domestic economic indicators (e.g. "UK Inflation Rises to 3.5%" + "Canada Inflation Rises to 3.1%" + "Japan Core Inflation Surges to 2.1%"), budgets, court rulings, elections, or corporate earnings in DIFFERENT countries or for DIFFERENT companies/central banks — those are separate national/corporate releases and belong ONLY in "lateralConnections" (Job 3), NEVER in "merges"!
   • Example of FORBIDDEN merge #4 (Parallel Weather Systems, Sports Games, Aviation/Crime Incidents, Separate Temporal Occurrences, or Market Stories): NEVER merge two clusters about different named storms or weather systems in different countries/oceans (e.g. UK "Storm Austen and Storm Boelo" vs "Severe Weather in Australia" vs Canadian "Subtropical Storm Josephine"), different sports matches in the same league/tournament (e.g. "England Defeats Spain" vs "France vs. Italy", "Aston Villa Defeats Man City" vs "Tottenham Defeats Chelsea", or "Knicks" vs "76ers"), distinct chronological occurrences in the same city/theater (e.g. Paris riots from Weekend A vs. a separate wave of protests on Weekend B, or separate overnight drone strikes days apart — check each cluster's [event: ...] anchor), unrelated aviation/drone incidents ("Tel Aviv Flight Diverted" vs "Drone Explodes in Lithuania"), or a broad market wrap ("Global Stocks Tumble") with a single company's funding round ("OpenAI Nears $30B Funding"). NEVER stitch two separate events together using "Simultaneously," "Concurrently," or "Meanwhile,"!
   • Example of FORBIDDEN merge #5 (Earlier Campaign Episode vs. Election-Day Voting): NEVER merge an earlier campaign-trail episode from days prior (such as "Lula and Bolsonaro Spar in Debate" or "Lula Fast-Tracks Welfare Payments") with the general Election-Day voting cluster ("Brazil Holds High-Stakes Presidential Runoff Election") — keep each milestone separate and link them in "lateralConnections" (Job 3)!
@@ -3996,7 +4287,8 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
   • Example of VALID merge #2 (Same-Decision Policy Action + Leader Defense): If one cluster reports a specific government policy decision, waiver, or order (e.g. "U.S. Cuts Russia Sanctions and Rifts With Ukraine") and another cluster in the same window reports the leader's public remarks defending, announcing, or explaining that EXACT SAME decision (e.g. "Trump Defends Russia Sanctions Waiver"), they are the SAME specific policy event and MUST be merged in "merges" (never left separate in "lateralConnections")!
   • Example of VALID merge #3 (Direct Diplomatic/Rhetorical Exchange — Criticism + Target Leader Counter-Rebuke): If an earlier cluster specifically reports foreign leaders or observers criticizing a country/leader over an event (e.g. "International Observers React to French Unrest" or "Trump Remarks on France Riots and Immigration") and a subsequent cluster reports the targeted leader directly rebuking or responding to those exact remarks (e.g. "Macron Slams Foreign Leaders Over Riot Comments"), they are chronological stages of the EXACT SAME diplomatic war-of-words and MUST be merged in "merges" with "updateType": "material_shift" (while keeping the separate on-the-ground domestic street-protest cluster linked via "lateralConnections")!
   • Example of VALID merge #4 (Same-Announcement Dual-Facet Split — Market/Leak Reaction + Official Substantive Release, or Umbrella-vs-Specific Twin): If one cluster captures the initial data leak, rumor, or stock/market reaction to a specific clinical trial, scientific study, earnings report, or corporate announcement (e.g. "Moderna Stock Plummets Following Cancer Vaccine Leak") and another cluster captures the substantive clinical, scientific, or product findings of that EXACT SAME trial/announcement (e.g. "Global Pharmaceutical Firms Launch Advanced Cancer Vaccines" covering the same personalized mRNA melanoma vaccine trial, or "Global IT Disruption Caused by Critical Software Flaw" + "PHP Vulnerabilities Force Websites Offline"), they are two facets of the EXACT SAME underlying event and MUST be merged in "merges" with "updateType": "material_shift" (updating "story" to name the specific actor/entity and substantive outcome), NEVER left split in "lateralConnections"!
-- If no two clusters report the exact same specific incident or direct rhetorical exchange, return "merges": [].
+  • Example of VALID merge #5 (Direct Post-Ruling / Post-Verdict Recognition, Appeal, or Ruling-Triggered Sanctions Within 5 Days): When an earlier cluster covers a landmark court ruling, verdict, conviction, or arrest warrant (e.g. "ICJ Finds Myanmar Guilty of Rohingya Genocide") and a follow-up cluster within 5 days consists directly of governments/coalitions formally acknowledging, backing, appealing, or imposing targeted sanctions explicitly over that exact ruling (e.g. "14 Countries Acknowledge ICJ Rohingya Ruling as UK Sanctions Myanmar Leaders"), merge them in "merges" with "updateType": "material_shift", updating "story" to name ONLY verified actors from the dispatches (NEVER hallucinate "EU" if dispatches say "UK and 13 countries") while keeping the landmark ruling anchor!
+- If no two clusters report the exact same specific incident, direct rhetorical exchange, or direct post-ruling recognition/enforcement stage, return "merges": [].
 - For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary (or executes a direct head-of-state counter-rebuke to prior foreign criticism); otherwise set "updateType": "clarification" (deduplication).
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches — Eligible Indices: ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : 'NONE (return "inPlaceDevelopments": [])'}):
@@ -4009,6 +4301,7 @@ Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly 
 JOB 3 — "lateralConnections" (Interacting / Same-Campaign / Same-Theatre Clusters That Must Stay Separate):
 Identify pairs of DISTINCT clusters that share a political campaign, country backdrop, or causal interaction without being the same specific incident (e.g. separate policy milestones ahead of Brazil's runoff election, or linking a domestic street-protest cluster to a separate diplomatic commentary cluster about those protests):
 - Keep them as separate clusters (NEVER put them in "merges"), and record their connection here.
+- NEVER write prompt index labels like "[12]", "S12", or "Cluster 5" inside "howItConnects" — always name the real-world actors, institutions, or events directly.
 - ANTI-SUPER-NODE RULE: NEVER link two clusters in "lateralConnections" merely because they mention the same head of state, administration, or public figure (e.g. NEVER link a local property, golf course, or lifestyle story to international war diplomacy, sanctions, or foreign elections). Both clusters in a lateralConnection must operate in the same geopolitical theater, economic sector, or policy/judicial domain.
 
 Clusters:
@@ -4110,18 +4403,23 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const idxs = (m.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
       if (idxs.length < 2) return false;
       const pairKey = `${Math.min(idxs[0], idxs[1])}:${Math.max(idxs[0], idxs[1])}`;
+      const maxSpecificMergeClusterDf = Math.max(6, Math.min(16, Math.round(meta.length * 0.04)));
+      const clA = clusters[idxs[0]];
+      const clB = clusters[idxs[1]];
+      const isDirectPostRulingMerge = Boolean(clA && clB && isDirectPostRulingEnforcementFollowUp(clA, clB, clusterStemFreq, maxSpecificMergeClusterDf));
       if (lateralPairKeys.has(pairKey)) {
-        const urlsA = new Set((clusters[idxs[0]]?.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
-        const urlsB = new Set((clusters[idxs[1]]?.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
-        let sharedU = 0;
-        for (const u of urlsB) { if (urlsA.has(u)) sharedU++; }
-        const minU = Math.min(urlsA.size || 1, urlsB.size || 1);
-        if (sharedU < 3 && (sharedU < 2 || (sharedU / minU) < 0.35)) return false;
+        if (!isDirectPostRulingMerge) {
+          const urlsA = new Set((clA?.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
+          const urlsB = new Set((clB?.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
+          let sharedU = 0;
+          for (const u of urlsB) { if (urlsA.has(u)) sharedU++; }
+          const minU = Math.min(urlsA.size || 1, urlsB.size || 1);
+          if (sharedU < 3 && (sharedU < 2 || (sharedU / minU) < 0.35)) return false;
+        }
         lateralPairKeys.delete(pairKey);
       }
       // Corpus IDF specificity guard: reject any LLM index slip or broad-theatre over-merge
       // where merged clusters do not share at least 1 low-document-frequency specific stem (<= 4% of active clusters)
-      const maxSpecificMergeClusterDf = Math.max(6, Math.min(16, Math.round(meta.length * 0.04)));
       const isBroadCorpusStem = (s) => (clusterStemFreq.get(s) || 0) > maxSpecificMergeClusterDf;
       const metaA = meta[idxs[0]];
       const metaB = meta[idxs[1]];
@@ -4135,19 +4433,18 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           return false;
         }
       }
-      const clA = clusters[idxs[0]];
-      const clB = clusters[idxs[1]];
       if (clA && clB) {
         const urlsA = new Set((clA.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
         const urlsB = new Set((clB.coverage || []).map(a => canonicalUrl(a.link)).filter(Boolean));
         let sharedUrlsCount = 0;
         for (const u of urlsB) { if (urlsA.has(u)) sharedUrlsCount++; }
-        if (sharedUrlsCount === 0 && hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxSpecificMergeClusterDf)) {
+        if (sharedUrlsCount === 0 && !isDirectPostRulingMerge && hasDisjointProperSubjectMergeConflict(clA, clB, clusterStemFreq, maxSpecificMergeClusterDf)) {
           console.warn(`[Clusters] Rejected disjoint proper-subject / geographic / episodic merge between [${idxs[0]}] "${clA.story}" and [${idxs[1]}] "${clB.story}"`);
           return false;
         }
         if (
           sharedUrlsCount === 0 &&
+          !isDirectPostRulingMerge &&
           clA.temporalKind === 'point_event' &&
           clB.temporalKind === 'point_event' &&
           clA.eventTime?.sourceBacked &&
@@ -4211,13 +4508,18 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       // 2. If unbatched Decisions-1 pre-triage verified this update is an in-phase clarification (pClar >= 0.70, pShift < 0.22), lock to clarification.
       const isPreludeOnly = /\b(weigh(?:s|ed|ing)?|push(?:es|ed|ing)?\s+for|consider(?:s|ed|ing)?|mull(?:s|ed|ing)?|debate(?:s|d)?|propose(?:s|d)?)\b/i.test(noteText) &&
         !/\b(spread|expand|cross|enact|impos|arrest|indict|charg|releas|struck|launch|clear)\w*/i.test(noteText);
+      const isPreviewResolvedNow = Boolean(
+        c._pendingUpdate?.isPreviewToOutcomeRepair ||
+        hasHeadlineOpenPreviewVsResolvedOutcome(c.story || '', `${dev.summary || c.summary || ''}. ${(c._pendingUpdate?.addedHeadlines || []).join('. ')}`)
+      );
       const lockedByDecision1Clarification = Boolean(
+        !isPreviewResolvedNow &&
         c._decisionTriage &&
         c._decisionTriage.choice === 'clarification' &&
         (c._decisionTriage.pClar || 0) >= 0.70 &&
         (c._decisionTriage.pShift || 0) < 0.22
       );
-      const uType = (dev.updateType === 'material_shift' && !isPreludeOnly && !lockedByDecision1Clarification) ? 'material_shift' : 'clarification';
+      const uType = ((dev.updateType === 'material_shift' || isPreviewResolvedNow) && !isPreludeOnly && !lockedByDecision1Clarification) ? 'material_shift' : 'clarification';
       const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
 
       // Skip routine restatements ("Re-emphasizes...", "Reaffirms...") that add no new factual detail
@@ -4334,7 +4636,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         return NEWS_SOURCES.some(s => leadPrefix.includes(s.name.toLowerCase())) || /\b(outlets?|newsrooms?|agencies|media|press)\b/i.test(leadPrefix);
       })();
       let effectiveUType = uType;
-      if (substantiveNoteStems.length >= 1) {
+      if (!c._pendingUpdate?.isPreviewToOutcomeRepair && substantiveNoteStems.length >= 1) {
         const alreadyInBaseline = substantiveNoteStems.filter(s => priorBaselineStems.has(s)).length;
         const novelStemCount = substantiveNoteStems.length - alreadyInBaseline;
         const overlapRatio = alreadyInBaseline / substantiveNoteStems.length;
@@ -4510,6 +4812,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         const storyLower = (c.story || '').toLowerCase();
         const sumLower = (newSummary || '').toLowerCase();
         const hasSemanticContradiction = (
+          hasHeadlineOpenPreviewVsResolvedOutcome(c.story || '', newSummary || '') ||
           (/\b(halts?|halted|stops?|stopped|blocks?|blocked|cancels?|canceled)\b/.test(storyLower) && /\b(pushed forward|pushing forward|proceeds?|proceeding|will officially begin|will begin|resumes?|resumed)\b/.test(sumLower)) ||
           (/\b(prepares?|preparing|plans?|planning|set to|gears? up)\b/.test(storyLower) && /\b(successfully launched|lifts? off|lifted off|completed|concluded|rejected|approved|enacted)\b/.test(sumLower)) ||
           (/\b(holds?|holding)\s+(referendum|election|vote)\b/.test(storyLower) && /\b(voters\s+(?:decisively\s+)?(?:reject|approve|elect|back)|official results confirm)\b/.test(sumLower)) ||
@@ -4618,7 +4921,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const clB = clusters[idxB];
       const idA = clA.id || slugify(clA.story);
       const idB = clB.id || slugify(clB.story);
-      const reason = String(link.howItConnects).trim();
+      const reason = cleanLateralConnectionReason(link.howItConnects);
+      if (!reason) continue;
 
       if (!Array.isArray(clA.lateralConnections)) clA.lateralConnections = [];
       if (!clA.lateralConnections.some(x => x.clusterId === idB)) {
@@ -4668,17 +4972,19 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
             if ((shSpec.length === 0 && shRev.length === 0) || shNonSuper.length === 0) continue;
           }
           seen.add(tid);
+          const cleanHow = cleanLateralConnectionReason(lc.howItConnects);
+          if (!cleanHow) continue;
           cleaned.push({
             clusterId: tid,
             headline: target.story || lc.headline,
-            howItConnects: lc.howItConnects
+            howItConnects: cleanHow
           });
           if (!Array.isArray(target.lateralConnections)) target.lateralConnections = [];
           if (!target.lateralConnections.some(x => (byId.get(x.clusterId)?.id || x.clusterId) === cid)) {
             target.lateralConnections.push({
               clusterId: cid,
               headline: cl.story,
-              howItConnects: lc.howItConnects
+              howItConnects: cleanHow
             });
           }
         }
@@ -4726,12 +5032,14 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
         return !isNaN(h0) ? h0 : Infinity;
       };
 
+      const getNewestMs = (cl) => cl.newestMs || Math.max(...(cl.coverage || []).map(a => new Date(a.pubDate || 0).getTime() || 0), 0);
+
       // Pick the chronologically earliest cluster as the historical origin anchor, and largest for fallback metadata
       const originAnchor = [...group].sort((a, b) => getEarliestMs(a) - getEarliestMs(b))[0] || group[0];
       const largestAnchor = [...group].sort((a, b) => (b.outletCount || 0) - (a.outletCount || 0))[0] || group[0];
       const richestHistoryAnchor = [...group].sort((a, b) => ((b.evolutionHistory?.length || 0) - (a.evolutionHistory?.length || 0)) || (getEarliestMs(a) - getEarliestMs(b)))[0] || originAnchor;
-      const latestCluster = [...group].sort((a, b) => (b.newestMs || 0) - (a.newestMs || 0))[0] || group[0];
-      const chronologicalSpanMs = Math.max(0, (latestCluster.newestMs || 0) - getEarliestMs(originAnchor));
+      const latestCluster = [...group].sort((a, b) => getNewestMs(b) - getNewestMs(a))[0] || group[0];
+      const chronologicalSpanMs = Math.max(0, getNewestMs(latestCluster) - getEarliestMs(originAnchor));
 
       for (const g of group) {
         const gSlug = g.id || slugify(g.story);
@@ -4750,7 +5058,8 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
             }
           }
         }
-        if (g.newestMs && g.newestMs > maxNewestMs) maxNewestMs = g.newestMs;
+        const gNewest = getNewestMs(g);
+        if (gNewest > maxNewestMs) maxNewestMs = gNewest;
         if (typeof g.version === 'number' && g.version > maxVersion) maxVersion = g.version;
         if (g.lastDevelopedAt && (!bestLastDevelopedAt || new Date(g.lastDevelopedAt) > new Date(bestLastDevelopedAt))) {
           bestLastDevelopedAt = g.lastDevelopedAt;
@@ -4802,23 +5111,16 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const isDev = mergeType === 'material_shift';
 
       const anchor = isDev ? originAnchor : largestAnchor;
-      const finalStory = candFinalStory || anchor.story;
+      const finalStory = sanitizeDeterministicHeadlineTypos(candFinalStory || anchor.story, dedupedCov, (m.summary && m.summary.trim()) || anchor.summary);
       const finalSlug = slugify(finalStory) || anchor.id;
       const finalSummary = (m.summary && m.summary.trim()) || anchor.summary;
       evolvedIds.delete(finalSlug);
-
-      const nextVersion = isDev ? (maxVersion + 1) : maxVersion;
-      const ts = new Date(maxNewestMs || Date.now()).toISOString();
-      const nextDevelopedAt = isDev ? ts : bestLastDevelopedAt;
-      const nextDevNote = isDev
-        ? ((m.developmentNote && m.developmentNote.trim()) || `Story evolved: ${finalStory}`)
-        : bestDevelopmentNote;
 
       const baseHistSource = Array.isArray(richestHistoryAnchor.evolutionHistory) && richestHistoryAnchor.evolutionHistory.length > 0
         ? richestHistoryAnchor
         : originAnchor;
       const hist = Array.isArray(baseHistSource.evolutionHistory) && baseHistSource.evolutionHistory.length > 0
-        ? [...baseHistSource.evolutionHistory]
+        ? baseHistSource.evolutionHistory.map(h => ({ ...h }))
         : [{
             version: 1,
             type: 'initial',
@@ -4828,6 +5130,35 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
             outletCount: originAnchor.outletCount || 2,
             note: 'Initial cluster formation on the wire'
           }];
+      // If origin history started as a pre-event preview ("Set to Rule...") and recorded the actual verdict/outcome as a clarification
+      // without ever promoting the phase shift, retroactively promote that first resolved stage to material_shift!
+      if (hist.length > 1 && !hist.some(h => h && h.type === 'material_shift')) {
+        let promotedPreviewStage = false;
+        let runningVer = 1;
+        for (let hi = 1; hi < hist.length; hi++) {
+          const h = hist[hi];
+          if (!h) continue;
+          if (!promotedPreviewStage && h.type === 'clarification' && hasHeadlineOpenPreviewVsResolvedOutcome(h.headline || hist[0]?.headline || '', h.summary || '')) {
+            promotedPreviewStage = true;
+            runningVer += 1;
+            h.type = 'material_shift';
+            h.version = runningVer;
+          } else {
+            h.version = runningVer;
+          }
+        }
+        if (promotedPreviewStage && runningVer > maxVersion) {
+          maxVersion = runningVer;
+        }
+      }
+
+      const nextVersion = isDev ? (maxVersion + 1) : maxVersion;
+      const ts = new Date(maxNewestMs || Date.now()).toISOString();
+      const nextDevelopedAt = isDev ? ts : bestLastDevelopedAt;
+      const nextDevNote = isDev
+        ? ((m.developmentNote && m.developmentNote.trim()) || `Story evolved: ${finalStory}`)
+        : bestDevelopmentNote;
+
       // If simultaneous twins (<2h span) merged as clarification, sync initial headline to finalStory so v1 headline === story
       if (!isDev && hist.length === 1) {
         hist[0] = { ...hist[0], headline: finalStory, summary: finalSummary };
@@ -4988,6 +5319,8 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
   const candidates = [];
   clusters.forEach((c, idx) => {
     if (!c || !Array.isArray(c.coverage) || c.coverage.length < 2) return;
+    applyDeterministicHeadlineHygiene(c);
+    const headlineDefect = detectHeadlineGroundingDefect(c);
     const targetSig = getClusterSummarySynthesisSignature(c);
     const hasPinpointLoc = Boolean(c.primaryLocation && typeof c.primaryLocation.lat === 'number' && typeof c.primaryLocation.lon === 'number' && c.primaryLocation.name);
     const hasBriefing = Boolean(
@@ -4997,20 +5330,21 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
       c.briefing.whatsNext &&
       c.briefing.whatsNext.length >= 50
     );
-    if (!forceAll && c.summarySynthesizedSig === targetSig && hasPinpointLoc && hasBriefing) return;
+    if (!forceAll && !headlineDefect && c.summarySynthesizedSig === targetSig && hasPinpointLoc && hasBriefing) return;
 
     const newestMs = c.newestMs || Math.max(...c.coverage.map(a => new Date(a.pubDate).getTime() || 0), 0);
     const ageHours = newestMs > 0 ? Math.max(0, (nowMs - newestMs) / 3600000) : 999;
-    if (!forceAll && !process.argv.includes('--polish-summaries') && ageHours > cutoffHours) return;
+    if (!forceAll && !headlineDefect && !process.argv.includes('--polish-summaries') && ageHours > cutoffHours) return;
 
     const missingBriefing = !c.briefing || !c.briefing.whyItMatters || !c.briefing.whatsNext ? 1 : 0;
-    candidates.push({ idx, c, targetSig, newestMs, missingBriefing, histLen: (c.evolutionHistory || []).length });
+    const hasHeadlineDefectFlag = headlineDefect ? 1 : 0;
+    candidates.push({ idx, c, targetSig, newestMs, missingBriefing, hasHeadlineDefectFlag, headlineDefect, histLen: (c.evolutionHistory || []).length });
   });
 
   if (candidates.length === 0) return clusters;
 
-  // Prioritize stories completely missing Why It Matters / What's Next first, then recently updated & multi-stage evolving stories
-  candidates.sort((a, b) => (b.missingBriefing - a.missingBriefing) || (b.newestMs - a.newestMs) || (b.histLen - a.histLen) || ((b.c.outletCount || 0) - (a.c.outletCount || 0)));
+  // Prioritize stories with ungrounded/stale headlines or missing Why It Matters / What's Next first, then recently updated & multi-stage evolving stories
+  candidates.sort((a, b) => (b.hasHeadlineDefectFlag - a.hasHeadlineDefectFlag) || (b.missingBriefing - a.missingBriefing) || (b.newestMs - a.newestMs) || (b.histLen - a.histLen) || ((b.c.outletCount || 0) - (a.c.outletCount || 0)));
 
   const maxClustersThisRun = (forceAll || process.argv.includes('--polish-summaries'))
     ? candidates.length
@@ -5048,9 +5382,14 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
           ).join('\n')
         : '';
       const devLine = c.developmentNote ? `\nLatest Development Note: ${c.developmentNote}` : '';
+      const defectLine = item.headlineDefect
+        ? (item.headlineDefect.kind === 'stale_preview'
+            ? `\nHeadline Grounding Alert: Current Headline ("${c.story}") uses pre-event preview phrasing for an event that has ALREADY resolved in Covering Dispatches — provide a 4-8 word "correctedHeadline" stating the actual completed outcome!`
+            : `\nHeadline Grounding Alert: Current Headline ("${c.story}") names ungrounded token "${item.headlineDefect.token}" absent from Covering Dispatches — provide a 4-8 word "correctedHeadline" naming ONLY verified actors/facts from Covering Dispatches!`)
+        : '';
 
       return `[CLUSTER ${bIdx}] id="${c.id}" (v${c.version || 1})
-Headline: ${c.story}
+Headline: ${c.story}${defectLine}
 Current Draft Summary: ${c.summary || ''}${devLine}${historyBlock}
 Covering Dispatches (${Math.min(10, covSorted.length)} of ${covSorted.length} outlets):
 ${covLines}`;
@@ -5098,6 +5437,7 @@ Return ONLY a valid JSON array matching this exact schema:
   {
     "index": 0,
     "id": "cluster-id",
+    "correctedHeadline": null,
     "summary": "1-2 crisp, detail-packed sentences (~35-60 words) weaving the integrated chronological journey with exact named actors, institutions, venues, figures, and mechanisms.",
     "primaryLocation": {
       "name": "Specific Venue/City, City/Region (e.g. 'Nagqu, Tibet Autonomous Region' or 'Palace of Westminster, London')",
@@ -5174,6 +5514,48 @@ Return ONLY a valid JSON array matching this exact schema:
         c.summary = candidateSum;
         if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
           c.evolutionHistory[c.evolutionHistory.length - 1].summary = candidateSum;
+        }
+      }
+      // Apply grounded headline repair ONLY when a deterministic headline grounding / stale-preview defect was flagged on this cluster
+      const currentDefect = batch[bIdx].headlineDefect || detectHeadlineGroundingDefect(c);
+      if (currentDefect && typeof entry.correctedHeadline === 'string' && entry.correctedHeadline.trim().length >= 12) {
+        const cleanedHead = sanitizeDeterministicHeadlineTypos(entry.correctedHeadline.trim(), c.coverage, c.summary);
+        const stillDefective = detectHeadlineGroundingDefect({ ...c, story: cleanedHead, summary: c.summary });
+        if (cleanedHead && cleanedHead !== c.story && !stillDefective) {
+          const oldSlug = c.id || String(c.story).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          const newSlug = String(cleanedHead).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          console.log(`[Clusters] Repaired ${currentDefect.kind} headline: "${c.story}" -> "${cleanedHead}"`);
+          c.story = cleanedHead;
+          if (newSlug && newSlug !== oldSlug) {
+            c.evolvedFromIds = Array.from(new Set([...(c.evolvedFromIds || []), oldSlug])).filter(x => x !== newSlug);
+            c.id = newSlug;
+          }
+          if (currentDefect.kind === 'stale_preview' && Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 1) {
+            let promoted = false;
+            let runV = 1;
+            for (let hi = 1; hi < c.evolutionHistory.length; hi++) {
+              const h = c.evolutionHistory[hi];
+              if (!h) continue;
+              if (!promoted && h.type === 'clarification' && hasHeadlineOpenPreviewVsResolvedOutcome(h.headline || c.evolutionHistory[0]?.headline || '', h.summary || c.summary || '')) {
+                promoted = true;
+                runV += 1;
+                h.type = 'material_shift';
+                h.version = runV;
+                h.headline = cleanedHead;
+              } else {
+                h.version = runV;
+                if (promoted) h.headline = cleanedHead;
+              }
+            }
+            if (promoted && runV > (c.version || 1)) {
+              c.version = runV;
+              c.lastDevelopedAt = c.evolutionHistory[c.evolutionHistory.length - 1]?.timestamp || new Date().toISOString();
+            } else {
+              c.evolutionHistory[c.evolutionHistory.length - 1].headline = cleanedHead;
+            }
+          } else if (Array.isArray(c.evolutionHistory) && c.evolutionHistory.length > 0) {
+            c.evolutionHistory[c.evolutionHistory.length - 1].headline = cleanedHead;
+          }
         }
       }
       // Repair impossible percentage in c.story if summary provides the true percentage (e.g. "1,271 Percent" -> "22 Percent")
@@ -5866,6 +6248,7 @@ async function main() {
           if (Array.isArray(match.factors) && match.factors.length === 4) cov.factors = match.factors;
         }
       });
+      applyDeterministicHeadlineHygiene(cl);
       if (cl.coverage.length >= 4) {
         const getEb = (c) => {
           if (typeof c.eventBase === 'number') return c.eventBase;
@@ -5915,13 +6298,14 @@ async function main() {
     });
 
     const recentCutoffBriefingMs = Date.now() - 120 * 3600 * 1000;
-    const hasUnbriefedActiveClusters = sharedStoryClusters.some(cl => {
+    const hasUnbriefedOrDefectiveActiveClusters = sharedStoryClusters.some(cl => {
       if (!cl || !Array.isArray(cl.coverage) || cl.coverage.length < 2) return false;
+      if (detectHeadlineGroundingDefect(cl)) return true;
       if (cl.briefing?.whyItMatters && cl.briefing?.whatsNext) return false;
       const newestCovMs = Math.max(...cl.coverage.map(a => new Date(a.pubDate).getTime() || 0), 0);
       return newestCovMs >= recentCutoffBriefingMs;
     });
-    if (clusteringDidSucceed || hasUnbriefedActiveClusters || process.argv.includes('--polish-summaries') || process.argv.includes('--polish-summaries-all')) {
+    if (clusteringDidSucceed || hasUnbriefedOrDefectiveActiveClusters || process.argv.includes('--polish-summaries') || process.argv.includes('--polish-summaries-all')) {
       try {
         await synthesizeIntegratedClusterSummaries(sharedStoryClusters, geminiKeyTiers, finalSources);
       } catch (sumErr) {
@@ -6055,6 +6439,10 @@ async function main() {
     synthesizeIntegratedClusterSummaries,
     detectCrossRegionBreakingBurst,
     hasHeadlineStateOrPolarityShift,
+    hasHeadlineOpenPreviewVsResolvedOutcome,
+    sanitizeDeterministicHeadlineTypos,
+    detectHeadlineGroundingDefect,
+    isDirectPostRulingEnforcementFollowUp,
     isMacroMarketRoundupHijack,
     classifyMarketHeadlineDirection,
     hasOppositeMarketDirectionConflict
