@@ -166,8 +166,9 @@ async function generateDailyBriefing(options = {}) {
     candidatePlan.push({ model: 'gemini-4-hydrogen', key: process.env.GEMINI_PAID_API_KEY, tier: 'PAID' });
   }
   if (freeKey) {
-    candidatePlan.push({ model: 'gemini-3.8-flash', key: freeKey, tier: 'FREE' });
+    candidatePlan.push({ model: 'gemini-3.6-flash', key: freeKey, tier: 'FREE' });
     candidatePlan.push({ model: 'gemini-3.5-flash-lite', key: freeKey, tier: 'FREE' });
+    candidatePlan.push({ model: 'gemini-3.8-flash', key: freeKey, tier: 'FREE' });
   }
   if (paidKey) {
     candidatePlan.push({ model: 'gemini-3.5-flash-lite', key: paidKey, tier: 'PAID' });

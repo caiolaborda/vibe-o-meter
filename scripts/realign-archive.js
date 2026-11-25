@@ -255,7 +255,9 @@ async function main() {
     console.log(`[Realign] Loading pre-computed cross-archive audit from ${fromJsonPath}...`);
     auditData = JSON.parse(fs.readFileSync(fromJsonPath, 'utf8'));
   } else {
-    const apiKey = process.env.GEMINI_PAID_API_KEY || process.env.GEMINI_API_KEY;
+    const paidApiKey = process.env.GEMINI_PAID_API_KEY || '';
+    const freeApiKey = process.env.GEMINI_API_KEY || '';
+    const apiKey = paidApiKey || freeApiKey;
     if (!apiKey) {
       console.error('Missing GEMINI_API_KEY');
       process.exit(1);
@@ -347,37 +349,60 @@ async function main() {
     };
 
     const siloResults = [];
+    let batchFallbackKey = null;
     if (useBatchApi) {
       const batchModel = process.env.GEMINI_BATCH_MODEL || 'gemini-3.8-flash';
-      const batchRes = await runGeminiInlineBatch({
-        apiKey,
-        model: batchModel,
-        displayName: `realign-archive-${new Date().toISOString().slice(0, 10)}`,
-        items: preparedSilos.map(s => ({
-          key: s.siloDef.id,
-          systemInstruction: REALIGN_SYSTEM_INSTRUCTION,
-          prompt: s.inputPrompt
-        })),
-        pollIntervalMs: 15000,
-        maxWaitMs: 22 * 60 * 1000,
-        checkpointFile: BATCH_CHECKPOINT_FILE,
-        submitOnly: submitBatchOnly
-      });
-      if (!batchRes.completed) {
-        console.log(`[Realign Batch] Batch job ${batchRes.jobName} queued/running. Re-run with --batch later to collect and apply results.`);
-        return;
-      }
-      for (const s of preparedSilos) {
-        const parsed = batchRes.resultsByKey.get(s.siloDef.id);
-        if (parsed) {
-          siloResults.push(mapParsedSiloOutput(parsed, s.codeToCluster));
+      try {
+        const batchRes = await runGeminiInlineBatch({
+          apiKey,
+          model: batchModel,
+          displayName: `realign-archive-${new Date().toISOString().slice(0, 10)}`,
+          items: preparedSilos.map(s => ({
+            key: s.siloDef.id,
+            systemInstruction: REALIGN_SYSTEM_INSTRUCTION,
+            prompt: s.inputPrompt
+          })),
+          pollIntervalMs: 15000,
+          maxWaitMs: 22 * 60 * 1000,
+          checkpointFile: BATCH_CHECKPOINT_FILE,
+          submitOnly: submitBatchOnly
+        });
+        if (!batchRes.completed) {
+          console.log(`[Realign Batch] Batch job ${batchRes.jobName} queued/running. Re-run with --batch later to collect and apply results.`);
+          return;
+        }
+        for (const s of preparedSilos) {
+          const parsed = batchRes.resultsByKey.get(s.siloDef.id);
+          if (parsed) {
+            siloResults.push(mapParsedSiloOutput(parsed, s.codeToCluster));
+          }
+        }
+      } catch (batchErr) {
+        const bMsg = String(batchErr?.message || batchErr || '');
+        if (/spend(?:ing)? cap|429|quota|resource_exhausted/i.test(bMsg)) {
+          if (freeApiKey && freeApiKey !== apiKey && !submitBatchOnly) {
+            console.warn(`[Realign] Batch API key hit spend/quota cap (${bMsg.slice(0, 110)}) — falling back to Free-Tier sequential pass.`);
+            batchFallbackKey = freeApiKey;
+          } else {
+            console.warn(`[Realign] Skipping optional cross-archive realignment because API key reached spend/quota cap: ${bMsg.slice(0, 140)}`);
+            return;
+          }
+        } else {
+          throw batchErr;
         }
       }
-    } else {
-      for (let i = 0; i < preparedSilos.length; i += 4) {
-        const batch = preparedSilos.slice(i, i + 4);
+    }
+    if (!useBatchApi || batchFallbackKey) {
+      const runKey = batchFallbackKey || apiKey;
+      const runModels = batchFallbackKey
+        ? ['gemini-3.6-flash', 'gemini-3.5-flash-lite']
+        : ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+      const concurrency = batchFallbackKey ? 1 : 4;
+      for (let i = 0; i < preparedSilos.length; i += concurrency) {
+        if (batchFallbackKey && i > 0) await new Promise(r => setTimeout(r, 4000));
+        const batch = preparedSilos.slice(i, i + concurrency);
         const res = await Promise.all(batch.map(async (s) => {
-          const { parsed } = await callGeminiJson(s.inputPrompt, apiKey);
+          const { parsed } = await callGeminiJson(s.inputPrompt, runKey, runModels);
           return mapParsedSiloOutput(parsed, s.codeToCluster);
         }));
         siloResults.push(...res);

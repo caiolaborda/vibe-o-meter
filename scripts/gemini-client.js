@@ -11,6 +11,11 @@ const { GoogleGenAI } = require('@google/genai');
 
 const MIN_THINKING_MAX_OUTPUT_TOKENS = 32768;
 let _flexCongestedUntilMs = 0;
+const _spendCappedKeys = new Set();
+
+function isKeySpendCapped(apiKey) {
+  return Boolean(apiKey && _spendCappedKeys.has(apiKey));
+}
 
 // Cache SDK client instances by apiKey + apiVersion
 const _clientCache = new Map();
@@ -190,13 +195,19 @@ async function callGeminiInteraction({
   if (!apiKey) {
     throw new Error('Missing Gemini API key');
   }
+  if (_spendCappedKeys.has(apiKey)) {
+    const capErr = new Error('Your project has exceeded its monthly spending cap (cached circuit-breaker)');
+    capErr.status = 429;
+    throw capErr;
+  }
 
   const effectiveThinking = normalizeThinkingLevelForModel(model, thinkingLevel);
   const effectiveMaxTokens = normalizeMaxOutputTokens(model, maxOutputTokens);
 
   const invokeTier = async (tier, budgetMs, queueBudgetMs = 0) => {
-    // Flex service_tier uses v1beta when previewed; Standard uses default GA v1
-    const client = getGenAiClient(apiKey, tier === 'flex' ? 'v1beta' : undefined);
+    // Flex service_tier and *-preview models require v1beta; GA Standard models use default GA v1
+    const needsV1Beta = tier === 'flex' || String(model || '').toLowerCase().includes('preview');
+    const client = getGenAiClient(apiKey, needsV1Beta ? 'v1beta' : undefined);
     const params = {
       model,
       ...(systemInstruction ? { system_instruction: systemInstruction } : {}),
@@ -260,6 +271,7 @@ async function callGeminiInteraction({
         (async () => {
           try {
             const reqOpts = {
+              maxRetries: 0,
               signal: abortCtrl.signal,
               ...(budgetMs > 0 ? { timeout: budgetMs } : {})
             };
@@ -305,6 +317,10 @@ async function callGeminiInteraction({
 
             safeResolve({ accText, completedInteraction });
           } catch (innerErr) {
+            const em = String(innerErr?.message || innerErr || '').toLowerCase();
+            if (em.includes('spending cap') || em.includes('spend cap')) {
+              _spendCappedKeys.add(apiKey);
+            }
             safeReject(innerErr);
           }
         })();
@@ -505,6 +521,7 @@ async function runGeminiInlineBatch({
 
 module.exports = {
   MIN_THINKING_MAX_OUTPUT_TOKENS,
+  isKeySpendCapped,
   normalizeThinkingLevelForModel,
   normalizeMaxOutputTokens,
   tryRepairJsonArray,

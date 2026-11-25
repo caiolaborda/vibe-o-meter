@@ -584,6 +584,22 @@ function resolveSyncServiceTier(keyObj) {
  * - 'editorial' (longitudinal episode consolidation & whyItMatters/whatsNext synthesis):
  *     gemini-4-hydrogen [PAID Flex, 50% off] -> gemini-3.8-flash [FREE] -> gemini-3.5-flash-lite [FREE / PAID Flex]
  */
+const ALL_TRACKED_GEMINI_MODELS = [
+  'gemini-4-hydrogen',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-3.1-flash-lite-preview',
+  'gemini-decision-1'
+];
+
+function markKeyTierSpendCapped(tier) {
+  if (!tier) return;
+  for (const m of ALL_TRACKED_GEMINI_MODELS) {
+    exhaustedModelTiers.add(`${m}:${tier}`);
+  }
+}
+
 function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
   const rawTiers = getOrderedKeyTiers(apiKeyOrTiers);
   const freeKeyObj = rawTiers.find(t => t.tier === 'FREE') || null;
@@ -600,16 +616,18 @@ function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
   if (taskType === 'grading') {
     if (freeKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
+      pushCandidate('gemini-3.1-flash-lite-preview', freeKeyObj);
     }
     if (paidKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
       pushCandidate('gemini-4-hydrogen', paidKeyObj);
     }
     if (freeKeyObj) {
+      pushCandidate('gemini-3.6-flash', freeKeyObj);
       pushCandidate('gemini-3.8-flash', freeKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-3.5-flash-lite', 'gemini-4-hydrogen', 'gemini-3.8-flash']) {
+      for (const m of ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-4-hydrogen', 'gemini-3.6-flash']) {
         pushCandidate(m, singleKeyObj);
       }
     }
@@ -618,14 +636,16 @@ function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
       pushCandidate('gemini-4-hydrogen', paidKeyObj);
     }
     if (freeKeyObj) {
-      pushCandidate('gemini-3.8-flash', freeKeyObj);
+      pushCandidate('gemini-3.6-flash', freeKeyObj);
       pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
+      pushCandidate('gemini-3.8-flash', freeKeyObj);
+      pushCandidate('gemini-3.1-flash-lite-preview', freeKeyObj);
     }
     if (paidKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite']) {
+      for (const m of ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']) {
         pushCandidate(m, singleKeyObj);
       }
     }
@@ -831,23 +851,22 @@ Return ONLY valid JSON.`;
           const isDemandSpike = isQuotaOrRateLimit || msg.includes('503') || msgLower.includes('high demand') || msgLower.includes('timed out');
           console.warn(`[Gemini] Model ${modelName} [${keyObj.tier} key] attempt ${attempt}/${maxAttempts} warning:`, msg);
           if (isProjectSpendCap) {
-            for (const m of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen']) {
-              exhaustedModelTiers.add(`${m}:${keyObj.tier}`);
-            }
+            markKeyTierSpendCapped(keyObj.tier);
             console.log(`[Gemini] Monthly spend cap reached for [${keyObj.tier} key] — failing over immediately to remaining key tiers...`);
             break;
           }
           if (isQuotaOrRateLimit) {
-            exhaustedModelTiers.add(modelTierKey);
-            console.log(`[Gemini] Quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
+            if (/per[_ ]day|requests per day/i.test(msg)) {
+              exhaustedModelTiers.add(modelTierKey);
+            }
+            console.log(`[Gemini] Quota/rate-limit reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
             break;
           }
           if (attempt < maxAttempts) {
             const waitMs = isDemandSpike ? 4000 : 2000;
             await new Promise(r => setTimeout(r, waitMs));
           } else if (isDemandSpike && keyObj.tier === 'FREE') {
-            exhaustedModelTiers.add(modelTierKey);
-            console.log(`[Gemini] Free-tier high demand persisted for ${modelName} — failing over to next tier for remaining batches...`);
+            console.log(`[Gemini] Free-tier high demand persisted for ${modelName} on this batch — advancing to next candidate...`);
           }
         }
       }
@@ -2529,8 +2548,8 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
 
   if (candidates.length < 4) return previousClusters;
 
-  // Pass headline + brief lead snippet + extracted Event Fact Attributes (timing, geography, proper-noun subjects)
-  const promptLines = candidates.map((c, idx) => {
+  // Helper to format candidate lines (allows compact Free-Tier TPM-safe window when PAID tier is spend-capped)
+  const buildClusteringPromptLines = (candArr, descLimit = 180) => candArr.map((c, idx) => {
     if (c.isClusterAnchor) {
       const f = extractEventFactAttributes(c.anchorCluster || c);
       const metaParts = [
@@ -2539,7 +2558,8 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
         f.locTag ? `geo: ${f.locTag}` : '',
         f.properDisplay.length ? `subjects: ${f.properDisplay.slice(0, 5).join(', ')}` : ''
       ].filter(Boolean).join(' | ');
-      return `[${idx}] EXISTING_CLUSTER(${c.sourceId})${metaParts ? ` [${metaParts}]` : ''}: ${c.anchorStory} — ${c.title} (${c.description})`;
+      const ancDesc = c.description ? String(c.description).slice(0, descLimit) : '';
+      return `[${idx}] EXISTING_CLUSTER(${c.sourceId})${metaParts ? ` [${metaParts}]` : ''}: ${c.anchorStory} — ${c.title}${ancDesc ? ` (${ancDesc})` : ''}`;
     }
     const f = extractEventFactAttributes(c);
     const metaParts = [
@@ -2547,9 +2567,17 @@ async function clusterCrossOutletStories(finalSources, apiKey, previousClusters 
       f.countries.size ? `geo: ${Array.from(f.countries).slice(0, 3).join(',')}` : '',
       f.properDisplay.length ? `subjects: ${f.properDisplay.slice(0, 4).join(', ')}` : ''
     ].filter(Boolean).join(' | ');
-    const snippet = c.description ? ` — ${c.description}` : '';
+    const snippet = c.description ? ` — ${String(c.description).slice(0, descLimit)}` : '';
     return `[${idx}] ${c.sourceId}${metaParts ? ` [${metaParts}]` : ''}: ${c.title}${snippet}`;
   }).join('\n');
+
+  const promptLines = buildClusteringPromptLines(candidates, 180);
+  const freeAnchors = [...matchedAnchorIndices]
+    .map(idx => activeClusterAnchors[idx])
+    .sort((a, b) => (b.pubMs || 0) - (a.pubMs || 0))
+    .slice(0, 300);
+  const freeCandidates = [...freeAnchors, ...sortedMatchedUnclustered.slice(0, 520)];
+  const freePromptLines = buildClusteringPromptLines(freeCandidates, 90);
 
   const prompt = `You are a senior news editor analyzing recent dispatches across global newsrooms.
 Identify distinct real-world events, developments, or discoveries that are covered by 2 or more DIFFERENT news outlets (or where 1 or more new outlet dispatches match an EXISTING_CLUSTER).
@@ -2593,45 +2621,68 @@ Return JSON array in format:
 ]`;
 
   const clusteringInput = `Dispatches:\n${promptLines}`;
+  const freeClusteringInput = `Dispatches:\n${freePromptLines}`;
 
   let clusters = null;
+  let activeCandidatesForIds = candidates;
   const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
   for (const { model: modelName, keyObj } of candidatePlan) {
     if (clusters) break;
     const modelTierKey = `${modelName}:${keyObj.tier}`;
     if (exhaustedModelTiers.has(modelTierKey)) continue;
-    try {
-      const { parsed } = await callGeminiInteraction({
-        apiKey: keyObj.key,
-        model: modelName,
-        systemInstruction: prompt,
-        input: clusteringInput,
-        thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-        maxOutputTokens: 65536,
-        jsonMode: true,
-        repairJsonArray: true,
-        serviceTierMode: resolveSyncServiceTier(keyObj),
-        flexTimeoutMs: 20000,
-        timeoutMs: 210000
-      });
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        clusters = parsed;
-        console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName} [${keyObj.tier} key].`);
-        break;
-      }
-    } catch (err) {
-      const msg = String(err.message || err);
-      const msgLower = msg.toLowerCase();
-      const isProjectSpendCap = msgLower.includes('spending cap') || msgLower.includes('spend cap');
-      const isQuotaOrRateLimit = isProjectSpendCap || msg.includes('429') || msgLower.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msgLower.includes('rate limit');
-      console.warn(`[Sync] Clustering attempt with ${modelName} [${keyObj.tier} key] failed: ${msg}`);
-      if (isProjectSpendCap) {
-        for (const m of ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-4-hydrogen']) {
-          exhaustedModelTiers.add(`${m}:${keyObj.tier}`);
+    const isFreeTier = keyObj.tier === 'FREE';
+    const useCandidates = isFreeTier ? freeCandidates : candidates;
+    const useInput = isFreeTier ? freeClusteringInput : clusteringInput;
+
+    for (let tpmTry = 0; tpmTry < (isFreeTier ? 3 : 1); tpmTry++) {
+      try {
+        const { parsed } = await callGeminiInteraction({
+          apiKey: keyObj.key,
+          model: modelName,
+          systemInstruction: prompt,
+          input: useInput,
+          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+          maxOutputTokens: 65536,
+          jsonMode: true,
+          repairJsonArray: true,
+          serviceTierMode: resolveSyncServiceTier(keyObj),
+          flexTimeoutMs: 20000,
+          timeoutMs: 210000
+        });
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          clusters = parsed;
+          activeCandidatesForIds = useCandidates;
+          console.log(`[Clusters] Generated ${parsed.length} clusters using ${modelName} [${keyObj.tier} key] (${useCandidates.length} candidates).`);
+          break;
         }
-      } else if (isQuotaOrRateLimit) {
-        exhaustedModelTiers.add(modelTierKey);
-        console.log(`[Clusters] Quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
+        break;
+      } catch (err) {
+        const msg = String(err.message || err);
+        const msgLower = msg.toLowerCase();
+        const isProjectSpendCap = msgLower.includes('spending cap') || msgLower.includes('spend cap');
+        const isDailyCap = /per[_ ]day|requests per day/i.test(msg);
+        const isTransientDemand = msg.includes('503') || msgLower.includes('high demand') || msgLower.includes('service_unavailable');
+        const isQuotaOrRateLimit = isProjectSpendCap || msg.includes('429') || msgLower.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msgLower.includes('rate limit');
+        console.warn(`[Sync] Clustering attempt ${tpmTry + 1} with ${modelName} [${keyObj.tier} key] failed: ${msg}`);
+        if (isProjectSpendCap) {
+          markKeyTierSpendCapped(keyObj.tier);
+          break;
+        }
+        if (isFreeTier && isTransientDemand && tpmTry < 2) {
+          console.log(`[Clusters] Transient 503 high demand on ${modelName} — retrying in 5s...`);
+          await new Promise(r => setTimeout(r, 5000));
+          continue;
+        }
+        if (isFreeTier && isQuotaOrRateLimit && !isDailyCap && tpmTry === 0) {
+          console.log(`[Clusters] Free-tier per-minute TPM/RPM window hit on ${modelName} — pausing 16s to refill token bucket...`);
+          await new Promise(r => setTimeout(r, 16000));
+          continue;
+        }
+        if (isDailyCap || (isQuotaOrRateLimit && !isFreeTier)) {
+          exhaustedModelTiers.add(modelTierKey);
+          console.log(`[Clusters] Quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
+        }
+        break;
       }
     }
   }
@@ -2644,7 +2695,7 @@ Return JSON array in format:
 
     clusters.forEach(cl => {
       if (!cl.ids || cl.ids.length < 2) return;
-      const rawCandidates = cl.ids.map(id => candidates[id]).filter(Boolean);
+      const rawCandidates = cl.ids.map(id => activeCandidatesForIds[id]).filter(Boolean);
       if (rawCandidates.length < 2) return;
 
       // Strict Anchor + Peer-to-Peer Coherence Guard (prevents LLM digit slips, spliced ID arrays & thematic buckets):
@@ -3727,7 +3778,11 @@ async function callGeminiDecisionsApi(apiKeyOrTiers, inputText, questions) {
         return res.data.answers;
       }
       if (res.status === 429 || (res.status === 403 && /quota|spend|rate/i.test(String(res.raw || '')))) {
-        exhaustedModelTiers.add(decisionTierKey);
+        if (/spend(?:ing)? cap/i.test(String(res.raw || ''))) {
+          markKeyTierSpendCapped(keyObj.tier);
+        } else {
+          exhaustedModelTiers.add(decisionTierKey);
+        }
       }
     } catch (err) {
       // Fall through to next key tier or graceful fallback
@@ -4349,27 +4404,47 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       if (parsed) break;
       const modelTierKey = `${modelName}:${keyObj.tier}`;
       if (exhaustedModelTiers.has(modelTierKey)) continue;
-      try {
-        const { parsed: respParsed } = await callGeminiInteraction({
-          apiKey: keyObj.key,
-          model: modelName,
-          input: prompt,
-          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-          maxOutputTokens: 65536,
-          jsonMode: true,
-          serviceTierMode: resolveSyncServiceTier(keyObj),
-          flexTimeoutMs: 85000,
-          timeoutMs: 120000
-        });
-        parsed = respParsed;
-        console.log(`[Clusters] Episode consolidation pass completed via ${modelName} [${keyObj.tier} key].`);
-        break;
-      } catch (tierErr) {
-        const msg = String(tierErr.message || tierErr);
-        const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
-        console.warn(`[Clusters] Consolidation pass warning with ${modelName} [${keyObj.tier} key]: ${msg}`);
-        if (isQuotaOrRateLimit) {
-          exhaustedModelTiers.add(modelTierKey);
+      const isFreeTier = keyObj.tier === 'FREE';
+      for (let tpmTry = 0; tpmTry < (isFreeTier ? 3 : 1); tpmTry++) {
+        try {
+          const { parsed: respParsed } = await callGeminiInteraction({
+            apiKey: keyObj.key,
+            model: modelName,
+            input: prompt,
+            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            maxOutputTokens: 65536,
+            jsonMode: true,
+            serviceTierMode: resolveSyncServiceTier(keyObj),
+            flexTimeoutMs: 85000,
+            timeoutMs: 120000
+          });
+          parsed = respParsed;
+          console.log(`[Clusters] Episode consolidation pass completed via ${modelName} [${keyObj.tier} key].`);
+          break;
+        } catch (tierErr) {
+          const msg = String(tierErr.message || tierErr);
+          const msgLower = msg.toLowerCase();
+          const isProjectSpendCap = msgLower.includes('spending cap') || msgLower.includes('spend cap');
+          const isDailyCap = /per[_ ]day|requests per day/i.test(msg);
+          const isTransientDemand = msg.includes('503') || msgLower.includes('high demand') || msgLower.includes('service_unavailable');
+          const isQuotaOrRateLimit = isProjectSpendCap || msg.includes('429') || msgLower.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msgLower.includes('rate limit');
+          console.warn(`[Clusters] Consolidation pass warning with ${modelName} [${keyObj.tier} key]: ${msg}`);
+          if (isProjectSpendCap) {
+            markKeyTierSpendCapped(keyObj.tier);
+            break;
+          }
+          if (isFreeTier && isTransientDemand && tpmTry < 2) {
+            await new Promise(r => setTimeout(r, 5000));
+            continue;
+          }
+          if (isFreeTier && isQuotaOrRateLimit && !isDailyCap && tpmTry === 0) {
+            await new Promise(r => setTimeout(r, 16000));
+            continue;
+          }
+          if (isDailyCap || (isQuotaOrRateLimit && !isFreeTier)) {
+            exhaustedModelTiers.add(modelTierKey);
+          }
+          break;
         }
       }
     }
@@ -5346,9 +5421,10 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
   // Prioritize stories with ungrounded/stale headlines or missing Why It Matters / What's Next first, then recently updated & multi-stage evolving stories
   candidates.sort((a, b) => (b.hasHeadlineDefectFlag - a.hasHeadlineDefectFlag) || (b.missingBriefing - a.missingBriefing) || (b.newestMs - a.newestMs) || (b.histLen - a.histLen) || ((b.c.outletCount || 0) - (a.c.outletCount || 0)));
 
+  const isPaidExhausted = exhaustedModelTiers.has('gemini-4-hydrogen:PAID');
   const maxClustersThisRun = (forceAll || process.argv.includes('--polish-summaries'))
     ? candidates.length
-    : Math.min(candidates.length, 48);
+    : Math.min(candidates.length, isPaidExhausted ? 24 : 48);
   const selected = candidates.slice(0, maxClustersThisRun);
   const batchSize = 8;
 
@@ -5360,8 +5436,11 @@ async function synthesizeIntegratedClusterSummaries(clusters, apiKey, finalSourc
   for (let offset = 0; offset < selected.length; offset += batchSize) {
     batches.push({ offset, batch: selected.slice(offset, offset + batchSize) });
   }
-  const SUMMARY_CONCURRENCY = 3;
+  const SUMMARY_CONCURRENCY = isPaidExhausted ? 1 : 3;
   for (let bGroup = 0; bGroup < batches.length; bGroup += SUMMARY_CONCURRENCY) {
+    if (isPaidExhausted && bGroup > 0) {
+      await new Promise(r => setTimeout(r, 4000));
+    }
     const groupSlice = batches.slice(bGroup, bGroup + SUMMARY_CONCURRENCY);
     await Promise.all(groupSlice.map(async ({ offset, batch }) => {
     const clusterBlocks = batch.map((item, bIdx) => {
@@ -5465,30 +5544,52 @@ Return ONLY a valid JSON array matching this exact schema:
       if (parsedBatch) break;
       const modelTierKey = `${modelName}:${keyObj.tier}`;
       if (exhaustedModelTiers.has(modelTierKey)) continue;
-      try {
-        const { parsed: arr } = await callGeminiInteraction({
-          apiKey: keyObj.key,
-          model: modelName,
-          systemInstruction: prompt,
-          input: polishInput,
-          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-          maxOutputTokens: 32768,
-          jsonMode: true,
-          repairJsonArray: true,
-          serviceTierMode: resolveSyncServiceTier(keyObj),
-          flexTimeoutMs: 80000,
-          timeoutMs: 120000
-        });
-        if (Array.isArray(arr) && arr.length > 0) {
-          parsedBatch = arr;
-          console.log(`[Clusters] Summary batch ${Math.floor(offset / batchSize) + 1} synthesized via ${modelName} [${keyObj.tier} key].`);
-        }
-      } catch (err) {
-        const msg = String(err.message || err);
-        const isQuotaOrRateLimit = msg.includes('429') || msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('rate limit');
-        console.warn(`[Clusters] Summary synthesis attempt (${modelName} / ${keyObj.tier}) notice: ${msg}`);
-        if (isQuotaOrRateLimit) {
-          exhaustedModelTiers.add(modelTierKey);
+      const isFreeTier = keyObj.tier === 'FREE';
+      for (let tpmTry = 0; tpmTry < (isFreeTier ? 2 : 1); tpmTry++) {
+        try {
+          const { parsed: arr } = await callGeminiInteraction({
+            apiKey: keyObj.key,
+            model: modelName,
+            systemInstruction: prompt,
+            input: polishInput,
+            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            maxOutputTokens: 32768,
+            jsonMode: true,
+            repairJsonArray: true,
+            serviceTierMode: resolveSyncServiceTier(keyObj),
+            flexTimeoutMs: 80000,
+            timeoutMs: 120000
+          });
+          if (Array.isArray(arr) && arr.length > 0) {
+            parsedBatch = arr;
+            console.log(`[Clusters] Summary batch ${Math.floor(offset / batchSize) + 1} synthesized via ${modelName} [${keyObj.tier} key].`);
+          }
+          break;
+        } catch (err) {
+          const msg = String(err.message || err);
+          const msgLower = msg.toLowerCase();
+          const isProjectSpendCap = msgLower.includes('spending cap') || msgLower.includes('spend cap');
+          const isDailyCap = /per[_ ]day|requests per day/i.test(msg);
+          const isTransientDemand = msg.includes('503') || msgLower.includes('high demand') || msgLower.includes('service_unavailable');
+          const isQuotaOrRateLimit = isProjectSpendCap || msg.includes('429') || msgLower.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msgLower.includes('rate limit');
+          console.warn(`[Clusters] Summary synthesis attempt (${modelName} / ${keyObj.tier}) notice: ${msg}`);
+          if (isProjectSpendCap) {
+            markKeyTierSpendCapped(keyObj.tier);
+            break;
+          }
+          if (isFreeTier && isTransientDemand && tpmTry < 1) {
+            await new Promise(r => setTimeout(r, 5000));
+            continue;
+          }
+          if (isFreeTier && isQuotaOrRateLimit && !isDailyCap && tpmTry === 0) {
+            console.log(`[Clusters] Free-tier TPM/RPM pause (16s) before retrying summary batch on ${modelName}...`);
+            await new Promise(r => setTimeout(r, 16000));
+            continue;
+          }
+          if (isDailyCap || (isQuotaOrRateLimit && !isFreeTier)) {
+            exhaustedModelTiers.add(modelTierKey);
+          }
+          break;
         }
       }
     }
