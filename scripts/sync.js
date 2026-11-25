@@ -4064,8 +4064,8 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
             instructions: 'Classify the net real-world chronological impact of the Candidate New Dispatches on the Existing Cluster after subtracting facts already in the Existing Cluster Summary.',
             criteria: {
               none: 'Pure syndication echo repeating facts already in the Existing Cluster Summary or Prior Recorded Evolution Stages.',
-              clarification: 'Adds in-phase factual details, figures, quotes, deliberations, or localized sub-incidents without crossing into a new real-world event phase or requiring a new headline.',
-              material_shift: 'Crosses an irreversible State Envelope (new sovereign border, formal legal/executive/board enactment or reversal, corporate/institutional leadership appointment/ousting/reinstatement, decisive verdict/vote outcome, or major phase transition) that invalidates or supersedes the Existing Cluster Headline.'
+              clarification: 'Adds routine in-phase details, minor numerical adjustments, quotes, deliberations, or diplomatic statements of concern without crossing an irreversible fatality, war-act, retaliation, legal, or phase boundary.',
+              material_shift: 'Crosses an irreversible State Envelope — EITHER superseding/reversing the Existing Cluster Headline OR executing a major compounding escalation after the initial break: (1) formal declaration/act of war, UN Charter Article 51 / mutual-defense invocation, military retaliation vow, diplomatic rupture, or emergency cross-border defense/security summit; (2) crossing from zero deaths (injured-only/damage-only) to first confirmed deaths, new host-nation/third-country personnel killed, or a major casualty toll jump; (3) new sovereign border/theater crossing or follow-up kinetic strike; (4) formal legal/executive/board enactment or reversal, leadership appointment/ousting/reinstatement, or decisive vote/court outcome.'
             }
           }
         };
@@ -4302,20 +4302,22 @@ When evaluating what remains AFTER subtracting the existing summary baseline, di
 
 2. "clarification" (In-Phase Factual Delta — Sharpening Facts, Proposals, or Sub-Events Within the Existing Envelope):
    - The new dispatches add genuinely new factual precision, granularity, pre-decision deliberations, or localized sub-incidents NOT YET in the existing summary, WITHOUT executing an irreversible boundary crossing of the State Envelope:
-     • Introducing or sharpening a concrete metric or tally compared to a previously vague or lower figure in the summary (e.g. "fatalities" or "1 dead" -> "at least 4 dead"; "kills 53" -> "kills 73"; "thousands arrested" -> "nearly 2,400 arrested"; "pledges SpaceX shares" -> "valued at over $9 billion"),
-     • Pre-decision proposals, deliberations, or warnings BEFORE formal enactment (e.g. officials "weighing", "pushing for", "debating", or "threatening" curfews, sanctions, or charges — deliberating a measure is an In-Phase Update; only FORMAL ENACTMENT is a Shift),
+     • Sharpening an already-lethal casualty figure by a small increment or adding financial granularity (e.g. "at least 50 dead" -> "53 dead"; "pledges SpaceX shares" -> "valued at over $9 billion" — NOTE: crossing from 0 deaths/injuries-only to the FIRST confirmed deaths, or killing personnel/citizens of a host or third nation, is ALWAYS a "material_shift", NEVER a "clarification"!),
+     • Pre-decision proposals, deliberations, or routine diplomatic statements BEFORE formal escalation (e.g. officials "weighing" measures, "condemning" an incident, "demanding an explanation", or "urging a probe" — routine condemnation is an In-Phase Update, whereas labeling an attack a "declaration/act of war", invoking UN Charter Article 51, vowing military retaliation, severing diplomatic ties, or traveling abroad for emergency defense talks is ALWAYS a "material_shift"!),
      • Localized tactical flashpoints or rescue details within an already-established phenomenon (e.g. residents hoisted from rooftops during ongoing floods; protesters blockading a specific museum during nationwide unrest),
-     • A genuinely new subsequent chronological step, newly released identity of a previously unnamed suspect/victim, or a major new official/market reaction that occurred AFTER the initial event (never routine background details or age/party descriptors of an already-named subject).
+     • Newly released identity of a previously unnamed suspect/victim or routine market commentary after the initial event.
    - For "clarification": refine the cluster's "summary" so readers get the sharper facts, and record 1-2 crisp telegraphic delta fragments in "developmentNote", without bumping the version.
    - HEADLINE-SUMMARY CONSISTENCY & ANCHOR-PRESERVATION INVARIANT (for "clarification"): Normally, "clarification" keeps the existing "story" headline unchanged so the user recognizes the same story card over time. HOWEVER, if the existing "story" headline contains an explicit number/tally (e.g. "Kills 53", "1 Dead", "$5B") OR a directional/phase status word (e.g. "Halts", "Prepares", "Holds", "Injured" when they died, "Missing" when found) that is now directly contradicted or superseded by the updated "summary" (e.g. death toll rose to 73, or renovation is proceeding in November despite a lawsuit), you MUST surgically update ONLY the stale number/predicate in "story" while preserving the recognizable subject/place anchor (e.g. "Houthi Attack Kills 53 in Yemen" -> "Houthi Missile Attack Kills 73 in Yemen") and keeping "updateType": "clarification"!
 
 3. "material_shift" (Irreversible Phase Pivot — Structural Step-Change Not Yet in the Existing Summary):
-   - At least ONE net-new fact in the incoming dispatches (that is NOT already in the existing summary) executes an IRREVERSIBLE crossing of the prior State Envelope:
+   - At least ONE net-new fact in the incoming dispatches (that is NOT already in the existing summary) executes an IRREVERSIBLE crossing of the prior State Envelope (even when the original physical incident in the headline remains factually true!):
+     • Sovereign War-Act, Retaliation Vow, Charter Invocation, or Emergency Defense Summit: Authorities label an attack a "declaration of war" or "act of war", invoke UN Charter Article 51 or mutual defense, formally claim responsibility for a previously "suspected" strike, vow military retaliation, sever diplomatic relations / expel ambassadors, or dispatch top commanders/leaders abroad for emergency defense/security talks,
+     • Zero-to-Fatality Crossing, Third-Party/Host-Nation Fatalities, or Major Casualty Jump: An incident that previously had zero deaths ("injured", "damaged", "sank") records its FIRST confirmed human deaths (e.g. wounded soldiers/civilians die from wounds), kills military personnel or citizens of a host/third country, or jumps substantially in death toll,
      • Spatial / Sovereign Border Crossing: The active physical phenomenon crosses into a NEW sovereign country or international theatre not yet named in the prior summary (e.g. domestic French unrest spreading into Italy and Belgium; an outbreak crossing into Kenya),
      • Executed Institutional / Legal Regime Change: Authorities FORMALLY ENACT, SIGN, RULE, OR EXECUTE an extraordinary legal/coercive measure not yet in the summary (e.g. curfews formally imposed in Paris and Nice, criminal charges/indictments formally filed, a suspect released without charges, or construction ordered to begin despite a court injunction — NEVER merely "weighing" or "pushing for" it),
      • Phase Completion / Decisive Outcome Resolution: An active process, vote, election, referendum, trial, launch, or emergency transitions from an ongoing/unresolved state ("holds referendum", "voters cast ballots", "prepares to launch", "on trial") to a decisive declared result or completed milestone ("voters reject independence referendum", "court convicts leader", "spacecraft successfully launches"),
-     • Outcome / Premise Reversal: A critical threat or premise is definitively resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses),
-     • Temporal Re-Break / Follow-Up Kinetic or Institutional Escalation: When a new kinetic strike, explosion, military operation, municipal/regional ban, direct diplomatic summit, or significant casualty toll jump occurs hours or days (>= 6h) after the prior stage within the same cluster, classify as "material_shift" (never demote a new physical strike/explosion or major toll jump to "clarification" merely because the theatre headline is unchanged).
+     • Outcome / Premise Reversal: A critical threat or premise is definitively resolved or reversed (e.g. a mid-air bomb threat emergency landing is cleared with no explosives found onboard; a ceasefire collapses; an ousted CEO/leader is reinstated),
+     • Temporal Re-Break / Follow-Up Kinetic or Institutional Escalation: When a new kinetic strike, explosion, military operation, municipal/regional ban, direct diplomatic summit, or significant casualty toll jump occurs hours or days (>= 6h) after the prior stage within the same cluster, classify as "material_shift" (never demote a new physical strike/explosion, war-act declaration, or fatality threshold crossing to "clarification" merely because the origin incident headline still holds).
 
 DISJUNCTIVE (OR-GATE) BATCH PRINCIPLE, SUMMARY-DELTA SYNC & SELECTIVE ATTRIBUTION:
 - When a batch of incoming dispatches mixes routine commentary/reaction headlines with 1 or more headlines that execute a true net-new State-Envelope crossing, classify as "material_shift".
@@ -4583,18 +4585,45 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       // 2. If unbatched Decisions-1 pre-triage verified this update is an in-phase clarification (pClar >= 0.70, pShift < 0.22), lock to clarification.
       const isPreludeOnly = /\b(weigh(?:s|ed|ing)?|push(?:es|ed|ing)?\s+for|consider(?:s|ed|ing)?|mull(?:s|ed|ing)?|debate(?:s|d)?|propose(?:s|d)?)\b/i.test(noteText) &&
         !/\b(spread|expand|cross|enact|impos|arrest|indict|charg|releas|struck|launch|clear)\w*/i.test(noteText);
+      const priorHistorySweep = `${c.story || ''} ${c.summary || ''} ${(c.evolutionHistory || []).map(h => `${h?.headline || ''} ${h?.summary || ''} ${h?.note || ''}`).join(' ')}`;
+      const crossesHardEscalation = (() => {
+        const clauses = noteText.split(/\s*;\s*/).map(s => s.trim()).filter(Boolean);
+        const priorHadDeaths = /\b(dies?|died|dead|killed|fatalit\w*|death\s+toll|succumb\w*\s+to\s+(?:wounds?|injur\w*))\b/i.test(priorHistorySweep) &&
+          !/\b(no\s+(?:casualties|deaths|fatalities)|zero\s+(?:deaths|fatalities)|causing\s+a\s+blast\s+but\s+no\s+casual)\b/i.test(priorHistorySweep);
+        for (const clStr of clauses) {
+          if (/\b(weigh(?:s|ed|ing)?|mull(?:s|ed|ing)?|consider(?:s|ed|ing)?|propose(?:s|d)?|may\b|might\b|could\b|urges?\s+(?:a\s+)?probe|demands?\s+(?:an?\s+)?explanation)\b/i.test(clStr)) continue;
+          if (/\b(declaration\s+of\s+war|act\s+of\s+war|casus\s+belli|state\s+of\s+war|declares?\s+war|article\s+51\b|article\s+5\b)\b/i.test(clStr) &&
+              !/\b(declaration\s+of\s+war|act\s+of\s+war|casus\s+belli|state\s+of\s+war|declares?\s+war|article\s+51\b|article\s+5\b)\b/i.test(priorHistorySweep)) {
+            return true;
+          }
+          if (/\b(vows?\s+(?:military\s+)?retaliat\w*|orders?\s+retaliat\w*|declares?\s+(?:a\s+)?(?:state\s+of\s+emergency|martial\s+law)|severs?\s+diplomatic\s+(?:ties|relations)|expels?\s+(?:ambassador|diplomats))\b/i.test(clStr) &&
+              !/\b(vows?\s+(?:military\s+)?retaliat\w*|orders?\s+retaliat\w*|state\s+of\s+emergency|martial\s+law|severs?\s+diplomatic|expels?\s+(?:ambassador|diplomats))\b/i.test(priorHistorySweep)) {
+            return true;
+          }
+          if (/\b(travels?\s+to|flies?\s+to|visits?|arrives?\s+in)\s+[A-Z][a-z]+\s+for\s+(?:emergency\s+|urgent\s+|diplomatic\s+)?(?:security|defen[cs]e|military|crisis|ceasefire|truce)\s+talks\b/.test(clStr)) {
+            return true;
+          }
+          const hasDeathsNow = !/\b(no\s+(?:one\s+)?(?:died|killed|deaths|fatalities)|zero\s+(?:deaths|fatalities))\b/i.test(clStr) &&
+            /\b((?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|dozen)\s+(?:[a-z]+\s+){0,3}(?:die|dies|died|killed|succumb\w*)|(?:soldiers?|officers?|troops?|sailors?|civilians?|workers?|people|victims?|personnel)\s+(?:die|dies|died|killed|succumb\w*\s+to\s+(?:wounds?|injur\w*))|dies?\s+(?:from|of)\s+(?:wounds?|injur\w*))\b/i.test(clStr);
+          if (hasDeathsNow && !priorHadDeaths) {
+            return true;
+          }
+        }
+        return false;
+      })();
       const isPreviewResolvedNow = Boolean(
         c._pendingUpdate?.isPreviewToOutcomeRepair ||
         hasHeadlineOpenPreviewVsResolvedOutcome(c.story || '', `${dev.summary || c.summary || ''}. ${(c._pendingUpdate?.addedHeadlines || []).join('. ')}`)
       );
       const lockedByDecision1Clarification = Boolean(
         !isPreviewResolvedNow &&
+        !crossesHardEscalation &&
         c._decisionTriage &&
         c._decisionTriage.choice === 'clarification' &&
         (c._decisionTriage.pClar || 0) >= 0.70 &&
         (c._decisionTriage.pShift || 0) < 0.22
       );
-      const uType = ((dev.updateType === 'material_shift' || isPreviewResolvedNow) && !isPreludeOnly && !lockedByDecision1Clarification) ? 'material_shift' : 'clarification';
+      const uType = ((dev.updateType === 'material_shift' || isPreviewResolvedNow || crossesHardEscalation) && !isPreludeOnly && !lockedByDecision1Clarification) ? 'material_shift' : 'clarification';
       const newSummary = (dev.summary && dev.summary.trim()) || c.summary;
 
       // Skip routine restatements ("Re-emphasizes...", "Reaffirms...") that add no new factual detail
@@ -4811,7 +4840,7 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
       const candStoryCheck = isHeadlineAnchorRecognizable(rawCandStoryCheck) ? rawCandStoryCheck : c.story;
       const isUnchangedOrRevertedHeadline = normHeadSync(candStoryCheck) === normHeadSync(c.story) || seenPriorHeadlines.has(normHeadSync(candStoryCheck));
 
-      if (effectiveUType === 'material_shift' && !isUnchangedOrRevertedHeadline) {
+      if (effectiveUType === 'material_shift' && (!isUnchangedOrRevertedHeadline || crossesHardEscalation)) {
         materialInPlaceCount++;
         const oldSlug = c.id || slugify(c.story);
         const newStory = candStoryCheck;
