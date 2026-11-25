@@ -48,7 +48,8 @@ function normalizeThinkingLevelForModel(model, requestedLevel) {
   const supportsMinimal = (
     m.includes('3.5-flash-lite') ||
     m.includes('3.1-flash-lite') ||
-    m.includes('3.6-flash')
+    m.includes('3.6-flash') ||
+    m.includes('gemini-3-flash-preview')
   );
   const supportsXHigh = m.includes('gemini-4-hydrogen');
 

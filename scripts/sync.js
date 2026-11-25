@@ -589,6 +589,8 @@ const ALL_TRACKED_GEMINI_MODELS = [
   'gemini-3.6-flash',
   'gemini-3.5-flash-lite',
   'gemini-3.8-flash',
+  'gemini-3-flash-preview',
+  'gemini-3.1-flash-lite',
   'gemini-3.1-flash-lite-preview',
   'gemini-decision-1'
 ];
@@ -616,7 +618,8 @@ function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
   if (taskType === 'grading') {
     if (freeKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
-      pushCandidate('gemini-3.1-flash-lite-preview', freeKeyObj);
+      pushCandidate('gemini-3-flash-preview', freeKeyObj);
+      pushCandidate('gemini-3.1-flash-lite', freeKeyObj);
     }
     if (paidKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
@@ -627,7 +630,7 @@ function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
       pushCandidate('gemini-3.8-flash', freeKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite-preview', 'gemini-4-hydrogen', 'gemini-3.6-flash']) {
+      for (const m of ['gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-4-hydrogen', 'gemini-3.6-flash']) {
         pushCandidate(m, singleKeyObj);
       }
     }
@@ -638,14 +641,15 @@ function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
     if (freeKeyObj) {
       pushCandidate('gemini-3.6-flash', freeKeyObj);
       pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
+      pushCandidate('gemini-3-flash-preview', freeKeyObj);
       pushCandidate('gemini-3.8-flash', freeKeyObj);
-      pushCandidate('gemini-3.1-flash-lite-preview', freeKeyObj);
+      pushCandidate('gemini-3.1-flash-lite', freeKeyObj);
     }
     if (paidKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']) {
+      for (const m of ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-3.8-flash']) {
         pushCandidate(m, singleKeyObj);
       }
     }
@@ -706,7 +710,8 @@ async function analyzeWithGemini(headlines, apiKeyOrTiers, requestedModel, custo
 
   // Interleave & topic-group across outlets so simultaneous coverage of the same story sits in the same context window
   const orderedHeadlines = interleaveByOutlet(headlines);
-  const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || 50;
+  const hasActivePaidCandidate = initialPlan.some(p => p.keyObj?.tier === 'PAID');
+  const BATCH_SIZE = customBatchSize || Number(process.env.GEMINI_BATCH_SIZE) || (hasActivePaidCandidate ? 45 : 28);
   const allResults = [];
   let modelUsed = initialPlan[0]?.model || 'gemini-3.5-flash-lite';
   let tierUsed = keyTiers[0]?.tier || 'PRIMARY';
@@ -775,7 +780,8 @@ Return ONLY valid JSON.`;
       if (batchSuccess) break;
       const modelTierKey = `${modelName}:${keyObj.tier}`;
       if (exhaustedModelTiers.has(modelTierKey)) continue;
-      const maxAttempts = 2;
+      const isPrimaryFreeWorkhorse = keyObj.tier === 'FREE' && (modelName === 'gemini-3.5-flash-lite' || modelName === 'gemini-3-flash-preview');
+      const maxAttempts = isPrimaryFreeWorkhorse ? 3 : 2;
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
           console.log(`[Gemini] Batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(orderedHeadlines.length / BATCH_SIZE)} (${chunk.length} items) using ${modelName} [${keyObj.tier} key] (attempt ${attempt}/${maxAttempts})...`);
@@ -784,8 +790,8 @@ Return ONLY valid JSON.`;
             model: modelName,
             systemInstruction: prompt,
             input: batchInput,
-            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
-            maxOutputTokens: 65536,
+            thinkingLevel: (modelName.includes('flash-lite') || modelName === 'gemini-3-flash-preview') ? 'minimal' : 'low',
+            maxOutputTokens: 32768,
             jsonMode: true,
             repairJsonArray: true,
             serviceTierMode: resolveSyncServiceTier(keyObj),
@@ -856,14 +862,22 @@ Return ONLY valid JSON.`;
             break;
           }
           if (isQuotaOrRateLimit) {
-            if (/per[_ ]day|requests per day/i.test(msg)) {
+            const isDailyCap = /per[_ ]day|requests per day|limit:\s*0\b/i.test(msg);
+            if (isDailyCap) {
               exhaustedModelTiers.add(modelTierKey);
+              console.log(`[Gemini] Daily quota reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
+              break;
+            }
+            if (isPrimaryFreeWorkhorse && attempt === 1) {
+              console.log(`[Gemini] Per-minute RPM/TPM limit on ${modelName} [${keyObj.tier} key] — pausing 15s before retry...`);
+              await new Promise(r => setTimeout(r, 15000));
+              continue;
             }
             console.log(`[Gemini] Quota/rate-limit reached for ${modelName} [${keyObj.tier} key] — advancing to next model/tier candidate...`);
             break;
           }
           if (attempt < maxAttempts) {
-            const waitMs = isDemandSpike ? 4000 : 2000;
+            const waitMs = isDemandSpike ? (attempt === 1 ? 3500 : 8000) : 2000;
             await new Promise(r => setTimeout(r, waitMs));
           } else if (isDemandSpike && keyObj.tier === 'FREE') {
             console.log(`[Gemini] Free-tier high demand persisted for ${modelName} on this batch — advancing to next candidate...`);
