@@ -10,7 +10,7 @@ const fs = require('fs');
 const { GoogleGenAI } = require('@google/genai');
 
 const MIN_THINKING_MAX_OUTPUT_TOKENS = 32768;
-let _flexCongestedUntilMs = 0;
+const _flexCongestedByModel = new Map();
 const _spendCappedKeys = new Set();
 
 function isKeySpendCapped(apiKey) {
@@ -364,10 +364,11 @@ async function callGeminiInteraction({
   }
 
   if (serviceTierMode === 'flex_with_fallback') {
-    if (Date.now() < _flexCongestedUntilMs) {
+    const modelCongestedUntil = _flexCongestedByModel.get(model) || 0;
+    if (Date.now() < modelCongestedUntil) {
       return await invokeTier('standard', timeoutMs, 0);
     }
-    const queueBudgetMs = Math.min(Math.max(Number(flexTimeoutMs) || 20000, 12000), 22000);
+    const queueBudgetMs = Math.min(Math.max(Number(flexTimeoutMs) || 45000, 12000), 65000);
     const t0 = Date.now();
     try {
       return await invokeTier('flex', timeoutMs, queueBudgetMs);
@@ -375,8 +376,8 @@ async function callGeminiInteraction({
       if (!isFlexFallbackEligibleError(flexErr)) {
         throw flexErr;
       }
-      _flexCongestedUntilMs = Date.now() + 15 * 60 * 1000;
-      console.log(`[Gemini Flex -> Standard] ${model} Flex unavailable after ${Date.now() - t0}ms (${String(flexErr.message || '').slice(0, 100)}); circuit-breaking Flex for 15m and falling back to Standard.`);
+      _flexCongestedByModel.set(model, Date.now() + 3 * 60 * 1000);
+      console.log(`[Gemini Flex -> Standard] ${model} Flex unavailable after ${Date.now() - t0}ms (${String(flexErr.message || '').slice(0, 100)}); cooling down Flex on ${model} for 3m and falling back to Standard.`);
       return await invokeTier('standard', timeoutMs, 0);
     }
   }

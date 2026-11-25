@@ -97,7 +97,7 @@ Return ONLY valid JSON:
   ]
 }`;
 
-async function callGeminiJson(inputPrompt, apiKey, modelPreference = ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite']) {
+async function callGeminiJson(inputPrompt, apiKey, modelPreference = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-4-hydrogen', 'gemini-3.5-flash-lite']) {
   let lastErr = null;
   for (const model of modelPreference) {
     for (let attempt = 1; attempt <= 2; attempt++) {
@@ -107,11 +107,11 @@ async function callGeminiJson(inputPrompt, apiKey, modelPreference = ['gemini-4-
           model,
           systemInstruction: REALIGN_SYSTEM_INSTRUCTION,
           input: inputPrompt,
-          thinkingLevel: model.includes('flash-lite') ? 'minimal' : 'low',
+          thinkingLevel: (model.includes('flash-lite') || model === 'gemini-3.6-flash') ? 'minimal' : 'low',
           maxOutputTokens: 32768,
           jsonMode: true,
           serviceTierMode: 'flex_with_fallback',
-          flexTimeoutMs: 75000,
+          flexTimeoutMs: 60000,
           timeoutMs: 120000
         });
         return { parsed, model };
@@ -368,13 +368,17 @@ async function main() {
           submitOnly: submitBatchOnly
         });
         if (!batchRes.completed) {
-          console.log(`[Realign Batch] Batch job ${batchRes.jobName} queued/running. Re-run with --batch later to collect and apply results.`);
-          return;
-        }
-        for (const s of preparedSilos) {
-          const parsed = batchRes.resultsByKey.get(s.siloDef.id);
-          if (parsed) {
-            siloResults.push(mapParsedSiloOutput(parsed, s.codeToCluster));
+          if (submitBatchOnly) {
+            console.log(`[Realign Batch] Batch job ${batchRes.jobName} queued/running. Re-run with --batch later to collect and apply results.`);
+            return;
+          }
+          console.warn(`[Realign Batch] Batch job ${batchRes.jobName} still queued after poll window — falling back to live Flex pass so morning alignment completes.`);
+        } else {
+          for (const s of preparedSilos) {
+            const parsed = batchRes.resultsByKey.get(s.siloDef.id);
+            if (parsed) {
+              siloResults.push(mapParsedSiloOutput(parsed, s.codeToCluster));
+            }
           }
         }
       } catch (batchErr) {
@@ -392,11 +396,11 @@ async function main() {
         }
       }
     }
-    if (!useBatchApi || batchFallbackKey) {
+    if (!useBatchApi || batchFallbackKey || siloResults.length === 0) {
       const runKey = batchFallbackKey || apiKey;
       const runModels = batchFallbackKey
-        ? ['gemini-3.6-flash', 'gemini-3.5-flash-lite']
-        : ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+        ? ['gemini-3.6-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite']
+        : ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-4-hydrogen', 'gemini-3.5-flash-lite'];
       const concurrency = batchFallbackKey ? 1 : 4;
       for (let i = 0; i < preparedSilos.length; i += concurrency) {
         if (batchFallbackKey && i > 0) await new Promise(r => setTimeout(r, 4000));

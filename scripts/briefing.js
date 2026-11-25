@@ -160,15 +160,22 @@ async function generateDailyBriefing(options = {}) {
     ? process.env.GEMINI_PAID_API_KEY
     : null;
   const candidatePlan = [];
+  if (freeKey) {
+    candidatePlan.push({ model: 'gemini-3.6-flash', key: freeKey, tier: 'FREE' });
+    candidatePlan.push({ model: 'gemini-3-flash-preview', key: freeKey, tier: 'FREE' });
+  }
   if (paidKey) {
+    candidatePlan.push({ model: 'gemini-3.6-flash', key: paidKey, tier: 'PAID' });
+    candidatePlan.push({ model: 'gemini-3.8-flash', key: paidKey, tier: 'PAID' });
     candidatePlan.push({ model: 'gemini-4-hydrogen', key: paidKey, tier: 'PAID' });
   } else if (!freeKey && process.env.GEMINI_PAID_API_KEY) {
+    candidatePlan.push({ model: 'gemini-3.6-flash', key: process.env.GEMINI_PAID_API_KEY, tier: 'PAID' });
+    candidatePlan.push({ model: 'gemini-3.8-flash', key: process.env.GEMINI_PAID_API_KEY, tier: 'PAID' });
     candidatePlan.push({ model: 'gemini-4-hydrogen', key: process.env.GEMINI_PAID_API_KEY, tier: 'PAID' });
   }
   if (freeKey) {
-    candidatePlan.push({ model: 'gemini-3.6-flash', key: freeKey, tier: 'FREE' });
     candidatePlan.push({ model: 'gemini-3.5-flash-lite', key: freeKey, tier: 'FREE' });
-    candidatePlan.push({ model: 'gemini-3.8-flash', key: freeKey, tier: 'FREE' });
+    candidatePlan.push({ model: 'gemini-3.1-flash-lite', key: freeKey, tier: 'FREE' });
   }
   if (paidKey) {
     candidatePlan.push({ model: 'gemini-3.5-flash-lite', key: paidKey, tier: 'PAID' });

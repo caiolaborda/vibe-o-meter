@@ -623,33 +623,63 @@ function buildModelTierPlan(apiKeyOrTiers, taskType = 'editorial') {
     }
     if (paidKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
-      pushCandidate('gemini-4-hydrogen', paidKeyObj);
+      pushCandidate('gemini-3.1-flash-lite', paidKeyObj);
+      pushCandidate('gemini-3.6-flash', paidKeyObj);
     }
     if (freeKeyObj) {
       pushCandidate('gemini-3.6-flash', freeKeyObj);
       pushCandidate('gemini-3.8-flash', freeKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-4-hydrogen', 'gemini-3.6-flash']) {
+      for (const m of ['gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite', 'gemini-3.6-flash']) {
+        pushCandidate(m, singleKeyObj);
+      }
+    }
+  } else if (taskType === 'editorial_reasoning') {
+    // High-IQ State-Envelope shift/merge judge (1 call/hr on 50%-off Flex + 95%-off static prefix cache)
+    if (paidKeyObj) {
+      pushCandidate('gemini-4-hydrogen', paidKeyObj);
+      pushCandidate('gemini-3.8-flash', paidKeyObj);
+    }
+    if (freeKeyObj) {
+      pushCandidate('gemini-3.6-flash', freeKeyObj);
+      pushCandidate('gemini-3-flash-preview', freeKeyObj);
+      pushCandidate('gemini-3.8-flash', freeKeyObj);
+    }
+    if (paidKeyObj) {
+      pushCandidate('gemini-3.6-flash', paidKeyObj);
+      pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
+    }
+    if (freeKeyObj) {
+      pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
+      pushCandidate('gemini-3.1-flash-lite', freeKeyObj);
+    }
+    if (singleKeyObj) {
+      for (const m of ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3-flash-preview', 'gemini-3.5-flash-lite']) {
         pushCandidate(m, singleKeyObj);
       }
     }
   } else {
-    if (paidKeyObj) {
-      pushCandidate('gemini-4-hydrogen', paidKeyObj);
-    }
+    // 'editorial_synthesis' / 'editorial': clustering & multi-outlet dossier/location synthesis
     if (freeKeyObj) {
       pushCandidate('gemini-3.6-flash', freeKeyObj);
-      pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
       pushCandidate('gemini-3-flash-preview', freeKeyObj);
-      pushCandidate('gemini-3.8-flash', freeKeyObj);
+    }
+    if (paidKeyObj) {
+      pushCandidate('gemini-3.6-flash', paidKeyObj);
+      pushCandidate('gemini-3.8-flash', paidKeyObj);
+    }
+    if (freeKeyObj) {
+      pushCandidate('gemini-3.5-flash-lite', freeKeyObj);
       pushCandidate('gemini-3.1-flash-lite', freeKeyObj);
+      pushCandidate('gemini-3.8-flash', freeKeyObj);
     }
     if (paidKeyObj) {
       pushCandidate('gemini-3.5-flash-lite', paidKeyObj);
+      pushCandidate('gemini-4-hydrogen', paidKeyObj);
     }
     if (singleKeyObj) {
-      for (const m of ['gemini-4-hydrogen', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-3-flash-preview', 'gemini-3.8-flash']) {
+      for (const m of ['gemini-3.6-flash', 'gemini-3-flash-preview', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-4-hydrogen']) {
         pushCandidate(m, singleKeyObj);
       }
     }
@@ -2639,7 +2669,7 @@ Return JSON array in format:
 
   let clusters = null;
   let activeCandidatesForIds = candidates;
-  const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
+  const candidatePlan = buildModelTierPlan(apiKey, 'editorial_synthesis');
   for (const { model: modelName, keyObj } of candidatePlan) {
     if (clusters) break;
     const modelTierKey = `${modelName}:${keyObj.tier}`;
@@ -2655,12 +2685,12 @@ Return JSON array in format:
           model: modelName,
           systemInstruction: prompt,
           input: useInput,
-          thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+          thinkingLevel: (modelName.includes('flash-lite') || modelName === 'gemini-3.6-flash' || modelName === 'gemini-3-flash-preview') ? 'minimal' : 'low',
           maxOutputTokens: 65536,
           jsonMode: true,
           repairJsonArray: true,
           serviceTierMode: resolveSyncServiceTier(keyObj),
-          flexTimeoutMs: 20000,
+          flexTimeoutMs: 55000,
           timeoutMs: 210000
         });
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -4278,6 +4308,11 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
     }
   });
 
+  if (pendingPromptIndices.length === 0 && candidatePairHints.length === 0) {
+    console.log('[Clusters] Skipping consolidation LLM pass — zero candidate in-place updates and zero overlapping cluster pairs.');
+    return clusters;
+  }
+
   const pairHintBlock = candidatePairHints.length > 0
     ? `\n\n[HIGH-OVERLAP CANDIDATE PAIRS TO EVALUATE FOR JOB 1 (MERGE IF SAME SPECIFIC EVENT) OR JOB 3 (LATERAL CONNECTION IF SEPARATE EVENTS IN SAME THEATRE)]:\n` +
       candidatePairHints.slice(0, 25).map(p => {
@@ -4294,8 +4329,9 @@ async function consolidateEvolvingClusters(clusters, apiKey) {
       }).join('\n')
     : '';
 
-  const prompt = `You are the Executive Editor of a global news intelligence wire.
-Below are ${activeOrigIndices.length} active or overlapping story clusters from our rolling 7-day window, including each cluster's current summary, [PRIMARY HEADLINES], any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
+  // 100% static system instruction so Gemini Implicit Prefix Caching discounts the entire ~3,700-token rulebook by 90-95% across runs!
+  const consolidationSystemInstruction = `You are the Executive Editor of a global news intelligence wire.
+Review the active or overlapping story clusters provided in the user input from our rolling 7-day window, including each cluster's current summary, [PRIMARY HEADLINES], any [PRIOR RECORDED HISTORY], and any [CANDIDATE IN-PLACE UPDATE] dispatches.
 
 FIRST-PRINCIPLES META-RULE — BASELINE SUBTRACTION, INTRA-STATE RESOLUTION ("clarification") vs. STATE-ENVELOPE SHIFT ("material_shift"):
 Every news story has a current State Envelope defined by:
@@ -4362,8 +4398,8 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
 - If no two clusters report the exact same specific incident, direct rhetorical exchange, or direct post-ruling recognition/enforcement stage, return "merges": [].
 - For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary (or executes a direct head-of-state counter-rebuke to prior foreign criticism); otherwise set "updateType": "clarification" (deduplication).
 
-JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches — Eligible Indices: ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : 'NONE (return "inPlaceDevelopments": [])'}):
-Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly limited to indices ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : '[]'}):
+JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
+Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly limited to the Eligible Job 2 Indices listed at the top of the user input; if Eligible Job 2 Indices is NONE, return "inPlaceDevelopments": []):
 - NEVER include any cluster index that does not have a "[CANDIDATE IN-PLACE UPDATE]" line!
 - OFF-TOPIC / PARALLEL-COUNTRY CANDIDATE REJECTION: If a "[CANDIDATE IN-PLACE UPDATE]" dispatch is actually about a DIFFERENT country's domestic metric/budget/court, a DIFFERENT company, or a separate unrelated incident that only matched on generic words (e.g. a Bank of Japan or Statistics Canada inflation dispatch attached to a UK inflation cluster, or a Brazilian budget dispatch attached to a US deficit cluster), IGNORE that off-topic dispatch completely (and if no other genuinely on-topic dispatches remain, set "updateType": "none"). NEVER stitch a separate country's or company's domestic news into the cluster with "Concurrently..." or "Meanwhile..."!
 - If the new dispatches are redundant with the existing headline, summary, or [PRIOR RECORDED HISTORY], omit the cluster (or set "updateType": "none").
@@ -4374,9 +4410,6 @@ Identify pairs of DISTINCT clusters that share a political campaign, country bac
 - Keep them as separate clusters (NEVER put them in "merges"), and record their connection here.
 - NEVER write prompt index labels like "[12]", "S12", or "Cluster 5" inside "howItConnects" — always name the real-world actors, institutions, or events directly.
 - ANTI-SUPER-NODE RULE: NEVER link two clusters in "lateralConnections" merely because they mention the same head of state, administration, or public figure (e.g. NEVER link a local property, golf course, or lifestyle story to international war diplomacy, sanctions, or foreign elections). Both clusters in a lateralConnection must operate in the same geopolitical theater, economic sector, or policy/judicial domain.
-
-Clusters:
-${lines}${pairHintBlock}
 
 Return ONLY valid JSON in this exact field order (use "merges": [] if no two clusters are the exact same incident; omit "eventTime" unless new dispatches explicitly clarify, correct, or refine the sub-day occurrence time of the original event):
 {
@@ -4413,8 +4446,14 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
   ]
 }`;
 
+  const consolidationInput = `Active / Overlapping Clusters (${activeOrigIndices.length} total):
+Eligible Job 2 Indices ([CANDIDATE IN-PLACE UPDATE]): ${pendingPromptIndices.length > 0 ? `[${pendingPromptIndices.join(', ')}]` : 'NONE (return "inPlaceDevelopments": [])'}
+
+Clusters:
+${lines}${pairHintBlock}`;
+
   try {
-    const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
+    const candidatePlan = buildModelTierPlan(apiKey, 'editorial_reasoning');
     let parsed = null;
     for (const { model: modelName, keyObj } of candidatePlan) {
       if (parsed) break;
@@ -4426,12 +4465,13 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
           const { parsed: respParsed } = await callGeminiInteraction({
             apiKey: keyObj.key,
             model: modelName,
-            input: prompt,
-            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            systemInstruction: consolidationSystemInstruction,
+            input: consolidationInput,
+            thinkingLevel: (modelName.includes('flash-lite') || modelName === 'gemini-3.6-flash' || modelName === 'gemini-3-flash-preview') ? 'minimal' : 'low',
             maxOutputTokens: 65536,
             jsonMode: true,
             serviceTierMode: resolveSyncServiceTier(keyObj),
-            flexTimeoutMs: 85000,
+            flexTimeoutMs: 60000,
             timeoutMs: 120000
           });
           parsed = respParsed;
@@ -5518,10 +5558,11 @@ ${covLines}`;
     }).join('\n\n---\n\n');
 
     const currMonthYear = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    // Keep systemInstruction 100% static across all batches (no ${batch.length}) so Gemini Implicit Prefix Caching hits automatically!
     const prompt = `You are a senior correspondent, analytical editor, and geographic intelligence editor writing for an intelligent, time-pressed reader (think Matt Levine's Money Stuff, Financial Times Lex, and The Economist's briefings — sharp, insightful, concrete, and written in clear, natural, accessible journalistic English without dense academic jargon).
 Current Date: ${currMonthYear}.
 
-For each of the ${batch.length} news clusters below, synthesize:
+For each news cluster provided in the user input below, synthesize:
 (A) Its definitive top-level "summary" (1–2 crisp, detail-packed sentences, ~35–60 words) from its Covering Dispatches and Recorded Wire Evolution Stages.
 (B) Its pinpoint "primaryLocation" representing the single most specific real-world origin epicenter / center of gravity where the story took place, using the full Covering Dispatches (not just the headline!).
 (C) Its 2-part analytical stakes "briefing" ("whyItMatters" & "whatsNext") calibrated to the story's true scale:
@@ -5579,10 +5620,10 @@ Return ONLY a valid JSON array matching this exact schema:
   }
 ]`;
 
-    const polishInput = `Clusters to synthesize:\n${clusterBlocks}`;
+    const polishInput = `Clusters to synthesize (${batch.length} items):\n${clusterBlocks}`;
 
     let parsedBatch = null;
-    const candidatePlan = buildModelTierPlan(apiKey, 'editorial');
+    const candidatePlan = buildModelTierPlan(apiKey, 'editorial_synthesis');
     for (const { model: modelName, keyObj } of candidatePlan) {
       if (parsedBatch) break;
       const modelTierKey = `${modelName}:${keyObj.tier}`;
@@ -5595,12 +5636,12 @@ Return ONLY a valid JSON array matching this exact schema:
             model: modelName,
             systemInstruction: prompt,
             input: polishInput,
-            thinkingLevel: modelName.includes('flash-lite') ? 'minimal' : 'low',
+            thinkingLevel: (modelName.includes('flash-lite') || modelName === 'gemini-3.6-flash' || modelName === 'gemini-3-flash-preview') ? 'minimal' : 'low',
             maxOutputTokens: 32768,
             jsonMode: true,
             repairJsonArray: true,
             serviceTierMode: resolveSyncServiceTier(keyObj),
-            flexTimeoutMs: 80000,
+            flexTimeoutMs: 60000,
             timeoutMs: 120000
           });
           if (Array.isArray(arr) && arr.length > 0) {
@@ -6327,7 +6368,7 @@ async function main() {
       } else if (hasHeavyBacklog && hoursSinceLastCluster < clusterIntervalHours && !forceCluster) {
         console.log(`[Backlog Trigger] 📥 Heavy ingest wave (${newlyAnalyzedCount} new articles analyzed, ${hoursSinceLastCluster.toFixed(1)}h since last cluster) — triggering immediate clustering pass.`);
       }
-      const clusteringPlan = buildModelTierPlan(geminiKeyTiers, 'editorial');
+      const clusteringPlan = buildModelTierPlan(geminiKeyTiers, 'editorial_synthesis');
       const hasFreeClusteringSlot = clusteringPlan[0]?.keyObj?.tier === 'FREE';
       if (hasFreeClusteringSlot && newlyAnalyzedCount > 0) {
         console.log('[Sync] Pausing 6s before story clustering to avoid free-tier RPM/TPM collision...');
