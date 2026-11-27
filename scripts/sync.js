@@ -4396,7 +4396,10 @@ Identify ONLY pairs of clusters whose [PRIMARY HEADLINES] report the EXACT SAME 
   • Example of VALID merge #4 (Same-Announcement Dual-Facet Split — Market/Leak Reaction + Official Substantive Release, or Umbrella-vs-Specific Twin): If one cluster captures the initial data leak, rumor, or stock/market reaction to a specific clinical trial, scientific study, earnings report, or corporate announcement (e.g. "Moderna Stock Plummets Following Cancer Vaccine Leak") and another cluster captures the substantive clinical, scientific, or product findings of that EXACT SAME trial/announcement (e.g. "Global Pharmaceutical Firms Launch Advanced Cancer Vaccines" covering the same personalized mRNA melanoma vaccine trial, or "Global IT Disruption Caused by Critical Software Flaw" + "PHP Vulnerabilities Force Websites Offline"), they are two facets of the EXACT SAME underlying event and MUST be merged in "merges" with "updateType": "material_shift" (updating "story" to name the specific actor/entity and substantive outcome), NEVER left split in "lateralConnections"!
   • Example of VALID merge #5 (Direct Post-Ruling / Post-Verdict Recognition, Appeal, or Ruling-Triggered Sanctions Within 5 Days): When an earlier cluster covers a landmark court ruling, verdict, conviction, or arrest warrant (e.g. "ICJ Finds Myanmar Guilty of Rohingya Genocide") and a follow-up cluster within 5 days consists directly of governments/coalitions formally acknowledging, backing, appealing, or imposing targeted sanctions explicitly over that exact ruling (e.g. "14 Countries Acknowledge ICJ Rohingya Ruling as UK Sanctions Myanmar Leaders"), merge them in "merges" with "updateType": "material_shift", updating "story" to name ONLY verified actors from the dispatches (NEVER hallucinate "EU" if dispatches say "UK and 13 countries") while keeping the landmark ruling anchor!
 - If no two clusters report the exact same specific incident, direct rhetorical exchange, or direct post-ruling recognition/enforcement stage, return "merges": [].
-- For any valid merge, only set "updateType": "material_shift" if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary (or executes a direct head-of-state counter-rebuke to prior foreign criticism); otherwise set "updateType": "clarification" (deduplication).
+- For any valid merge:
+  • Set "updateType": "none" (and "developmentNote": "") when both clusters report the EXACT SAME initial event, court filing, statistic, or incident with zero new subsequent chronological event (pure duplicate-cluster deduplication). NEVER write meta-editorial housekeeping notes such as "Consolidating duplicate coverage...", "Deduplicating identical coverage...", or "Merging overlapping reports..."!
+  • Set "updateType": "clarification" ONLY if the newer cluster adds genuinely new factual granularity (e.g. a newly named customer, figure, or detail) not in the earlier cluster, stating ONLY that new factual delta in "developmentNote".
+  • Set "updateType": "material_shift" ONLY if the newer cluster introduces a strictly subsequent chronological phase that crosses a State-Envelope boundary (or executes a direct head-of-state counter-rebuke / post-ruling enforcement stage).
 
 JOB 2 — "inPlaceDevelopments" (Evaluating [CANDIDATE IN-PLACE UPDATE] Dispatches):
 Evaluate ONLY clusters that have a "[CANDIDATE IN-PLACE UPDATE]" line (strictly limited to the Eligible Job 2 Indices listed at the top of the user input; if Eligible Job 2 Indices is NONE, return "inPlaceDevelopments": []):
@@ -4417,9 +4420,9 @@ Return ONLY valid JSON in this exact field order (use "merges": [] if no two clu
     {
       "indices": [13, 14],
       "sharedSpecificIncident": "Name the single specific incident/bill/study both clusters report on (never a broad country or election campaign)",
-      "developmentNote": "Pure chronological delta (8-16 words max, NO 'following/after...' recap of prior steps). For clarification: 1-2 telegraphic fragments separated by '; '. For material_shift: 1 crisp delta sentence.",
-      "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — in-phase delta/proposal'",
-      "updateType": "clarification" | "material_shift",
+      "developmentNote": "Empty string \"\" when updateType is \"none\" (pure duplicate deduplication). Otherwise pure chronological factual delta (8-16 words max, NEVER 'Consolidating/Deduplicating coverage...').",
+      "stateBoundaryCrossed": "State which irreversible envelope boundary was crossed (Spatial/Sovereign Border, Executed Legal/Institutional Regime, Outcome Reversal), or 'None — duplicate deduplication / in-phase delta'",
+      "updateType": "none" | "clarification" | "material_shift",
       "story": "Updated 4-8 Word Title Keeping Origin Anchor + Key Shift (only used if material_shift)",
       "summary": "1-2 sentence detail-packed cumulative synthesis weaving the integrated chronological journey with exact named institutions/actors, specific venues/cities, concrete figures, and mechanisms (zero meta-coverage filler).",
       "eventTime": null,
@@ -4530,7 +4533,7 @@ ${lines}${pairHintBlock}`;
       }
     }
     const merges = rawMerges.filter(m => {
-      if (!m || m.updateType === 'none') return false;
+      if (!m) return false;
       const idxs = (m.indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < clusters.length);
       if (idxs.length < 2) return false;
       const pairKey = `${Math.min(idxs[0], idxs[1])}:${Math.max(idxs[0], idxs[1])}`;
@@ -5254,7 +5257,21 @@ ${lines}${pairHintBlock}`;
       const mergeHeadOverlap = originHeadStems.length > 0
         ? originHeadStems.filter(s => candFinalStems.has(s)).length / originHeadStems.length
         : 1;
-      const mergeNoteStr = String(m.developmentNote || '').trim();
+      const LEADING_MERGE_HOUSEKEEPING_RE = /^(?:consolidat(?:e|es|ed|ing)|deduplicat(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|combin(?:e|es|ed|ing)|absorb(?:s|ed|ing)?|unif(?:y|ies|ied|ying))\s+(?:duplicate|duplicated|overlapping|identical|parallel|redundant|split|twin|additional|clarifying|wire|cluster|existing)?\s*(?:coverage|reports?|reporting|dispatches|clusters?|stories|articles|entries|threads?)(?:\s+[^;—–]{0,90})?[;—–]\s*/i;
+      const PURE_MERGE_HOUSEKEEPING_RE = /^(?:(?:consolidat(?:e|es|ed|ing)|deduplicat(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|combin(?:e|es|ed|ing)|absorb(?:s|ed|ing)?|unif(?:y|ies|ied|ying))\s+(?:(?:duplicate|duplicated|overlapping|identical|parallel|redundant|split|twin|clarifying|additional|wire|cluster|existing)\s+)?(?:coverage|reports?|reporting|dispatches|clusters?)\b|(?:consolidat(?:e|es|ed|ing)|deduplicat(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|combin(?:e|es|ed|ing))\s+(?:duplicate|duplicated|overlapping|identical|parallel|redundant|split|twin)\s+(?:stories|articles|entries|threads?)\b|deduplicat(?:e|es|ed|ing)\b|merged?\s+clarifying\s+dispatches\.?$|consolidated?\s+cluster\s+coverage\.?$)/i;
+      let mergeNoteStr = String(m.developmentNote || '').trim();
+      let hadLeadingHousekeepingStrip = false;
+      if (LEADING_MERGE_HOUSEKEEPING_RE.test(mergeNoteStr)) {
+        mergeNoteStr = mergeNoteStr.replace(LEADING_MERGE_HOUSEKEEPING_RE, '').trim();
+        if (mergeNoteStr.length > 1) {
+          mergeNoteStr = mergeNoteStr.charAt(0).toUpperCase() + mergeNoteStr.slice(1);
+        }
+        hadLeadingHousekeepingStrip = true;
+      }
+      const isPureHousekeepingNote = !mergeNoteStr || PURE_MERGE_HOUSEKEEPING_RE.test(mergeNoteStr);
+      if (isPureHousekeepingNote) {
+        mergeNoteStr = '';
+      }
       const mergeNoteLead = mergeNoteStr.match(/\b(confirms?|confirmed|reports?|reported|reaffirms?|reaffirmed|notes?|noted|highlights?|highlighted|details?|detailed|echoes|echoed|covers?|covered)\b(?:\s+that)?\s+/i);
       const isOutletConfirmMerge = Boolean(
         mergeNoteLead &&
@@ -5263,9 +5280,11 @@ ${lines}${pairHintBlock}`;
         (NEWS_SOURCES.some(s => mergeNoteStr.slice(0, mergeNoteLead.index).toLowerCase().includes(s.name.toLowerCase())) ||
          /\b(outlets?|newsrooms?|agencies|media|press)\b/i.test(mergeNoteStr.slice(0, mergeNoteLead.index)))
       );
-      const mergeType = chronologicalSpanMs < 2 * 3600000 || (isOutletConfirmMerge && mergeHeadOverlap >= 0.50)
-        ? 'clarification'
-        : (rawMergeType === 'material_shift' ? 'material_shift' : (rawMergeType === 'clarification' ? 'clarification' : (mergeHeadOverlap < 0.70 ? 'material_shift' : rawMergeType)));
+      const mergeType = (rawMergeType === 'none' || isPureHousekeepingNote)
+        ? 'none'
+        : (hadLeadingHousekeepingStrip || chronologicalSpanMs < 2 * 3600000 || (isOutletConfirmMerge && mergeHeadOverlap >= 0.50)
+            ? 'clarification'
+            : (rawMergeType === 'material_shift' ? 'material_shift' : (rawMergeType === 'clarification' ? 'clarification' : (mergeHeadOverlap < 0.70 ? 'material_shift' : rawMergeType))));
       const isDev = mergeType === 'material_shift';
 
       const anchor = isDev ? originAnchor : largestAnchor;
@@ -5312,14 +5331,17 @@ ${lines}${pairHintBlock}`;
 
       const nextVersion = isDev ? (maxVersion + 1) : maxVersion;
       const ts = new Date(maxNewestMs || Date.now()).toISOString();
+      const cleanBestDevNote = bestDevelopmentNote && !PURE_MERGE_HOUSEKEEPING_RE.test(String(bestDevelopmentNote).trim())
+        ? bestDevelopmentNote
+        : undefined;
       const nextDevelopedAt = isDev ? ts : bestLastDevelopedAt;
       const nextDevNote = isDev
-        ? ((m.developmentNote && m.developmentNote.trim()) || `Story evolved: ${finalStory}`)
-        : bestDevelopmentNote;
+        ? (mergeNoteStr || `Story evolved: ${finalStory}`)
+        : (mergeNoteStr || cleanBestDevNote);
 
-      // If simultaneous twins (<2h span) merged as clarification, sync initial headline to finalStory so v1 headline === story
+      // If simultaneous/duplicate twins merged without a material_shift, sync initial headline/summary to finalStory so v1 stays coherent
       if (!isDev && hist.length === 1) {
-        hist[0] = { ...hist[0], headline: finalStory, summary: finalSummary };
+        hist[0] = { ...hist[0], headline: finalStory, summary: finalSummary, outletCount: dedupedCov.length };
       }
       const seenHistNotes = new Set(hist.map(h => (h.note || '').toLowerCase().trim()));
       for (const g of group) {
@@ -5327,14 +5349,14 @@ ${lines}${pairHintBlock}`;
         for (const h of g.evolutionHistory) {
           if (!h || h.type === 'initial') continue;
           const nKey = (h.note || '').toLowerCase().trim();
-          if (nKey && !seenHistNotes.has(nKey)) {
+          if (nKey && !seenHistNotes.has(nKey) && !PURE_MERGE_HOUSEKEEPING_RE.test(nKey)) {
             seenHistNotes.add(nKey);
             hist.push(h);
           }
         }
       }
 
-      if (mergeType === 'material_shift' || mergeType === 'clarification') {
+      if ((mergeType === 'material_shift' || mergeType === 'clarification') && mergeNoteStr) {
         const beforeSnapshot = {
           id: originAnchor.id || slugify(originAnchor.story),
           version: maxVersion,
@@ -5349,7 +5371,7 @@ ${lines}${pairHintBlock}`;
           summary: finalSummary,
           outletCount: dedupedCov.length
         };
-        const entryNote = (m.developmentNote && m.developmentNote.trim()) || (isDev ? `Story evolved: ${finalStory}` : 'Merged clarifying dispatches');
+        const entryNote = mergeNoteStr;
         hist.push({
           version: nextVersion,
           type: mergeType,

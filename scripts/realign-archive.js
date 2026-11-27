@@ -212,10 +212,11 @@ function mergeSuccessorIntoAncestor(anc, suc, ev) {
   if (!alreadyHasSucChapter) {
     const nextVer = (primary.version || primary.evolutionHistory.length || 1) + 1;
     const sucTs = suc.firstSeenAt || suc.latestUpdateAt || new Date().toISOString();
+    const cleanNote = (suc.summary && suc.summary.trim()) || suc.story;
     primary.version = nextVer;
     primary.lastDevelopedAt = sucTs;
     primary.latestUpdateAt = suc.latestUpdateAt || sucTs;
-    primary.developmentNote = suc.summary || ev.rationale;
+    primary.developmentNote = cleanNote;
     primary.evolutionHistory.push({
       version: nextVer,
       type: 'material_shift',
@@ -223,7 +224,7 @@ function mergeSuccessorIntoAncestor(anc, suc, ev) {
       headline: suc.story,
       summary: suc.summary || '',
       outletCount: primary.outletCount,
-      note: suc.summary || ev.rationale
+      note: cleanNote
     });
   }
 

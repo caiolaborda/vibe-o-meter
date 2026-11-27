@@ -1551,15 +1551,58 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     return out;
   };
 
+  const LEADING_EVO_HOUSEKEEPING_RE = /^(?:consolidat(?:e|es|ed|ing)|deduplicat(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|combin(?:e|es|ed|ing)|absorb(?:s|ed|ing)?|unif(?:y|ies|ied|ying))\s+(?:duplicate|duplicated|overlapping|identical|parallel|redundant|split|twin|additional|clarifying|wire|cluster|existing)?\s*(?:coverage|reports?|reporting|dispatches|clusters?|stories|articles|entries|threads?)(?:\s+[^;—–]{0,90})?[;—–]\s*/i;
+  const PURE_EVO_HOUSEKEEPING_RE = /^(?:(?:consolidat(?:e|es|ed|ing)|deduplicat(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|combin(?:e|es|ed|ing)|absorb(?:s|ed|ing)?|unif(?:y|ies|ied|ying))\s+(?:(?:duplicate|duplicated|overlapping|identical|parallel|redundant|split|twin|clarifying|additional|wire|cluster|existing)\s+)?(?:coverage|reports?|reporting|dispatches|clusters?)\b|(?:consolidat(?:e|es|ed|ing)|deduplicat(?:e|es|ed|ing)|merg(?:e|es|ed|ing)|combin(?:e|es|ed|ing))\s+(?:duplicate|duplicated|overlapping|identical|parallel|redundant|split|twin)\s+(?:stories|articles|entries|threads?)\b|deduplicat(?:e|es|ed|ing)\b|merged?\s+clarifying\s+dispatches\.?$|consolidated?\s+cluster\s+coverage\.?$)/i;
+  const scrubEvoHousekeepingNote = (raw) => {
+    let s = String(raw || '').trim();
+    let strippedLeading = false;
+    if (LEADING_EVO_HOUSEKEEPING_RE.test(s)) {
+      s = s.replace(LEADING_EVO_HOUSEKEEPING_RE, '').trim();
+      if (s.length > 1) s = s.charAt(0).toUpperCase() + s.slice(1);
+      strippedLeading = true;
+    }
+    if (!s || PURE_EVO_HOUSEKEEPING_RE.test(s)) {
+      return { clean: '', isPureHousekeeping: Boolean(String(raw || '').trim()), strippedLeading };
+    }
+    return { clean: s, isPureHousekeeping: false, strippedLeading };
+  };
+
   const result = [];
   for (const cl of byId.values()) {
+    if (cl.developmentNote) {
+      const scrubbedDev = scrubEvoHousekeepingNote(cl.developmentNote);
+      if (!scrubbedDev.clean) {
+        delete cl.developmentNote;
+      } else {
+        cl.developmentNote = scrubbedDev.clean;
+      }
+    }
+
     if (Array.isArray(cl.evolutionHistory) && cl.evolutionHistory.length > 1) {
-      // Pre-step A: Repair or drop truncated stub notes (< 15 chars, e.g. "U.S.")
+      // Pre-step A: Scrub meta-editorial dedup/consolidation housekeeping notes & repair truncated stub notes (< 15 chars, e.g. "U.S.")
       const preRepaired = [];
+      let hadStrippedHousekeeping = false;
       for (let i = 0; i < cl.evolutionHistory.length; i++) {
         const h = { ...cl.evolutionHistory[i] };
-        const noteStr = String(h.note || '').trim();
-        if (i > 0 && (noteStr.length < 15 || /^(?:U\.S\.|U\.K\.|U\.N\.|E\.U\.)$/i.test(noteStr))) {
+        let noteStr = String(h.note || '').trim();
+        let strippedLeading = false;
+        if (i > 0) {
+          const scrubbed = scrubEvoHousekeepingNote(noteStr);
+          if (scrubbed.isPureHousekeeping) {
+            hadStrippedHousekeeping = true;
+            continue;
+          }
+          if (scrubbed.strippedLeading) {
+            strippedLeading = true;
+            noteStr = scrubbed.clean;
+            h.note = noteStr;
+            h.type = 'clarification';
+            if (preRepaired.length === 1 && h.headline) {
+              preRepaired[0].headline = h.headline;
+            }
+          }
+        }
+        if (i > 0 && !strippedLeading && (noteStr.length < 15 || /^(?:U\.S\.|U\.K\.|U\.N\.|E\.U\.)$/i.test(noteStr))) {
           const sents = splitSentencesSafe(h.summary || '');
           const candSent = sents[0] || '';
           const prevSum = preRepaired[preRepaired.length - 1]?.summary || '';
@@ -1570,6 +1613,15 @@ function deduplicateAndSanitizeClusters(rawClusters) {
           }
         }
         preRepaired.push(h);
+      }
+      if (hadStrippedHousekeeping && preRepaired.length === 1) {
+        preRepaired[0].headline = cl.story || preRepaired[0].headline;
+        preRepaired[0].summary = cl.summary || preRepaired[0].summary;
+        preRepaired[0].outletCount = cl.outletCount || (cl.coverage || []).length || preRepaired[0].outletCount || 2;
+        cl.version = 1;
+        delete cl.developmentNote;
+        delete cl.lastDevelopedAt;
+        cl._strippedHousekeepingShift = true;
       }
       if (preRepaired.length > 0) {
         // Pre-step B: If any step [1..N] has an earlier valid timestamp than step [0], sort all steps chronologically
@@ -1766,78 +1818,89 @@ function deduplicateAndSanitizeClusters(rawClusters) {
     };
 
     if (cl.evolutionHistory.length === 1) {
-      const h0 = cl.evolutionHistory[0];
-      const h0Ms = Date.parse(h0.timestamp || cl.firstSeenAt || '') || earliestCovMs;
-      const logMatch = [...updatesLogEntries].reverse().find(e =>
-        e && (e.after?.id === cl.id || e.after?.story === cl.story) &&
-        e.before?.story && e.before.story.toLowerCase() !== String(cl.story || '').toLowerCase()
-      );
-      let priorTitle = (h0.headline && h0.headline.toLowerCase() !== String(cl.story || '').toLowerCase())
-        ? h0.headline
-        : (logMatch?.before?.story || null);
-      let priorSummary = (h0.headline && h0.headline.toLowerCase() !== String(cl.story || '').toLowerCase())
-        ? (h0.summary || logMatch?.before?.summary || '')
-        : (logMatch?.before?.summary || '');
-      let priorBirthMs = h0Ms;
-      let shiftNote = logMatch?.note || cl.developmentNote || '';
-      let shiftTs = logMatch?.eventTimestamp || cl.lastDevelopedAt || new Date(latestCovMs).toISOString();
+      if (cl._strippedHousekeepingShift || cl.silentDedupMerge) {
+        cl.evolutionHistory[0].headline = cl.story;
+        cl.evolutionHistory[0].summary = cl.summary || cl.evolutionHistory[0].summary;
+      } else {
+        const h0 = cl.evolutionHistory[0];
+        const h0Ms = Date.parse(h0.timestamp || cl.firstSeenAt || '') || earliestCovMs;
+        const logMatch = [...updatesLogEntries].reverse().find(e =>
+          e && (e.after?.id === cl.id || e.after?.story === cl.story) &&
+          e.before?.story && e.before.story.toLowerCase() !== String(cl.story || '').toLowerCase() &&
+          !scrubEvoHousekeepingNote(e.note).isPureHousekeeping
+        );
+        let priorTitle = (h0.headline && h0.headline.toLowerCase() !== String(cl.story || '').toLowerCase())
+          ? h0.headline
+          : (logMatch?.before?.story || null);
+        let priorSummary = (h0.headline && h0.headline.toLowerCase() !== String(cl.story || '').toLowerCase())
+          ? (h0.summary || logMatch?.before?.summary || '')
+          : (logMatch?.before?.summary || '');
+        let priorBirthMs = h0Ms;
+        let shiftNote = scrubEvoHousekeepingNote(logMatch?.note || cl.developmentNote || '').clean;
+        let shiftTs = logMatch?.eventTimestamp || cl.lastDevelopedAt || new Date(latestCovMs).toISOString();
 
-      if (!priorTitle && Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0) {
-        for (const oldId of cl.evolvedFromIds) {
-          const arch = archiveLookup.get(oldId);
-          const logByOld = [...updatesLogEntries].reverse().find(e => e?.before?.id === oldId || (Array.isArray(e?.mergedClusterIds) && e.mergedClusterIds.includes(oldId)));
-          const candTitle = arch?.story || logByOld?.before?.story || humanizeSlug(oldId);
-          if (candTitle && candTitle.toLowerCase() !== String(cl.story || '').toLowerCase()) {
-            const archBirthMs = arch?.firstSeenAt ? Date.parse(arch.firstSeenAt) : h0Ms;
-            const stA = getStems(candTitle);
-            const stB = getStems(cl.story || '');
-            const ov = countFuzzyOverlap(stA, stB) / Math.max(1, Math.min(stA.size || 1, stB.size || 1));
-            if (ov < 0.85) {
-              priorTitle = candTitle;
-              priorSummary = arch?.summary || logByOld?.before?.summary || '';
-              if (archBirthMs > 0 && archBirthMs < priorBirthMs) priorBirthMs = archBirthMs;
-              shiftNote = logByOld?.note || shiftNote;
-              if (logByOld?.eventTimestamp) shiftTs = logByOld.eventTimestamp;
-              break;
+        if (!priorTitle && Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0) {
+          for (const oldId of cl.evolvedFromIds) {
+            const arch = archiveLookup.get(oldId);
+            const rawLogsForOld = [...updatesLogEntries].reverse().filter(e => e?.before?.id === oldId || (Array.isArray(e?.mergedClusterIds) && e.mergedClusterIds.includes(oldId)));
+            const hasHousekeepingLogForOld = rawLogsForOld.length > 0 && rawLogsForOld.every(e => scrubEvoHousekeepingNote(e?.note).isPureHousekeeping);
+            if (hasHousekeepingLogForOld) continue;
+            const logByOld = rawLogsForOld.find(e => !scrubEvoHousekeepingNote(e?.note).isPureHousekeeping) || null;
+            if ((cl.version || 1) <= 1 && !logByOld) continue;
+            const candTitle = arch?.story || logByOld?.before?.story || humanizeSlug(oldId);
+            if (candTitle && candTitle.toLowerCase() !== String(cl.story || '').toLowerCase()) {
+              const archBirthMs = arch?.firstSeenAt ? Date.parse(arch.firstSeenAt) : h0Ms;
+              const stA = getStems(candTitle);
+              const stB = getStems(cl.story || '');
+              const ov = countFuzzyOverlap(stA, stB) / Math.max(1, Math.min(stA.size || 1, stB.size || 1));
+              if (ov < 0.85) {
+                priorTitle = candTitle;
+                priorSummary = arch?.summary || logByOld?.before?.summary || '';
+                if (archBirthMs > 0 && archBirthMs < priorBirthMs) priorBirthMs = archBirthMs;
+                shiftNote = scrubEvoHousekeepingNote(logByOld?.note || shiftNote).clean;
+                if (logByOld?.eventTimestamp) shiftTs = logByOld.eventTimestamp;
+                break;
+              }
             }
           }
         }
-      }
 
-      const spanHours = (latestCovMs - priorBirthMs) / 3600000;
-      if (priorTitle && (spanHours >= 1.5 || Boolean(logMatch) || (Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0))) {
-        const sents = splitSentencesSafe(cl.summary || '');
-        const finalNote = shiftNote || sents[sents.length - 1] || sents[0] || `Story updated: ${cl.story}`;
-        const finalShiftTs = new Date(Math.max(Date.parse(shiftTs) || latestCovMs, priorBirthMs + 60000)).toISOString();
-        const distinctInitSum = (priorSummary && priorSummary.trim() !== String(cl.summary || '').trim())
-          ? priorSummary
-          : buildDistinctInitialSummary(priorTitle);
-        cl.evolutionHistory = [
-          {
-            version: 1,
-            type: 'initial',
-            timestamp: new Date(priorBirthMs).toISOString(),
-            headline: priorTitle,
-            summary: distinctInitSum,
-            outletCount: logMatch?.before?.outletCount || h0.outletCount || 2,
-            note: 'Initial cluster formation on the wire'
-          },
-          {
-            version: 2,
-            type: 'material_shift',
-            timestamp: finalShiftTs,
-            headline: cl.story,
-            summary: cl.summary,
-            beforeStory: priorTitle,
-            beforeSummary: distinctInitSum,
-            outletCount: cl.outletCount || (cl.coverage || []).length || 2,
-            note: finalNote
-          }
-        ];
-      } else {
-        cl.evolutionHistory[0].headline = cl.story;
-        cl.evolutionHistory[0].summary = cl.summary || cl.evolutionHistory[0].summary;
+        const spanHours = (latestCovMs - priorBirthMs) / 3600000;
+        if (priorTitle && (spanHours >= 1.5 || Boolean(logMatch) || ((cl.version || 1) >= 2 && Array.isArray(cl.evolvedFromIds) && cl.evolvedFromIds.length > 0))) {
+          const sents = splitSentencesSafe(cl.summary || '');
+          const finalNote = shiftNote || sents[sents.length - 1] || sents[0] || `Story updated: ${cl.story}`;
+          const finalShiftTs = new Date(Math.max(Date.parse(shiftTs) || latestCovMs, priorBirthMs + 60000)).toISOString();
+          const distinctInitSum = (priorSummary && priorSummary.trim() !== String(cl.summary || '').trim())
+            ? priorSummary
+            : buildDistinctInitialSummary(priorTitle);
+          cl.evolutionHistory = [
+            {
+              version: 1,
+              type: 'initial',
+              timestamp: new Date(priorBirthMs).toISOString(),
+              headline: priorTitle,
+              summary: distinctInitSum,
+              outletCount: logMatch?.before?.outletCount || h0.outletCount || 2,
+              note: 'Initial cluster formation on the wire'
+            },
+            {
+              version: 2,
+              type: 'material_shift',
+              timestamp: finalShiftTs,
+              headline: cl.story,
+              summary: cl.summary,
+              beforeStory: priorTitle,
+              beforeSummary: distinctInitSum,
+              outletCount: cl.outletCount || (cl.coverage || []).length || 2,
+              note: finalNote
+            }
+          ];
+        } else {
+          cl.evolutionHistory[0].headline = cl.story;
+          cl.evolutionHistory[0].summary = cl.summary || cl.evolutionHistory[0].summary;
+        }
       }
+      delete cl._strippedHousekeepingShift;
     }
 
     // Enforce Headline-Shift Co-Change Law, Premature Conclusion Removal & No Ping-Pong Reversions across all steps:
