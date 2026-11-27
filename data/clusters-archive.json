@@ -1,8 +1,201 @@
 {
   "dataset": "vibe-o-meter/clusters-archive",
-  "lastUpdated": "2026-11-27T00:00:54.687Z",
+  "lastUpdated": "2026-11-27T00:28:55.683Z",
   "count": 2478,
   "clusters": [
+    {
+      "id": "cargo-ship-carrying-diesel-sinks-off-ibiza",
+      "story": "Cargo Ship Carrying Diesel Sinks Off Ibiza",
+      "summary": "The Maltese-flagged chemical tanker Med Emre capsized and sank 46 kilometers off Ibiza while carrying 7,000 tonnes of diesel from Algeciras to Barcelona, leaving one crew member dead and six injured. Spanish maritime authorities rescued 17 crew members and activated a marine pollution contingency plan to protect sensitive Mediterranean waters.",
+      "version": 1,
+      "summarySynthesizedSig": "cargo-ship-carrying-diesel-sinks-off-ibiza|v1|h1",
+      "primaryLocation": {
+        "name": "Ibiza",
+        "region": "Balearic Islands, Spain",
+        "countryIso": "es",
+        "lat": 38.9067,
+        "lon": 1.4206,
+        "lng": 1.4206,
+        "zoom": 9,
+        "whyHere": "The diesel tanker capsized and sank off the coast of Ibiza."
+      },
+      "briefing": {
+        "whyItMattersLabel": "Why It Matters",
+        "whyItMatters": "The wreck of a vessel carrying 7,000 tonnes of diesel creates an acute environmental hazard for the Balearic Islands' fragile marine ecosystem and tourism economy. Spanish maritime emergency protocols were immediately deployed to deploy containment booms and monitor minor surface sheens. The incident puts spotlight safety regulations and hull integrity checks on regional chemical tankers operating busy Mediterranean trade corridors.",
+        "whatsNextLabel": "What's Next",
+        "whatsNext": "Spain's maritime safety agency will deploy underwater remotely operated vehicles to inspect the sunken hull and assess fuel leakage risks. Investigators will examine weather conditions and cargo management to determine the cause of the capsizing."
+      },
+      "evolvedFromIds": [
+        "diesel-tanker-capsizes-near-ibiza-killing-one"
+      ],
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-11-26T07:24:28.000Z",
+          "batchConsolidatedAt": "2026-11-26T11:07:46.099Z",
+          "headline": "Cargo Ship Carrying Diesel Sinks Off Ibiza",
+          "summary": "The Maltese-flagged chemical tanker Med Emre capsized and sank 46 kilometers off Ibiza while carrying 7,000 tonnes of diesel from Algeciras to Barcelona, leaving one crew member dead and six injured. Spanish maritime authorities rescued 17 crew members and activated a marine pollution contingency plan to protect sensitive Mediterranean waters.",
+          "outletCount": 3,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "domains": [
+        "infrastructure",
+        "climate",
+        "society"
+      ],
+      "concepts": [
+        "shipwreck",
+        "environmental-hazard",
+        "oil-spill"
+      ],
+      "entities": [
+        "Ibiza",
+        "Salvamento Maritimo"
+      ],
+      "temporalKind": "point_event",
+      "eventDate": "2026-11-25",
+      "eventTime": {
+        "startDate": "2026-11-25",
+        "endDate": null,
+        "timeOfDay": null,
+        "precision": "day",
+        "label": "Wed Nov 25",
+        "sourceBacked": true,
+        "clarifiedAt": null
+      },
+      "eventTimeLabel": "Wed Nov 25",
+      "topic": "climate",
+      "imageUrl": "https://cebudailynews.inquirer.net/files/2026/11/AFP__20261126__D8PK8K4__v3__HighRes__CorrectionSpainTransportationAccidentSeaEnviron-620x382.jpg",
+      "averageSentiment": -0.39,
+      "eventBase": -0.294,
+      "significanceScore": -0.64,
+      "sentimentSpread": 0.25,
+      "outletCount": 11,
+      "regionsCovered": [
+        "LATAM",
+        "UK",
+        "EU",
+        "ME",
+        "APAC",
+        "GLOBAL"
+      ],
+      "firstSeenAt": "2026-11-26T07:24:28.000Z",
+      "latestUpdateAt": "2026-11-26T23:56:00.000Z",
+      "coverage": [
+        {
+          "sourceId": "inquirer",
+          "sourceName": "Philippine Daily Inquirer",
+          "region": "APAC",
+          "title": "Spain races to stop oil spill after ship capsizes off Ibiza",
+          "sentiment": -0.352,
+          "category": "climate",
+          "link": "https://cebudailynews.inquirer.net/788517/spain-races-to-stop-oil-spill-after-ship-capsizes-off-ibiza",
+          "pubDate": "Fri, 27 Nov 2026 07:56:00 +0800"
+        },
+        {
+          "sourceId": "bbc",
+          "sourceName": "BBC News",
+          "region": "UK",
+          "title": "Diesel tanker carrying up to 7,000 tonnes capsizes near Ibiza, killing one",
+          "sentiment": -0.418,
+          "category": "climate",
+          "link": "https://www.bbc.co.uk/news/articles/c9gklryvj24do?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Thu, 26 Nov 2026 22:01:22 GMT"
+        },
+        {
+          "sourceId": "elpaisamerica",
+          "sourceName": "El País América",
+          "region": "LATAM",
+          "title": "Sailor dies after shipwreck of fuel-laden vessel near Ibiza",
+          "sentiment": -0.491,
+          "category": "climate",
+          "link": "https://elpais.com/espana/2026-11-26/muere-un-marinero-en-el-hundimiento-de-un-buque-cargado-de-combustible-cerca-de-ibiza.html",
+          "pubDate": "Thu, 26 Nov 2026 19:24:04 GMT"
+        },
+        {
+          "sourceId": "aljazeera",
+          "sourceName": "Al Jazeera",
+          "region": "ME",
+          "title": "Diesel tanker capsizes near Ibiza, killing crew member",
+          "sentiment": -0.396,
+          "category": "world",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/11/26/aje-onl-nf_loaded-diesel-tanker-capsizes-off-ibiza-killing-one-261126?traffic_source=rss",
+          "pubDate": "Thu, 26 Nov 2026 15:56:39 +0000"
+        },
+        {
+          "sourceId": "almonitor",
+          "sourceName": "Al-Monitor",
+          "region": "ME",
+          "title": "Crew member dies after diesel tanker capsizes off Ibiza, no pollution so far",
+          "sentiment": -0.319,
+          "category": "climate",
+          "link": "https://www.al-monitor.com/originals/2026/11/crew-member-dies-after-diesel-tanker-capsizes-ibiza-no-pollution-so-far",
+          "pubDate": "2026-11-26T09:46:29-0500"
+        },
+        {
+          "sourceId": "euronews",
+          "sourceName": "Euronews",
+          "region": "EU",
+          "title": "Aerial footage shows diesel tanker sinking off Ibiza",
+          "sentiment": -0.328,
+          "category": "climate",
+          "link": "https://www.euronews.com/2026/11/26/aerial-footage-shows-diesel-tanker-sinking-off-ibiza",
+          "pubDate": "Thu, 26 Nov 2026 15:40:10 +0100"
+        },
+        {
+          "sourceId": "eleconomista",
+          "sourceName": "El Economista",
+          "region": "LATAM",
+          "title": "Spain mobilizes to prevent oil spill following shipwreck off Ibiza",
+          "sentiment": -0.307,
+          "category": "climate",
+          "link": "https://www.eleconomista.com.mx/internacionales/espana-moviliza-evitar-marea-negra-naufragio-frente-ibiza-20261126-845965.html",
+          "pubDate": "Thu, 26 Nov 2026 08:08:57 -0600"
+        },
+        {
+          "sourceId": "dw",
+          "sourceName": "DW News",
+          "region": "EU",
+          "title": "Crew member dies after diesel tanker sinks off Ibiza coast",
+          "sentiment": -0.351,
+          "category": "world",
+          "link": "https://www.dw.com/en/crew-member-dies-after-diesel-tanker-sinks-off-ibiza-coast/a-80059054?maca=en-rss-en-all-1573-rdf",
+          "pubDate": "2026-11-26T11:58:00.000Z"
+        },
+        {
+          "sourceId": "oglobo",
+          "sourceName": "O Globo",
+          "region": "LATAM",
+          "title": "Ship carrying 7 thousand tons of diesel sinks near Ibiza, and accident leaves one dead",
+          "sentiment": -0.558,
+          "category": "climate",
+          "link": "https://oglobo.globo.com/mundo/noticia/2026/11/26/navio-com-7-mil-toneladas-de-diesel-afunda-perto-de-ibiza-e-acidente-deixa-um-morto.ghtml",
+          "pubDate": "Thu, 26 Nov 2026 10:05:09 -0000"
+        },
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Crew member dies after diesel tanker sinks off Ibiza; Spain launches pollution plan - Reuters",
+          "sentiment": -0.351,
+          "category": "climate",
+          "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxOcmZUbzlMdjVtVDNjMmxRZHZ2Rk50anZIMDlOZ0swTEZBNi1aakVXV0NBT19oTkkzWTk0cUhXbUJEN0xuczdibXF0Y09WaUxmaWRwU2RvOVY3cXhNNE44XzY4TV9Rc2hISnBiSGI1T3FpdEdIR2JETGYta01tc203a2RJaVNhc1VYTEh5UTAxNGRreEFNTTlHcGJiT09QZURZdW9yQWtwX2Y4ckRhUkRFZE9QVTdlM1N1WlhjUGFyTno4cXBtcjFvLQ?oc=5",
+          "pubDate": "Thu, 26 Nov 2026 07:41:00 GMT"
+        },
+        {
+          "sourceId": "bloomberg",
+          "sourceName": "Bloomberg",
+          "region": "GLOBAL",
+          "title": "Diesel-Carrying Ship Sinks Off Spanish Island of Ibiza, One Dead",
+          "sentiment": -0.463,
+          "category": "world",
+          "link": "https://www.bloomberg.com/news/articles/2026-11-26/diesel-carrying-ship-sinks-off-spanish-island-of-ibiza-one-dead",
+          "pubDate": "Thu, 26 Nov 2026 07:24:28 GMT"
+        }
+      ]
+    },
     {
       "id": "spain-leaders-clash-in-sole-pre-election-debate",
       "story": "Spain Leaders Clash in Sole Pre-Election Debate",
@@ -2077,6 +2270,227 @@
       ]
     },
     {
+      "id": "besiktas-match-against-hapoel-beer-sheva-suspended",
+      "story": "Besiktas Match Against Hapoel Beer Sheva Suspended",
+      "summary": "A UEFA Europa League match between Turkish club Beşiktaş and Israeli side Hapoel Beer-Sheva in Batumi, Georgia was suspended after supporters unfurled a pro-Palestinian banner. The resulting clashes between police and Turkish fans in the stands prompted a diplomatic row, with the Turkish Football Federation condemning the security response as 'unacceptable'.",
+      "version": 1,
+      "summarySynthesizedSig": "besiktas-match-against-hapoel-beer-sheva-suspended|v1|h1",
+      "primaryLocation": {
+        "name": "Batumi Stadium, Batumi",
+        "region": "Adjara, Georgia",
+        "countryIso": "ge",
+        "lat": 41.6434,
+        "lon": 41.6399,
+        "lng": 41.6399,
+        "zoom": 12,
+        "whyHere": "The UEFA Europa League match was hosted in Batumi when clashes broke out in the stands."
+      },
+      "briefing": {
+        "whyItMattersLabel": "Why It Matters",
+        "whyItMatters": "The fixture had already been moved to neutral ground in Georgia to manage security risks surrounding Israeli sports teams during ongoing Middle Eastern hostilities. Security forces intervened over political banners, escalating a stadium policing incident into a multi-nation diplomatic conflict involving foreign ministries. European sports authorities face worsening friction when balancing political speech bans against local policing standards.",
+        "whatsNextLabel": "What's Next",
+        "whatsNext": "UEFA's Control, Ethics and Disciplinary Body will review referee and delegate match reports to determine sanctions or forfeits. Georgian authorities and European football regulators must decide whether upcoming neutral-venue fixtures require heightened security protocols."
+      },
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-11-26T19:21:56.000Z",
+          "batchConsolidatedAt": "2026-11-26T22:35:58.661Z",
+          "headline": "Besiktas Match Against Hapoel Beer Sheva Suspended",
+          "summary": "A UEFA Europa League match between Turkish club Beşiktaş and Israeli side Hapoel Beer-Sheva in Batumi, Georgia was suspended after supporters unfurled a pro-Palestinian banner. The resulting clashes between police and Turkish fans in the stands prompted a diplomatic row, with the Turkish Football Federation condemning the security response as 'unacceptable'.",
+          "outletCount": 3,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "domains": [
+        "sport",
+        "governance"
+      ],
+      "concepts": [
+        "uefa-europa-league",
+        "political-protest",
+        "diplomatic-tension"
+      ],
+      "entities": [
+        "Besiktas",
+        "Hapoel Beer Sheva",
+        "Turkish Football Federation"
+      ],
+      "temporalKind": "point_event",
+      "eventDate": "2026-11-26",
+      "eventTime": {
+        "startDate": "2026-11-26",
+        "endDate": null,
+        "timeOfDay": null,
+        "precision": "day",
+        "label": "Thursday Nov 26, 2026",
+        "sourceBacked": true,
+        "clarifiedAt": null
+      },
+      "eventTimeLabel": "Thursday Nov 26, 2026",
+      "topic": "sports",
+      "imageUrl": null,
+      "averageSentiment": -0.29,
+      "eventBase": -0.187,
+      "significanceScore": -0.409,
+      "sentimentSpread": 0.07,
+      "outletCount": 3,
+      "regionsCovered": [
+        "ME",
+        "GLOBAL"
+      ],
+      "firstSeenAt": "2026-11-26T19:21:56.000Z",
+      "latestUpdateAt": "2026-11-26T22:57:48.000Z",
+      "coverage": [
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Besiktas v Hapoel Beer-Sheva suspended after police enter stands - Reuters",
+          "sentiment": -0.261,
+          "category": "sports",
+          "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNZmk5SkpEdGwtR2pPNzZFT0tXLUFObl8wQnJfcTVRcXhfOHpVNnI1TFZwR2F1RnJOczB5MjRkNzNWRl9Wd0EtZFc0ZEVFYmZmanJiOFVIdHY4WWdORGVXVUg2YmhUZVdHRlJJblBmWGdXUVYyR0RBYjlvTUwtdXFvRXFXUkNTbnRmbFlidUhOWk0wdUFSSkZQS3ZkeDBwWi1wT2pLVXNRYzlHUkJhRG1sbXVmY3g?oc=5",
+          "pubDate": "Thu, 26 Nov 2026 22:57:48 GMT"
+        },
+        {
+          "sourceId": "almonitor",
+          "sourceName": "Al-Monitor",
+          "region": "ME",
+          "title": "Clashes at Besiktas match against Israeli club spark diplomatic row",
+          "sentiment": -0.333,
+          "category": "sports",
+          "link": "https://www.al-monitor.com/originals/2026/11/clashes-besiktas-match-against-israeli-club-spark-diplomatic-row",
+          "pubDate": "2026-11-26T17:30:24-0500"
+        },
+        {
+          "sourceId": "turkishminute",
+          "sourceName": "Turkish Minute",
+          "region": "ME",
+          "title": "Turkish federation condemns ‘unacceptable’ fan treatment at Beşiktaş-Hapoel Beer Sheva match",
+          "sentiment": -0.284,
+          "category": "sports",
+          "link": "https://www.turkishminute.com/2026/11/26/turkish-federation-condemns-unacceptable-fan-treatment-at-besiktas-hapoel-beer-sheva-match/",
+          "pubDate": "Thu, 26 Nov 2026 20:19:26 +0000"
+        }
+      ]
+    },
+    {
+      "id": "trump-thanksgiving-message-attacks-foes-and-immigrants",
+      "story": "Trump Thanksgiving Message Attacks Foes and Immigrants",
+      "summary": "President Donald Trump delivered a Thanksgiving message lashing out at political rivals, undocumented immigrants, and the federal government. Writing on Truth Social, he explicitly singled out Minnesota's Somali community, claiming that only 2% should be permitted to remain in the country.",
+      "version": 1,
+      "summarySynthesizedSig": "trump-thanksgiving-message-attacks-foes-and-immigrants|v1|h1",
+      "primaryLocation": {
+        "name": "Mar-a-Lago, Palm Beach",
+        "region": "Florida, United States",
+        "countryIso": "us",
+        "lat": 26.6771,
+        "lon": -80.037,
+        "lng": -80.037,
+        "zoom": 11,
+        "whyHere": "President Trump issued his holiday statements on Truth Social during the Thanksgiving holiday from his Palm Beach residence."
+      },
+      "briefing": {
+        "whyItMattersLabel": "The Context",
+        "whyItMatters": "The remarks signal an intensification of executive rhetoric targeting specific immigrant communities, establishing public rationale for expanded deportation enforcement. By isolating Minnesota's Somali diaspora with explicit percentage metrics, the administration signals a shift toward community-wide scrutiny over individualized immigration processing. The policy lever relies on executive authority under federal immigration law, though enforced removals faced immediate legal challenges from civil rights groups.",
+        "whatsNextLabel": "Where Things Stand",
+        "whatsNext": "The Department of Homeland Security is expected to issue operational guidance regarding regional enforcement priorities. Federal courts are likely to receive emergency injunction requests from immigration advocacy groups challenging target quotas."
+      },
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-11-26T20:11:54.000Z",
+          "batchConsolidatedAt": "2026-11-26T21:33:54.275Z",
+          "headline": "Trump Thanksgiving Message Attacks Foes and Immigrants",
+          "summary": "President Donald Trump delivered a Thanksgiving message lashing out at political rivals, undocumented immigrants, and the federal government. Writing on Truth Social, he explicitly singled out Minnesota's Somali community, claiming that only 2% should be permitted to remain in the country.",
+          "outletCount": 4,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "domains": [
+        "governance",
+        "society"
+      ],
+      "concepts": [
+        "political-rhetoric",
+        "immigration-policy",
+        "holiday-address"
+      ],
+      "entities": [
+        "Donald Trump"
+      ],
+      "temporalKind": "point_event",
+      "eventDate": "2026-11-26",
+      "eventTime": {
+        "startDate": "2026-11-26",
+        "endDate": null,
+        "timeOfDay": "day",
+        "precision": "day",
+        "label": "Thursday Nov 26, 2026",
+        "sourceBacked": true,
+        "clarifiedAt": null
+      },
+      "eventTimeLabel": "Thursday Nov 26, 2026",
+      "topic": "politics",
+      "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/01/931/523/somalia-flag-donald-trump.png?ve=1&tl=1",
+      "averageSentiment": -0.46,
+      "eventBase": -0.276,
+      "significanceScore": -0.61,
+      "sentimentSpread": 0.37,
+      "outletCount": 4,
+      "regionsCovered": [
+        "NA",
+        "LATAM",
+        "GLOBAL"
+      ],
+      "firstSeenAt": "2026-11-26T20:11:54.000Z",
+      "latestUpdateAt": "2026-11-26T22:57:41.000Z",
+      "coverage": [
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Trump uses Thanksgiving message to lash out at political foes, immigrants, federal government - Reuters",
+          "sentiment": -0.229,
+          "category": "politics",
+          "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxPQmtPdXRIWFFwMkxPY3ZpT0hvLVRPZVRURVFPbTh1ZVZ6aG1aNnNRU1FocksyRWM4UVJ6amxnd0tpQWdIbU02TEg2elQwY0VjTm9pbFVUNjVNRnA4RENJVTdBRTUwM0tLVktMUW5HNkN3Vm1QY1JuRkMwM3Z6X3F3NUtzWC1LVWF4N01hbTRXSGN1Z2dnTzJ2Y0V5RHlMbmhpQVZXZHp6eDhmcmROb2NHUTNmWFFwMjNsX1RF?oc=5",
+          "pubDate": "Thu, 26 Nov 2026 22:57:41 GMT"
+        },
+        {
+          "sourceId": "fox",
+          "sourceName": "Fox News",
+          "region": "NA",
+          "title": "Trump takes on Somali welfare dependency in Thanksgiving message, lays out who should stay in US",
+          "sentiment": -0.599,
+          "category": "politics",
+          "link": "https://www.foxnews.com/politics/trump-takes-somali-welfare-dependency-thanksgiving-message-lays-who-should-stay-us",
+          "pubDate": "Thu, 26 Nov 2026 15:58:30 -0500"
+        },
+        {
+          "sourceId": "eleconomista",
+          "sourceName": "El Economista",
+          "region": "LATAM",
+          "title": "Trump attacks immigrants and political rivals in Thanksgiving message",
+          "sentiment": -0.465,
+          "category": "politics",
+          "link": "https://www.eleconomista.com.mx/internacionales/trump-ataca-inmigrantes-rivales-politicos-mensaje-dia-accion-gracias-20261126-846025.html",
+          "pubDate": "Thu, 26 Nov 2026 14:57:07 -0600"
+        },
+        {
+          "sourceId": "latercera",
+          "sourceName": "La Tercera",
+          "region": "LATAM",
+          "title": "Trump attacks immigrants and political rivals in his Thanksgiving message",
+          "sentiment": -0.532,
+          "category": "politics",
+          "link": "https://www.latercera.com/mundo/noticia/trump-ataca-a-los-inmigrantes-y-a-sus-rivales-politicos-en-su-mensaje-por-el-dia-de-accion-de-gracias/",
+          "pubDate": "Thu, 26 Nov 2026 20:11:54 +0000"
+        }
+      ]
+    },
+    {
       "id": "pablo-hern-ndez-de-cos-to-lead-ecb",
       "story": "Pablo Hernández de Cos to Lead ECB",
       "summary": "EU leaders have selected 55-year-old Spanish economist Pablo Hernández de Cos to succeed Christine Lagarde as President of the European Central Bank, effective February 7, 2026. The former Bank of Spain Governor secured the nomination after winning crucial support from France, Germany, and the Netherlands to lead the institution through a period of war-driven inflation.",
@@ -2294,8 +2708,8 @@
       "id": "zelenskyy-warns-russia-preparing-new-strikes-on-ukraine",
       "story": "Zelenskyy Warns Russia Preparing New Strikes on Ukraine",
       "summary": "Ukrainian President Volodymyr Zelenskyy warned that intelligence indicates Russia is preparing new large-scale aerial strikes on Ukraine's power grid, logistics, and critical services, urging citizens to take shelter. The warning follows Russian missile and drone strikes on five districts in Dnipropetrovsk and Kryvyi Rih that killed a 7-year-old boy and a 20-year-old woman and injured 60, alongside earlier 400-drone and 110-missile barrages on Kyiv and Lviv, while Ukraine hit the Kerch Strait Bridge three times in four days using airborne radio relay towers instead of Starlink and three Russian projectiles violated Polish airspace.",
-      "version": 14,
-      "summarySynthesizedSig": "zelenskyy-warns-russia-preparing-new-strikes-on-ukraine|v14|h28",
+      "version": 10,
+      "summarySynthesizedSig": "zelenskyy-warns-russia-preparing-new-strikes-on-ukraine|v10|h18",
       "primaryLocation": {
         "name": "Kyiv",
         "region": "Kyiv, Ukraine",
@@ -2332,160 +2746,32 @@
         "russian-missile-barrage-kills-eight-and-violates-polish-airspace",
         "ukraine-crimea-bridge-attack",
         "russian-missile-barrage-on-ukraine",
-        "zelenskyy-rejects-trump-s-putin-comments-after-russian-bombardment",
-        "ukraine-logistics-facility-hit-by-russian-strike",
-        "russian-airstrikes-hit-zaporizhzhia-aid-center",
-        "russian-strikes-knock-out-power-to-650-towns-in-ukraine",
-        "russian-drone-attack-on-dnipro-railway-station-kills-13",
-        "russian-drone-attack-on-dnipro-railway-station-kills-14",
-        "russian-strikes-hit-dnipro-station-and-black-out-200-000",
-        "ukrainian-missile-and-drone-strikes-leave-hundreds-of-thousands-without-power",
-        "ukrainian-drones-strike-russian-airfield",
-        "russian-strikes-cause-power-outages-across-ukraine"
+        "zelenskyy-rejects-trump-s-putin-comments-after-russian-bombardment"
       ],
       "evolutionHistory": [
         {
           "version": 1,
           "type": "initial",
-          "timestamp": "2026-10-24T11:33:01.000Z",
-          "headline": "Ukraine Logistics Facility Hit by Russian Strike",
-          "summary": "A major Russian drone and missile attack struck a logistics facility in Sofiivska Borshchahivka, Kyiv region, causing a large fire and injuring at least one person. Russian forces launched massive overnight airstrikes and drone attacks across Ukraine, utilizing 172 drones and 36 ballistic missiles that killed at least one person in Odesa, injured individuals at a Kyiv hospital, and cut power and water supplies across multiple regions. A massive overnight Russian aerial bombardment utilizing attack drones, ballistic missiles, and cruise missiles culminated in heavy bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. Ongoing search and rescue operations confirmed a death toll of at least 40 civilians, with dozens remaining missing beneath the rubble. Overnight Russian missile and drone salvos struck energy infrastructure across Ukraine, forcing operator DTEK to implement power cuts in five regions.",
-          "outletCount": 27,
+          "timestamp": "2026-11-07T11:50:24.000Z",
+          "headline": "Ukraine Destroys Kerch Bridge Span; Russia Hits Kyiv",
+          "summary": "Ukraine launched a record-breaking 1,336-drone barrage that destroyed a road arch and central span of the Kerch Strait Bridge linking Russia to occupied Crimea, alongside striking a Nizhnekamsk petrochemical complex. Russia retaliated by heavily damaging two major Dnipro River bridges in Kyiv and striking Odesa, marking a severe escalation in strategic infrastructure targeting.",
+          "outletCount": 13,
           "note": "Initial cluster formation on the wire"
         },
         {
           "version": 2,
           "type": "material_shift",
-          "timestamp": "2026-10-29T18:03:21.000Z",
-          "batchConsolidatedAt": "2026-10-29T18:29:25.249Z",
-          "headline": "Russian Drone Attack on Dnipro Railway Station Kills 13",
-          "summary": "At least 14 people were killed and 10 others wounded—including an 11-year-old boy—when a Russian jet-powered drone struck a crowded passenger platform at Dnipro’s main railway station in central Ukraine, where a train was actively parked and waiting to board passengers.",
-          "beforeStory": "Ukraine Logistics Facility Hit by Russian Strike",
-          "beforeSummary": "At least 13 people were killed when a Russian drone targeted a station platform in Dnipro, Ukraine, where a passenger train was actively parked. Ukrainian authorities confirmed the casualty toll after the strike hit the busy transit hub, dealing a devastating blow to civilian rail infrastructure.",
-          "outletCount": 10,
-          "note": "Confirmed death toll rises to at least 14; regional head Oleksandr Hanzha reports 10 wounded including a child."
-        },
-        {
-          "version": 3,
-          "type": "material_shift",
-          "timestamp": "2026-10-30T11:29:59.000Z",
-          "batchConsolidatedAt": "2026-10-30T12:42:27.232Z",
-          "headline": "Russian Strikes Hit Dnipro Station and Black Out 200,000",
-          "summary": "A Russian jet-powered drone strike on a crowded passenger platform at Dnipro's central railway station killed 14 people and wounded 10 others, including an 11-year-old boy. Subsequent bombardments across the Dnipropetrovsk region knocked out critical electrical grids, leaving over 200,000 residents without power as President Volodymyr Zelenskyy warned of further missile barrages.",
-          "beforeStory": "Russian Drone Attack on Dnipro Railway Station Kills 13",
-          "beforeSummary": "A Russian jet-powered drone strike on a crowded passenger platform at Dnipro's main railway station in central Ukraine killed at least 14 people and wounded 10 others, including an 11-year-old boy. Follow-up Russian bombardments across the wider Dnipropetrovsk region knocked out critical electrical infrastructure, leaving more than 200,000 residents without power.",
-          "outletCount": 11,
-          "note": "CNBC reports Ukrainian city blackout as Zelenskyy warns of additional missile attacks."
-        },
-        {
-          "version": 3,
-          "type": "clarification",
-          "timestamp": "2026-11-01T14:37:21.000Z",
-          "batchConsolidatedAt": "2026-11-01T15:17:23.809Z",
-          "headline": "Russian Strikes Hit Dnipro Station and Black Out 200,000",
-          "summary": "After a Russian jet-powered drone strike killed 14 people and injured 10 at Dnipro's central railway station, expanded Russian bombardments severed electricity across four Ukrainian regions, cutting power to 650 towns. Moscow concurrently claimed its air defenses intercepted 235 Ukrainian cross-border drones amid reciprocal strikes on Russian facilities.",
-          "beforeStory": "Russian Strikes Hit Dnipro Station and Black Out 200,000",
-          "beforeSummary": "A Russian jet-powered drone strike on a crowded passenger platform at Dnipro's central railway station killed 14 people and wounded 10 others, including an 11-year-old boy. Subsequent bombardments across the Dnipropetrovsk region knocked out critical electrical grids, leaving over 200,000 residents without power as President Volodymyr Zelenskyy warned of further missile barrages.",
-          "outletCount": 12,
-          "note": "Russian bombings cut power to 650 towns across four regions as Moscow intercepts 235 drones."
-        },
-        {
-          "version": 4,
-          "type": "material_shift",
-          "timestamp": "2026-11-02T21:59:00.000Z",
-          "batchConsolidatedAt": "2026-11-02T22:31:16.352Z",
-          "headline": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "summary": "Russian airstrikes utilizing nine 3,000kg aerial bombs devastated a humanitarian aid center and shelter operating inside a school in the village of Komyshuvakha, Ukraine. Civil defense authorities and President Volodymyr Zelenskyy confirmed that the strike killed at least 26 people, injured five others, and left 27 individuals missing beneath the rubble.",
-          "beforeStory": "Russian Strikes Hit Dnipro Station and Black Out 200,000",
-          "beforeSummary": "A devastating Russian air raid struck a humanitarian aid center and shelter located inside a school in the village of Komyshuvakha, Ukraine, killing 24 people and injuring five others. Emergency services and civil defense authorities reported that at least nine 3,000kg aerial bombs flattened the facility while 27 people remained missing beneath the rubble.",
-          "outletCount": 5,
-          "note": "DW, BBC, and SCMP confirm death toll rises to 26 in Russian airstrikes on Komyshuvakha school aid center."
-        },
-        {
-          "version": 4,
-          "type": "clarification",
-          "timestamp": "2026-11-03T14:05:54.000Z",
-          "batchConsolidatedAt": "2026-11-03T15:12:52.787Z",
-          "headline": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "summary": "A massive overnight Russian barrage of 289 attack drones, 17 ballistic missiles, and 59 cruise missiles culminated in nine 3,000kg aerial bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. The strike killed 31 civilians and left 48 missing, marking a violent escalation that shattered local ceasefire hopes.",
-          "beforeStory": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "beforeSummary": "A massive overnight Russian barrage of 289 attack drones, 17 ballistic missiles, and 59 cruise missiles culminated in nine 3,000kg aerial bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. The strike killed 29 civilians and left 48 missing, marking a violent escalation that shattered local ceasefire hopes.",
-          "outletCount": 15,
-          "note": "Confirmed death toll rises to 31 following ongoing search operations at the bombed-out aid facility."
-        },
-        {
-          "version": 4,
-          "type": "clarification",
-          "timestamp": "2026-11-03T20:39:39.000Z",
-          "batchConsolidatedAt": "2026-11-03T20:56:02.029Z",
-          "headline": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "summary": "A massive overnight Russian barrage of 289 attack drones, 17 ballistic missiles, and 59 cruise missiles culminated in nine 3,000kg aerial bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. The confirmed death toll rose to 38 civilians following ongoing rescue operations, while President Volodymyr Zelenskyy warned that dozens more remain trapped under rubble.",
-          "beforeStory": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "beforeSummary": "A massive overnight Russian barrage of 289 attack drones, 17 ballistic missiles, and 59 cruise missiles culminated in nine 3,000kg aerial bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. The strike killed 31 civilians and left 48 missing, marking a violent escalation that shattered local ceasefire hopes.",
-          "outletCount": 20,
-          "note": "Confirmed death toll rises to at least 38; President Zelenskyy warns dozens remain trapped under rubble."
-        },
-        {
-          "version": 4,
-          "type": "clarification",
-          "timestamp": "2026-11-03T22:12:00.000Z",
-          "batchConsolidatedAt": "2026-11-04T02:27:24.562Z",
-          "headline": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "summary": "Massive Russian bombardments severed electrical grids across nine Ukrainian regions and left 650 towns without power, following a jet-powered drone strike that killed 14 people at Dnipro's railway station and left over 200,000 residents without electricity in Dnipropetrovsk. Subsequent strikes on a Chernihiv humanitarian shelter killed 24 civilians, while a guided-bomb attack on a Komyshuvakha aid center killed 29 people with 48 still missing, amid reciprocal cross-border drone exchanges.",
-          "beforeStory": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "beforeSummary": "Massive Russian bombardments severed electrical grids across four Ukrainian regions, knocking out power to 650 towns following a jet-powered drone strike that killed 14 people at Dnipro's railway station and left over 200,000 residents without electricity in Dnipropetrovsk. Subsequent strikes on a Chernihiv humanitarian shelter killed 24 civilians, while a guided-bomb attack on a Komyshuvakha aid center killed 29 people with 48 still missing, amid reciprocal cross-border drone exchanges.",
-          "outletCount": 13,
-          "note": "Financial Times and Reuters report widespread energy infrastructure attacks hitting substations across nine Ukrainian regions."
-        },
-        {
-          "version": 4,
-          "type": "clarification",
-          "timestamp": "2026-11-04T09:26:29.000Z",
-          "batchConsolidatedAt": "2026-11-04T09:42:19.997Z",
-          "headline": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "summary": "A massive overnight Russian aerial bombardment utilizing attack drones, ballistic missiles, and cruise missiles culminated in heavy bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. Ongoing search and rescue operations confirmed a death toll of at least 33 to 38 civilians, with over 50 individuals remaining missing beneath the rubble.",
-          "beforeStory": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "beforeSummary": "A massive overnight Russian barrage of 289 attack drones, 17 ballistic missiles, and 59 cruise missiles culminated in nine 3,000kg aerial bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. The confirmed death toll rose to 38 civilians following ongoing rescue operations, while President Volodymyr Zelenskyy warned that dozens more remain trapped under rubble.",
-          "outletCount": 23,
-          "note": "Confirmed death toll rises to 33 with over 50 missing following Komyshuvakha humanitarian aid center bombing."
-        },
-        {
-          "version": 5,
-          "type": "material_shift",
-          "timestamp": "2026-11-08T16:59:42.000Z",
-          "batchConsolidatedAt": "2026-11-10T19:47:14.526Z",
-          "headline": "Intense Russian Airstrikes Hammer Kyiv Energy Grid",
-          "summary": "Russian forces struck Ukraine's energy infrastructure overnight with 172 drones and 36 ballistic missiles, damaging electricity substations, a Dnipro River bridge, and water supplies across Kyiv and leaving hundreds of thousands without power as freezing temperatures approached ahead of peace talks.",
-          "beforeStory": "Russian Airstrikes Hit Zaporizhzhia Aid Center",
-          "beforeSummary": "Russian forces struck Ukraine's energy infrastructure overnight with 172 drones and 36 ballistic missiles, damaging electricity substations, a Dnipro River bridge, and water supplies across Kyiv as temperatures neared freezing on the eve of peace talks.",
-          "outletCount": 5,
-          "note": "Russian forces strike Ukraine with 172 drones and 36 missiles, cutting power to hundreds of thousands in Kyiv."
-        },
-        {
-          "version": 5,
-          "type": "clarification",
-          "timestamp": "2026-11-13T11:00:16.000Z",
-          "headline": "Intense Russian Airstrikes Hammer Kyiv Energy Grid",
-          "summary": "A major Russian drone and missile attack struck a logistics facility in Sofiivska Borshchahivka, Kyiv region, causing a large fire and injuring at least one person. The strike was part of an overnight assault involving 128 drones and two missiles, prompting emergency crews to battle the blaze. Intense Russian overnight drone strikes across Ukraine killed at least one person in Odesa, injured another at a Kyiv hospital, and forced emergency medical evacuations.",
-          "beforeStory": "Intense Russian Airstrikes Hammer Kyiv Energy Grid",
-          "beforeSummary": "A major Russian drone and missile attack struck a logistics facility in Sofiivska Borshchahivka, Kyiv region, causing a large fire and injuring at least one person. The strike was part of an overnight assault involving 128 drones and two missiles, prompting emergency crews to battle the blaze.",
-          "outletCount": 8,
-          "note": "Ukraine Hit by Massive Russian Overnight Drone Attacks — Intense Russian overnight drone strikes across Ukraine killed at least one person in Odesa, injured another at a Kyiv hospital, and forced emergency medical evacuations."
-        },
-        {
-          "version": 6,
-          "type": "material_shift",
           "timestamp": "2026-11-13T15:46:36.000Z",
           "batchConsolidatedAt": "2026-11-13T18:44:44.910Z",
           "headline": "Russian Airstrikes Hit Kyiv and Odesa as Ukraine Unleashes Drone Swarms",
           "summary": "Russian forces launched massive overnight airstrikes and drone attacks across Ukraine, utilizing 172 drones and 36 ballistic missiles that killed at least one person in Odesa, injured individuals at a Kyiv hospital, and cut power and water supplies across multiple regions. In retaliation during peace talks, Ukraine unleashed a massive swarm of nearly 1,200 drones at Russian targets, striking its ninth oil refinery in the Volga region since November and resulting in four reported deaths inside Russia.",
-          "beforeStory": "Intense Russian Airstrikes Hammer Kyiv Energy Grid",
+          "beforeStory": "Ukraine Destroys Kerch Bridge Span; Russia Hits Kyiv",
           "beforeSummary": "Russian forces struck Ukraine's energy infrastructure overnight with 172 drones and 36 ballistic missiles, damaging electricity substations, a Dnipro River bridge, and water supplies across Kyiv and leaving hundreds of thousands without power as freezing temperatures approached ahead of peace talks.",
           "outletCount": 9,
           "note": "Ukraine launches nearly 1,200 drones at Russian targets while striking a ninth oil refinery in the Volga region."
         },
         {
-          "version": 7,
+          "version": 3,
           "type": "material_shift",
           "timestamp": "2026-11-16T09:15:47.000Z",
           "batchConsolidatedAt": "2026-11-16T11:05:09.584Z",
@@ -2497,7 +2783,7 @@
           "note": "Ukraine launches 1,336-drone barrage striking Kerch bridge linking Russia to Crimea."
         },
         {
-          "version": 7,
+          "version": 3,
           "type": "clarification",
           "timestamp": "2026-11-16T11:18:47.000Z",
           "batchConsolidatedAt": "2026-11-16T11:45:54.561Z",
@@ -2509,7 +2795,7 @@
           "note": "Russia reports interception of record drone numbers; traffic on Kerch bridge remains restricted."
         },
         {
-          "version": 7,
+          "version": 3,
           "type": "clarification",
           "timestamp": "2026-11-16T14:00:25.000Z",
           "batchConsolidatedAt": "2026-11-16T14:34:01.100Z",
@@ -2521,7 +2807,7 @@
           "note": "Russia confirms interception of over 1,300 drones in largest-ever aerial assault."
         },
         {
-          "version": 7,
+          "version": 3,
           "type": "clarification",
           "timestamp": "2026-11-17T04:18:32.000Z",
           "headline": "Ukrainian Drones Strike Crimean Bridge in Massive Barrage",
@@ -2532,7 +2818,7 @@
           "note": "Russian missile and drone strikes hit five districts in Dnipropetrovsk and the city of Kryvyi Rih on November 20, 2026, killing at least two people and injuring 60 others."
         },
         {
-          "version": 8,
+          "version": 4,
           "type": "material_shift",
           "timestamp": "2026-11-17T21:24:35.000Z",
           "batchConsolidatedAt": "2026-11-17T23:16:21.974Z",
@@ -2544,7 +2830,7 @@
           "note": "BBC, NYT, and Le Monde confirm Ukrainian drones and missiles caused a partial span collapse of the Kerch Bridge."
         },
         {
-          "version": 9,
+          "version": 5,
           "type": "material_shift",
           "timestamp": "2026-11-18T17:27:14.000Z",
           "batchConsolidatedAt": "2026-11-18T22:14:04.809Z",
@@ -2556,7 +2842,7 @@
           "note": "New footage confirms scale of bridge destruction; Ukraine continues multi-wave operations."
         },
         {
-          "version": 9,
+          "version": 5,
           "type": "clarification",
           "timestamp": "2026-11-19T00:10:00.000Z",
           "batchConsolidatedAt": "2026-11-19T00:33:16.361Z",
@@ -2568,7 +2854,7 @@
           "note": "Crimea's Russian-installed governor Sergei Aksyonov reports temporary bridge closure following fresh attack; rail traffic suspended."
         },
         {
-          "version": 9,
+          "version": 5,
           "type": "clarification",
           "timestamp": "2026-11-20T00:52:00.000Z",
           "batchConsolidatedAt": "2026-11-20T01:06:47.854Z",
@@ -2580,7 +2866,7 @@
           "note": "Putin rules out Black Sea or energy truce, warning of far more painful response."
         },
         {
-          "version": 9,
+          "version": 5,
           "type": "clarification",
           "timestamp": "2026-11-20T04:30:00.000Z",
           "batchConsolidatedAt": "2026-11-20T04:45:58.411Z",
@@ -2592,7 +2878,7 @@
           "note": "Neue Zürcher Zeitung reveals Ukraine utilized flying radio towers instead of Starlink."
         },
         {
-          "version": 10,
+          "version": 6,
           "type": "material_shift",
           "timestamp": "2026-11-20T12:07:28.000Z",
           "batchConsolidatedAt": "2026-11-20T12:43:44.125Z",
@@ -2604,7 +2890,7 @@
           "note": "Polish defense minister confirms three objects violated airspace, comprising two missiles and a drone."
         },
         {
-          "version": 11,
+          "version": 7,
           "type": "material_shift",
           "timestamp": "2026-11-20T16:16:01.000Z",
           "batchConsolidatedAt": "2026-11-20T18:42:12.860Z",
@@ -2616,7 +2902,7 @@
           "note": "Fox News and The Guardian report Russian strikes launched over 400 drones and 110 missiles, killing at least eight and prompting Polish PM to denounce an intentional missile breach."
         },
         {
-          "version": 12,
+          "version": 8,
           "type": "material_shift",
           "timestamp": "2026-11-21T09:47:05.000Z",
           "batchConsolidatedAt": "2026-11-21T14:16:19.999Z",
@@ -2628,7 +2914,7 @@
           "note": "NATO and Polish officials condemn Russian projectiles landing in Poland as grave airspace violation."
         },
         {
-          "version": 12,
+          "version": 8,
           "type": "clarification",
           "timestamp": "2026-11-21T13:17:38.000Z",
           "batchConsolidatedAt": "2026-11-23T21:32:24.243Z",
@@ -2640,7 +2926,7 @@
           "note": "Zelensky calls Crimean Bridge strikes a 'fair response' during meeting with UK's Streeting."
         },
         {
-          "version": 13,
+          "version": 9,
           "type": "material_shift",
           "timestamp": "2026-11-21T17:20:03.000Z",
           "headline": "Zelenskyy Rejects Trump's Putin Comments After Russian Bombardment",
@@ -2651,24 +2937,24 @@
           "note": "Zelenskyy explicitly rebukes Trump's description of Putin as a friend, declaring 'for us, he is a killer' following massive nationwide strikes."
         },
         {
-          "version": 13,
-          "type": "clarification",
-          "timestamp": "2026-11-25T15:31:00.000Z",
-          "headline": "Zelenskyy Rejects Trump's Putin Comments After Russian Bombardment",
-          "summary": "A major Russian drone and missile attack struck a logistics facility in Sofiivska Borshchahivka, Kyiv region, causing a large fire and injuring at least one person. Russian forces launched massive overnight airstrikes and drone attacks across Ukraine, utilizing 172 drones and 36 ballistic missiles that killed at least one person in Odesa, injured individuals at a Kyiv hospital, and cut power and water supplies across multiple regions. A massive overnight Russian aerial bombardment utilizing attack drones, ballistic missiles, and cruise missiles culminated in heavy bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. Ongoing search and rescue operations confirmed a death toll of at least 40 civilians, with dozens remaining missing beneath the rubble. Overnight Russian missile and drone salvos struck energy infrastructure across Ukraine, forcing operator DTEK to implement power cuts in five regions.",
+          "version": 10,
+          "type": "material_shift",
+          "timestamp": "2026-11-23T21:09:08.000Z",
+          "headline": "Zelenskyy Warns Russia Preparing New Strikes on Ukraine",
+          "summary": "Ukrainian President Volodymyr Zelenskyy warned that intelligence indicates Russia is preparing new large-scale aerial strikes on Ukraine, urging citizens to take shelter. The warning follows Russian missile and drone strikes on five districts in Dnipropetrovsk and Kryvyi Rih that killed a 7-year-old boy and a 20-year-old woman and injured 60, alongside earlier 400-drone and 110-missile barrages on Kyiv and Lviv, while Ukraine hit the Kerch Strait Bridge three times in four days using airborne radio relay towers instead of Starlink and three Russian projectiles violated Polish airspace.",
           "beforeStory": "Zelenskyy Rejects Trump's Putin Comments After Russian Bombardment",
-          "beforeSummary": "A major Russian drone and missile attack struck a logistics facility in Sofiivska Borshchahivka, Kyiv region, causing a large fire and injuring at least one person. Russian forces launched massive overnight airstrikes and drone attacks across Ukraine, utilizing 172 drones and 36 ballistic missiles that killed at least one person in Odesa, injured individuals at a Kyiv hospital, and cut power and water supplies across multiple regions. A massive overnight Russian aerial bombardment utilizing attack drones, ballistic missiles, and cruise missiles culminated in heavy bombs devastating a school-turned-humanitarian aid center in Komyshuvakha, Ukraine. Ongoing search and rescue operations confirmed a death toll of at least 40 civilians, with dozens remaining missing beneath the rubble.",
-          "outletCount": 27,
-          "note": "Russian Strikes Cause Power Outages Across Ukraine — Overnight Russian missile and drone salvos struck energy infrastructure across Ukraine, forcing operator DTEK to implement power cuts in five regions."
+          "beforeSummary": "Ukrainian President Volodymyr Zelenskyy warned that intelligence indicates Russia is preparing new large-scale aerial strikes on Ukraine, urging citizens to take shelter. Russian missile and drone strikes hit five districts in Dnipropetrovsk and Kryvyi Rih, killing at least two people—a 7-year-old boy and a 20-year-old woman—and injuring 60, alongside earlier 400-drone and 110-missile barrages on Kyiv and Lviv. Simultaneously, Ukraine conducted a third aerial strike in four days on the Kerch Strait Bridge using drones coordinated via airborne radio relay towers instead of Starlink—which President Volodymyr Zelensky called a 'fair response'—as three Russian projectiles violated Polish airspace.",
+          "outletCount": 31,
+          "note": "Ukrainian President Volodymyr Zelenskyy warned that intelligence indicates Russia is preparing new large-scale aerial strikes on Ukraine, urging citizens to take shelter."
         },
         {
-          "version": 14,
-          "type": "material_shift",
+          "version": 10,
+          "type": "clarification",
           "timestamp": "2026-11-26T22:43:13.000Z",
           "batchConsolidatedAt": "2026-11-26T23:59:47.840Z",
           "headline": "Zelenskyy Warns Russia Preparing New Strikes on Ukraine",
           "summary": "Ukrainian President Volodymyr Zelenskyy warned that intelligence indicates Russia is preparing new large-scale aerial strikes on Ukraine's power grid, logistics, and critical services, urging citizens to take shelter. The warning follows Russian missile and drone strikes on five districts in Dnipropetrovsk and Kryvyi Rih that killed a 7-year-old boy and a 20-year-old woman and injured 60, alongside earlier 400-drone and 110-missile barrages on Kyiv and Lviv, while Ukraine hit the Kerch Strait Bridge three times in four days using airborne radio relay towers instead of Starlink and three Russian projectiles violated Polish airspace.",
-          "beforeStory": "Zelenskyy Rejects Trump's Putin Comments After Russian Bombardment",
+          "beforeStory": "Zelenskyy Warns Russia Preparing New Strikes on Ukraine",
           "beforeSummary": "Ukrainian President Volodymyr Zelenskyy warned that intelligence indicates Russia is preparing new large-scale aerial strikes on Ukraine, urging citizens to take shelter. The warning follows Russian missile and drone strikes on five districts in Dnipropetrovsk and Kryvyi Rih that killed a 7-year-old boy and a 20-year-old woman and injured 60, alongside earlier 400-drone and 110-missile barrages on Kyiv and Lviv, while Ukraine hit the Kerch Strait Bridge three times in four days using airborne radio relay towers instead of Starlink and three Russian projectiles violated Polish airspace.",
           "outletCount": 31,
           "note": "Zelenskyy specifies Russia's imminent mass strike targets Ukraine's power grid, logistics, and critical services."
@@ -2705,11 +2991,11 @@
       "eventTimeLabel": "Thu Nov 26, 2026",
       "topic": "world",
       "imageUrl": "https://www.latercera.com/resizer/v2/MGZTGT6C6JGQ7A6IXGMNPWHEDE.jpeg?auth=749c633b974e617eae3aa102f8f03598d895ae2508853fcdf5779cf5298aa1f2&smart=true&width=2048&height=1365",
-      "averageSentiment": -0.44,
+      "averageSentiment": -0.4,
       "eventBase": -0.337,
       "significanceScore": -0.65,
       "sentimentSpread": 0.83,
-      "outletCount": 33,
+      "outletCount": 30,
       "regionsCovered": [
         "NA",
         "LATAM",
@@ -2720,7 +3006,7 @@
         "APAC",
         "GLOBAL"
       ],
-      "firstSeenAt": "2026-10-24T11:33:01.000Z",
+      "firstSeenAt": "2026-11-07T11:50:24.000Z",
       "latestUpdateAt": "2026-11-26T22:43:13.000Z",
       "coverage": [
         {
@@ -3022,155 +3308,7 @@
           "category": "world",
           "link": "http://www.africanews.com/2026/11/13/ukraine-russian-drone-attacks-hit-kyiv-hospital-leave-one-dead-in-odesa/",
           "pubDate": "Fri, 13 Nov 2026 11:00:16 +0000"
-        },
-        {
-          "sourceId": "guardian",
-          "sourceName": "The Guardian",
-          "region": "UK",
-          "title": "Zelenskyy says 40 now confirmed dead after ‘insane’ Russian attack on school – Europe live",
-          "sentiment": -0.901,
-          "category": "world",
-          "link": "https://www.theguardian.com/world/live/2026/nov/04/eu-ukraine-russia-france-germany-us-nato-europe-latest-news",
-          "pubDate": "Wed, 04 Nov 2026 15:54:27 GMT"
-        },
-        {
-          "sourceId": "lemonde",
-          "sourceName": "Le Monde",
-          "region": "EU",
-          "title": "In Ukraine, Russia intensifies strikes on civilian targets",
-          "sentiment": -0.898,
-          "category": "world",
-          "link": "https://www.lemonde.fr/en/international/article/2026/11/04/in-ukraine-russia-intensifies-strikes-on-civilian-targets_6770887_4.html",
-          "pubDate": "Wed, 04 Nov 2026 01:08:23 +0100"
-        },
-        {
-          "sourceId": "ap",
-          "sourceName": "Associated Press",
-          "region": "GLOBAL",
-          "title": "Russia bombs aid center and shelter in southern Ukraine, killing 26, officials say - AP News",
-          "sentiment": -0.759,
-          "category": "world",
-          "link": "https://news.google.com/rss/articles/CBMipAFBVV95cUxOSjQxRVBYSHRNOF9zQ2l4RldLcXhabTFZWjVtWkhRaGZ3c25xemVZZmJjU1FiQUxMYlpzdmFvQkp1RGRFcWpaVGlOel9vLWx4ZDdfdDdlbm9DWTBXU1B2ZTNHQVFfU1EyQ1VaSHE2NFNqTXEwSEdxZmJEM3piSHhQc1YwUnM0SmxQVFFXYkQtM3BkdW5hclJpdEZwNXZ0M01mRXVUWQ?oc=5",
-          "pubDate": "Mon, 02 Nov 2026 23:52:00 GMT"
         }
-      ],
-      "seenArticleKeys": [
-        "https://www.latercera.com/mundo/noticia/zelensky-afirma-que-rusia-esta-preparando-un-nuevo-ataque-masivo-contra-ucrania-para-los-proximos-dias",
-        "zelensky says russia is preparing a new massive attack against ukraine in the coming days",
-        "https://news.google.com/rss/articles/cbmiowfbvv95cuxnddhjr3rhcm4tzdbldjfgzv9pmm1av0pwzf9rdfhwdva0anhfwhdkn212sfbuztn6v2rxbghzmhi0cfdxa3vmy3hvb3bxcezvwevydzqyynkwn2t0wjrnzmpfbxhyvhmywhprufrlntvyogzsswfkd21qcng5qtnrzugyb294a3njwunqauhwmdvyt0e2bglsyxjjtu9izzd0vm8w",
-        "zelenskiy says russia preparing new mass strike in coming days",
-        "https://www.pbs.org/newshour/world/zelenskyy-warns-of-imminent-major-russian-attack-on-ukraines-power-grid",
-        "zelenskyy warns of imminent major russian attack on ukraines power grid",
-        "https://www.pravda.com.ua/eng/news/2026/11/23/8064294",
-        "russia preparing new strikes on ukraine zelenskyy says",
-        "https://globalnews.ca/news/12160812/missle-attack-central-ukraine",
-        "ballistic missile attack in central ukraine kills 2 wounds 60",
-        "https://www.dw.com/en/russia-strikes-zelenskyy-s-hometown-killing-2/a-80009458?maca=en-rss-en-all-1573-rdf",
-        "russia strikes zelenskyys hometown killing 2",
-        "https://www.bbc.co.uk/news/articles/c6wy0qj7w5zqo?at_medium=rss&at_campaign=rss",
-        "zelensky says crimean bridge strikes fair response as he meets uks streeting",
-        "https://www.foxnews.com/world/ukraine-deals-major-blow-putins-crimea-lifeline-european-intel-assessment-claims",
-        "ukraine deals major blow to putins crimea lifeline european intel assessment claims",
-        "https://www.euronews.com/2026/11/21/putin-a-killer-zelenskyy-says-after-trump-calls-russian-leader-his-friend",
-        "putin a killer zelenskyy says after trump calls russian leader his friend",
-        "https://english.elpais.com/international/2026-11-20/ukraine-war-spills-over-into-eastern-poland.html",
-        "ukraine war spills over into eastern poland",
-        "https://www.abc.net.au/news/2026-11-20/ukraine-crimean-bridge-destruction-significance-explained/107408488",
-        "ukraines destruction of putins prized bridge a major hit to war effort",
-        "https://www.nzz.ch/international/angriff-auf-krim-bruecke-ukraine-setzt-auf-fliegende-funktuerme-statt-starlink-ld.10068407",
-        "alternative to spacex in the attack on the crimean bridge ukraine relied on flying radio towers instead of starlink",
-        "https://www.japantimes.co.jp/news/2026/11/20/world/putin-ukraine-crimea-bridge",
-        "putin says no sea or energy truce after ukraine hits crimea bridge again",
-        "https://news.sky.com/story/putin-vows-to-retaliate-as-ukraine-hits-prized-crimea-bridge-for-third-time-in-four-days-13613963",
-        "putin vows to retaliate as ukraine hits prized crimea bridge for third time in four days",
-        "https://www.nytimes.com/2026/11/18/world/europe/russia-kerch-strait-crimean-bridge.html",
-        "after crippling crimea bridge ukraine attacks it again",
-        "https://www.cbc.ca/news/world/crimea-bridge-attacked-9.7427374?cmp=rss",
-        "crimea bridge attacked again russian governor says",
-        "https://www.france24.com/en/tv-shows/truth-or-fake/20261118-crimea-bridge-strike-fact-checking-fake-videos-of-damage-after-ukraine-s-attack",
-        "crimea bridge strike factchecking fake videos of damage after ukraines attack",
-        "https://news.google.com/rss/articles/cbmihafbvv95cuxpqw91x0jwz3ezulncvhl3n0vhvv8wwkyyxzjvrxb4zva3rfrxzwzjvf96akjjc0fyzw41oe1xdkl2efmzstr6ek5rtvrorwgyqjzoy3fmvnjez2mxz3o1me1wdxheqvjtnw94enplsl94agjdzfbrn3vvbvdiz2r3nm9wu2i",
-        "see how ukraine hit putins showpiece bridge",
-        "https://www.aljazeera.com/news/2026/11/18/crimea-is-turning-into-an-island-how-ukraine-hit-putins-prized-bridge?traffic_source=rss",
-        "crimea is turning into an island how ukraine hit putins prized bridge",
-        "https://www.ft.com/content/65c5684a-f532-4601-9878-8fa2efe8d8f8?syn-25a6b1a6=1",
-        "ukraines flying modems helped take down putins bridge",
-        "https://www.repubblica.it/esteri/2026/11/18/news/smacco_ucraina_spezzato_ponte_di_kerch_opera_simbolo_di_putin-425730774/?rss=",
-        "ukraines slap kerch bridge broken the tsars symbolic work",
-        "https://www.smh.com.au/national/ukraine-strikes-key-crimean-bridge-20261118-p61f31.html?ref=rss",
-        "ukraine strikes key crimean bridge",
-        "https://www.bloomberg.com/news/videos/2026-11-17/video-shows-cruise-missile-targeting-crimea-bridge-video",
-        "video shows cruise missile targeting crimea bridge",
-        "https://oglobo.globo.com/mundo/noticia/2026/11/17/ucrania-destroi-parte-de-ponte-na-crimeia-em-ataque-com-misseis.ghtml",
-        "ukraine destroys part of bridge in crimea in missile attack",
-        "https://www.cnbc.com/2026/11/17/kerch-bridge-ukraine-russia-putin-kyiv.html",
-        "ukraine damages putins prized crimea bridge as zelenskyy lauds unprecedented operation",
-        "https://www.npr.org/2026/11/17/g-s1-153946/russia-ukraine-war",
-        "ukraine strikes major russian bridge with drones and missiles as aerial attacks escalate",
-        "https://www.thenationalnews.com/news/europe/2026/11/17/ukraine-and-russia-attack-key-bridges-ahead-of-china-talks",
-        "ukraine and russia attack key bridges ahead of china talks",
-        "https://news.google.com/rss/articles/cbmif0fvx3lxte1mbtkyr1c3yvzutjdmbfrmqwjtsxmtnevnsgjsx1c0vg1cbgyztwnyu0fjzuxix1v0skwtuhdwuno5exhfqzzjrhzprdvvb2g2wu55cvrkefv1qlfgbtfucwh4mujcy185adffu2hjsggwddbpc3qtsg5swglqvwc",
-        "ukraine strike collapses section of putins prized bridge to occupied crimea",
-        "https://www.rte.ie/news/ukraine/2026/1117/1599488-russia-ukraine-strikes-bridge",
-        "ukraine strikes bridge linking occupied crimea and russia",
-        "https://www.scmp.com/week-asia/politics/article/3374595/ukraine-strikes-bridge-linking-russia-crimea-1336-drone-barrage",
-        "ukraine strikes bridge linking russia to crimea in 1336drone barrage",
-        "http://www.africanews.com/2026/11/13/ukraine-russian-drone-attacks-hit-kyiv-hospital-leave-one-dead-in-odesa",
-        "ukraine russian drone attacks hit kyiv hospital leave two dead in odesa",
-        "https://www.pravda.com.ua/eng/news/2026/11/25/8064628",
-        "three injured in russian drone strike on energy facility in poltava oblast",
-        "https://www.bloomberg.com/news/articles/2026-11-13/ukraine-hits-ninth-russian-oil-refinery-since-start-of-november",
-        "ukraine hits ninth russian oil refinery since start of november",
-        "https://www.ft.com/content/e7697dda-888a-407e-82b1-f2bfc0b9f8ed",
-        "kyiv hit by water shortages as russia targets ukrainian infrastructure",
-        "https://www.aljazeera.com/video/newsfeed/2026/11/7/0711-reported-audrey-in-zaporizhzhia-071126?traffic_source=rss",
-        "ukraines zaporizhzhia faces threat as russian drones close in",
-        "https://oglobo.globo.com/mundo/noticia/2026/11/06/sobe-para-50-numero-de-mortos-em-ataque-russo-no-sul-da-ucrania-contra-edificio-que-recebia-ajuda-humanitaria.ghtml",
-        "death toll rises to 50 in russian strike in southern ukraine targeting building receiving humanitarian aid",
-        "https://news.google.com/rss/articles/cbmiugfbvv95cuxpwml3dezdytzha00tsmtbsguznwjioxzcmgtkvny0wvo1nexxdxdwx2dyrxjtamr5nkrnrxvmv3vxrvjxbwoxsgzutlg5ltd5mtvzsgtxekvdutq0v3zxttftlwo5egq1wnh0d2zozkxpz3dnu01jv3l4rlrfm3diuulit25qtgutuhvosvzpejh0bhblehjldtd4zmxenjfhvuiwlw1hslfgexlxevdxade5mezyymhls3c",
-        "death toll from russian bombing of ukrainian aid point rises to 53 governor says",
-        "https://www.france24.com/en/europe/20261106-death-toll-rises-to-50-in-russian-attack-on-aid-distribution-point-in-ukraine",
-        "death toll rises to 50 in russian attack on aid distribution point in ukraine",
-        "https://www.theguardian.com/world/live/2026/nov/04/eu-ukraine-russia-france-germany-us-nato-europe-latest-news",
-        "zelenskyy says 40 now confirmed dead after insane russian attack on school europe live",
-        "https://www.rte.ie/news/ukraine/2026/1104/1597955-ukraine-russia",
-        "dozens missing after russian strike on ukraine aid centre",
-        "https://www.euronews.com/video/2026/11/04/ukraine-31-dead-over-45-missing-after-russian-bombing-in-zaporizhzhia",
-        "ukraine 33 dead over 50 missing after russian bombing in zaporizhzhia",
-        "https://www.lemonde.fr/en/international/article/2026/11/04/in-ukraine-russia-intensifies-strikes-on-civilian-targets_6770887_4.html",
-        "in ukraine russia intensifies strikes on civilian targets",
-        "https://www.japantimes.co.jp/news/2026/11/04/world/politics/russia-ukraine-power-abu-dhabi-merz",
-        "russia bombards ukraine power grid before abu dhabi talks merz urges moscow to engage",
-        "https://www.bbc.co.uk/news/articles/c65ynez5y599o?at_medium=rss&at_campaign=rss",
-        "death toll rises in ukraine after russia attacks aid centre hospice and hospital",
-        "https://www.nytimes.com/2026/11/03/world/europe/komyshuvakha-zaporizhzhia-attack-ukraine.html",
-        "strike on ukraine humanitarian hub is feared to be among wars deadliest",
-        "https://www.pbs.org/newshour/world/russian-strikes-on-ukrainian-aid-site-kill-at-least-31-people-with-dozens-still-missing",
-        "russian strikes on ukrainian aid site kill at least 31 people with dozens still missing",
-        "https://news.google.com/rss/articles/cbmiugfbvv95cuxnykl0b0tibwxbtvnpthdsa05nzgw0burirfgza09xanrbbjnpvhjrte9hawrmaxz5adnqnezby2dqcvk4cxm0emtbzw1ooflxohhmd0zzuhqxavfpoefgaffhb0rzotf6wmrbrtfmuhfza3u4oejwz2lxwk1irhbrthdvt0jyvwpfekexu0jcv0rvwtdsvxhbmkjzqupdcm0xvnl4bwvmegjludruawhoceh1nmzqz2lim0e",
-        "ukraines zaporizhzhia region suffers huge russian bomb attack",
-        "https://www.nzz.ch/international/nach-der-waffenruhe-ein-massaker-russischer-angriff-auf-schulhaus-toetet-dutzende-von-zivilisten-ld.10052705",
-        "after the truce a massacre russian attack on school building kills dozens of civilians",
-        "https://globalnews.ca/news/12134263/russia-ukraine-strikes-aid-facility",
-        "death toll climbs to 31 after russian strike on ukrainian aid site",
-        "https://news.google.com/rss/articles/cbmiiwfbvv95cuxpwvvzqmzylvgxzvnxofj4dllymezqns1wlututhltzgjitnvqnm9yzgxcbxbdutdfoddurehbcm1da2kxy1zynmhwenlmnxdvbdd1cfa4snvjvdnftmfvzgtkrm9uagjldvo2uezfdmrwtlhblum1buxwsnbhunpmczdjnkx0nhfklv9j",
-        "russian airstrike kills 31 at ukraine aid center",
-        "https://www.cbc.ca/news/world/ukraine-russia-missing-civilians-abu-dhabi-talks-9.7406815?cmp=rss",
-        "dozens still missing from deadly guidedbomb attack in southern ukraine",
-        "https://www.npr.org/2026/11/03/g-s1-151439/russia-ukraine-war",
-        "death toll hits 29 after russian strike on ukrainian aid site with 48 still missing",
-        "https://www.latercera.com/mundo/noticia/ataque-ruso-contra-un-centro-hospitalario-en-ucrania-deja-al-menos-73-heridos-y-mas-de-220-pacientes-evacuados",
-        "russian attack on a hospital center in ukraine leaves at least 73 injured and over 220 patients evacuated",
-        "https://www.repubblica.it/esteri/2026/12/03/news/raid_scuola_diventata_rifugio_strage_civili_zaporizhzhia_dopo_tregua_oleshky-425694928/?rss=",
-        "raid on school turned shelter massacre of civilians in zaporizhzhia",
-        "https://news.google.com/rss/articles/cbmipafbvv95cuxosjqxrvbyshrnof9zq2l4rldlcxhabtfzwjvtwkhragz3c25xemvzzmjju1fiquxmylpzdmfvqkp1rgrfcwpavgloel9vlwx4zddfdddlbm9dwtbxu1b2ztnhqvffu1eyq1vashe2nfnqtxewsedxzmjem3pishhqc1ywunm0smxqvffxykqtm3bkdw5hcljpdezwnxz0m01mrxvuwq",
-        "russia bombs aid center and shelter in southern ukraine killing 26 officials say",
-        "https://www.dw.com/en/ukraine-at-least-26-killed-in-russian-strikes-on-aid-center/live-79825079?maca=en-rss-en-all-1573-rdf",
-        "ukraine at least 26 killed in russian strikes on aid center",
-        "https://www.scmp.com/news/world/russia-central-asia/article/3373043/russia-bombs-aid-centre-and-shelter-southern-ukraine-killing-24-authorities-say",
-        "russia bombs aid centre and shelter in southern ukraine killing 24 authorities say",
-        "https://www.cnbc.com/2026/10/30/russia-ukraine-putin-zelenskyy-energy-strikes.html",
-        "russian strikes plunge ukrainian city into blackout as zelenskyy warns of more missile attacks"
       ]
     },
     {
@@ -3964,112 +4102,6 @@
       ]
     },
     {
-      "id": "besiktas-match-against-hapoel-beer-sheva-suspended",
-      "story": "Besiktas Match Against Hapoel Beer Sheva Suspended",
-      "summary": "A UEFA Europa League match between Turkish club Beşiktaş and Israeli side Hapoel Beer-Sheva in Batumi, Georgia was suspended after supporters unfurled a pro-Palestinian banner. The resulting clashes between police and Turkish fans in the stands prompted a diplomatic row, with the Turkish Football Federation condemning the security response as 'unacceptable'.",
-      "version": 1,
-      "summarySynthesizedSig": "besiktas-match-against-hapoel-beer-sheva-suspended|v1|h1",
-      "primaryLocation": {
-        "name": "Batumi Stadium, Batumi",
-        "region": "Adjara, Georgia",
-        "countryIso": "ge",
-        "lat": 41.6434,
-        "lon": 41.6399,
-        "lng": 41.6399,
-        "zoom": 12,
-        "whyHere": "The UEFA Europa League match was hosted in Batumi when clashes broke out in the stands."
-      },
-      "briefing": {
-        "whyItMattersLabel": "Why It Matters",
-        "whyItMatters": "The fixture had already been moved to neutral ground in Georgia to manage security risks surrounding Israeli sports teams during ongoing Middle Eastern hostilities. Security forces intervened over political banners, escalating a stadium policing incident into a multi-nation diplomatic conflict involving foreign ministries. European sports authorities face worsening friction when balancing political speech bans against local policing standards.",
-        "whatsNextLabel": "What's Next",
-        "whatsNext": "UEFA's Control, Ethics and Disciplinary Body will review referee and delegate match reports to determine sanctions or forfeits. Georgian authorities and European football regulators must decide whether upcoming neutral-venue fixtures require heightened security protocols."
-      },
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-11-26T19:21:56.000Z",
-          "batchConsolidatedAt": "2026-11-26T22:35:58.661Z",
-          "headline": "Besiktas Match Against Hapoel Beer Sheva Suspended",
-          "summary": "A UEFA Europa League match between Turkish club Beşiktaş and Israeli side Hapoel Beer-Sheva in Batumi, Georgia was suspended after supporters unfurled a pro-Palestinian banner. The resulting clashes between police and Turkish fans in the stands prompted a diplomatic row, with the Turkish Football Federation condemning the security response as 'unacceptable'.",
-          "outletCount": 3,
-          "note": "Initial cluster formation on the wire"
-        }
-      ],
-      "domains": [
-        "sport",
-        "governance"
-      ],
-      "concepts": [
-        "uefa-europa-league",
-        "political-protest",
-        "diplomatic-tension"
-      ],
-      "entities": [
-        "Besiktas",
-        "Hapoel Beer Sheva",
-        "Turkish Football Federation"
-      ],
-      "temporalKind": "point_event",
-      "eventDate": "2026-11-26",
-      "eventTime": {
-        "startDate": "2026-11-26",
-        "endDate": null,
-        "timeOfDay": null,
-        "precision": "day",
-        "label": "Thursday Nov 26, 2026",
-        "sourceBacked": true,
-        "clarifiedAt": null
-      },
-      "eventTimeLabel": "Thursday Nov 26, 2026",
-      "topic": "sports",
-      "imageUrl": null,
-      "averageSentiment": -0.29,
-      "eventBase": -0.187,
-      "significanceScore": -0.409,
-      "sentimentSpread": 0.07,
-      "outletCount": 3,
-      "regionsCovered": [
-        "ME",
-        "GLOBAL"
-      ],
-      "firstSeenAt": "2026-11-26T19:21:56.000Z",
-      "latestUpdateAt": "2026-11-26T22:30:24.000Z",
-      "coverage": [
-        {
-          "sourceId": "almonitor",
-          "sourceName": "Al-Monitor",
-          "region": "ME",
-          "title": "Clashes at Besiktas match against Israeli club spark diplomatic row",
-          "sentiment": -0.333,
-          "category": "sports",
-          "link": "https://www.al-monitor.com/originals/2026/11/clashes-besiktas-match-against-israeli-club-spark-diplomatic-row",
-          "pubDate": "2026-11-26T17:30:24-0500"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Besiktas v Hapoel Beer-Sheva suspended after police enter stands - Reuters",
-          "sentiment": -0.261,
-          "category": "sports",
-          "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNZmk5SkpEdGwtR2pPNzZFT0tXLUFObl8wQnJfcTVRcXhfOHpVNnI1TFZwR2F1RnJOczB5MjRkNzNWRl9Wd0EtZFc0ZEVFYmZmanJiOFVIdHY4WWdORGVXVUg2YmhUZVdHRlJJblBmWGdXUVYyR0RBYjlvTUwtdXFvRXFXUkNTbnRmbFlidUhOWk0wdUFSSkZQS3ZkeDBwWi1wT2pLVXNRYzlHUkJhRG1sbXVmY3g?oc=5",
-          "pubDate": "Thu, 26 Nov 2026 21:27:43 GMT"
-        },
-        {
-          "sourceId": "turkishminute",
-          "sourceName": "Turkish Minute",
-          "region": "ME",
-          "title": "Turkish federation condemns ‘unacceptable’ fan treatment at Beşiktaş-Hapoel Beer Sheva match",
-          "sentiment": -0.284,
-          "category": "sports",
-          "link": "https://www.turkishminute.com/2026/11/26/turkish-federation-condemns-unacceptable-fan-treatment-at-besiktas-hapoel-beer-sheva-match/",
-          "pubDate": "Thu, 26 Nov 2026 20:19:26 +0000"
-        }
-      ]
-    },
-    {
       "id": "dual-storms-threaten-us-thanksgiving-travel",
       "story": "Dual Storms Threaten US Thanksgiving Travel",
       "summary": "Dual storm systems on both U.S. coasts—compounded by airline technical glitches and California high tides two or more feet above normal—have disrupted Thanksgiving travel, leaving more than 840,000 homes and businesses without power and prompting San Francisco's mayor to urge residents to avoid non-essential travel. On the East Coast, 70 mph winds caused over 400 flight cancellations and knocked out power to nearly 200,000 customers in Virginia and 177,000 in Maryland.",
@@ -4384,199 +4416,6 @@
       ]
     },
     {
-      "id": "cargo-ship-carrying-diesel-sinks-off-ibiza",
-      "story": "Cargo Ship Carrying Diesel Sinks Off Ibiza",
-      "summary": "The Maltese-flagged chemical tanker Med Emre capsized and sank 46 kilometers off Ibiza while carrying 7,000 tonnes of diesel from Algeciras to Barcelona, leaving one crew member dead and six injured. Spanish maritime authorities rescued 17 crew members and activated a marine pollution contingency plan to protect sensitive Mediterranean waters.",
-      "version": 1,
-      "summarySynthesizedSig": "cargo-ship-carrying-diesel-sinks-off-ibiza|v1|h1",
-      "primaryLocation": {
-        "name": "Ibiza",
-        "region": "Balearic Islands, Spain",
-        "countryIso": "es",
-        "lat": 38.9067,
-        "lon": 1.4206,
-        "lng": 1.4206,
-        "zoom": 9,
-        "whyHere": "The diesel tanker capsized and sank off the coast of Ibiza."
-      },
-      "briefing": {
-        "whyItMattersLabel": "Why It Matters",
-        "whyItMatters": "The wreck of a vessel carrying 7,000 tonnes of diesel creates an acute environmental hazard for the Balearic Islands' fragile marine ecosystem and tourism economy. Spanish maritime emergency protocols were immediately deployed to deploy containment booms and monitor minor surface sheens. The incident puts spotlight safety regulations and hull integrity checks on regional chemical tankers operating busy Mediterranean trade corridors.",
-        "whatsNextLabel": "What's Next",
-        "whatsNext": "Spain's maritime safety agency will deploy underwater remotely operated vehicles to inspect the sunken hull and assess fuel leakage risks. Investigators will examine weather conditions and cargo management to determine the cause of the capsizing."
-      },
-      "evolvedFromIds": [
-        "diesel-tanker-capsizes-near-ibiza-killing-one"
-      ],
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-11-26T07:24:28.000Z",
-          "batchConsolidatedAt": "2026-11-26T11:07:46.099Z",
-          "headline": "Cargo Ship Carrying Diesel Sinks Off Ibiza",
-          "summary": "The Maltese-flagged chemical tanker Med Emre capsized and sank 46 kilometers off Ibiza while carrying 7,000 tonnes of diesel from Algeciras to Barcelona, leaving one crew member dead and six injured. Spanish maritime authorities rescued 17 crew members and activated a marine pollution contingency plan to protect sensitive Mediterranean waters.",
-          "outletCount": 3,
-          "note": "Initial cluster formation on the wire"
-        }
-      ],
-      "domains": [
-        "infrastructure",
-        "climate",
-        "society"
-      ],
-      "concepts": [
-        "shipwreck",
-        "environmental-hazard",
-        "oil-spill"
-      ],
-      "entities": [
-        "Ibiza",
-        "Salvamento Maritimo"
-      ],
-      "temporalKind": "point_event",
-      "eventDate": "2026-11-25",
-      "eventTime": {
-        "startDate": "2026-11-25",
-        "endDate": null,
-        "timeOfDay": null,
-        "precision": "day",
-        "label": "Wed Nov 25",
-        "sourceBacked": true,
-        "clarifiedAt": null
-      },
-      "eventTimeLabel": "Wed Nov 25",
-      "topic": "climate",
-      "imageUrl": "https://cebudailynews.inquirer.net/files/2026/11/AFP__20261126__D8PK8K4__v3__HighRes__CorrectionSpainTransportationAccidentSeaEnviron-620x382.jpg",
-      "averageSentiment": -0.39,
-      "eventBase": -0.294,
-      "significanceScore": -0.64,
-      "sentimentSpread": 0.25,
-      "outletCount": 11,
-      "regionsCovered": [
-        "LATAM",
-        "UK",
-        "EU",
-        "ME",
-        "APAC",
-        "GLOBAL"
-      ],
-      "firstSeenAt": "2026-11-26T07:24:28.000Z",
-      "latestUpdateAt": "2026-11-26T22:19:03.000Z",
-      "coverage": [
-        {
-          "sourceId": "inquirer",
-          "sourceName": "Philippine Daily Inquirer",
-          "region": "APAC",
-          "title": "Spain races to stop oil spill after ship capsizes off Ibiza",
-          "sentiment": -0.352,
-          "category": "climate",
-          "link": "https://cebudailynews.inquirer.net/788517/spain-races-to-stop-oil-spill-after-ship-capsizes-off-ibiza",
-          "pubDate": "Fri, 27 Nov 2026 06:19:03 +0800"
-        },
-        {
-          "sourceId": "bbc",
-          "sourceName": "BBC News",
-          "region": "UK",
-          "title": "Diesel tanker carrying up to 7,000 tonnes capsizes near Ibiza, killing one",
-          "sentiment": -0.418,
-          "category": "climate",
-          "link": "https://www.bbc.co.uk/news/articles/c9gklryvj24do?at_medium=RSS&at_campaign=rss",
-          "pubDate": "Thu, 26 Nov 2026 22:01:22 GMT"
-        },
-        {
-          "sourceId": "elpaisamerica",
-          "sourceName": "El País América",
-          "region": "LATAM",
-          "title": "Sailor dies after shipwreck of fuel-laden vessel near Ibiza",
-          "sentiment": -0.491,
-          "category": "climate",
-          "link": "https://elpais.com/espana/2026-11-26/muere-un-marinero-en-el-hundimiento-de-un-buque-cargado-de-combustible-cerca-de-ibiza.html",
-          "pubDate": "Thu, 26 Nov 2026 19:24:04 GMT"
-        },
-        {
-          "sourceId": "aljazeera",
-          "sourceName": "Al Jazeera",
-          "region": "ME",
-          "title": "Diesel tanker capsizes near Ibiza, killing crew member",
-          "sentiment": -0.396,
-          "category": "world",
-          "link": "https://www.aljazeera.com/video/newsfeed/2026/11/26/aje-onl-nf_loaded-diesel-tanker-capsizes-off-ibiza-killing-one-261126?traffic_source=rss",
-          "pubDate": "Thu, 26 Nov 2026 15:56:39 +0000"
-        },
-        {
-          "sourceId": "almonitor",
-          "sourceName": "Al-Monitor",
-          "region": "ME",
-          "title": "Crew member dies after diesel tanker capsizes off Ibiza, no pollution so far",
-          "sentiment": -0.319,
-          "category": "climate",
-          "link": "https://www.al-monitor.com/originals/2026/11/crew-member-dies-after-diesel-tanker-capsizes-ibiza-no-pollution-so-far",
-          "pubDate": "2026-11-26T09:46:29-0500"
-        },
-        {
-          "sourceId": "euronews",
-          "sourceName": "Euronews",
-          "region": "EU",
-          "title": "Aerial footage shows diesel tanker sinking off Ibiza",
-          "sentiment": -0.328,
-          "category": "climate",
-          "link": "https://www.euronews.com/2026/11/26/aerial-footage-shows-diesel-tanker-sinking-off-ibiza",
-          "pubDate": "Thu, 26 Nov 2026 15:40:10 +0100"
-        },
-        {
-          "sourceId": "eleconomista",
-          "sourceName": "El Economista",
-          "region": "LATAM",
-          "title": "Spain mobilizes to prevent oil spill following shipwreck off Ibiza",
-          "sentiment": -0.307,
-          "category": "climate",
-          "link": "https://www.eleconomista.com.mx/internacionales/espana-moviliza-evitar-marea-negra-naufragio-frente-ibiza-20261126-845965.html",
-          "pubDate": "Thu, 26 Nov 2026 08:08:57 -0600"
-        },
-        {
-          "sourceId": "dw",
-          "sourceName": "DW News",
-          "region": "EU",
-          "title": "Crew member dies after diesel tanker sinks off Ibiza coast",
-          "sentiment": -0.351,
-          "category": "world",
-          "link": "https://www.dw.com/en/crew-member-dies-after-diesel-tanker-sinks-off-ibiza-coast/a-80059054?maca=en-rss-en-all-1573-rdf",
-          "pubDate": "2026-11-26T11:58:00.000Z"
-        },
-        {
-          "sourceId": "oglobo",
-          "sourceName": "O Globo",
-          "region": "LATAM",
-          "title": "Ship carrying 7 thousand tons of diesel sinks near Ibiza, and accident leaves one dead",
-          "sentiment": -0.558,
-          "category": "climate",
-          "link": "https://oglobo.globo.com/mundo/noticia/2026/11/26/navio-com-7-mil-toneladas-de-diesel-afunda-perto-de-ibiza-e-acidente-deixa-um-morto.ghtml",
-          "pubDate": "Thu, 26 Nov 2026 10:05:09 -0000"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Crew member dies after diesel tanker sinks off Ibiza; Spain launches pollution plan - Reuters",
-          "sentiment": -0.351,
-          "category": "climate",
-          "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxOcmZUbzlMdjVtVDNjMmxRZHZ2Rk50anZIMDlOZ0swTEZBNi1aakVXV0NBT19oTkkzWTk0cUhXbUJEN0xuczdibXF0Y09WaUxmaWRwU2RvOVY3cXhNNE44XzY4TV9Rc2hISnBiSGI1T3FpdEdIR2JETGYta01tc203a2RJaVNhc1VYTEh5UTAxNGRreEFNTTlHcGJiT09QZURZdW9yQWtwX2Y4ckRhUkRFZE9QVTdlM1N1WlhjUGFyTno4cXBtcjFvLQ?oc=5",
-          "pubDate": "Thu, 26 Nov 2026 07:41:00 GMT"
-        },
-        {
-          "sourceId": "bloomberg",
-          "sourceName": "Bloomberg",
-          "region": "GLOBAL",
-          "title": "Diesel-Carrying Ship Sinks Off Spanish Island of Ibiza, One Dead",
-          "sentiment": -0.463,
-          "category": "world",
-          "link": "https://www.bloomberg.com/news/articles/2026-11-26/diesel-carrying-ship-sinks-off-spanish-island-of-ibiza-one-dead",
-          "pubDate": "Thu, 26 Nov 2026 07:24:28 GMT"
-        }
-      ]
-    },
-    {
       "id": "marie-antoinette-s-nipple-bowl-sells-for-3-1-million",
       "story": "Marie-Antoinette's 'Nipple Bowl' Sells for $3.1 Million",
       "summary": "A rare porcelain 'jatte-teton', or nipple bowl, commissioned for Queen Marie-Antoinette by Louis XVI for her royal dairy creamery at Rambouillet, sold for a record €2.9 million ($3.1 million) at a Paris auction. The sale set an all-time record for Sèvres porcelain.",
@@ -4749,6 +4588,119 @@
           "category": "business",
           "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxNUUhZaXItb2lOYVhHRHBoUkpGZFM2Y0ZpQ1dSN3QwUnEyQlBKdmlRVG9fdFM5WS1UNm41dGZnRVhyY1FIbjBvOUNFWEREN1F4S1l1amVSUGFheGl4N1NNbk1ieF9HU3N0azQ1djN1bjA2RWhIc1VhVWVWb0RVbG1HMVlPbFQyb0N5N1ZLTUVZeXlxMDk4d3d0UHh1ajdZeWd3ekx5TU52Z3BDaXdhOU9uN3dtd1lLMXM?oc=5",
           "pubDate": "Thu, 26 Nov 2026 16:56:45 GMT"
+        }
+      ]
+    },
+    {
+      "id": "argentina-senate-set-to-pass-electoral-reform-suspending-primaries",
+      "story": "Argentina Senate Set to Pass Electoral Reform Suspending Primaries",
+      "summary": "Ruling party Senator Patricia Bullrich declared that President Javier Milei's electoral reform bill has sufficient votes to pass the Argentine Senate. The legislation suspends mandatory primary elections (PASO), significantly shortening the campaign calendar ahead of the 2027 presidential election.",
+      "version": 1,
+      "summarySynthesizedSig": "argentina-senate-set-to-pass-electoral-reform-suspending-primaries|v1|h1",
+      "primaryLocation": {
+        "name": "Palace of the Argentine National Congress, Buenos Aires",
+        "region": "Autonomous City of Buenos Aires, Argentina",
+        "countryIso": "ar",
+        "lat": -34.6097,
+        "lon": -58.3926,
+        "lng": -58.3926,
+        "zoom": 14,
+        "whyHere": "The Senate debate and vote on President Milei's electoral reform bill take place at the National Congress in Buenos Aires."
+      },
+      "briefing": {
+        "whyItMattersLabel": "Why It Matters",
+        "whyItMatters": "Scrapping mandatory primaries shifts power away from broad coalitions and back to central party bosses, altering candidate selection mechanics while curbing state campaign spending. For President Milei, eliminating the primary layer reduces political exposure and forces fragmented opposition parties into hurried tactical alliances without state-sanctioned polling feedback.",
+        "whatsNextLabel": "What's Next",
+        "whatsNext": "The Senate is scheduled to take its final vote on the electoral reform package before the end of the current legislative session. The key leverage point rests on whether regional governors can hold their senators in line to secure the final statutory majority."
+      },
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-11-25T12:45:52.000Z",
+          "batchConsolidatedAt": "2026-11-25T18:45:20.130Z",
+          "headline": "Argentina Senate Set to Pass Electoral Reform Suspending Primaries",
+          "summary": "Ruling party Senator Patricia Bullrich declared that President Javier Milei's electoral reform bill has sufficient votes to pass the Argentine Senate. The legislation suspends mandatory primary elections (PASO), significantly shortening the campaign calendar ahead of the 2027 presidential election.",
+          "outletCount": 2,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "domains": [
+        "governance"
+      ],
+      "concepts": [
+        "electoral-reform",
+        "argentina-politics"
+      ],
+      "entities": [
+        "Patricia Bullrich",
+        "Javier Milei"
+      ],
+      "temporalKind": "upcoming",
+      "eventDate": "2026-11-25",
+      "eventTime": {
+        "startDate": "2026-11-25",
+        "endDate": null,
+        "timeOfDay": null,
+        "precision": "day",
+        "label": "Wed Nov 25, 2026",
+        "sourceBacked": true,
+        "clarifiedAt": null
+      },
+      "eventTimeLabel": "Wed Nov 25, 2026",
+      "topic": "politics",
+      "imageUrl": "https://www.clarin.com/img/2026/11/26/82LRjiboc_1200x630__1.jpg",
+      "averageSentiment": -0.01,
+      "eventBase": -0.01,
+      "significanceScore": -0.16,
+      "sentimentSpread": 0.15,
+      "outletCount": 4,
+      "regionsCovered": [
+        "LATAM",
+        "GLOBAL"
+      ],
+      "firstSeenAt": "2026-11-25T12:45:52.000Z",
+      "latestUpdateAt": "2026-11-26T21:54:00.000Z",
+      "coverage": [
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Argentina Senate approves suspension of primaries, boosting Milei's reelection bid - Reuters",
+          "sentiment": 0.04,
+          "category": "politics",
+          "link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxOME12Z2hWeXJDdjhYQll0TW9vYWFaMzgwdWdBQ05BR3k4ckdrdFo3SkdfOXZrOGVXU1VUOTNtYXRXWEJBYlExUllERjdYRGxqR3lCelZyQTJxd0o2Q1VacWw0Sk5QajJWbGlDaDV1Y2hjWDE4dEVjNFpSQXdhQWg4MmFydGdDMEhmQjI2TjNiMUliZ1hBX1lXaDBoRlN0RHoxeUpxV3JuMkU2TmFncHhfWXdyOFNaUlVrUC1NZnlSS0NoRFE?oc=5",
+          "pubDate": "Thu, 26 Nov 2026 21:54:00 GMT"
+        },
+        {
+          "sourceId": "clarin",
+          "sourceName": "Clarín",
+          "region": "LATAM",
+          "title": "Electoral reform: which senators voted for and against the bill eliminating primary elections",
+          "sentiment": -0.111,
+          "category": "politics",
+          "link": "https://www.clarin.com/politica/reforma-electoral-senadores-votaron-favor-proyecto-elimina-paso_0_MQ9o7IZC9p.html",
+          "pubDate": "Thu, 26 Nov 2026 21:27:22 +0000"
+        },
+        {
+          "sourceId": "oglobo",
+          "sourceName": "O Globo",
+          "region": "LATAM",
+          "title": "Leader of Milei's Senate Block Says Electoral Reform Suspending Primaries in Argentina Will Pass",
+          "sentiment": 0.04,
+          "category": "politics",
+          "link": "https://oglobo.globo.com/mundo/noticia/2026/11/25/chefe-da-bancada-de-milei-no-senado-confia-na-aprovacao-de-reforma-eleitoral-que-suspendera-primarias-na-argentina-em-2027.ghtml",
+          "pubDate": "Wed, 25 Nov 2026 15:06:30 -0000"
+        },
+        {
+          "sourceId": "bloomberg",
+          "sourceName": "Bloomberg",
+          "region": "GLOBAL",
+          "title": "Bullrich confident Milei's electoral reform will be approved",
+          "sentiment": 0.01,
+          "category": "politics",
+          "link": "https://www.bloomberg.com/news/videos/2026-11-25/bullrich-confia-en-que-la-reforma-electoral-de-milei-sera-aprobada",
+          "pubDate": "Wed, 25 Nov 2026 12:45:52 GMT"
         }
       ]
     },
@@ -5742,119 +5694,6 @@
           "category": "politics",
           "link": "https://news.sky.com/story/pm-to-say-brexit-hasnt-worked-and-set-out-conditions-for-future-eu-deal-in-major-speech-13612600",
           "pubDate": "Sun, 15 Nov 2026 21:33:00 +0000"
-        }
-      ]
-    },
-    {
-      "id": "argentina-senate-set-to-pass-electoral-reform-suspending-primaries",
-      "story": "Argentina Senate Set to Pass Electoral Reform Suspending Primaries",
-      "summary": "Ruling party Senator Patricia Bullrich declared that President Javier Milei's electoral reform bill has sufficient votes to pass the Argentine Senate. The legislation suspends mandatory primary elections (PASO), significantly shortening the campaign calendar ahead of the 2027 presidential election.",
-      "version": 1,
-      "summarySynthesizedSig": "argentina-senate-set-to-pass-electoral-reform-suspending-primaries|v1|h1",
-      "primaryLocation": {
-        "name": "Palace of the Argentine National Congress, Buenos Aires",
-        "region": "Autonomous City of Buenos Aires, Argentina",
-        "countryIso": "ar",
-        "lat": -34.6097,
-        "lon": -58.3926,
-        "lng": -58.3926,
-        "zoom": 14,
-        "whyHere": "The Senate debate and vote on President Milei's electoral reform bill take place at the National Congress in Buenos Aires."
-      },
-      "briefing": {
-        "whyItMattersLabel": "Why It Matters",
-        "whyItMatters": "Scrapping mandatory primaries shifts power away from broad coalitions and back to central party bosses, altering candidate selection mechanics while curbing state campaign spending. For President Milei, eliminating the primary layer reduces political exposure and forces fragmented opposition parties into hurried tactical alliances without state-sanctioned polling feedback.",
-        "whatsNextLabel": "What's Next",
-        "whatsNext": "The Senate is scheduled to take its final vote on the electoral reform package before the end of the current legislative session. The key leverage point rests on whether regional governors can hold their senators in line to secure the final statutory majority."
-      },
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-11-25T12:45:52.000Z",
-          "batchConsolidatedAt": "2026-11-25T18:45:20.130Z",
-          "headline": "Argentina Senate Set to Pass Electoral Reform Suspending Primaries",
-          "summary": "Ruling party Senator Patricia Bullrich declared that President Javier Milei's electoral reform bill has sufficient votes to pass the Argentine Senate. The legislation suspends mandatory primary elections (PASO), significantly shortening the campaign calendar ahead of the 2027 presidential election.",
-          "outletCount": 2,
-          "note": "Initial cluster formation on the wire"
-        }
-      ],
-      "domains": [
-        "governance"
-      ],
-      "concepts": [
-        "electoral-reform",
-        "argentina-politics"
-      ],
-      "entities": [
-        "Patricia Bullrich",
-        "Javier Milei"
-      ],
-      "temporalKind": "upcoming",
-      "eventDate": "2026-11-25",
-      "eventTime": {
-        "startDate": "2026-11-25",
-        "endDate": null,
-        "timeOfDay": null,
-        "precision": "day",
-        "label": "Wed Nov 25, 2026",
-        "sourceBacked": true,
-        "clarifiedAt": null
-      },
-      "eventTimeLabel": "Wed Nov 25, 2026",
-      "topic": "politics",
-      "imageUrl": "https://www.clarin.com/img/2026/11/26/82LRjiboc_1200x630__1.jpg",
-      "averageSentiment": -0.01,
-      "eventBase": -0.01,
-      "significanceScore": -0.16,
-      "sentimentSpread": 0.15,
-      "outletCount": 4,
-      "regionsCovered": [
-        "LATAM",
-        "GLOBAL"
-      ],
-      "firstSeenAt": "2026-11-25T12:45:52.000Z",
-      "latestUpdateAt": "2026-11-26T21:27:22.000Z",
-      "coverage": [
-        {
-          "sourceId": "clarin",
-          "sourceName": "Clarín",
-          "region": "LATAM",
-          "title": "Electoral reform: which senators voted for and against the bill eliminating primary elections",
-          "sentiment": -0.111,
-          "category": "politics",
-          "link": "https://www.clarin.com/politica/reforma-electoral-senadores-votaron-favor-proyecto-elimina-paso_0_MQ9o7IZC9p.html",
-          "pubDate": "Thu, 26 Nov 2026 21:27:22 +0000"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Argentina's Senate poised to suspend primaries, boosting Milei's re-election bid - Reuters",
-          "sentiment": 0.04,
-          "category": "politics",
-          "link": "https://news.google.com/rss/articles/CBMiwwFBVV95cUxOME12Z2hWeXJDdjhYQll0TW9vYWFaMzgwdWdBQ05BR3k4ckdrdFo3SkdfOXZrOGVXU1VUOTNtYXRXWEJBYlExUllERjdYRGxqR3lCelZyQTJxd0o2Q1VacWw0Sk5QajJWbGlDaDV1Y2hjWDE4dEVjNFpSQXdhQWg4MmFydGdDMEhmQjI2TjNiMUliZ1hBX1lXaDBoRlN0RHoxeUpxV3JuMkU2TmFncHhfWXdyOFNaUlVrUC1NZnlSS0NoRFE?oc=5",
-          "pubDate": "Thu, 26 Nov 2026 16:11:15 GMT"
-        },
-        {
-          "sourceId": "oglobo",
-          "sourceName": "O Globo",
-          "region": "LATAM",
-          "title": "Leader of Milei's Senate Block Says Electoral Reform Suspending Primaries in Argentina Will Pass",
-          "sentiment": 0.04,
-          "category": "politics",
-          "link": "https://oglobo.globo.com/mundo/noticia/2026/11/25/chefe-da-bancada-de-milei-no-senado-confia-na-aprovacao-de-reforma-eleitoral-que-suspendera-primarias-na-argentina-em-2027.ghtml",
-          "pubDate": "Wed, 25 Nov 2026 15:06:30 -0000"
-        },
-        {
-          "sourceId": "bloomberg",
-          "sourceName": "Bloomberg",
-          "region": "GLOBAL",
-          "title": "Bullrich confident Milei's electoral reform will be approved",
-          "sentiment": 0.01,
-          "category": "politics",
-          "link": "https://www.bloomberg.com/news/videos/2026-11-25/bullrich-confia-en-que-la-reforma-electoral-de-milei-sera-aprobada",
-          "pubDate": "Wed, 25 Nov 2026 12:45:52 GMT"
         }
       ]
     },
@@ -7646,121 +7485,6 @@
           "category": "world",
           "link": "https://globalnation.inquirer.net/349778/colombia-gunmen-take-25-hostages-at-supermarket-siege",
           "pubDate": "Wed, 25 Nov 2026 06:29:46 +0800"
-        }
-      ]
-    },
-    {
-      "id": "trump-thanksgiving-message-attacks-foes-and-immigrants",
-      "story": "Trump Thanksgiving Message Attacks Foes and Immigrants",
-      "summary": "President Donald Trump delivered a Thanksgiving message lashing out at political rivals, undocumented immigrants, and the federal government. Writing on Truth Social, he explicitly singled out Minnesota's Somali community, claiming that only 2% should be permitted to remain in the country.",
-      "version": 1,
-      "summarySynthesizedSig": "trump-thanksgiving-message-attacks-foes-and-immigrants|v1|h1",
-      "primaryLocation": {
-        "name": "Mar-a-Lago, Palm Beach",
-        "region": "Florida, United States",
-        "countryIso": "us",
-        "lat": 26.6771,
-        "lon": -80.037,
-        "lng": -80.037,
-        "zoom": 11,
-        "whyHere": "President Trump issued his holiday statements on Truth Social during the Thanksgiving holiday from his Palm Beach residence."
-      },
-      "briefing": {
-        "whyItMattersLabel": "The Context",
-        "whyItMatters": "The remarks signal an intensification of executive rhetoric targeting specific immigrant communities, establishing public rationale for expanded deportation enforcement. By isolating Minnesota's Somali diaspora with explicit percentage metrics, the administration signals a shift toward community-wide scrutiny over individualized immigration processing. The policy lever relies on executive authority under federal immigration law, though enforced removals faced immediate legal challenges from civil rights groups.",
-        "whatsNextLabel": "Where Things Stand",
-        "whatsNext": "The Department of Homeland Security is expected to issue operational guidance regarding regional enforcement priorities. Federal courts are likely to receive emergency injunction requests from immigration advocacy groups challenging target quotas."
-      },
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-11-26T20:11:54.000Z",
-          "batchConsolidatedAt": "2026-11-26T21:33:54.275Z",
-          "headline": "Trump Thanksgiving Message Attacks Foes and Immigrants",
-          "summary": "President Donald Trump delivered a Thanksgiving message lashing out at political rivals, undocumented immigrants, and the federal government. Writing on Truth Social, he explicitly singled out Minnesota's Somali community, claiming that only 2% should be permitted to remain in the country.",
-          "outletCount": 4,
-          "note": "Initial cluster formation on the wire"
-        }
-      ],
-      "domains": [
-        "governance",
-        "society"
-      ],
-      "concepts": [
-        "political-rhetoric",
-        "immigration-policy",
-        "holiday-address"
-      ],
-      "entities": [
-        "Donald Trump"
-      ],
-      "temporalKind": "point_event",
-      "eventDate": "2026-11-26",
-      "eventTime": {
-        "startDate": "2026-11-26",
-        "endDate": null,
-        "timeOfDay": "day",
-        "precision": "day",
-        "label": "Thursday Nov 26, 2026",
-        "sourceBacked": true,
-        "clarifiedAt": null
-      },
-      "eventTimeLabel": "Thursday Nov 26, 2026",
-      "topic": "politics",
-      "imageUrl": "https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/01/931/523/somalia-flag-donald-trump.png?ve=1&tl=1",
-      "averageSentiment": -0.46,
-      "eventBase": -0.276,
-      "significanceScore": -0.61,
-      "sentimentSpread": 0.37,
-      "outletCount": 4,
-      "regionsCovered": [
-        "NA",
-        "LATAM",
-        "GLOBAL"
-      ],
-      "firstSeenAt": "2026-11-26T20:11:54.000Z",
-      "latestUpdateAt": "2026-11-26T20:58:30.000Z",
-      "coverage": [
-        {
-          "sourceId": "fox",
-          "sourceName": "Fox News",
-          "region": "NA",
-          "title": "Trump takes on Somali welfare dependency in Thanksgiving message, lays out who should stay in US",
-          "sentiment": -0.599,
-          "category": "politics",
-          "link": "https://www.foxnews.com/politics/trump-takes-somali-welfare-dependency-thanksgiving-message-lays-who-should-stay-us",
-          "pubDate": "Thu, 26 Nov 2026 15:58:30 -0500"
-        },
-        {
-          "sourceId": "eleconomista",
-          "sourceName": "El Economista",
-          "region": "LATAM",
-          "title": "Trump attacks immigrants and political rivals in Thanksgiving message",
-          "sentiment": -0.465,
-          "category": "politics",
-          "link": "https://www.eleconomista.com.mx/internacionales/trump-ataca-inmigrantes-rivales-politicos-mensaje-dia-accion-gracias-20261126-846025.html",
-          "pubDate": "Thu, 26 Nov 2026 14:57:07 -0600"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Trump uses Thanksgiving message to lash out at political foes, immigrants, federal government - Reuters",
-          "sentiment": -0.229,
-          "category": "politics",
-          "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxPQmtPdXRIWFFwMkxPY3ZpT0hvLVRPZVRURVFPbTh1ZVZ6aG1aNnNRU1FocksyRWM4UVJ6amxnd0tpQWdIbU02TEg2elQwY0VjTm9pbFVUNjVNRnA4RENJVTdBRTUwM0tLVktMUW5HNkN3Vm1QY1JuRkMwM3Z6X3F3NUtzWC1LVWF4N01hbTRXSGN1Z2dnTzJ2Y0V5RHlMbmhpQVZXZHp6eDhmcmROb2NHUTNmWFFwMjNsX1RF?oc=5",
-          "pubDate": "Thu, 26 Nov 2026 20:23:16 GMT"
-        },
-        {
-          "sourceId": "latercera",
-          "sourceName": "La Tercera",
-          "region": "LATAM",
-          "title": "Trump attacks immigrants and political rivals in his Thanksgiving message",
-          "sentiment": -0.532,
-          "category": "politics",
-          "link": "https://www.latercera.com/mundo/noticia/trump-ataca-a-los-inmigrantes-y-a-sus-rivales-politicos-en-su-mensaje-por-el-dia-de-accion-de-gracias/",
-          "pubDate": "Thu, 26 Nov 2026 20:11:54 +0000"
         }
       ]
     },
@@ -85467,7 +85191,7 @@
           "region": "NA",
           "title": "Refugee influx and foreign aid cuts strain South Sudan's health care system",
           "sentiment": -0.435,
-          "category": "health",
+          "category": "world",
           "link": "https://www.pbs.org/newshour/show/refugee-influx-and-foreign-aid-cuts-strain-south-sudans-health-care-system",
           "pubDate": "Thu, 05 Nov 2026 18:35:31 -0500"
         }
@@ -122760,11 +122484,6 @@
           "clusterId": "eu-proposes-45-billion-ukraine-loan-repaid-by-russian-assets",
           "headline": "EU Proposes €45 Billion Ukraine Loan Repaid by Russian Assets",
           "howItConnects": "Ukrainian drone strikes destroying Russian oil refineries and forcing domestic fuel rationing precipitated wider European financial loan packages."
-        },
-        {
-          "clusterId": "ukraine-logistics-facility-hit-by-russian-strike",
-          "headline": "Ukraine Logistics Facility Hit by Russian Strike",
-          "howItConnects": "Massive Russian strikes on Ukrainian logistics and power infrastructure were met with Ukrainian drone attacks on Russia's Kirishi refinery, forcing fuel rationing."
         },
         {
           "clusterId": "un-talks-on-killer-robots",
@@ -173619,7 +173338,7 @@
         "whatsNextLabel": "What's Next",
         "whatsNext": "Markets will scrutinize upcoming wage negotiation data and the next policy meeting in December for a definitive interest rate hike. The exact trajectory of the yen and incoming national inflation prints will determine whether the central bank moves before year-end."
       },
-      "lastDevelopedAt": "2026-10-30T05:35:23.000Z",
+      "lastDevelopedAt": "2026-10-30T05:36:23.000Z",
       "developmentNote": "Bank of Japan holds interest rates as core Tokyo inflation exceeds 2% target.",
       "evolvedFromIds": [
         "japan-september-core-inflation-surges-to-2-1"
@@ -173628,7 +173347,7 @@
         {
           "version": 1,
           "type": "initial",
-          "timestamp": "2026-10-30T05:34:23.000Z",
+          "timestamp": "2026-10-30T05:35:23.000Z",
           "headline": "Japan September Core Inflation Surges to 2 1",
           "summary": "The Bank of Japan voted 8-1 to keep its benchmark interest rate unchanged while officially declaring its 2% underlying inflation target achieved for the first time since 2013.",
           "outletCount": 6,
@@ -173637,7 +173356,7 @@
         {
           "version": 2,
           "type": "material_shift",
-          "timestamp": "2026-10-30T05:35:23.000Z",
+          "timestamp": "2026-10-30T05:36:23.000Z",
           "headline": "BOJ Holds Benchmark Interest Rates Steady",
           "summary": "The Bank of Japan voted 8-1 to keep its benchmark interest rate unchanged while officially declaring its 2% underlying inflation target achieved for the first time since 2013. The decision followed government data showing Tokyo core consumer inflation rose 2.6% in October, alongside an acceleration in ETF sales to about ¥860 billion ($5.5 billion) a year, intensifying expectations of a rate hike in December.",
           "beforeStory": "Japan September Core Inflation Surges to 2 1",
@@ -190499,11 +190218,6 @@
           "clusterId": "un-talks-on-killer-robots",
           "headline": "UN Talks on 'Killer Robots'",
           "howItConnects": "Rapid battlefield deployment of autonomous extraction and strike drones in Ukraine underscored the urgency of stalled UN Geneva talks on regulating lethal autonomous weapons."
-        },
-        {
-          "clusterId": "ukraine-logistics-facility-hit-by-russian-strike",
-          "headline": "Ukraine Logistics Facility Hit by Russian Strike",
-          "howItConnects": "Escalating Russian drone and missile strikes on Ukrainian logistics and infrastructure heightened the urgency for autonomous frontline medical evacuation drones."
         }
       ],
       "seenArticleKeys": [
@@ -232134,11 +231848,6 @@
           "howItConnects": "Coordinated hoax bomb threats across European schools and flights mirrored hybrid warfare concerns seen in the hacked Ukrainian and Russian air-raid apps."
         },
         {
-          "clusterId": "ukraine-logistics-facility-hit-by-russian-strike",
-          "headline": "Ukraine Logistics Facility Hit by Russian Strike",
-          "howItConnects": "Massive Russian drone and missile strikes on Ukrainian infrastructure coincided with a cyberattack transmitting fake nuclear warnings on Ukraine's alert app."
-        },
-        {
           "clusterId": "nato-alleges-russia-ready-to-launch-nuclear-armed-satellite",
           "headline": "NATO Alleges Russia Ready to Launch Nuclear-Armed Satellite",
           "howItConnects": "Malicious cyber breaches of emergency alert apps amplified broader European anxieties surrounding reports of Russian space-based nuclear capabilities."
@@ -245797,11 +245506,6 @@
           "clusterId": "zelenskyy-warns-russia-preparing-new-strikes-on-ukraine",
           "headline": "Zelenskyy Warns Russia Preparing New Strikes on Ukraine",
           "howItConnects": "U.S. approval of Patriot missile sales to bolster Ukrainian air defenses directly responds to escalating, intense Russian aerial bombardments on Ukrainian energy grids."
-        },
-        {
-          "clusterId": "ukraine-logistics-facility-hit-by-russian-strike",
-          "headline": "Ukraine Logistics Facility Hit by Russian Strike",
-          "howItConnects": "U.S. approval of $2.1 billion in Patriot missile sales to Kyiv directly coincides with intense retaliatory Russian drone and missile strikes across Ukraine."
         },
         {
           "clusterId": "russian-strike-kills-one-near-kyiv",
