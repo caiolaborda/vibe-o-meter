@@ -1,11 +1,11 @@
 {
   "project": "No Good News / Some Good News — Global Media Sentiment & Story Cluster API",
-  "lastUpdated": "2026-11-28T13:50:35.471Z",
+  "lastUpdated": "2026-11-28T14:15:12.523Z",
   "endpoints": {
     "clusters": {
       "path": "data/clusters.json",
       "description": "Cross-outlet story clusters (rolling 7-day window across all sentiments) with neutral headlines, editorial summaries, single-word topic tags, lead images, valence spread, regionsCovered, and per-outlet coverage links.",
-      "count": 522
+      "count": 518
     },
     "clustersArchive": {
       "path": "data/clusters-archive.json",
@@ -15,7 +15,7 @@
     "goodNews": {
       "path": "data/good-news.json",
       "description": "Rescued constructive breakthroughs (sentiment >= +0.15) including the Daily 5 Antidote, constructive multi-outlet clusters, and 24h/7d positive dispatches.",
-      "count24h": 51,
+      "count24h": 48,
       "count7d": 552
     },
     "outlets": {
@@ -26,13 +26,13 @@
     "timeseries": {
       "path": "data/timeseries.json",
       "description": "Rolling historical sentiment trajectory snapshots across global and individual newsroom averages.",
-      "pointCount": 1291
+      "pointCount": 1292
     },
     "wireMap": {
       "path": "data/wire-map.json",
       "description": "Standalone 48h geolocated unclustered wire dispatches sorted by signal weight for optional map-layer rendering.",
       "itemCount": 320,
-      "highSignalCount": 63
+      "highSignalCount": 64
     },
     "summary": {
       "path": "data/summary.json",
