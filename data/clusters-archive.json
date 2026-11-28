@@ -1,6 +1,6 @@
 {
   "dataset": "vibe-o-meter/clusters-archive",
-  "lastUpdated": "2026-11-28T12:39:41.557Z",
+  "lastUpdated": "2026-11-28T13:04:36.968Z",
   "count": 2500,
   "clusters": [
     {
@@ -76,8 +76,18 @@
         "ME"
       ],
       "firstSeenAt": "2026-11-28T00:01:00.000Z",
-      "latestUpdateAt": "2026-11-28T12:30:24.000Z",
+      "latestUpdateAt": "2026-11-28T13:02:39.000Z",
       "coverage": [
+        {
+          "sourceId": "bbc",
+          "sourceName": "BBC News",
+          "region": "UK",
+          "title": "Argentina's bid to stop Falklands oil drilling rejected",
+          "sentiment": -0.062,
+          "category": "world",
+          "link": "https://www.bbc.co.uk/news/articles/c84gnq3qq9rno?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Sat, 28 Nov 2026 13:02:39 GMT"
+        },
         {
           "sourceId": "almonitor",
           "sourceName": "Al-Monitor",
@@ -87,16 +97,6 @@
           "category": "world",
           "link": "https://www.al-monitor.com/originals/2026/11/un-backed-court-rejects-argentine-bid-halt-falklands-oil-project",
           "pubDate": "2026-11-28T07:30:24-0500"
-        },
-        {
-          "sourceId": "bbc",
-          "sourceName": "BBC News",
-          "region": "UK",
-          "title": "Argentina's bid to stop Falkland Islands oil drilling rejected",
-          "sentiment": -0.062,
-          "category": "world",
-          "link": "https://www.bbc.co.uk/news/articles/c84gnq3qq9rno?at_medium=RSS&at_campaign=rss",
-          "pubDate": "Sat, 28 Nov 2026 12:15:45 GMT"
         },
         {
           "sourceId": "guardian",
@@ -117,6 +117,375 @@
           "category": "world",
           "link": "https://news.sky.com/story/court-rejects-argentinas-bid-to-block-falklands-oil-drilling-project-13615287",
           "pubDate": "Sat, 28 Nov 2026 00:01:00 +0000"
+        }
+      ]
+    },
+    {
+      "id": "school-blast-in-afghanistan-kills-students",
+      "story": "School Blast in Afghanistan Kills Students",
+      "summary": "At least seven students were killed and up to 99 people wounded after an explosion struck near a middle school in Asadabad, within the Andar Ser area of eastern Afghanistan's Kunar province. Taliban interior ministry officials reported that the blast was caused by improperly stored explosives igniting at an adjacent commercial mining depot.",
+      "version": 1,
+      "summarySynthesizedSig": "school-blast-in-afghanistan-kills-students|v1|h2",
+      "primaryLocation": {
+        "name": "Asadabad, Kunar Province",
+        "region": "Kunar Province, Afghanistan",
+        "countryIso": "af",
+        "lat": 34.8731,
+        "lon": 71.1528,
+        "lng": 71.1528,
+        "zoom": 10,
+        "whyHere": "The explosion occurred near a middle school in the Andar Ser area of Asadabad, the capital of Kunar province."
+      },
+      "briefing": {
+        "whyItMattersLabel": "The Context",
+        "whyItMatters": "The tragedy highlights severe ongoing regulatory vacuums across Afghanistan's commercial mining sector, where volatile explosive stockpiles are frequently stored in unsecured residential and educational zones without basic safety protocols. Competing demands between rapid resource extraction and public safety have left local communities exposed to catastrophic industrial accidents.",
+        "whatsNextLabel": "The Aftermath",
+        "whatsNext": "Taliban interior ministry investigators are conducting an inquiry into the private mining firm operating the depot to determine criminal negligence. Local hospitals in Asadabad remain under heavy strain as medical staff treat nearly 100 injured survivors, many of whom suffer from severe blast trauma."
+      },
+      "lastDevelopedAt": "2026-11-28T11:07:35.000Z",
+      "developmentNote": "Officials attribute blast to improperly stored explosives at nearby mining depot; injuries up to 99",
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-11-28T07:42:09.000Z",
+          "batchConsolidatedAt": "2026-11-28T10:25:32.474Z",
+          "headline": "School Blast in Afghanistan Kills Students",
+          "summary": "An explosion at a school in the Andar Ser area of eastern Afghanistan's Kunar province killed at least seven students and wounded more than 90 others, according to Kunar Provincial Police Headquarters spokesperson Farid Dehqan.",
+          "outletCount": 4,
+          "note": "Initial cluster formation on the wire"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-11-28T11:07:35.000Z",
+          "batchConsolidatedAt": "2026-11-28T11:17:58.007Z",
+          "headline": "School Blast in Afghanistan Kills Students",
+          "summary": "At least seven students were killed and up to 99 people wounded after an explosion struck near a middle school in Asadabad, within the Andar Ser area of eastern Afghanistan's Kunar province. Taliban interior ministry officials reported that the blast was caused by improperly stored explosives igniting at an adjacent commercial mining depot.",
+          "beforeStory": "School Blast in Afghanistan Kills Students",
+          "beforeSummary": "An explosion at a school in the Andar Ser area of eastern Afghanistan's Kunar province killed at least seven students and wounded more than 90 others, according to Kunar Provincial Police Headquarters spokesperson Farid Dehqan.",
+          "outletCount": 10,
+          "note": "Officials attribute blast to improperly stored explosives at nearby mining depot; injuries up to 99"
+        }
+      ],
+      "domains": [
+        "conflict",
+        "society"
+      ],
+      "concepts": [
+        "school-attack",
+        "improvised-explosive-device",
+        "civilian-casualties"
+      ],
+      "entities": [
+        "Farid Dehqan",
+        "Kunar Provincial Police"
+      ],
+      "temporalKind": "point_event",
+      "eventDate": "2026-11-28",
+      "eventTime": {
+        "startDate": "2026-11-28",
+        "endDate": null,
+        "timeOfDay": "morning",
+        "precision": "part_of_day",
+        "label": "Saturday morning, Nov 28",
+        "sourceBacked": true,
+        "clarifiedAt": null
+      },
+      "eventTimeLabel": "Saturday morning, Nov 28",
+      "topic": "world",
+      "imageUrl": "https://live-production.wcms.abc-cdn.net.au/b837def5cf8b4ea77bcb9b4afd08350b?impolicy=wcms_crop_resize&cropH=278&cropW=495&xPos=0&yPos=156&width=862&height=485",
+      "averageSentiment": -0.42,
+      "eventBase": -0.39,
+      "significanceScore": -0.67,
+      "sentimentSpread": 0.31,
+      "outletCount": 12,
+      "regionsCovered": [
+        "NA",
+        "UK",
+        "EU",
+        "ME",
+        "SA",
+        "APAC",
+        "GLOBAL"
+      ],
+      "firstSeenAt": "2026-11-28T07:42:09.000Z",
+      "latestUpdateAt": "2026-11-28T12:49:44.000Z",
+      "coverage": [
+        {
+          "sourceId": "bbc",
+          "sourceName": "BBC News",
+          "region": "UK",
+          "title": "Afghanistan explosion kills 10 students and injures more than 100, official says",
+          "sentiment": -0.339,
+          "category": "world",
+          "link": "https://www.bbc.co.uk/news/articles/ckp80jyz6dl8o?at_medium=RSS&at_campaign=rss",
+          "pubDate": "Sat, 28 Nov 2026 12:49:44 GMT"
+        },
+        {
+          "sourceId": "abcau",
+          "sourceName": "ABC News Australia",
+          "region": "APAC",
+          "title": "Explosion at Afghanistan school kills seven students, wounds 97 people",
+          "sentiment": -0.519,
+          "category": "world",
+          "link": "https://www.abc.net.au/news/2026-11-28/explosion-at-afghanistan-school/107438626",
+          "pubDate": "Sat, 28 Nov 2026 11:43:42 +0000"
+        },
+        {
+          "sourceId": "npr",
+          "sourceName": "NPR News",
+          "region": "NA",
+          "title": "Explosion at a school in eastern Afghanistan kills 7, wounds more than 90",
+          "sentiment": -0.552,
+          "category": "world",
+          "link": "https://www.npr.org/2026/11/28/nx-s1-6056284/explosion-school-eastern-afghanistan",
+          "pubDate": "Sat, 28 Nov 2026 06:32:37 -0500"
+        },
+        {
+          "sourceId": "scmp",
+          "sourceName": "South China Morning Post",
+          "region": "APAC",
+          "title": "Afghanistan school explosion kills 7 pupils, over 90 injured",
+          "sentiment": -0.362,
+          "category": "world",
+          "link": "https://www.scmp.com/news/world/russia-central-asia/article/3376136/afghanistan-school-explosion-kills-7-pupils-over-90-injured",
+          "pubDate": "Sat, 28 Nov 2026 11:07:35 +0000"
+        },
+        {
+          "sourceId": "cbc",
+          "sourceName": "CBC News",
+          "region": "NA",
+          "title": "Explosion at a middle school in Afghanistan kills at least 7, injures more than 90",
+          "sentiment": -0.362,
+          "category": "world",
+          "link": "https://www.cbc.ca/news/world/afghanistan-school-explosion-9.7440205?cmp=rss",
+          "pubDate": "Sat, 28 Nov 2026 05:29:19 EST"
+        },
+        {
+          "sourceId": "cnn",
+          "sourceName": "CNN",
+          "region": "NA",
+          "title": "Afghanistan school blast kills 7 students, injures up to 99 - CNN",
+          "sentiment": -0.371,
+          "category": "world",
+          "link": "https://news.google.com/rss/articles/CBMickFVX3lxTE85cjY4b0RlRDFadnZ1cW9Ld1VqWkprUEVDNjZwZFpoMFg5bmQ0aXF3cDBmb3lNQk5ZeGNHakdzblJHaTlZY29aaHlRTHQwZlp3UXhMWVBrQTFUTC0zTmlLUVNxbWZ5SkdfS2RXZXNZclhSQQ?oc=5",
+          "pubDate": "Sat, 28 Nov 2026 10:24:26 GMT"
+        },
+        {
+          "sourceId": "ap",
+          "sourceName": "Associated Press",
+          "region": "GLOBAL",
+          "title": "An explosion at a school in eastern Afghanistan kills 7, wounds more than 90 - AP News",
+          "sentiment": -0.611,
+          "category": "world",
+          "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOYzQwcm1zRUVmQVB2b3E5X1Q4RHZxbWRGY1ctOFQwZ1otcC11UUJHM2wyZVBhUGhlTTgxYmt1SFc0N0k1aGlnQmxwVUI4S0dXX3NpdzhXYVg2UTdQc3R2bGNrZFJMempoZ3FTZzFhamFPWGt6TDc4NG5BTElMS3JqSmM4OUVlcFBod09hZnIzcVBwdw?oc=5",
+          "pubDate": "Sat, 28 Nov 2026 10:23:00 GMT"
+        },
+        {
+          "sourceId": "dw",
+          "sourceName": "DW News",
+          "region": "EU",
+          "title": "Afghanistan: Several killed in blast near middle school",
+          "sentiment": -0.373,
+          "category": "world",
+          "link": "https://www.dw.com/en/afghanistan-several-killed-in-blast-near-middle-school/a-80084227?maca=en-rss-en-all-1573-rdf",
+          "pubDate": "2026-11-28T10:21:00.000Z"
+        },
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Afghanistan school blast kills 7 students, injures up to 99 - Reuters",
+          "sentiment": -0.297,
+          "category": "world",
+          "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxNcVRKa09nUTkyZHR6Tnp6aTFwNzFYOHd0WGRtWjFEU2Z4RmFvRzVETWJwbEF4WHROdnpCVU9NMVBYYUJtbVU5NzVqNEVkaEVhNUtmMHFrbFE0cW5OQmdXYkpiV0JvbGoteXRYamR6Mjl0clR1cmp2elB5LU9IOUFjZzcwSXFjTXVxcy1XbmJHdGQwbjZMREhfNzRwS29Jck8zbURsQkdoTXMtZw?oc=5",
+          "pubDate": "Sat, 28 Nov 2026 10:12:52 GMT"
+        },
+        {
+          "sourceId": "aljazeera",
+          "sourceName": "Al Jazeera",
+          "region": "ME",
+          "title": "Several students killed in blast beside Afghan school",
+          "sentiment": -0.508,
+          "category": "world",
+          "link": "https://www.aljazeera.com/video/newsfeed/2026/11/28/several-students-killed-in-blast-beside-afghan-school?traffic_source=rss",
+          "pubDate": "Sat, 28 Nov 2026 10:05:26 +0000"
+        },
+        {
+          "sourceId": "skynews",
+          "sourceName": "Sky News",
+          "region": "UK",
+          "title": "Seven students killed and up to 99 injured in explosion near Afghan school",
+          "sentiment": -0.345,
+          "category": "world",
+          "link": "https://news.sky.com/story/seven-students-killed-and-up-to-99-injured-in-explosion-near-afghan-school-13617431",
+          "pubDate": "Sat, 28 Nov 2026 09:57:00 +0000"
+        },
+        {
+          "sourceId": "ndtv",
+          "sourceName": "NDTV",
+          "region": "SA",
+          "title": "Several Students Feared Dead In Blast At School In Afghanistan",
+          "sentiment": -0.446,
+          "category": "world",
+          "link": "https://www.ndtv.com/world-news/several-students-feared-dead-in-blast-at-school-in-afghanistan-12388416#publisher=newsstand",
+          "pubDate": "Sat, 28 Nov 2026 14:07:59 +0530"
+        }
+      ]
+    },
+    {
+      "id": "indian-government-clears-delimitation-bill-with-50-seat-increase",
+      "story": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+      "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50% and capping Assembly seats at 650—which would grow Uttar Pradesh's Assembly from 403 to about 605—while pegging state allocations to the 1971 census and using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
+      "version": 1,
+      "summarySynthesizedSig": "indian-government-clears-delimitation-bill-with-50-seat-increase|v1|h4",
+      "primaryLocation": {
+        "name": "New Delhi",
+        "region": "Delhi, India",
+        "countryIso": "in",
+        "lat": 28.6139,
+        "lon": 77.209,
+        "lng": 77.209,
+        "zoom": 10,
+        "whyHere": "New Delhi is the seat of the Indian federal government where the Union Cabinet cleared the landmark delimitation legislation."
+      },
+      "briefing": {
+        "whyItMattersLabel": "Why It Matters",
+        "whyItMatters": "By expanding parliamentary seats while pegging state proportions to the 1971 census, the bill avoids punishing southern states that successfully managed population growth while expanding representation for high-growth northern states like Uttar Pradesh. Integrating the long-delayed 33 percent women's reservation quota into the expanding parliamentary footprint secured vital support from key regional opposition parties like the DMK and NCP(SP). However, capping state assembly seats at 650 triggers complex electoral administrative redrawing across large states.",
+        "whatsNextLabel": "What's Next",
+        "whatsNext": "Parliament's Business Advisory Committee meets on Monday to schedule debate and formal voting on the constitutional amendment bill. Passage requires a two-thirds majority in both houses, testing opposition cohesion as the INDIA alliance debates whether to demand further procedural amendments."
+      },
+      "lastDevelopedAt": "2026-11-28T12:17:17.000Z",
+      "developmentNote": "NDTV reports revised plan caps Assembly seats at 650, expanding Uttar Pradesh from 403 to 605",
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-11-27T12:23:00.000Z",
+          "batchConsolidatedAt": "2026-11-27T13:47:15.147Z",
+          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+          "summary": "India's Union Cabinet approved a landmark delimitation-linked bill that expands parliamentary constituencies by 50% across all states while freezing boundary seat totals through 2051, securing key support from regional opposition parties like Sharad Pawar's NCP faction and the DMK.",
+          "outletCount": 3,
+          "note": "Initial cluster formation on the wire"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-11-27T14:54:57.000Z",
+          "batchConsolidatedAt": "2026-11-27T15:10:19.568Z",
+          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+          "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary constituencies by 50% across all states, setting seat allocations on the 1971 census while using 2011 data for boundary drawings. The measure freezes totals through 2051 and integrates a pending women's quota, drawing crucial backing from regional opposition parties including the DMK and Sharad Pawar's NCP faction ahead of Monday's Business Advisory Committee meeting.",
+          "beforeStory": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+          "beforeSummary": "India's Union Cabinet approved a landmark delimitation-linked bill that expands parliamentary constituencies by 50% across all states while freezing boundary seat totals through 2051, securing key support from regional opposition parties like Sharad Pawar's NCP faction and the DMK.",
+          "outletCount": 3,
+          "note": "NDTV details 1971 census seat basis, 2011 boundary basis; Business Advisory Committee meets Monday"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-11-28T05:10:05.000Z",
+          "batchConsolidatedAt": "2026-11-28T05:58:57.766Z",
+          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+          "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50%, pegging state allocations to the 1971 census while using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing fierce criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
+          "beforeStory": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+          "beforeSummary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary constituencies by 50% across all states, setting seat allocations on the 1971 census while using 2011 data for boundary drawings. The measure freezes totals through 2051 and integrates a pending women's quota, drawing crucial backing from regional opposition parties including the DMK and Sharad Pawar's NCP faction ahead of Monday's Business Advisory Committee meeting.",
+          "outletCount": 3,
+          "note": "Maharashtra Congress attacks Sharad Pawar over NCP(SP) support for delimitation bill"
+        },
+        {
+          "version": 1,
+          "type": "clarification",
+          "timestamp": "2026-11-28T12:17:17.000Z",
+          "batchConsolidatedAt": "2026-11-28T12:38:55.972Z",
+          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+          "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50% and capping Assembly seats at 650—which would grow Uttar Pradesh's Assembly from 403 to about 605—while pegging state allocations to the 1971 census and using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
+          "beforeStory": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
+          "beforeSummary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50%, pegging state allocations to the 1971 census while using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing fierce criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
+          "outletCount": 4,
+          "note": "NDTV reports revised plan caps Assembly seats at 650, expanding Uttar Pradesh from 403 to 605"
+        }
+      ],
+      "domains": [
+        "governance",
+        "law"
+      ],
+      "concepts": [
+        "delimitation",
+        "parliament-seats",
+        "electoral-boundaries"
+      ],
+      "entities": [
+        "Dravida Munnetra Kazhagam",
+        "Lok Sabha"
+      ],
+      "temporalKind": "announcement",
+      "eventDate": "2026-11-27",
+      "eventEndDate": "2026-11-28",
+      "eventTime": {
+        "startDate": "2026-11-27",
+        "endDate": "2026-11-28",
+        "timeOfDay": null,
+        "precision": "span",
+        "label": "Nov 27–28, 2026",
+        "sourceBacked": true,
+        "clarifiedAt": null
+      },
+      "eventTimeLabel": "Nov 27–28, 2026",
+      "topic": "politics",
+      "imageUrl": "https://c.ndtvimg.com/2026-11/q3jzq9t6k_uttar-pradesh-is-the-most-populous-state-of-india-and-has-the-largest-assembly-ndtvwiki-commonscanva-ai_625x300_28_November_26.jpeg",
+      "averageSentiment": -0.04,
+      "eventBase": -0.044,
+      "significanceScore": -0.19,
+      "sentimentSpread": 0.16,
+      "outletCount": 4,
+      "regionsCovered": [
+        "SA",
+        "APAC",
+        "GLOBAL"
+      ],
+      "firstSeenAt": "2026-11-27T12:23:00.000Z",
+      "latestUpdateAt": "2026-11-28T12:43:55.000Z",
+      "coverage": [
+        {
+          "sourceId": "ndtv",
+          "sourceName": "NDTV",
+          "region": "SA",
+          "title": "Why New Delimitation Plan Caps Assembly Seats At 650. Reason Sits In Lucknow",
+          "sentiment": -0.073,
+          "category": "politics",
+          "link": "https://www.ndtv.com/india-news/new-delimitation-bill-caps-assembly-strength-at-650-seats-uttar-pradesh-is-the-reason-12389204#publisher=newsstand",
+          "pubDate": "Sat, 28 Nov 2026 18:13:55 +0530"
+        },
+        {
+          "sourceId": "scrollin",
+          "sourceName": "Scroll.in",
+          "region": "SA",
+          "title": "Delimitation bill: INDIA bloc reiterates demands, says current Lok Sabha seats should be maintained",
+          "sentiment": -0.12,
+          "category": "politics",
+          "link": "https://scroll.in/latest/1097397/delimitation-bill-india-bloc-reiterates-demands-says-current-lok-sabha-seats-should-be-maintained?utm_source=rss&utm_medium=public",
+          "pubDate": "Sat, 28 Nov 2026 10:44:38 +0000"
+        },
+        {
+          "sourceId": "bloomberg",
+          "sourceName": "Bloomberg",
+          "region": "GLOBAL",
+          "title": "Modi Nears Majority Needed to Increase India’s Parliament Seats",
+          "sentiment": 0.036,
+          "category": "politics",
+          "link": "https://www.bloomberg.com/news/articles/2026-11-28/modi-nears-majority-needed-to-increase-india-s-parliament-seats",
+          "pubDate": "Sat, 28 Nov 2026 10:17:39 GMT"
+        },
+        {
+          "sourceId": "cna",
+          "sourceName": "CNA",
+          "region": "APAC",
+          "title": "India's Modi to revive parliament expansion bill tied to women's quota, sources say",
+          "sentiment": 0,
+          "category": "politics",
+          "link": "https://www.channelnewsasia.com/asia/indias-modi-revive-parliament-expansion-bill-tied-womens-quota-sources-say-6587726",
+          "pubDate": "Fri, 27 Nov 2026 20:23:00 +0800"
         }
       ]
     },
@@ -879,161 +1248,6 @@
           "category": "world",
           "link": "https://www.bbc.co.uk/news/articles/c6jeqyqzy1y7o?at_medium=RSS&at_campaign=rss",
           "pubDate": "Fri, 27 Nov 2026 21:26:30 GMT"
-        }
-      ]
-    },
-    {
-      "id": "indian-government-clears-delimitation-bill-with-50-seat-increase",
-      "story": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-      "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50% and capping Assembly seats at 650—which would grow Uttar Pradesh's Assembly from 403 to about 605—while pegging state allocations to the 1971 census and using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
-      "version": 1,
-      "summarySynthesizedSig": "indian-government-clears-delimitation-bill-with-50-seat-increase|v1|h4",
-      "primaryLocation": {
-        "name": "New Delhi",
-        "region": "Delhi, India",
-        "countryIso": "in",
-        "lat": 28.6139,
-        "lon": 77.209,
-        "lng": 77.209,
-        "zoom": 10,
-        "whyHere": "New Delhi is the seat of the Indian federal government where the Union Cabinet cleared the landmark delimitation legislation."
-      },
-      "briefing": {
-        "whyItMattersLabel": "Why It Matters",
-        "whyItMatters": "By expanding parliamentary seats while pegging state proportions to the 1971 census, the bill avoids punishing southern states that successfully managed population growth while expanding representation for high-growth northern states like Uttar Pradesh. Integrating the long-delayed 33 percent women's reservation quota into the expanding parliamentary footprint secured vital support from key regional opposition parties like the DMK and NCP(SP). However, capping state assembly seats at 650 triggers complex electoral administrative redrawing across large states.",
-        "whatsNextLabel": "What's Next",
-        "whatsNext": "Parliament's Business Advisory Committee meets on Monday to schedule debate and formal voting on the constitutional amendment bill. Passage requires a two-thirds majority in both houses, testing opposition cohesion as the INDIA alliance debates whether to demand further procedural amendments."
-      },
-      "lastDevelopedAt": "2026-11-28T12:17:17.000Z",
-      "developmentNote": "NDTV reports revised plan caps Assembly seats at 650, expanding Uttar Pradesh from 403 to 605",
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-11-27T12:23:00.000Z",
-          "batchConsolidatedAt": "2026-11-27T13:47:15.147Z",
-          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-          "summary": "India's Union Cabinet approved a landmark delimitation-linked bill that expands parliamentary constituencies by 50% across all states while freezing boundary seat totals through 2051, securing key support from regional opposition parties like Sharad Pawar's NCP faction and the DMK.",
-          "outletCount": 3,
-          "note": "Initial cluster formation on the wire"
-        },
-        {
-          "version": 1,
-          "type": "clarification",
-          "timestamp": "2026-11-27T14:54:57.000Z",
-          "batchConsolidatedAt": "2026-11-27T15:10:19.568Z",
-          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-          "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary constituencies by 50% across all states, setting seat allocations on the 1971 census while using 2011 data for boundary drawings. The measure freezes totals through 2051 and integrates a pending women's quota, drawing crucial backing from regional opposition parties including the DMK and Sharad Pawar's NCP faction ahead of Monday's Business Advisory Committee meeting.",
-          "beforeStory": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-          "beforeSummary": "India's Union Cabinet approved a landmark delimitation-linked bill that expands parliamentary constituencies by 50% across all states while freezing boundary seat totals through 2051, securing key support from regional opposition parties like Sharad Pawar's NCP faction and the DMK.",
-          "outletCount": 3,
-          "note": "NDTV details 1971 census seat basis, 2011 boundary basis; Business Advisory Committee meets Monday"
-        },
-        {
-          "version": 1,
-          "type": "clarification",
-          "timestamp": "2026-11-28T05:10:05.000Z",
-          "batchConsolidatedAt": "2026-11-28T05:58:57.766Z",
-          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-          "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50%, pegging state allocations to the 1971 census while using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing fierce criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
-          "beforeStory": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-          "beforeSummary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary constituencies by 50% across all states, setting seat allocations on the 1971 census while using 2011 data for boundary drawings. The measure freezes totals through 2051 and integrates a pending women's quota, drawing crucial backing from regional opposition parties including the DMK and Sharad Pawar's NCP faction ahead of Monday's Business Advisory Committee meeting.",
-          "outletCount": 3,
-          "note": "Maharashtra Congress attacks Sharad Pawar over NCP(SP) support for delimitation bill"
-        },
-        {
-          "version": 1,
-          "type": "clarification",
-          "timestamp": "2026-11-28T12:17:17.000Z",
-          "batchConsolidatedAt": "2026-11-28T12:38:55.972Z",
-          "headline": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-          "summary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50% and capping Assembly seats at 650—which would grow Uttar Pradesh's Assembly from 403 to about 605—while pegging state allocations to the 1971 census and using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
-          "beforeStory": "Indian Government Clears Delimitation Bill With 50% Seat Increase",
-          "beforeSummary": "India's Union Cabinet approved a landmark delimitation bill expanding parliamentary seats by 50%, pegging state allocations to the 1971 census while using 2011 data for inner boundary drawing. The measure freezes totals through 2051 and integrates a women's reservation quota, securing backing from the DMK and Sharad Pawar's NCP(SP) faction while drawing fierce criticism from the Maharashtra Congress ahead of Monday's Business Advisory Committee meeting.",
-          "outletCount": 4,
-          "note": "NDTV reports revised plan caps Assembly seats at 650, expanding Uttar Pradesh from 403 to 605"
-        }
-      ],
-      "domains": [
-        "governance",
-        "law"
-      ],
-      "concepts": [
-        "delimitation",
-        "parliament-seats",
-        "electoral-boundaries"
-      ],
-      "entities": [
-        "Dravida Munnetra Kazhagam",
-        "Lok Sabha"
-      ],
-      "temporalKind": "announcement",
-      "eventDate": "2026-11-27",
-      "eventEndDate": "2026-11-28",
-      "eventTime": {
-        "startDate": "2026-11-27",
-        "endDate": "2026-11-28",
-        "timeOfDay": null,
-        "precision": "span",
-        "label": "Nov 27–28, 2026",
-        "sourceBacked": true,
-        "clarifiedAt": null
-      },
-      "eventTimeLabel": "Nov 27–28, 2026",
-      "topic": "politics",
-      "imageUrl": "https://c.ndtvimg.com/2026-11/q3jzq9t6k_uttar-pradesh-is-the-most-populous-state-of-india-and-has-the-largest-assembly-ndtvwiki-commonscanva-ai_625x300_28_November_26.jpeg",
-      "averageSentiment": -0.04,
-      "eventBase": -0.044,
-      "significanceScore": -0.19,
-      "sentimentSpread": 0.16,
-      "outletCount": 4,
-      "regionsCovered": [
-        "SA",
-        "APAC",
-        "GLOBAL"
-      ],
-      "firstSeenAt": "2026-11-27T12:23:00.000Z",
-      "latestUpdateAt": "2026-11-28T12:17:17.000Z",
-      "coverage": [
-        {
-          "sourceId": "ndtv",
-          "sourceName": "NDTV",
-          "region": "SA",
-          "title": "New Delimitation Plan Caps Assembly Seats At 650. How UP's 'Division' Is The Reason",
-          "sentiment": -0.073,
-          "category": "politics",
-          "link": "https://www.ndtv.com/india-news/new-delimitation-bill-caps-assembly-strength-at-650-seats-uttar-pradesh-is-the-reason-12389204#publisher=newsstand",
-          "pubDate": "Sat, 28 Nov 2026 17:47:17 +0530"
-        },
-        {
-          "sourceId": "scrollin",
-          "sourceName": "Scroll.in",
-          "region": "SA",
-          "title": "Delimitation bill: INDIA bloc reiterates demands, says current Lok Sabha seats should be maintained",
-          "sentiment": -0.12,
-          "category": "politics",
-          "link": "https://scroll.in/latest/1097397/delimitation-bill-india-bloc-reiterates-demands-says-current-lok-sabha-seats-should-be-maintained?utm_source=rss&utm_medium=public",
-          "pubDate": "Sat, 28 Nov 2026 10:44:38 +0000"
-        },
-        {
-          "sourceId": "bloomberg",
-          "sourceName": "Bloomberg",
-          "region": "GLOBAL",
-          "title": "Modi Nears Majority Needed to Increase India’s Parliament Seats",
-          "sentiment": 0.036,
-          "category": "politics",
-          "link": "https://www.bloomberg.com/news/articles/2026-11-28/modi-nears-majority-needed-to-increase-india-s-parliament-seats",
-          "pubDate": "Sat, 28 Nov 2026 10:17:39 GMT"
-        },
-        {
-          "sourceId": "cna",
-          "sourceName": "CNA",
-          "region": "APAC",
-          "title": "India's Modi to revive parliament expansion bill tied to women's quota, sources say",
-          "sentiment": 0,
-          "category": "politics",
-          "link": "https://www.channelnewsasia.com/asia/indias-modi-revive-parliament-expansion-bill-tied-womens-quota-sources-say-6587726",
-          "pubDate": "Fri, 27 Nov 2026 20:23:00 +0800"
         }
       ]
     },
@@ -3217,220 +3431,6 @@
           "category": "world",
           "link": "https://www.lemonde.fr/en/le-monde-africa/article/2026/11/11/thousands-of-african-migrants-arrive-in-the-canary-islands-state-of-emergency-declared-on-one-of-the-islands_6777160_124.html",
           "pubDate": "Wed, 11 Nov 2026 01:02:02 +0100"
-        }
-      ]
-    },
-    {
-      "id": "school-blast-in-afghanistan-kills-students",
-      "story": "School Blast in Afghanistan Kills Students",
-      "summary": "At least seven students were killed and up to 99 people wounded after an explosion struck near a middle school in Asadabad, within the Andar Ser area of eastern Afghanistan's Kunar province. Taliban interior ministry officials reported that the blast was caused by improperly stored explosives igniting at an adjacent commercial mining depot.",
-      "version": 1,
-      "summarySynthesizedSig": "school-blast-in-afghanistan-kills-students|v1|h2",
-      "primaryLocation": {
-        "name": "Asadabad, Kunar Province",
-        "region": "Kunar Province, Afghanistan",
-        "countryIso": "af",
-        "lat": 34.8731,
-        "lon": 71.1528,
-        "lng": 71.1528,
-        "zoom": 10,
-        "whyHere": "The explosion occurred near a middle school in the Andar Ser area of Asadabad, the capital of Kunar province."
-      },
-      "briefing": {
-        "whyItMattersLabel": "The Context",
-        "whyItMatters": "The tragedy highlights severe ongoing regulatory vacuums across Afghanistan's commercial mining sector, where volatile explosive stockpiles are frequently stored in unsecured residential and educational zones without basic safety protocols. Competing demands between rapid resource extraction and public safety have left local communities exposed to catastrophic industrial accidents.",
-        "whatsNextLabel": "The Aftermath",
-        "whatsNext": "Taliban interior ministry investigators are conducting an inquiry into the private mining firm operating the depot to determine criminal negligence. Local hospitals in Asadabad remain under heavy strain as medical staff treat nearly 100 injured survivors, many of whom suffer from severe blast trauma."
-      },
-      "lastDevelopedAt": "2026-11-28T11:07:35.000Z",
-      "developmentNote": "Officials attribute blast to improperly stored explosives at nearby mining depot; injuries up to 99",
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-11-28T07:42:09.000Z",
-          "batchConsolidatedAt": "2026-11-28T10:25:32.474Z",
-          "headline": "School Blast in Afghanistan Kills Students",
-          "summary": "An explosion at a school in the Andar Ser area of eastern Afghanistan's Kunar province killed at least seven students and wounded more than 90 others, according to Kunar Provincial Police Headquarters spokesperson Farid Dehqan.",
-          "outletCount": 4,
-          "note": "Initial cluster formation on the wire"
-        },
-        {
-          "version": 1,
-          "type": "clarification",
-          "timestamp": "2026-11-28T11:07:35.000Z",
-          "batchConsolidatedAt": "2026-11-28T11:17:58.007Z",
-          "headline": "School Blast in Afghanistan Kills Students",
-          "summary": "At least seven students were killed and up to 99 people wounded after an explosion struck near a middle school in Asadabad, within the Andar Ser area of eastern Afghanistan's Kunar province. Taliban interior ministry officials reported that the blast was caused by improperly stored explosives igniting at an adjacent commercial mining depot.",
-          "beforeStory": "School Blast in Afghanistan Kills Students",
-          "beforeSummary": "An explosion at a school in the Andar Ser area of eastern Afghanistan's Kunar province killed at least seven students and wounded more than 90 others, according to Kunar Provincial Police Headquarters spokesperson Farid Dehqan.",
-          "outletCount": 10,
-          "note": "Officials attribute blast to improperly stored explosives at nearby mining depot; injuries up to 99"
-        }
-      ],
-      "domains": [
-        "conflict",
-        "society"
-      ],
-      "concepts": [
-        "school-attack",
-        "improvised-explosive-device",
-        "civilian-casualties"
-      ],
-      "entities": [
-        "Farid Dehqan",
-        "Kunar Provincial Police"
-      ],
-      "temporalKind": "point_event",
-      "eventDate": "2026-11-28",
-      "eventTime": {
-        "startDate": "2026-11-28",
-        "endDate": null,
-        "timeOfDay": "morning",
-        "precision": "part_of_day",
-        "label": "Saturday morning, Nov 28",
-        "sourceBacked": true,
-        "clarifiedAt": null
-      },
-      "eventTimeLabel": "Saturday morning, Nov 28",
-      "topic": "world",
-      "imageUrl": "https://live-production.wcms.abc-cdn.net.au/b837def5cf8b4ea77bcb9b4afd08350b?impolicy=wcms_crop_resize&cropH=278&cropW=495&xPos=0&yPos=156&width=862&height=485",
-      "averageSentiment": -0.42,
-      "eventBase": -0.39,
-      "significanceScore": -0.67,
-      "sentimentSpread": 0.31,
-      "outletCount": 12,
-      "regionsCovered": [
-        "NA",
-        "UK",
-        "EU",
-        "ME",
-        "SA",
-        "APAC",
-        "GLOBAL"
-      ],
-      "firstSeenAt": "2026-11-28T07:42:09.000Z",
-      "latestUpdateAt": "2026-11-28T11:43:42.000Z",
-      "coverage": [
-        {
-          "sourceId": "abcau",
-          "sourceName": "ABC News Australia",
-          "region": "APAC",
-          "title": "Explosion at Afghanistan school kills seven students, wounds 97 people",
-          "sentiment": -0.519,
-          "category": "world",
-          "link": "https://www.abc.net.au/news/2026-11-28/explosion-at-afghanistan-school/107438626",
-          "pubDate": "Sat, 28 Nov 2026 11:43:42 +0000"
-        },
-        {
-          "sourceId": "npr",
-          "sourceName": "NPR News",
-          "region": "NA",
-          "title": "Explosion at a school in eastern Afghanistan kills 7, wounds more than 90",
-          "sentiment": -0.552,
-          "category": "world",
-          "link": "https://www.npr.org/2026/11/28/nx-s1-6056284/explosion-school-eastern-afghanistan",
-          "pubDate": "Sat, 28 Nov 2026 06:32:37 -0500"
-        },
-        {
-          "sourceId": "bbc",
-          "sourceName": "BBC News",
-          "region": "UK",
-          "title": "Afghanistan explosion kills 10 students and injures more than 100, official says",
-          "sentiment": -0.339,
-          "category": "world",
-          "link": "https://www.bbc.co.uk/news/articles/ckp80jyz6dl8o?at_medium=RSS&at_campaign=rss",
-          "pubDate": "Sat, 28 Nov 2026 11:18:37 GMT"
-        },
-        {
-          "sourceId": "scmp",
-          "sourceName": "South China Morning Post",
-          "region": "APAC",
-          "title": "Afghanistan school explosion kills 7 pupils, over 90 injured",
-          "sentiment": -0.362,
-          "category": "world",
-          "link": "https://www.scmp.com/news/world/russia-central-asia/article/3376136/afghanistan-school-explosion-kills-7-pupils-over-90-injured",
-          "pubDate": "Sat, 28 Nov 2026 11:07:35 +0000"
-        },
-        {
-          "sourceId": "cbc",
-          "sourceName": "CBC News",
-          "region": "NA",
-          "title": "Explosion at a middle school in Afghanistan kills at least 7, injures more than 90",
-          "sentiment": -0.362,
-          "category": "world",
-          "link": "https://www.cbc.ca/news/world/afghanistan-school-explosion-9.7440205?cmp=rss",
-          "pubDate": "Sat, 28 Nov 2026 05:29:19 EST"
-        },
-        {
-          "sourceId": "cnn",
-          "sourceName": "CNN",
-          "region": "NA",
-          "title": "Afghanistan school blast kills 7 students, injures up to 99 - CNN",
-          "sentiment": -0.371,
-          "category": "world",
-          "link": "https://news.google.com/rss/articles/CBMickFVX3lxTE85cjY4b0RlRDFadnZ1cW9Ld1VqWkprUEVDNjZwZFpoMFg5bmQ0aXF3cDBmb3lNQk5ZeGNHakdzblJHaTlZY29aaHlRTHQwZlp3UXhMWVBrQTFUTC0zTmlLUVNxbWZ5SkdfS2RXZXNZclhSQQ?oc=5",
-          "pubDate": "Sat, 28 Nov 2026 10:24:26 GMT"
-        },
-        {
-          "sourceId": "ap",
-          "sourceName": "Associated Press",
-          "region": "GLOBAL",
-          "title": "An explosion at a school in eastern Afghanistan kills 7, wounds more than 90 - AP News",
-          "sentiment": -0.611,
-          "category": "world",
-          "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxOYzQwcm1zRUVmQVB2b3E5X1Q4RHZxbWRGY1ctOFQwZ1otcC11UUJHM2wyZVBhUGhlTTgxYmt1SFc0N0k1aGlnQmxwVUI4S0dXX3NpdzhXYVg2UTdQc3R2bGNrZFJMempoZ3FTZzFhamFPWGt6TDc4NG5BTElMS3JqSmM4OUVlcFBod09hZnIzcVBwdw?oc=5",
-          "pubDate": "Sat, 28 Nov 2026 10:23:00 GMT"
-        },
-        {
-          "sourceId": "dw",
-          "sourceName": "DW News",
-          "region": "EU",
-          "title": "Afghanistan: Several killed in blast near middle school",
-          "sentiment": -0.373,
-          "category": "world",
-          "link": "https://www.dw.com/en/afghanistan-several-killed-in-blast-near-middle-school/a-80084227?maca=en-rss-en-all-1573-rdf",
-          "pubDate": "2026-11-28T10:21:00.000Z"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Afghanistan school blast kills 7 students, injures up to 99 - Reuters",
-          "sentiment": -0.297,
-          "category": "world",
-          "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxNcVRKa09nUTkyZHR6Tnp6aTFwNzFYOHd0WGRtWjFEU2Z4RmFvRzVETWJwbEF4WHROdnpCVU9NMVBYYUJtbVU5NzVqNEVkaEVhNUtmMHFrbFE0cW5OQmdXYkpiV0JvbGoteXRYamR6Mjl0clR1cmp2elB5LU9IOUFjZzcwSXFjTXVxcy1XbmJHdGQwbjZMREhfNzRwS29Jck8zbURsQkdoTXMtZw?oc=5",
-          "pubDate": "Sat, 28 Nov 2026 10:12:52 GMT"
-        },
-        {
-          "sourceId": "aljazeera",
-          "sourceName": "Al Jazeera",
-          "region": "ME",
-          "title": "Several students killed in blast beside Afghan school",
-          "sentiment": -0.508,
-          "category": "world",
-          "link": "https://www.aljazeera.com/video/newsfeed/2026/11/28/several-students-killed-in-blast-beside-afghan-school?traffic_source=rss",
-          "pubDate": "Sat, 28 Nov 2026 10:05:26 +0000"
-        },
-        {
-          "sourceId": "skynews",
-          "sourceName": "Sky News",
-          "region": "UK",
-          "title": "Seven students killed and up to 99 injured in explosion near Afghan school",
-          "sentiment": -0.345,
-          "category": "world",
-          "link": "https://news.sky.com/story/seven-students-killed-and-up-to-99-injured-in-explosion-near-afghan-school-13617431",
-          "pubDate": "Sat, 28 Nov 2026 09:57:00 +0000"
-        },
-        {
-          "sourceId": "ndtv",
-          "sourceName": "NDTV",
-          "region": "SA",
-          "title": "Several Students Feared Dead In Blast At School In Afghanistan",
-          "sentiment": -0.446,
-          "category": "world",
-          "link": "https://www.ndtv.com/world-news/several-students-feared-dead-in-blast-at-school-in-afghanistan-12388416#publisher=newsstand",
-          "pubDate": "Sat, 28 Nov 2026 14:07:59 +0530"
         }
       ]
     },
@@ -7586,6 +7586,127 @@
           "category": "politics",
           "link": "https://www.ft.com/content/9cdc5817-0c7f-42d0-a6ae-bfd7006e4c9b?syn-25a6b1a6=1",
           "pubDate": "Fri, 27 Nov 2026 18:15:16 GMT"
+        }
+      ]
+    },
+    {
+      "id": "eu-fines-fragrance-giants-over-cartel",
+      "story": "EU Fines Fragrance Giants Over Cartel",
+      "summary": "European Union and UK antitrust regulators fined global fragrance suppliers Firmenich, Givaudan, and International Flavors & Fragrances over €570 million ($517 million) for colluding to fix ingredient prices, inflating costs on consumer staples purchased by manufacturing clients like Unilever.",
+      "version": 1,
+      "summarySynthesizedSig": "eu-fines-fragrance-giants-over-cartel|v1|h1",
+      "primaryLocation": {
+        "name": "European Commission, Brussels",
+        "region": "Brussels, Belgium",
+        "countryIso": "be",
+        "lat": 50.8436,
+        "lon": 4.3828,
+        "lng": 4.3828,
+        "zoom": 12,
+        "whyHere": "European antitrust authorities in Brussels issued the coordinated penalty against the global fragrance cartel."
+      },
+      "briefing": {
+        "whyItMattersLabel": "Why It Matters",
+        "whyItMatters": "The penalties deliver a major blow to the operating margins of the fragrance sector's dominant trio, while handing consumer packaged goods giants like Unilever ammunition to pursue follow-on civil damages. By exchanging sensitive pricing data for years, the cartel manipulated input benchmarks across cosmetics, household cleaning, and laundry detergent supply chains. The coordinated action signals that European and British watchdogs will aggressively target upstream business-to-business collusive pacts whose downstream costs are ultimately absorbed by consumers.",
+        "whatsNextLabel": "What's Next",
+        "whatsNext": "The penalised fragrance houses must formally decide whether to challenge the European Commission's findings before the EU General Court in Luxembourg. Simultaneously, legal teams at Unilever and other corporate buyers will review the ruling to determine whether to lodge commercial compensation claims."
+      },
+      "evolvedFromIds": [
+        "eu-and-uk-fine-fragrance-cartel-over-500m"
+      ],
+      "evolutionHistory": [
+        {
+          "version": 1,
+          "type": "initial",
+          "timestamp": "2026-11-25T14:06:54.000Z",
+          "headline": "EU Fines Fragrance Giants Over Cartel",
+          "summary": "European Union and UK antitrust regulators fined global fragrance suppliers Firmenich, Givaudan, and International Flavors & Fragrances over €570 million ($517 million) for colluding to fix ingredient prices, inflating costs on consumer staples purchased by manufacturing clients like Unilever.",
+          "outletCount": 2,
+          "note": "Initial cluster formation on the wire"
+        }
+      ],
+      "domains": [
+        "economy",
+        "law"
+      ],
+      "concepts": [
+        "antitrust",
+        "eu-fine",
+        "cartel"
+      ],
+      "entities": [
+        "European Commission",
+        "Givaudan",
+        "Firmenich",
+        "International Flavors & Fragrances"
+      ],
+      "temporalKind": "announcement",
+      "topic": "business",
+      "imageUrl": "https://img.lemde.fr/2026/08/27/458/0/5471/2735/644/322/60/0/72aafe3_ftp-1-uy5nbriv5d5p-2026-08-27t095910z-547242421-rc2x6naqeqfx-rtrmadp-3-givaudan-restructuring.JPG",
+      "averageSentiment": -0.3,
+      "eventBase": -0.272,
+      "significanceScore": -0.474,
+      "sentimentSpread": 0.13,
+      "outletCount": 5,
+      "regionsCovered": [
+        "NA",
+        "LATAM",
+        "UK",
+        "EU",
+        "GLOBAL"
+      ],
+      "firstSeenAt": "2026-11-25T14:06:54.000Z",
+      "latestUpdateAt": "2026-11-28T10:28:39.000Z",
+      "coverage": [
+        {
+          "sourceId": "wsj",
+          "sourceName": "Wall Street Journal",
+          "region": "NA",
+          "title": "Fragrance Giants Handed $630 Million in EU, U.K. Antitrust Fines",
+          "sentiment": -0.351,
+          "category": "business",
+          "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOREthVklBaU80NGJRNFJTX3ozbGFmeTY5WDhTVVlZR09fa1J0LUk0ZUs4cWh5OVlScXJsOWxMV01maFlyZkl3ZHpid3J1WlYzYVlqeVRIUXVZbno0WnAtWUw2UjZwZjEtVVJrd2RONzdYTG5lMENRQnJqRkNhdkpQdjZuZEtXWDlPcVFGeDJHZVlxM2kzQVhydU5aTHB5TWNEbDZrY0lOZC1qOGJiNkFKNg?oc=5",
+          "pubDate": "Sat, 28 Nov 2026 10:28:39 GMT"
+        },
+        {
+          "sourceId": "lemonde",
+          "sourceName": "Le Monde",
+          "region": "EU",
+          "title": "EU and UK fine global fragrance giants more than €570 million over cartel",
+          "sentiment": -0.27,
+          "category": "business",
+          "link": "https://www.lemonde.fr/en/international/article/2026/11/25/eu-and-uk-fine-global-fragrance-giants-more-than-570-million-over-cartel_6788443_4.html",
+          "pubDate": "Wed, 25 Nov 2026 17:58:51 +0100"
+        },
+        {
+          "sourceId": "ft",
+          "sourceName": "Financial Times",
+          "region": "UK",
+          "title": "Fragrance makers fined more than €500mn over Unilever price-fixing cartel",
+          "sentiment": -0.359,
+          "category": "business",
+          "link": "https://www.ft.com/content/472d6327-a693-4023-a2ab-9672ad0e71b8?syn-25a6b1a6=1",
+          "pubDate": "Wed, 25 Nov 2026 16:54:07 GMT"
+        },
+        {
+          "sourceId": "eleconomista",
+          "sourceName": "El Economista",
+          "region": "LATAM",
+          "title": "EU fines fragrance manufacturer cartel nearly 517 million dollars",
+          "sentiment": -0.232,
+          "category": "business",
+          "link": "https://www.eleconomista.com.mx/empresas/ue-multa-517-millones-dolares-cartel-fabricantes-fragancias-20261125-845757.html",
+          "pubDate": "Wed, 25 Nov 2026 10:19:11 -0600"
+        },
+        {
+          "sourceId": "reuters",
+          "sourceName": "Reuters",
+          "region": "GLOBAL",
+          "title": "Global fragrance makers hit with nearly $517 million EU fine for taking part in cartel - Reuters",
+          "sentiment": -0.28,
+          "category": "business",
+          "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxNNXdKc0Fib1ktQzJ1Umx4VE9DTjFjWHhQa3czVlJ6YVlTUVBxNG5IY2p5T3pGbVpkTDRXLV9GTWk5YXB3dHBUWTUyRVpVb1VPLTBfV1p2QUFjNnZqeFBWbE4zckpScDFnY2NtTzNQVVpadTdFcWZWMDNiM2RfVzZCZ3V1YVh3ZmhtbENaVGJvSG9yUFdZU0MySDA3LWZDNEt2U3BSY01RcExfT0lwWjdCMzlLNUZ5Mi1KdkYzaEpn?oc=5",
+          "pubDate": "Wed, 25 Nov 2026 15:27:44 GMT"
         }
       ]
     },
@@ -33644,127 +33765,6 @@
           "category": "business",
           "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxNRFVsTjFROGtER0loSkZOcnF2NDRLUWFmcjBHZ01ybE51N19idjFFMXI1dnFqZ21JYS1HVVpicTJ1V1RfVU4zd3pkVEZMWHdqMUJWRENOQWJ2VjFqT1Y3WS0xYTV3bzd2RnRraFhtOVpzVE9yYThzdV9tdWxJbUpjNzFraw?oc=5",
           "pubDate": "Wed, 25 Nov 2026 12:40:57 GMT"
-        }
-      ]
-    },
-    {
-      "id": "eu-fines-fragrance-giants-over-cartel",
-      "story": "EU Fines Fragrance Giants Over Cartel",
-      "summary": "European Union and UK antitrust regulators fined global fragrance suppliers Firmenich, Givaudan, and International Flavors & Fragrances over €570 million ($517 million) for colluding to fix ingredient prices, inflating costs on consumer staples purchased by manufacturing clients like Unilever.",
-      "version": 1,
-      "summarySynthesizedSig": "eu-fines-fragrance-giants-over-cartel|v1|h1",
-      "primaryLocation": {
-        "name": "European Commission, Brussels",
-        "region": "Brussels, Belgium",
-        "countryIso": "be",
-        "lat": 50.8436,
-        "lon": 4.3828,
-        "lng": 4.3828,
-        "zoom": 12,
-        "whyHere": "European antitrust authorities in Brussels issued the coordinated penalty against the global fragrance cartel."
-      },
-      "briefing": {
-        "whyItMattersLabel": "Why It Matters",
-        "whyItMatters": "The penalties deliver a major blow to the operating margins of the fragrance sector's dominant trio, while handing consumer packaged goods giants like Unilever ammunition to pursue follow-on civil damages. By exchanging sensitive pricing data for years, the cartel manipulated input benchmarks across cosmetics, household cleaning, and laundry detergent supply chains. The coordinated action signals that European and British watchdogs will aggressively target upstream business-to-business collusive pacts whose downstream costs are ultimately absorbed by consumers.",
-        "whatsNextLabel": "What's Next",
-        "whatsNext": "The penalised fragrance houses must formally decide whether to challenge the European Commission's findings before the EU General Court in Luxembourg. Simultaneously, legal teams at Unilever and other corporate buyers will review the ruling to determine whether to lodge commercial compensation claims."
-      },
-      "evolvedFromIds": [
-        "eu-and-uk-fine-fragrance-cartel-over-500m"
-      ],
-      "evolutionHistory": [
-        {
-          "version": 1,
-          "type": "initial",
-          "timestamp": "2026-11-25T14:06:54.000Z",
-          "headline": "EU Fines Fragrance Giants Over Cartel",
-          "summary": "European Union and UK antitrust regulators fined global fragrance suppliers Firmenich, Givaudan, and International Flavors & Fragrances over €570 million ($517 million) for colluding to fix ingredient prices, inflating costs on consumer staples purchased by manufacturing clients like Unilever.",
-          "outletCount": 2,
-          "note": "Initial cluster formation on the wire"
-        }
-      ],
-      "domains": [
-        "economy",
-        "law"
-      ],
-      "concepts": [
-        "antitrust",
-        "eu-fine",
-        "cartel"
-      ],
-      "entities": [
-        "European Commission",
-        "Givaudan",
-        "Firmenich",
-        "International Flavors & Fragrances"
-      ],
-      "temporalKind": "announcement",
-      "topic": "business",
-      "imageUrl": "https://img.lemde.fr/2026/08/27/458/0/5471/2735/644/322/60/0/72aafe3_ftp-1-uy5nbriv5d5p-2026-08-27t095910z-547242421-rc2x6naqeqfx-rtrmadp-3-givaudan-restructuring.JPG",
-      "averageSentiment": -0.3,
-      "eventBase": -0.272,
-      "significanceScore": -0.474,
-      "sentimentSpread": 0.13,
-      "outletCount": 5,
-      "regionsCovered": [
-        "NA",
-        "LATAM",
-        "UK",
-        "EU",
-        "GLOBAL"
-      ],
-      "firstSeenAt": "2026-11-25T14:06:54.000Z",
-      "latestUpdateAt": "2026-11-27T13:28:36.000Z",
-      "coverage": [
-        {
-          "sourceId": "wsj",
-          "sourceName": "Wall Street Journal",
-          "region": "NA",
-          "title": "Fragrance Giants Handed $630 Million in EU, U.K. Antitrust Fines",
-          "sentiment": -0.351,
-          "category": "business",
-          "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOREthVklBaU80NGJRNFJTX3ozbGFmeTY5WDhTVVlZR09fa1J0LUk0ZUs4cWh5OVlScXJsOWxMV01maFlyZkl3ZHpid3J1WlYzYVlqeVRIUXVZbno0WnAtWUw2UjZwZjEtVVJrd2RONzdYTG5lMENRQnJqRkNhdkpQdjZuZEtXWDlPcVFGeDJHZVlxM2kzQVhydU5aTHB5TWNEbDZrY0lOZC1qOGJiNkFKNg?oc=5",
-          "pubDate": "Fri, 27 Nov 2026 13:28:36 GMT"
-        },
-        {
-          "sourceId": "lemonde",
-          "sourceName": "Le Monde",
-          "region": "EU",
-          "title": "EU and UK fine global fragrance giants more than €570 million over cartel",
-          "sentiment": -0.27,
-          "category": "business",
-          "link": "https://www.lemonde.fr/en/international/article/2026/11/25/eu-and-uk-fine-global-fragrance-giants-more-than-570-million-over-cartel_6788443_4.html",
-          "pubDate": "Wed, 25 Nov 2026 17:58:51 +0100"
-        },
-        {
-          "sourceId": "ft",
-          "sourceName": "Financial Times",
-          "region": "UK",
-          "title": "Fragrance makers fined more than €500mn over Unilever price-fixing cartel",
-          "sentiment": -0.359,
-          "category": "business",
-          "link": "https://www.ft.com/content/472d6327-a693-4023-a2ab-9672ad0e71b8?syn-25a6b1a6=1",
-          "pubDate": "Wed, 25 Nov 2026 16:54:07 GMT"
-        },
-        {
-          "sourceId": "eleconomista",
-          "sourceName": "El Economista",
-          "region": "LATAM",
-          "title": "EU fines fragrance manufacturer cartel nearly 517 million dollars",
-          "sentiment": -0.232,
-          "category": "business",
-          "link": "https://www.eleconomista.com.mx/empresas/ue-multa-517-millones-dolares-cartel-fabricantes-fragancias-20261125-845757.html",
-          "pubDate": "Wed, 25 Nov 2026 10:19:11 -0600"
-        },
-        {
-          "sourceId": "reuters",
-          "sourceName": "Reuters",
-          "region": "GLOBAL",
-          "title": "Global fragrance makers hit with nearly $517 million EU fine for taking part in cartel - Reuters",
-          "sentiment": -0.28,
-          "category": "business",
-          "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxNNXdKc0Fib1ktQzJ1Umx4VE9DTjFjWHhQa3czVlJ6YVlTUVBxNG5IY2p5T3pGbVpkTDRXLV9GTWk5YXB3dHBUWTUyRVpVb1VPLTBfV1p2QUFjNnZqeFBWbE4zckpScDFnY2NtTzNQVVpadTdFcWZWMDNiM2RfVzZCZ3V1YVh3ZmhtbENaVGJvSG9yUFdZU0MySDA3LWZDNEt2U3BSY01RcExfT0lwWjdCMzlLNUZ5Mi1KdkYzaEpn?oc=5",
-          "pubDate": "Wed, 25 Nov 2026 15:27:44 GMT"
         }
       ]
     },
@@ -186945,7 +186945,7 @@
         "whatsNextLabel": "What's Next",
         "whatsNext": "Markets will scrutinize upcoming wage negotiation data and the next policy meeting in December for a definitive interest rate hike. The exact trajectory of the yen and incoming national inflation prints will determine whether the central bank moves before year-end."
       },
-      "lastDevelopedAt": "2026-10-30T06:41:23.000Z",
+      "lastDevelopedAt": "2026-10-30T06:42:23.000Z",
       "developmentNote": "Bank of Japan holds interest rates as core Tokyo inflation exceeds 2% target.",
       "evolvedFromIds": [
         "japan-september-core-inflation-surges-to-2-1"
@@ -186954,7 +186954,7 @@
         {
           "version": 1,
           "type": "initial",
-          "timestamp": "2026-10-30T06:40:23.000Z",
+          "timestamp": "2026-10-30T06:41:23.000Z",
           "headline": "Japan September Core Inflation Surges to 2 1",
           "summary": "The Bank of Japan voted 8-1 to keep its benchmark interest rate unchanged while officially declaring its 2% underlying inflation target achieved for the first time since 2013.",
           "outletCount": 6,
@@ -186963,7 +186963,7 @@
         {
           "version": 2,
           "type": "material_shift",
-          "timestamp": "2026-10-30T06:41:23.000Z",
+          "timestamp": "2026-10-30T06:42:23.000Z",
           "headline": "BOJ Holds Benchmark Interest Rates Steady",
           "summary": "The Bank of Japan voted 8-1 to keep its benchmark interest rate unchanged while officially declaring its 2% underlying inflation target achieved for the first time since 2013. The decision followed government data showing Tokyo core consumer inflation rose 2.6% in October, alongside an acceleration in ETF sales to about ¥860 billion ($5.5 billion) a year, intensifying expectations of a rate hike in December.",
           "beforeStory": "Japan September Core Inflation Surges to 2 1",
